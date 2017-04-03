@@ -54,12 +54,60 @@ public abstract class Regular {
 	 */
 	public final boolean hasBindings;
 	
-	private Regular(Kind kind, int size, boolean hasBindings) {
+	/**
+	 * Whether this regular expression matches the empty string.
+	 * <p>
+	 * <i>Note that the end-of-file regular expression does not
+	 * match the empty string, it matches a special character 
+	 * instead.</i>
+	 */
+	public final boolean nullable;
+	
+	private Regular(Kind kind, 
+			int size, boolean hasBindings, boolean nullable) {
 		this.kind = kind;
 		assert (kind.witness == this.getClass());
 		this.size = size;
 		this.hasBindings = hasBindings;
+		this.nullable = nullable;
 	}
+	
+	/**
+	 * An instance of {@link Folder} is a set of methods to
+	 * apply to the various cases of a regular expression, depending
+	 * on its form, as part of a (possibly) recursive traversal of 
+	 * the regular expression structure. It is the natural 
+	 * <i>catamorphism</i> of the tree-like structure of regular
+	 * expressions, and a generalization of the traditional 
+	 * Java <i>visitor</i>.
+	 * 
+	 * @author Stéphane Lescuyer
+	 *
+	 * @param <V> the resulting type of applying this folder
+	 */
+	public static interface Folder<V> {
+		/** Applying this on {@link Regular#EPSILON} */
+		public V epsilon();
+		/** Applying this on {@link Regular#EOF} */
+		public V eof();
+		/** Applying this on a {@link Characters} regular expression */
+		public V chars(Characters chars);
+		/** Applying this on an {@link Alternate} regular expression */
+		public V alternate(Alternate alt);
+		/** Applying this on a {@link Sequence} regular expression */
+		public V sequence(Sequence seq);
+		/** Applying this on a {@link Repetition} regular expression */
+		public V repetition(Repetition rep);
+		/** Applying this on a {@link Binding} regular expression */
+		public V binding(Binding binding);
+	}
+	
+	/**
+	 * @param folder
+	 * @return the result of applying the provided {@link Folder}
+	 * 		to the receiver
+	 */
+	public abstract <V> V fold(Folder<V> folder);
 
 	/**
 	 * The singleton class that stands for the empty 
@@ -71,7 +119,12 @@ public abstract class Regular {
 		protected static final Epsilon INSTANCE = new Epsilon();
 		
 		private Epsilon() {
-			super(Kind.EPSILON, 0, false);
+			super(Kind.EPSILON, 0, false, true);
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.epsilon();
 		}
 	}
 	/**
@@ -90,7 +143,12 @@ public abstract class Regular {
 		protected static final Eof INSTANCE = new Eof();
 		
 		private Eof() {
-			super(Kind.EOF, 0, false);
+			super(Kind.EOF, 0, false, false);
+		}
+		
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.eof();
 		}
 	}
 	/**
@@ -111,8 +169,13 @@ public abstract class Regular {
 		public final CSet chars;
 		
 		private Characters(CSet chars) {
-			super(Kind.CHARACTERS, 1, false);
+			super(Kind.CHARACTERS, 1, false, false);
 			this.chars = chars;
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.chars(this);
 		}
 	}
 	/**
@@ -141,9 +204,15 @@ public abstract class Regular {
 			super(Kind.ALTERNATE,
 					(lhs.size == rhs.size && lhs.size >= 0) ?
 					lhs.size : -1,
-				  lhs.hasBindings || rhs.hasBindings);
+				  lhs.hasBindings || rhs.hasBindings,
+				  lhs.nullable || rhs.nullable);
 			this.lhs = lhs;
 			this.rhs = rhs;
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.alternate(this);
 		}
 	}
 	/**
@@ -174,9 +243,15 @@ public abstract class Regular {
 			super(Kind.SEQUENCE,
 					first.size < 0 || second.size < 0 ? - 1 :
 					first.size + second.size,
-				  first.hasBindings || second.hasBindings);
+				  first.hasBindings || second.hasBindings,
+				  first.nullable && second.nullable);
 			this.first = first;
 			this.second = second;
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.sequence(this);
 		}
 	}
 	/**
@@ -204,8 +279,13 @@ public abstract class Regular {
 		public final Regular reg;
 		
 		private Repetition(Regular reg) {
-			super(Kind.REPETITION, -1, reg.hasBindings);
+			super(Kind.REPETITION, -1, reg.hasBindings, true);
 			this.reg = reg;
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.repetition(this);
 		}
 	}
 	/**
@@ -237,10 +317,15 @@ public abstract class Regular {
 		public final Location loc;
 		
 		private Binding(Regular reg, String name, Location loc) {
-			super(Kind.BINDING, reg.size, true);
+			super(Kind.BINDING, reg.size, true, reg.nullable);
 			this.reg = reg;
 			this.name = name;
 			this.loc = loc;
+		}
+
+		@Override
+		public <V> V fold(Folder<V> folder) {
+			return folder.binding(this);
 		}
 	}
 	/**
