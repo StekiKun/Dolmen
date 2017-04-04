@@ -1,6 +1,7 @@
 package syntax;
 
 import common.CSet;
+import common.Hierarchy;
 
 /**
  * Instances of {@link Regular} represent concrete
@@ -9,6 +10,7 @@ import common.CSet;
  * 
  * @author Stéphane Lescuyer
  */
+@Hierarchy("getKind")
 public abstract class Regular {
 
 	/**
@@ -70,6 +72,16 @@ public abstract class Regular {
 		this.size = size;
 		this.hasBindings = hasBindings;
 		this.nullable = nullable;
+	}
+	
+	/**
+	 * <i>Only there for the quick-assist based on {@link Hierarchy}.
+	 * 	You should probably use the field {@link #kind} directly.</i>
+	 * 
+	 * @return {@link #kind}
+	 */
+	public final Kind getKind() {
+		return kind;
 	}
 	
 	/**
