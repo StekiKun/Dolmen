@@ -477,7 +477,7 @@ public abstract class CSet {
 		/**
 		 * Configuration of the generator
 		 * 
-		 * <i> Cumulative robabilities for the different 
+		 * <i> Cumulative probabilities for the different 
 		 * character set kinds must be increasing, since
 		 * they are tested in the order of definition. </i>
 		 * 

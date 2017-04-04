@@ -1,8 +1,11 @@
 package syntax;
 
+import java.util.Random;
+
 import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
+import common.Generator;
 import common.Hierarchy;
 
 /**
@@ -387,5 +390,117 @@ public abstract class Regular {
 	 */
 	public static Binding binding(Regular reg, String name, Location loc) {
 		return new Binding(reg, name, loc);
+	}
+	
+	/*
+	 * Generating random regular expressions
+	 */
+	
+	/**
+	 * Generates random regular expressions based on a
+	 * probability {@link Config configuration}
+	 * and a {@link Random random number generator}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Gen implements Generator<Regular> {
+		
+		/**
+		 * Configuration of the generator
+		 * 
+		 * <i> Probabilities specified for each kind of
+		 * regular expressions are cumulative, can be set
+		 * individually but must be increasing, since they
+		 * are tested in the order of definition. </i>
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public static final class Config {
+			/** Probability to generate {@link Regular#EPSILON} */
+			public float epsilon = 0.05f;
+			/** Probability to generate {@link Regular#EOF} */
+			public float eof = 0.10f;
+			/** Probability to generate a regexp matching some character set */
+			public float chars = 0.30f;
+			/** Probability to generate a regular expression of the form "a | b" */
+			public float alternate = 0.50f;
+			/** Probability to generate a regular expression of the form "ab" */
+			public float sequence = 0.70f;
+			/** Probability to generate a regular expression of the form "a*" */
+			public float repetition = 0.90f;
+			
+			/** Maximum depth of a generated regular expression */
+			public int maxDepth = 8;
+			/** Configuration used to generate the random character sets */
+			public CSet.Gen.Config csConfig = new CSet.Gen.Config();
+		}
+		
+		private final Random random;
+		private final Config config;
+		private final CSet.Gen csetGenerator;
+		
+		/**
+		 * Creates a regular expression generator based on the
+		 * given random-number generator and configuration
+		 * 
+		 * @param random
+		 * @param config
+		 */
+		public Gen(Random random, Config config) {
+			this.random = random;
+			this.config = config;
+			// Use easy characters
+			config.csConfig.minChar='A';
+			config.csConfig.maxChar='z';
+			this.csetGenerator = new CSet.Gen(random, config.csConfig);
+		}
+		
+		private Gen() {
+			this(new Random(), new Config());
+		}
+
+		@Override
+		public @NonNull String name() {
+			return "Regular expression generation";
+		}
+
+		private Regular genAux(int curDepth) {
+			// Force a leaf (in the form of a character set) if at max depth
+			if (config.maxDepth == curDepth)
+				return chars(csetGenerator.generate());
+			
+			float f = random.nextFloat();
+			if (f < config.epsilon) return EPSILON;
+			if (f < config.eof) return EOF;
+			if (f < config.chars) return chars(csetGenerator.generate());
+			if (f < config.alternate) {
+				return or(genAux(curDepth + 1), genAux(curDepth + 1));
+			}
+			if (f < config.sequence) {
+				return seq(genAux(curDepth + 1), genAux(curDepth + 1));
+			}
+			if (f < config.repetition) {
+				return star(genAux(curDepth + 1));
+			}
+			// Otherwise generate a binding regular expression
+			char c1 = (char) ('a' + random.nextInt(26));
+			String name = "" + c1;
+			if (random.nextBoolean())
+				name += (char) ('a' + random.nextInt(26));
+			return binding(genAux(curDepth + 1), name, Location.DUMMY);
+		}
+		
+		@Override
+		public @NonNull Regular generate() {
+			return genAux(0);
+		}
+		
+	}
+	/**
+	 * @return a regular expression generator random
+	 * 		generator based on a default configuration
+	 */
+	public static Gen generator() {
+		return new Gen();
 	}
 }

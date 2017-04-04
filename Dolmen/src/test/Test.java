@@ -1,6 +1,7 @@
 package test;
 
 import common.CSet;
+import syntax.Regular;
 
 /**
  * Class to interactively test the various features 
@@ -14,8 +15,16 @@ public abstract class Test {
 		// Static utility class only
 	}
 
+	private static boolean test_cset_gen = false;
 	private static void testCSetGeneration() {
+		if (!test_cset_gen) return;
 		CSet.generator().present();
+	}
+	
+	private static boolean test_regular_gen = true;
+	private static void testRegularGeneration() {
+		if (!test_regular_gen) return;
+		Regular.generator().present();
 	}
 	
 	/**
@@ -26,5 +35,7 @@ public abstract class Test {
 	public static void main(String[] args) {
 		// 1. CSet generation
 		testCSetGeneration();
+		// 2. Regular expression generation
+		testRegularGeneration();
 	}
 }
