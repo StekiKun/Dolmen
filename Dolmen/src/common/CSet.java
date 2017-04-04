@@ -1,5 +1,7 @@
 package common;
 
+import java.util.Random;
+
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -33,6 +35,28 @@ public abstract class CSet {
 	
 	@Override
 	public abstract String toString();
+	
+	/**
+	 * @param ch
+	 * @return a string to display {@code ch}, either
+	 * 	using the character itself if appropriate, or
+	 *  the '\\uxxxx' form
+	 */
+	private static String charToString(char ch) {
+		// Check for characters which must be escaped
+		switch (ch) {
+		case '[':
+		case ']':
+		case '^':
+		case '\\':
+		case '-':
+		case '_':
+			return "\\" + ch; // printable but escaped
+		}
+		if (Character.isUnicodeIdentifierPart(ch))
+			return "" + ch; // printable
+		return "\\u" + String.format("%04x", (short)ch);
+	}
 	
 	/**
 	 * The set of <b>all</b> possible characters
@@ -101,7 +125,7 @@ public abstract class CSet {
 
 		@Override
 		public @NonNull String toString() {
-			return "" + c;
+			return charToString(c);
 		}
 	}
 	/**
@@ -147,9 +171,11 @@ public abstract class CSet {
 		
 		private StringBuilder append(StringBuilder buf) {
 			if (first == last) 
-				buf.append(first);
+				buf.append(charToString(first));
 			else
-				buf.append(first + "-" + last);
+				buf.append(charToString(first))
+				   .append("-")
+				   .append(charToString(last));
 			if (next != null) {
 				next.append(buf);
 			}
@@ -433,5 +459,104 @@ public abstract class CSet {
 			return c1 == c2;
 		}
 		return iequivalent(intervalsOf(cs1), intervalsOf(cs2));
+	}
+	
+	/*
+	 * Generating random character sets
+	 */
+	
+	/**
+	 * Generates random character sets based on a
+	 * probability {@link Config configuration}
+	 * and a {@link Random random number generator}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Gen implements Generator<CSet> {
+
+		/**
+		 * Configuration of the generator
+		 * 
+		 * <i> Cumulative robabilities for the different 
+		 * character set kinds must be increasing, since
+		 * they are tested in the order of definition. </i>
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public static final class Config {
+			/** Minimum char value generated */
+			public char minChar = 16;
+			/** Maximum char value generated */
+			public char maxChar = 128;
+ 
+			/** Probability to generate {@link CSet#EMPTY} */
+			public float empty = 0.15f;
+			/** Probability to generate {@link CSet#ALL} */
+			public float all = 0.35f;
+			/** Probability to generate singleton character set */
+			public float singleton = 0.75f;
+			/** Maximum number of character intervals generated */
+			public int maxIntervals = 4;
+			/** Maximum size of each generated interval */
+			public int maxSize = 20;
+		}
+		
+		private final Random random;
+		private final Config config;
+
+		/**
+		 * Creates a character set generator based on the
+		 * given random-number generator and configuration
+		 * 
+		 * @param random
+		 * @param config
+		 */
+		public Gen(Random random, Config config) {
+			this.random = random;
+			this.config = config;
+		}
+		
+		private Gen() {
+			this(new Random(), new Config());
+		}
+		
+		private char nextChar() {
+			int k = random.nextInt(config.maxChar - config.minChar);
+			return (char) (config.minChar + k);
+		}
+		
+		@Override
+		public CSet generate() {
+			float f = random.nextFloat();
+			if (f < config.empty) return EMPTY;
+			if (f < config.all) return ALL;
+			if (f < config.singleton) return singleton(nextChar());
+			
+			// Generate n random intervals in [minChar, maxChar]
+			// and take the reunion of these
+			int n = 1 + random.nextInt(config.maxIntervals);
+			@Nullable Interval interval = null;
+			for (int i = 0; i < n; ++i) {
+				char first = nextChar();
+				char last = (char) (first + random.nextInt(config.maxSize));
+				if (last > config.maxChar)
+					last = config.maxChar;
+				interval = iunion(new Interval(first, last, null), interval);
+			}
+			return intervals(interval);
+		}
+		
+		@Override
+		public String name() {
+			return "Character set generation";
+			// TODO: print config?
+		}
+	}
+	/**
+	 * @return a character set random generator
+	 * 		based on default configuration
+	 */
+	public static Gen generator() {
+		return new Gen();
 	}
 }
