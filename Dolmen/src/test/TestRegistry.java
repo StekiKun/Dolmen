@@ -29,10 +29,11 @@ public final class TestRegistry {
 	}
 	
 	/**
-	 * Executes all the tests in the registry
+	 * Executes all the tests in the registry, in the given {@code mode}
+	 * @param mode
 	 */
-	public void run() {
-		testUnits.forEach((tu, n) -> tu.run(n));
+	public void run(TestUnit.Mode mode) {
+		testUnits.forEach((tu, n) -> tu.run(n, mode));
 	}
 	
 	/**
@@ -46,7 +47,7 @@ public final class TestRegistry {
 		private Builder() {
 			this.testUnits = new IdentityHashMap<>();
 		}
-		
+
 		/**
 		 * Add a test unit to the registry builder, to be run
 		 * on the specified number of samples
@@ -56,6 +57,23 @@ public final class TestRegistry {
 		 * @return this builder, for possible method chaining
 		 */
 		public Builder add(TestUnit<?, ?> testUnit, int samples) {
+			testUnits.put(testUnit, samples);
+			return this;
+		}
+
+		/**
+		 * Add a test unit to the registry builder, to be run
+		 * on the specified number of samples, as {@link #add},
+		 * if and only if {@code condition} holds. Otherwise
+		 * does nothing.
+		 * 
+		 * @param testUnit 
+		 * @param samples
+		 * @param condition
+		 * @return this builder, for possible method chaining
+		 */
+		public Builder addIf(TestUnit<?, ?> testUnit,
+				int samples, boolean condition) {
 			testUnits.put(testUnit, samples);
 			return this;
 		}

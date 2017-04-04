@@ -2,6 +2,8 @@ package test;
 
 import common.CSet;
 import syntax.Regular;
+import test.TestUnit.Mode;
+import test.regular.TestRemoveNestedBinding;
 
 /**
  * Class to interactively test the various features 
@@ -21,10 +23,16 @@ public abstract class Test {
 		CSet.generator().present();
 	}
 	
-	private static boolean test_regular_gen = true;
+	private static boolean test_regular_gen = false;
 	private static void testRegularGeneration() {
 		if (!test_regular_gen) return;
 		Regular.generator().present();
+	}
+	
+	private static TestRegistry testRegularOperations() {
+		return TestRegistry.create()
+						.addIf(new TestRemoveNestedBinding(), 50, true)
+						.done();
 	}
 	
 	/**
@@ -37,5 +45,7 @@ public abstract class Test {
 		testCSetGeneration();
 		// 2. Regular expression generation
 		testRegularGeneration();
+		// 3. Regular expression operations tests
+		testRegularOperations().run(Mode.INTERACTIVE);
 	}
 }

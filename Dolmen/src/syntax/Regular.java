@@ -483,10 +483,12 @@ public abstract class Regular {
 				return star(genAux(curDepth + 1));
 			}
 			// Otherwise generate a binding regular expression
-			char c1 = (char) ('a' + random.nextInt(26));
+			char c1 = (char) ('a' + random.nextInt(4));
 			String name = "" + c1;
-			if (random.nextBoolean())
-				name += (char) ('a' + random.nextInt(26));
+			// I am reducing the number of possible names to increase
+			// the probability of capture/shadowing
+//			if (random.nextBoolean())
+//				name += (char) ('a' + random.nextInt(4));
 			return binding(genAux(curDepth + 1), name, Location.DUMMY);
 		}
 		
