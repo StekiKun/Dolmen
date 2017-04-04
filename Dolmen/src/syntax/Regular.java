@@ -1,5 +1,7 @@
 package syntax;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import common.CSet;
 import common.Hierarchy;
 
@@ -121,6 +123,8 @@ public abstract class Regular {
 	 */
 	public abstract <V> V fold(Folder<V> folder);
 
+	@Override public abstract @NonNull String toString();
+	
 	/**
 	 * The singleton class that stands for the empty 
 	 * regular expression ε, which only matches the empty string.
@@ -137,6 +141,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.epsilon();
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "ε";
 		}
 	}
 	/**
@@ -161,6 +170,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.eof();
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "EOF";
 		}
 	}
 	/**
@@ -188,6 +202,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.chars(this);
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return chars.toString();
 		}
 	}
 	/**
@@ -225,6 +244,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.alternate(this);
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "(" + lhs.toString() + "|" + rhs.toString() + ")";
 		}
 	}
 	/**
@@ -265,6 +289,11 @@ public abstract class Regular {
 		public <V> V fold(Folder<V> folder) {
 			return folder.sequence(this);
 		}
+
+		@Override
+		public @NonNull String toString() {
+			return first.toString() + second.toString();
+		}
 	}
 	/**
 	 * @param first
@@ -298,6 +327,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.repetition(this);
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "(" + reg.toString() + ")*";
 		}
 	}
 	/**
@@ -338,6 +372,11 @@ public abstract class Regular {
 		@Override
 		public <V> V fold(Folder<V> folder) {
 			return folder.binding(this);
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "(" + reg.toString() + " as " + name + ")";
 		}
 	}
 	/**

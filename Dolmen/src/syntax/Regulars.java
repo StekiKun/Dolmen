@@ -3,6 +3,7 @@ package syntax;
 import java.util.HashSet;
 import java.util.Set;
 
+import common.CSet;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
 import syntax.Regular.Characters;
@@ -19,6 +20,61 @@ public abstract class Regulars {
 
 	private Regulars() {
 		// Static utility class only
+	}
+	
+	/**
+	 * <i>This is not an equivalence test between regular
+	 * 	regular expressions, in the sense that it can return
+	 *  {@code false} on two different regular expressions
+	 *  which would otherwise recognize the same language.</i>
+	 * 
+	 * @param r1
+	 * @param r2
+	 * @return {@code true} if and only if the two given
+	 * 		regular expressions are structurally equal
+	 */
+	public static boolean equal(Regular r1, Regular r2) {
+		// Shortcuts
+		if (r1 == r2) return true;
+		if (r1.kind != r2.kind) return false;
+		if (r1.size != r2.size) return false; 
+		if (r1.hasBindings != r2.hasBindings) return false;
+		
+		switch (r1.getKind()) {
+		case EPSILON:
+		case EOF:
+			return true;
+		case CHARACTERS: {
+			final Characters chars1 = (Characters) r1;
+			final Characters chars2 = (Characters) r2;
+			return CSet.equivalent(chars1.chars, chars2.chars);
+		}
+		case ALTERNATE: {
+			final Alternate alt1 = (Alternate) r1;
+			final Alternate alt2 = (Alternate) r2;
+			return equal(alt1.lhs, alt2.lhs)
+					&& equal(alt1.rhs, alt2.rhs);
+		}
+		case SEQUENCE: {
+			final Sequence seq1 = (Sequence) r1;
+			final Sequence seq2 = (Sequence) r2;
+			return equal(seq1.first, seq2.first)
+					&& equal(seq1.second, seq2.second);
+		}
+		case REPETITION: {
+			final Repetition rep1 = (Repetition) r1;
+			final Repetition rep2 = (Repetition) r2;
+			return equal(rep1.reg, rep2.reg);
+		}
+		case BINDING: {
+			final Binding binding1 = (Binding) r1;
+			final Binding binding2 = (Binding) r2;
+			return binding1.name.equals(binding2.name)
+					&& binding1.loc.equals(binding2.loc)
+					&& equal(binding1.reg, binding2.reg);
+		}
+		}
+		throw new IllegalStateException();
 	}
 
 	/**

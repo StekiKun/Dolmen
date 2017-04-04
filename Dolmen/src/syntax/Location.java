@@ -1,11 +1,13 @@
 package syntax;
 
+import org.eclipse.jdt.annotation.Nullable;
+
 /**
  * Instances of this class describe ranges of characters
  * in files, and are used to link parsed entities with
  * their concrete representation in the original sources.
  * 
- * @author Stéphane Lescuyer
+ * @author Stï¿½phane Lescuyer
  */
 public final class Location {
 
@@ -64,4 +66,37 @@ public final class Location {
 	public int length() {
 		return endPos - startPos + 1;
 	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + endPos;
+		result = prime * result + filename.hashCode();
+		result = prime * result + startCol;
+		result = prime * result + startLine;
+		result = prime * result + startPos;
+		return result;
+	}
+
+	@Override
+	public boolean equals(@Nullable Object obj) {
+		if (this == obj) return true;
+		if (!(obj instanceof Location)) return false;
+		Location loc = (Location) obj;
+		if (startPos != loc.startPos) return false;
+		if (endPos != loc.endPos) return false;
+		if (startLine != loc.startLine) return false;
+		if (startCol != loc.startCol) return false;
+		if (!filename.equals(loc.filename)) return false;
+		return true;
+	}
+
+	@Override
+	public String toString() {
+		return "Location [filename=" + filename + ", startPos=" + startPos 
+				+ ", endPos=" + endPos + ", startLine="
+				+ startLine + ", startCol=" + startCol + "]";
+	}
+
 }

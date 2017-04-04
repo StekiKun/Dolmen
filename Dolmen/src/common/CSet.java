@@ -215,6 +215,7 @@ public abstract class CSet {
 	 */
 	public static CSet interval(char first, char last) {
 		if (first > last) throw new IllegalArgumentException();
+		if (first == last) return new Singleton(first);
 		return new Intervals(new Interval(first, last, null));
 	}
 	
@@ -228,6 +229,21 @@ public abstract class CSet {
 	
 	/*
 	 * Character set operations
+	 * 
+	 * All character sets operations are implemented
+	 * with the following principles in mind:
+	 * 
+	 * - canonicity: character sets are supposed to be
+	 * 	canonical in terms of representation (i.e. no 
+	 * 	degenerate interval but ALL, EMPTY or Singleton
+	 *  instead), and of course well-formed in that lists
+	 *  of intervals are strictly-ordered. All operations
+	 *  return character sets with the same property, and
+	 *  so that this property can be relied upon when
+	 *  comparing character sets, for instance.
+	 * - suffix of interval lists are shared as most as
+	 *  possible during operations, in order to take profit
+	 *  of the fact that intervals are immutable.
 	 */
 	
 	private static final Interval ALL_INTERVAL =
@@ -388,5 +404,34 @@ public abstract class CSet {
 	 */
 	public static CSet complement(CSet cs) {
 		return diff(ALL, cs);
+	}
+	
+	private static boolean iequivalent(
+			@Nullable Interval i1, @Nullable Interval i2) {
+		if (i1 == i2) return true;
+		if (i1 == null || i2 == null) return false;
+		if (i1.first != i2.first) return false;
+		if (i1.last != i2.last) return false;
+		return iequivalent(i1.next, i2.next);
+	}
+	
+	/**
+	 * @param cs1
+	 * @param cs2
+	 * @return {@code true} if and only if the two given
+	 * 	character sets are equivalent
+	 */
+	public static boolean equivalent(CSet cs1, CSet cs2) {
+		// By canonicity, equivalent character sets are 
+		// represented in the same manner
+		if (cs1 == cs2) return true;
+		// Can't have cs1 and cs2 both equal to EMPTY or ALL
+		if (cs1.getClass() != cs2.getClass()) return false;
+		if (cs1 instanceof Singleton) {
+			char c1 = ((Singleton) cs1).c;
+			char c2 = ((Singleton) cs2).c;
+			return c1 == c2;
+		}
+		return iequivalent(intervalsOf(cs1), intervalsOf(cs2));
 	}
 }
