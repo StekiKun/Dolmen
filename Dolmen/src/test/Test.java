@@ -31,8 +31,8 @@ public abstract class Test {
 	
 	private static TestRegistry testRegularOperations() {
 		return TestRegistry.create()
-						.addIf(new TestRemoveNestedBinding(), 50, true)
-						.done();
+					.addIf(new TestRemoveNestedBinding(), 20000, true)
+					.done();
 	}
 	
 	/**
@@ -46,6 +46,6 @@ public abstract class Test {
 		// 2. Regular expression generation
 		testRegularGeneration();
 		// 3. Regular expression operations tests
-		testRegularOperations().run(Mode.INTERACTIVE);
+		testRegularOperations().run(Mode.QUIET);
 	}
 }

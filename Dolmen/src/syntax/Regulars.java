@@ -1,9 +1,11 @@
 package syntax;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
 import common.CSet;
+import common.Sets;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
 import syntax.Regular.Characters;
@@ -220,5 +222,131 @@ public abstract class Regulars {
 	public static Regular removeNestedBindings2(Regular r) {
 		if (!r.hasBindings) return r;
 		return rnbAux(r, new HashSet<String>(2));
+	}
+	
+	/**
+	 * Gathers information about the nature of various
+	 * bindings in a regular expression. This info
+	 * can be computed by calling {@link #analyseVars}.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class VarsInfo {
+		/** All variables bound in the regular expression */
+		public final Set<String> allVars;
+		/** All variables optionally matched in the regular expression */
+		public final Set<String> optVars;
+		/** 
+		 * All variables matched potentially more
+		 * than once in the regular expression
+		 */
+		public final Set<String> dblVars;
+		/**
+		 * All variables which <b>can</b> match 
+		 * sub-expressions that must be of size 1.
+		 */
+		public final Set<String> chrVars;
+		/**
+		 * All variables which <b>can</b> match
+		 * sub-expressions that are not guaranteed
+		 * to be of size 1.
+		 */
+		public final Set<String> strVars;
+		
+		/**
+		 * @param allVars
+		 * @param optVars
+		 * @param dblVars
+		 * @param chrVars
+		 * @param strVars
+		 */
+		public VarsInfo(Set<String> allVars,
+					Set<String> optVars, Set<String> dblVars, 
+					Set<String> chrVars, Set<String> strVars) {
+			this.allVars = allVars;
+			this.optVars = optVars;
+			this.dblVars = dblVars;
+			this.chrVars = chrVars;
+			this.strVars = strVars;
+		}
+	}
+	/**
+	 * A special instance of {@link VarsInfo} for regular expressions
+	 * without any bindings
+	 */
+	@SuppressWarnings("null")
+	private static VarsInfo NO_VARS =
+		new VarsInfo(Collections.emptySet(), Collections.emptySet(),
+					 Collections.emptySet(), Collections.emptySet(),
+					 Collections.emptySet());
+	
+	/**
+	 * @param regular
+	 * @return a {@link VarsInfo} structure describing 
+	 * 	the nature of the various bound names appearing
+	 * 	in the given regular expression
+	 */
+	public static VarsInfo analyseVars(Regular regular) {
+		if (!regular.hasBindings) return NO_VARS;
+		
+		switch (regular.getKind()) {
+		case EPSILON:
+		case EOF:
+		case CHARACTERS:
+			return NO_VARS;
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			VarsInfo info1 = analyseVars(alternate.lhs);
+			VarsInfo info2 = analyseVars(alternate.rhs);
+			return new VarsInfo(
+				Sets.union(info1.allVars, info2.allVars),
+				Sets.union(
+					Sets.symdiff(info1.allVars, info2.allVars),
+					Sets.union(info1.optVars, info2.optVars)),
+				Sets.union(info1.dblVars, info2.dblVars),
+				Sets.union(info1.chrVars, info2.chrVars),
+				Sets.union(info1.strVars, info2.strVars));
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			VarsInfo info1 = analyseVars(sequence.first);
+			VarsInfo info2 = analyseVars(sequence.second);
+			return new VarsInfo(
+				Sets.union(info1.allVars, info2.allVars),
+				Sets.union(info1.optVars, info2.optVars),
+				Sets.union(
+					Sets.inter(info1.allVars, info2.allVars),
+					Sets.union(info1.dblVars, info2.dblVars)),
+				Sets.union(info1.chrVars, info2.chrVars),
+				Sets.union(info1.strVars, info2.strVars));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			VarsInfo info = analyseVars(repetition.reg);
+			if (info.allVars.equals(info.chrVars)
+				&& info.allVars.equals(info.dblVars))
+				return info;
+			return new VarsInfo(info.allVars,
+					info.allVars, info.allVars,
+					info.chrVars, info.strVars);
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			VarsInfo info = analyseVars(binding.reg);
+			return new VarsInfo(
+				Sets.add(binding.name, info.allVars),
+				info.optVars,
+				info.allVars.contains(binding.name) ?
+					Sets.add(binding.name, info.dblVars) :
+					info.dblVars,
+				binding.reg.size == 1 ?
+					Sets.add(binding.name, info.chrVars) :
+					info.chrVars,
+				binding.reg.size == 1 ?
+					info.strVars :
+					Sets.add(binding.name, info.strVars));
+		}
+		}
+		throw new IllegalStateException();
 	}
 }
