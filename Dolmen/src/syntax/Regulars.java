@@ -1,10 +1,18 @@
 package syntax;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
+
+import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import common.CSet;
+import common.Iterables;
+import common.Maps;
 import common.Sets;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
@@ -348,5 +356,156 @@ public abstract class Regulars {
 		}
 		}
 		throw new IllegalStateException();
+	}
+	
+	/**
+	 * The result of a successful match of a
+	 * regular expression against some input string
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class MatchResult {
+		/** 
+		 * Contains all bound substrings which were
+		 * matched by {@linking Regular.Binding} regexps
+		 */
+		public final Map<String, String> bindings;
+		/**
+		 * The size of the input string prefix that matched
+		 * the regular expression
+		 */
+		public final int matchedLength;
+		
+		/**
+		 * @param bindings
+		 * @param matchedLength
+		 */
+		public MatchResult(Map<String, String> bindings, int matchedLength) {
+			this.bindings = bindings;
+			this.matchedLength = matchedLength;
+		}
+	}
+	
+	private static final Iterable<MatchResult> NO_MATCH = Iterables.empty();
+	
+	/**
+	 * @param regular
+	 * @param input
+	 * @param from
+	 * @return an iterable of all potential matchings
+	 * 		of (a prefix of) the {@code input} string
+	 * 		starting at offset {@code from}
+	 */
+	private static Iterable<MatchResult>
+		match(Regular regular, String input, int from) {
+		int rem = input.length() - from;
+		// There's no hope there if not enough remaining characters
+		if (regular.size > rem) return NO_MATCH;
+		
+		switch (regular.getKind()) {
+		case EPSILON: {
+			return Iterables.singleton(
+					new MatchResult(Maps.empty(), from));
+		}
+		case EOF: {
+			// TODO : maybe just match an actual special char
+			// 		appended to the input string?
+			// Means EPSILON can match again after EOF, is
+			// it right or not? It does not sound right
+			if (from == input.length())
+				return Iterables.singleton(
+						new MatchResult(Maps.empty(), from));
+			else
+				return NO_MATCH;
+		}
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			if (from >= input.length())
+				return NO_MATCH;
+			char next = input.charAt(from);
+			if (characters.chars.contains(next))
+				return Iterables.singleton(
+						new MatchResult(Maps.empty(), from + 1));
+			else
+				return NO_MATCH;
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			Iterable<MatchResult> res1 = match(alternate.lhs, input, from);
+			Iterable<MatchResult> res2 = match(alternate.rhs, input, from);
+			return Iterables.concat(res1, res2);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			Iterable<MatchResult> res1 = match(sequence.first, input, from);
+			// For each match of the first part, try to match the second part
+			Function<MatchResult, Iterable<MatchResult>> f = mr1 -> {
+				Iterable<MatchResult> res2 = match(sequence.second, input, mr1.matchedLength);
+				// If no bindings to reconcile
+				if (mr1.bindings.isEmpty()) return res2;
+				// Otherwise, we need to extend res1 bindings with res2
+				return Iterables.transform(res2, (MatchResult mr2) -> {
+					Map<String, String> extended;
+					if (mr2.bindings.isEmpty())
+						extended = mr1.bindings;
+					else {
+						extended = new HashMap<String, String>(mr1.bindings);
+						extended.putAll(mr2.bindings);
+					}
+					return new MatchResult(extended, mr2.matchedLength);
+				});
+			};
+			return Iterables.concat(Iterables.transform(res1, f));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			// Either we match the empty string, or the underlying
+			// regexp followed by another match of this repetition
+			// This could go on infinitely if the regexp below is nullable!
+			return match(Regular.or(Regular.EPSILON,
+									Regular.seq(repetition.reg, repetition)),
+						 input, from);
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			// For each match of the regular expression, compute
+			// the associated binding and return the updated match result
+			Iterable<MatchResult> res = match(binding.reg, input, from);
+			res.forEach(mr -> {
+				@SuppressWarnings("null")
+				@NonNull String bound = input.substring(from, mr.matchedLength);
+				// Save this binding, potentially shadowing other nested bindings
+				mr.bindings.put(binding.name, bound);
+			});
+			return res;
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	/**
+	 * @param regular
+	 * @param input
+	 * @return an iterable of all potential match results of the
+	 * 		regular expression {@code regular} and a prefix of {@code input}
+	 */
+	public static Iterable<MatchResult> allMatches(Regular regular, String input) {
+		return match(regular, input, 0);
+	}
+	
+	/**
+	 * @param regular
+	 * @param input
+	 * @return {@code null} if {@code regular} does not match the full
+	 * 		{@code input} string, or the map of bound substrings if a match
+	 * 		was found
+	 */
+	public static @Nullable Map<String, String> matches(Regular regular, String input) {
+		final int size = input.length();
+		// Find a match which covered the whole input string
+		for (MatchResult mr : allMatches(regular, input)) {
+			if (mr.matchedLength == size) return mr.bindings;
+		}
+		return null;
 	}
 }

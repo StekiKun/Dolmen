@@ -22,7 +22,24 @@ public abstract class Sets {
 	private Sets() {
 		// Static utility only
 	}
+	
+	/**
+	 * @return the empty unmodifiable set
+	 */
+	@SuppressWarnings("null")
+	public static <T> Set<T> empty() {
+		return Collections.emptySet();
+	}
 
+	/**
+	 * @param elt
+	 * @return the singleton set containing {@code elt}
+	 */
+	@SuppressWarnings("null")
+	public static <T> Set<T> singleton(T elt) {
+		return Collections.singleton(elt);
+	}	
+	
 	/**
 	 * @param elt
 	 * @param s
@@ -55,14 +72,12 @@ public abstract class Sets {
 	 * @param s2
 	 * @return the intersection of {@code s1} and {@code s2}
 	 */
-	@SuppressWarnings("null")
 	public static <T> Set<T> inter(Set<T> s1, Set<T> s2) {
 		if (s1.isEmpty() || s2.isEmpty())
 			return s1;
 		Set<T> res = new HashSet<T>(s1);
 		res.retainAll(s2);
-		if (res.isEmpty())
-			return Collections.emptySet();
+		if (res.isEmpty()) return empty();
 		return res;
 	}
 
@@ -71,13 +86,11 @@ public abstract class Sets {
 	 * @param s2
 	 * @return the set of elements in {@code s1} and not in {@code s2}
 	 */
-	@SuppressWarnings("null")
 	public static <T> Set<T> diff(Set<T> s1, Set<T> s2) {
 		if (s1.isEmpty() || s2.isEmpty()) return s1;
 		Set<T> res = new HashSet<T>(s1);
 		res.removeAll(s2);
-		if (res.isEmpty())
-			return Collections.emptySet();
+		if (res.isEmpty()) return empty();
 		return res;
 	}
 
