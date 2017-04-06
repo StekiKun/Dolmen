@@ -25,7 +25,7 @@ public abstract class Test {
 		CSet.generator().present();
 	}
 	
-	private static boolean test_regular_gen = true;
+	private static boolean test_regular_gen = false;
 	private static void testRegularGeneration() {
 		if (!test_regular_gen) return;
 		Regular.generator().present();
@@ -56,7 +56,7 @@ public abstract class Test {
 		// 2. Regular expression generation
 		testRegularGeneration();
 		// 3. Regular expression operations tests
-		testRegularOperations().run(Mode.INTERACTIVE);
+		testRegularOperations().run(Mode.QUIET);
 		// 4. Regular expression matchers generation
 		testRegularWitnessGeneration();
 	}

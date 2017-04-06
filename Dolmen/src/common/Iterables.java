@@ -1,13 +1,14 @@
 package common;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.function.Function;
-import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 /**
  * This class contains various utility
@@ -50,7 +51,7 @@ public abstract class Iterables {
 			@Override
 			public boolean hasNext() {
 				boolean currentHasNext;
-				while ((currentHasNext = current.hasNext())
+				while (!(currentHasNext = current.hasNext())
 						&& iterators.hasNext()) {
 					current = iterators.next();
 				}
@@ -73,15 +74,14 @@ public abstract class Iterables {
 	 */
 	public static <T> Iterable<T> concat(
 		Iterable<? extends Iterable<? extends T>> iterables) {
-		Stream<? extends Iterable<? extends T>> stream =
-			StreamSupport.stream(iterables.spliterator(), false);
+		
 		return new Iterable<T>() {
 			@SuppressWarnings("null")
 			@Override
 			public Iterator<T> iterator() {
-				return concatIterator(stream
-										  .map(it -> it.iterator())
-										  .iterator());
+				return concatIterator(
+					transformIterator(iterables.iterator(),
+						iterable -> iterable.iterator()));
 			}
 		};
 	}
@@ -94,14 +94,38 @@ public abstract class Iterables {
 	@SafeVarargs
 	public static <T> Iterable<T> concat(Iterable<? extends T>... its) {
 		@SuppressWarnings("null")
-		List<Iterable<? extends T>> iterables = Arrays.asList(its);
+		final List<Iterable<? extends T>> iterables = Arrays.asList(its);
 		return new Iterable<T>() {
 			@SuppressWarnings("null")
 			@Override
 			public Iterator<T> iterator() {
-				return concatIterator(iterables.stream()
-										  .map(it -> it.iterator())
-										  .iterator());
+				List<Iterator<? extends T>> iterators =
+					new ArrayList<>(iterables.size());
+				for (Iterable<? extends T> it : iterables)
+					iterators.add(it.iterator());
+				return concatIterator(iterators.iterator());
+			}
+		};
+	}
+
+	/**
+	 * @param it
+	 * @param f
+	 * @return an iterator based on {@code it} where all
+	 * 		elements have been transformed by {@code f}
+	 */
+	private static <T, U> Iterator<U> transformIterator(
+		Iterator<? extends T> it, Function<? super T, ? extends U> f) {
+		return new Iterator<U>() {
+			@Override
+			public boolean hasNext() {
+				return it.hasNext();
+			}
+
+			@Override
+			public U next() {
+				T t = it.next();
+				return f.apply(t);
 			}
 		};
 	}
@@ -117,20 +141,40 @@ public abstract class Iterables {
 		return new Iterable<U>() {
 			@Override
 			public Iterator<U> iterator() {
-				final Iterator<? extends T> iterator = it.iterator();
-				return new Iterator<U>() {
-					@Override
-					public boolean hasNext() {
-						return iterator.hasNext();
-					}
-
-					@Override
-					public U next() {
-						T t = iterator.next();
-						return f.apply(t);
-					}
-				};
+				@SuppressWarnings("null")
+				@NonNull Iterator<? extends T> iterator = it.iterator();
+				return transformIterator(iterator, f);
 			}
 		};
 	}
+	
+//	/**
+//	 * @param args
+//	 */
+//	public static void main(String[] args) {
+//		List<Integer> l = new java.util.ArrayList<Integer>();
+//		l.add(5); l.add(99); l.add(66);
+//		
+//		for (int k : Iterables.singleton(55))
+//			System.out.println("" + k);
+//		
+//		List<Iterable<Integer>> lits = new java.util.ArrayList<>();
+//		lits.add(Arrays.asList(1, 2));
+//		lits.add(Arrays.asList(1));
+//		lits.add(Iterables.empty());
+//		lits.add(Iterables.singleton(23));
+//		lits.add(l);
+//		for (int k : Iterables.concat(lits))
+//			System.out.println("" + k);
+//		
+//		for (int k :
+//			Iterables.<Integer> concat(
+//				Arrays.asList(1, 2),
+//				Arrays.asList(1),
+//				Iterables.empty(),
+//				Iterables.singleton(23),
+//				l))
+//			System.out.println("" + k);
+//	}
+
 }
