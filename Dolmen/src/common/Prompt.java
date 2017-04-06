@@ -18,13 +18,15 @@ public abstract class Prompt {
 	}
 
 	/**
+	 * @param prompt	prompt line displayed
 	 * @return the next line of standard input (blocking for it)
 	 * 	or {@code null} if there is no such line (typically
 	 *  standard input was closed)
 	 */
 	public static 
-	@Nullable String getInputLine() {
+	@Nullable String getInputLine(String prompt) {
 		try {
+			System.out.print(prompt + "> ");
 			/**
 			 * This scanner is never closed, on purpose,
 			 * because we don't want to close stdin!

@@ -105,8 +105,7 @@ public interface TestUnit<Input, Output> {
 		int failure = 0;
 		for (int i = 0; i < numTests; ++i) {
 			if (mode == Mode.INTERACTIVE) {
-				System.out.println("> Press ENTER to proceed on test #" + i);
-				String line = Prompt.getInputLine();
+				String line = Prompt.getInputLine("Press ENTER to proceed on test #" + i);
 				if (line == null || line.equals("q") || line.equals("quit"))
 					break;
 			}

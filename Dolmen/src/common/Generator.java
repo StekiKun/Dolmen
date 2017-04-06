@@ -56,7 +56,7 @@ public interface Generator<T> extends Supplier<T> {
 		int i = 0;
 		String line;
 		present:
-		while ((line = Prompt.getInputLine()) != null) {
+		while ((line = Prompt.getInputLine("")) != null) {
 			if (line.equals("q") || line.equals("quit")) break;
 			int nsamples = 1;
 			if (!line.isEmpty()) {
