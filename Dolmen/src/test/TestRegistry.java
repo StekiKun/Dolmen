@@ -74,6 +74,7 @@ public final class TestRegistry {
 		 */
 		public Builder addIf(TestUnit<?, ?> testUnit,
 				int samples, boolean condition) {
+			if (!condition) return this;
 			testUnits.put(testUnit, samples);
 			return this;
 		}

@@ -559,4 +559,21 @@ public abstract class CSet {
 	public static Gen generator() {
 		return new Gen();
 	}
+	
+	/**
+	 * @param cset
+	 * @return an iterable sequence of (some, not necessary all) 
+	 * 		   characters that belong to {@code cset}
+	 */
+	public static Iterable<Character> witnesses(CSet cset) {
+		if (cset == EMPTY) return Iterables.empty();
+		if (cset == ALL) return Iterables.singleton('a');
+		if (cset instanceof Singleton) {
+			char c = ((Singleton) cset).c;
+			return Iterables.singleton(c);
+		}
+		Interval i = ((Intervals) cset).head;
+		if (i == null) return Iterables.empty();
+		return Iterables.singleton(i.first);
+	}
 }

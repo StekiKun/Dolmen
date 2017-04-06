@@ -1,7 +1,9 @@
 package test;
 
 import common.CSet;
+import common.Generator;
 import syntax.Regular;
+import syntax.Regulars;
 import test.TestUnit.Mode;
 import test.regular.TestRemoveNestedBinding;
 
@@ -23,10 +25,18 @@ public abstract class Test {
 		CSet.generator().present();
 	}
 	
-	private static boolean test_regular_gen = false;
+	private static boolean test_regular_gen = true;
 	private static void testRegularGeneration() {
 		if (!test_regular_gen) return;
 		Regular.generator().present();
+	}
+	
+	private static boolean test_regular_wit_gen = true;
+	private static void testRegularWitnessGeneration() {
+		if (!test_regular_wit_gen) return;
+		Regular.generator().present(
+			reg -> Generator.ofIterable("Generating matching strings",
+				Regulars.witnesses(reg)).present());
 	}
 	
 	private static TestRegistry testRegularOperations() {
@@ -46,6 +56,8 @@ public abstract class Test {
 		// 2. Regular expression generation
 		testRegularGeneration();
 		// 3. Regular expression operations tests
-		testRegularOperations().run(Mode.QUIET);
+		testRegularOperations().run(Mode.INTERACTIVE);
+		// 4. Regular expression matchers generation
+		testRegularWitnessGeneration();
 	}
 }

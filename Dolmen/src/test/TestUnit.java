@@ -1,10 +1,9 @@
 package test;
 
-import java.util.Scanner;
-
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Generator;
+import common.Prompt;
 
 /**
  * A common interface to test procedures
@@ -104,14 +103,12 @@ public interface TestUnit<Input, Output> {
 		Generator<Input> sampler = generator();
 		int success = 0;
 		int failure = 0;
-		Scanner scanner = new Scanner(System.in);
 		for (int i = 0; i < numTests; ++i) {
 			if (mode == Mode.INTERACTIVE) {
 				System.out.println("> Press ENTER to proceed on test #" + i);
-				while (scanner.hasNextLine()) {
-					scanner.nextLine();
+				String line = Prompt.getInputLine();
+				if (line == null || line.equals("q") || line.equals("quit"))
 					break;
-				}
 			}
 			
 			Input input = sampler.generate();
@@ -132,9 +129,8 @@ public interface TestUnit<Input, Output> {
 				System.out.println(msg);
 			}
 		}
-		scanner.close();
 		System.out.printf("%d samples tested: %d successful, %d failed\n",
-			numTests, success, failure);
+			success + failure, success, failure);
 		postHook();
 	}
 	

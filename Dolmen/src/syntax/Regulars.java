@@ -384,6 +384,12 @@ public abstract class Regulars {
 			this.bindings = bindings;
 			this.matchedLength = matchedLength;
 		}
+		
+		@Override
+		public @NonNull String toString() {
+			return "Matched " + matchedLength + 
+					" chars, bindings: " + bindings.toString();
+		}
 	}
 	
 	private static final Iterable<MatchResult> NO_MATCH = Iterables.empty();
@@ -507,5 +513,55 @@ public abstract class Regulars {
 			if (mr.matchedLength == size) return mr.bindings;
 		}
 		return null;
+	}
+	
+	private static String EOF_STRING = new String(new char[]{CSet.EOF});
+	/**
+	 * @param regular
+	 * @return an iterable view of potential matching strings
+	 * 	for the given regular expression
+	 */
+	public static Iterable<String> witnesses(Regular regular) {
+		switch (regular.getKind()) {
+		case EPSILON: {
+			return Iterables.singleton("");
+		}
+		case EOF: {
+			return Iterables.singleton(EOF_STRING);
+		}
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			return Iterables.transform(CSet.witnesses(characters.chars),
+					c -> "" + c);
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			Iterable<String> wit1 = witnesses(alternate.lhs);
+			Iterable<String> wit2 = witnesses(alternate.rhs);
+			// TODO: could be nicer with an interleaved union
+			return Iterables.concat(wit1, wit2);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			final Iterable<String> wit1 = witnesses(sequence.first);
+			final Iterable<String> wit2 = witnesses(sequence.second); 
+			return Iterables.concat(
+				Iterables.transform(wit1,
+					s1 -> Iterables.transform(wit2, (String s2) -> s1 + s2)));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			// Finite approx
+			return Iterables.concat(
+						witnesses(Regular.EPSILON),
+						witnesses(repetition.reg),
+						witnesses(Regular.seq(repetition.reg, repetition.reg)));
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			return witnesses(binding.reg);
+		}
+		}
+		throw new IllegalStateException();
 	}
 }
