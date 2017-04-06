@@ -85,9 +85,12 @@ public interface TestUnit<Input, Output> {
 	/**
 	 * Post-hook ran after all tests have been performed,
 	 * typically used to display gathered timings or any
-	 * other useful info
+	 * other useful info. The default implementation does
+	 * nothing.
 	 */
-	public void postHook();
+	public default void postHook() {
+		// Nothing
+	}
 	
 	/**
 	 * Runs this testing unit on the specified number of samples.

@@ -72,6 +72,7 @@ public interface Generator<T> extends Supplier<T> {
 					System.out.println("[" + i++ + "] " + t.toString());
 					consumer.accept(t);
 				} catch (NoSuchElementException e) {
+					System.out.println("<Generator exhausted>");
 					break present;
 				}
 			}

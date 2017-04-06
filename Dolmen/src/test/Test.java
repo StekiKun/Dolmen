@@ -5,6 +5,7 @@ import common.Generator;
 import syntax.Regular;
 import syntax.Regulars;
 import test.TestUnit.Mode;
+import test.regular.TestGenerateMatchers;
 import test.regular.TestRemoveNestedBinding;
 
 /**
@@ -42,6 +43,7 @@ public abstract class Test {
 	private static TestRegistry testRegularOperations() {
 		return TestRegistry.create()
 					.addIf(new TestRemoveNestedBinding(), 20000, true)
+					.addIf(new TestGenerateMatchers(10), 1000, true)
 					.done();
 	}
 	
