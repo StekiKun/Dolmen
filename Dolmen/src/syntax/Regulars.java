@@ -3,7 +3,9 @@ package syntax;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Function;
 
@@ -331,7 +333,7 @@ public abstract class Regulars {
 		case REPETITION: {
 			final Repetition repetition = (Repetition) regular;
 			VarsInfo info = analyseVars(repetition.reg);
-			if (info.allVars.equals(info.chrVars)
+			if (info.allVars.equals(info.optVars)
 				&& info.allVars.equals(info.dblVars))
 				return info;
 			return new VarsInfo(info.allVars,
@@ -474,10 +476,33 @@ public abstract class Regulars {
 			final Repetition repetition = (Repetition) regular;
 			// Either we match the empty string, or the underlying
 			// regexp followed by another match of this repetition
-			// This could go on infinitely if the regexp below is nullable!
-			return match(Regular.or(Regular.EPSILON,
-									Regular.seq(repetition.reg, repetition)),
-						 input, from);
+			// This could go on infinitely if the regexp below is nullable,
+			// so we use an arbitrary bound (>= than the one used in
+			// witnesses so all generated witnesses can match)
+			return Iterables.concat(new Iterable<Iterable<MatchResult>>() {
+				@Override
+				public Iterator<@NonNull Iterable<MatchResult>> iterator() {
+					return new Iterator<@NonNull Iterable<MatchResult>>() {
+						private int level = 0;
+						private Regular unfolded = Regular.EPSILON;
+						
+						@Override
+						public boolean hasNext() {
+							// arbitrary bound
+							return level <= 2;
+						}
+
+						@Override
+						public @NonNull Iterable<@NonNull MatchResult> next() {
+							if (!hasNext()) throw new NoSuchElementException();
+							Iterable<MatchResult> res = match(unfolded, input, from);
+							unfolded = Regular.seq(repetition.reg, unfolded);
+							++level;
+							return res;
+						}
+					};
+				}
+			});
 		}
 		case BINDING: {
 			final Binding binding = (Binding) regular;

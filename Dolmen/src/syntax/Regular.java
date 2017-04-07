@@ -344,6 +344,7 @@ public abstract class Regular {
 	 */
 	public static Regular star(Regular reg) {
 		if (reg == EPSILON) return EPSILON;
+		if (reg instanceof Repetition) return reg;
 		return new Repetition(reg);
 	}
 	
@@ -421,13 +422,13 @@ public abstract class Regular {
 			/** Probability to generate {@link Regular#EOF} */
 			public float eof = 0.10f;
 			/** Probability to generate a regexp matching some character set */
-			public float chars = 0.30f;
+			public float chars = 0.40f;
 			/** Probability to generate a regular expression of the form "a | b" */
-			public float alternate = 0.50f;
+			public float alternate = 0.60f;
 			/** Probability to generate a regular expression of the form "ab" */
-			public float sequence = 0.70f;
+			public float sequence = 0.80f;
 			/** Probability to generate a regular expression of the form "a*" */
-			public float repetition = 0.70f;	// 0.90
+			public float repetition = 0.90f;
 			
 			/** Maximum depth of a generated regular expression */
 			public int maxDepth = 8;

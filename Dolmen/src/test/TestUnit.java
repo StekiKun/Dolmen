@@ -114,10 +114,11 @@ public interface TestUnit<Input, Output> {
 			}
 			
 			Input input = sampler.generate();
+			if (mode == Mode.INTERACTIVE)
+				System.out.printf("[Test %d] Input: %s\n", i, input);
 			Output output = apply(input);
 			@Nullable String res = check(input, output);
 			if (mode == Mode.INTERACTIVE) {
-				System.out.printf("[Test %d] Input: %s\n", i, input);
 				System.out.printf("[Test %d] Output: %s\n", i, output);
 				System.out.printf("[Test %d] Check result: %s\n", i, res);
 			}
