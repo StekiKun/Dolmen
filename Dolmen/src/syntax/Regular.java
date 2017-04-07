@@ -427,7 +427,7 @@ public abstract class Regular {
 			/** Probability to generate a regular expression of the form "ab" */
 			public float sequence = 0.70f;
 			/** Probability to generate a regular expression of the form "a*" */
-			public float repetition = 0.90f;
+			public float repetition = 0.70f;	// 0.90
 			
 			/** Maximum depth of a generated regular expression */
 			public int maxDepth = 8;

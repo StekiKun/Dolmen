@@ -372,23 +372,33 @@ public abstract class Regulars {
 		public final Map<String, String> bindings;
 		/**
 		 * The size of the input string prefix that matched
-		 * the regular expression
+		 * the regular expression.
 		 */
 		public final int matchedLength;
+		/**
+		 * Whether the end-of-input has been matched,
+		 * in which case {@link #matchedLength} should be
+		 * the length of the whole input, and no more 
+		 * can be matched (even {@link Regular#EPSILON}).
+		 */
+		public final boolean reachedEOF;
 		
 		/**
 		 * @param bindings
 		 * @param matchedLength
 		 */
-		public MatchResult(Map<String, String> bindings, int matchedLength) {
+		public MatchResult(Map<String, String> bindings, 
+				int matchedLength, boolean reachedEOF) {
 			this.bindings = bindings;
 			this.matchedLength = matchedLength;
+			this.reachedEOF = reachedEOF;
 		}
 		
 		@Override
 		public @NonNull String toString() {
 			return "Matched " + matchedLength + 
-					" chars, bindings: " + bindings.toString();
+					" chars" + (reachedEOF ? " including EOF" : "") +
+					", bindings: " + bindings.toString();
 		}
 	}
 	
@@ -411,18 +421,13 @@ public abstract class Regulars {
 		switch (regular.getKind()) {
 		case EPSILON: {
 			return Iterables.singleton(
-					new MatchResult(Maps.empty(), from));
+					new MatchResult(Maps.empty(), from, false));
 		}
 		case EOF: {
-			// TODO : maybe just match an actual special char
-			// 		appended to the input string?
-			// Means EPSILON can match again after EOF, is
-			// it right or not? It does not sound right
-			if (from == input.length())
-				return Iterables.singleton(
-						new MatchResult(Maps.empty(), from));
-			else
+			if (from != input.length())
 				return NO_MATCH;
+			return Iterables.singleton(
+						new MatchResult(Maps.empty(), from, true));
 		}
 		case CHARACTERS: {
 			final Characters characters = (Characters) regular;
@@ -431,7 +436,7 @@ public abstract class Regulars {
 			char next = input.charAt(from);
 			if (characters.chars.contains(next))
 				return Iterables.singleton(
-						new MatchResult(Maps.empty(), from + 1));
+						new MatchResult(Maps.empty(), from + 1, false));
 			else
 				return NO_MATCH;
 		}
@@ -446,6 +451,8 @@ public abstract class Regulars {
 			Iterable<MatchResult> res1 = match(sequence.first, input, from);
 			// For each match of the first part, try to match the second part
 			Function<MatchResult, Iterable<MatchResult>> f = mr1 -> {
+				// If already reached end-of-input, nothing more can be matched
+				if (mr1.reachedEOF) return Iterables.empty();
 				Iterable<MatchResult> res2 = match(sequence.second, input, mr1.matchedLength);
 				// If no bindings to reconcile
 				if (mr1.bindings.isEmpty()) return res2;
@@ -458,7 +465,7 @@ public abstract class Regulars {
 						extended = new HashMap<String, String>(mr1.bindings);
 						extended.putAll(mr2.bindings);
 					}
-					return new MatchResult(extended, mr2.matchedLength);
+					return new MatchResult(extended, mr2.matchedLength, mr2.reachedEOF);
 				});
 			};
 			return Iterables.concat(Iterables.transform(res1, f));
@@ -477,13 +484,18 @@ public abstract class Regulars {
 			// For each match of the regular expression, compute
 			// the associated binding and return the updated match result
 			Iterable<MatchResult> res = match(binding.reg, input, from);
-			res.forEach(mr -> {
+			return Iterables.transform(res, mr -> {
 				@SuppressWarnings("null")
 				@NonNull String bound = input.substring(from, mr.matchedLength);
 				// Save this binding, potentially shadowing other nested bindings
+				if (mr.bindings.isEmpty()) {
+					Map<String, String> bindings = new HashMap<>();
+					bindings.put(binding.name, bound);
+					return new MatchResult(bindings, mr.matchedLength, mr.reachedEOF);
+				}
 				mr.bindings.put(binding.name, bound);
+				return mr;
 			});
-			return res;
 		}
 		}
 		throw new IllegalStateException();
@@ -515,53 +527,88 @@ public abstract class Regulars {
 		return null;
 	}
 	
-	private static String EOF_STRING = new String(new char[]{CSet.EOF});
+	/**
+	 * A witness string, i.e. a potential matcher
+	 * along with the info of whether this string
+	 * can still be extended or not, i.e. whether
+	 * it is a witness of a regexp that matched
+	 * end-of-input or not
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static class Witness {
+		String witness;
+		boolean eof;
+		
+		Witness(String witness) {
+			this.witness = witness;
+			this.eof = false;
+		}
+		Witness(String witness, boolean eof) {
+			this.witness = witness;
+			this.eof = eof;
+		}
+	}
+	/**
+	 * @param regular
+	 * @return an iterable view of potential matching strings
+	 * 	for the given regular expression
+	 */
+	private static Iterable<Witness> witnesses_(Regular regular) {
+		switch (regular.getKind()) {
+		case EPSILON: {
+			return Iterables.singleton(new Witness(""));
+		}
+		case EOF: {
+			Witness eof = new Witness("", true);
+			return Iterables.singleton(eof);
+		}
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			return Iterables.transform(CSet.witnesses(characters.chars),
+					c -> new Witness("" + c));
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			Iterable<Witness> wit1 = witnesses_(alternate.lhs);
+			Iterable<Witness> wit2 = witnesses_(alternate.rhs);
+			// TODO: could be nicer with an interleaved union?
+			return Iterables.concat(wit1, wit2);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			final Iterable<Witness> wit1 = witnesses_(sequence.first);
+			final Iterable<Witness> wit2 = witnesses_(sequence.second); 
+			return Iterables.concat(
+				Iterables.transform(wit1,
+					(Witness w1) -> {
+						if (w1.eof) return Iterables.empty();
+						return Iterables.transform(wit2, 
+							(Witness w2) -> new Witness(w1.witness + w2.witness, w2.eof));
+					}));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			// Finite approx: at most 0, 1 or 2 reps
+			return Iterables.concat(
+						witnesses_(Regular.EPSILON),
+						witnesses_(repetition.reg),
+						witnesses_(Regular.seq(repetition.reg, repetition.reg)));
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			return witnesses_(binding.reg);
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
 	/**
 	 * @param regular
 	 * @return an iterable view of potential matching strings
 	 * 	for the given regular expression
 	 */
 	public static Iterable<String> witnesses(Regular regular) {
-		switch (regular.getKind()) {
-		case EPSILON: {
-			return Iterables.singleton("");
-		}
-		case EOF: {
-			return Iterables.singleton(EOF_STRING);
-		}
-		case CHARACTERS: {
-			final Characters characters = (Characters) regular;
-			return Iterables.transform(CSet.witnesses(characters.chars),
-					c -> "" + c);
-		}
-		case ALTERNATE: {
-			final Alternate alternate = (Alternate) regular;
-			Iterable<String> wit1 = witnesses(alternate.lhs);
-			Iterable<String> wit2 = witnesses(alternate.rhs);
-			// TODO: could be nicer with an interleaved union
-			return Iterables.concat(wit1, wit2);
-		}
-		case SEQUENCE: {
-			final Sequence sequence = (Sequence) regular;
-			final Iterable<String> wit1 = witnesses(sequence.first);
-			final Iterable<String> wit2 = witnesses(sequence.second); 
-			return Iterables.concat(
-				Iterables.transform(wit1,
-					s1 -> Iterables.transform(wit2, (String s2) -> s1 + s2)));
-		}
-		case REPETITION: {
-			final Repetition repetition = (Repetition) regular;
-			// Finite approx
-			return Iterables.concat(
-						witnesses(Regular.EPSILON),
-						witnesses(repetition.reg),
-						witnesses(Regular.seq(repetition.reg, repetition.reg)));
-		}
-		case BINDING: {
-			final Binding binding = (Binding) regular;
-			return witnesses(binding.reg);
-		}
-		}
-		throw new IllegalStateException();
+		return Iterables.transform(witnesses_(regular), w -> w.witness);
 	}
 }
