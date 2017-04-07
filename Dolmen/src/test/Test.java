@@ -5,6 +5,7 @@ import common.Generator;
 import syntax.Regular;
 import syntax.Regulars;
 import test.TestUnit.Mode;
+import test.regular.TestAnalyseVars;
 import test.regular.TestGenerateMatchers;
 import test.regular.TestRemoveNestedBinding;
 
@@ -20,13 +21,13 @@ public abstract class Test {
 		// Static utility class only
 	}
 
-	private static boolean test_cset_gen = false;
+	private static boolean test_cset_gen = true;
 	private static void testCSetGeneration() {
 		if (!test_cset_gen) return;
 		CSet.generator().present();
 	}
 	
-	private static boolean test_regular_gen = false;
+	private static boolean test_regular_gen = true;
 	private static void testRegularGeneration() {
 		if (!test_regular_gen) return;
 		Regular.generator().present();
@@ -43,7 +44,8 @@ public abstract class Test {
 	private static TestRegistry testRegularOperations() {
 		return TestRegistry.create()
 					.addIf(new TestRemoveNestedBinding(), 20000, true)
-					.addIf(new TestGenerateMatchers(10), 1000, true)
+					.addIf(new TestGenerateMatchers(20), 20000, true)
+					.addIf(new TestAnalyseVars(30), 10000, true)
 					.done();
 	}
 	
@@ -58,7 +60,7 @@ public abstract class Test {
 		// 2. Regular expression generation
 		testRegularGeneration();
 		// 3. Regular expression operations tests
-		testRegularOperations().run(Mode.QUIET);
+		testRegularOperations().run(Mode.BATCH);
 		// 4. Regular expression matchers generation
 		testRegularWitnessGeneration();
 	}
