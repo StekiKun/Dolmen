@@ -51,7 +51,7 @@ public final class TestGenerateMatchers
 		Set<String> res = new HashSet<String>();
 		for (String matcher : Regulars.witnesses(input)) {
 			if (res.add(matcher))
-				if (found == maxSamples) break;
+				if (++found == maxSamples) break;
 		}
 		return res;
 	}

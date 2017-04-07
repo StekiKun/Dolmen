@@ -126,9 +126,11 @@ public interface TestUnit<Input, Output> {
 			else ++failure;
 			
 			if (mode != Mode.QUIET) {
-				String msg = String.format("[%d/%d] %s",
+				if (mode == Mode.INTERACTIVE || res != null) {
+					String msg = String.format("[%d/%d] %s",
 						i, numTests, res == null ? "success" : res);
-				System.out.println(msg);
+					System.out.println(msg);
+				}
 			}
 		}
 		System.out.printf("%d samples tested: %d successful, %d failed\n",

@@ -1,6 +1,6 @@
 package test;
 
-import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
@@ -45,7 +45,7 @@ public final class TestRegistry {
 		private final Map<TestUnit<?, ?>, Integer> testUnits;
 		
 		private Builder() {
-			this.testUnits = new IdentityHashMap<>();
+			this.testUnits = new LinkedHashMap<TestUnit<?,?>, Integer>();
 		}
 
 		/**
