@@ -127,10 +127,15 @@ public interface TestUnit<Input, Output> {
 			else ++failure;
 			
 			if (mode != Mode.QUIET) {
-				if (mode == Mode.INTERACTIVE || res != null) {
+				if (mode == Mode.INTERACTIVE || (res != null && failure <= 500)) {
 					String msg = String.format("[%d/%d] %s",
 						i, numTests, res == null ? "success" : res);
 					System.out.println(msg);
+				}
+				if (res != null && failure == 500) {
+					System.out.printf(
+						"[%d/%d] Already 500 failed tests, not displaying anymore.\n",
+						i, numTests);
 				}
 			}
 		}

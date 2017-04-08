@@ -7,6 +7,7 @@ import syntax.Regulars;
 import test.TestUnit.Mode;
 import test.regular.TestAnalyseVars;
 import test.regular.TestGenerateMatchers;
+import test.regular.TestGenerateTMatchers;
 import test.regular.TestRemoveNestedBinding;
 
 /**
@@ -46,6 +47,7 @@ public abstract class Test {
 					.addIf(new TestRemoveNestedBinding(), 20000, true)
 					.addIf(new TestGenerateMatchers(20), 20000, true)
 					.addIf(new TestAnalyseVars(30), 20000, true)
+					.addIf(new TestGenerateTMatchers(20), 20000, true)
 					.done();
 	}
 	

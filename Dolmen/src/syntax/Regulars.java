@@ -279,6 +279,15 @@ public abstract class Regulars {
 			this.chrVars = chrVars;
 			this.strVars = strVars;
 		}
+		
+		/**
+		 * @return a set of variables which, according
+		 * 	to this analysis, are guaranteed to always be
+		 * 	matched to a substring of size 1, if matched at all
+		 */
+		public Set<String> getCharVars() {
+			return Sets.diff(chrVars, strVars);
+		}
 	}
 	/**
 	 * A special instance of {@link VarsInfo} for regular expressions

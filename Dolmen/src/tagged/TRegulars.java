@@ -186,7 +186,7 @@ public abstract class TRegulars {
 		case TAG: {
 			final Tag tag = (Tag) regular;
 			return Iterables.singleton(
-				new MatchResult(Maps.singleton(tag.tag, from), from + 1, false));
+				new MatchResult(Maps.singleton(tag.tag, from), from, false));
 		}
 		case ALTERNATE: {
 			final Alternate alternate = (Alternate) regular;
