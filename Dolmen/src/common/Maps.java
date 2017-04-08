@@ -1,6 +1,7 @@
 package common;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -23,6 +24,16 @@ public abstract class Maps {
 	@SuppressWarnings("null")
 	public static <K, V> Map<K, V> empty() {
 		return Collections.emptyMap();
+	}
+	
+	/**
+	 * 
+	 * @param k
+	 * @param v
+	 * @return the singleton hash map binding {@code k} to {@code v}
+	 */
+	public static <K, V> Map<K, V> singleton(K k, V v) {
+		return new HashMap<>(Collections.singletonMap(k, v));
 	}
 
 }
