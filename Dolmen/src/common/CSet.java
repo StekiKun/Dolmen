@@ -137,9 +137,9 @@ public abstract class CSet {
 	}
 	
 	/**
-	 * Special character value used to denote end-of-file
+	 * Special character set used to denote end-of-file
 	 */
-	public static final char EOF = 0xFFFF;
+	public static final CSet EOF = singleton((char)0xFFFF);
 	
 	/**
 	 * Describes a single contiguous interval of characters,

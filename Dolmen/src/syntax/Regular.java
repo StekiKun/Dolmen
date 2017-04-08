@@ -263,6 +263,12 @@ public abstract class Regular {
 	 */
 	public static Regular or(Regular lhs, Regular rhs) {
 		if (lhs == rhs) return lhs;
+		if (lhs instanceof Characters &&
+			rhs instanceof Characters) {
+			return chars(CSet.union(
+					((Characters) lhs).chars, 
+					((Characters) rhs).chars));
+		}
 		return new Alternate(lhs, rhs);
 	}
 
