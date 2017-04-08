@@ -14,7 +14,9 @@ import common.Hierarchy;
  * been replaced by pair of "tags" enclosing the bound
  * parts of regular expressions, and where character sets
  * are replaced by indices in an external map of character 
- * sets.
+ * sets. When a bounded expression is guaranteed to match
+ * only single characters, it is marked by a single starting
+ * tag and has no closing tag.
  * <p>
  * In a latter phase, they can also reference 
  * <i>semantic actions</i> to be executed at the point
