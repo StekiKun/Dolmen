@@ -223,4 +223,70 @@ public final class Optimiser {
 		if (!r.hasTags) return r;
 		return simpleForward(new PosTRegular(0, r)).regular;
 	}
+	
+	/**
+	 * @param pr	the tagged regular exception to optimize
+	 * 				along with its absolute position with
+	 * 				respect to the end of the input, if any
+	 * @return a tagged regular exception equivalent to
+	 * 	{@code regular} but where some tags have been removed,
+	 *  as their position relative to the end of the input
+	 *  can be determined statically, along with the absolute
+	 *  position known at the <i>start</i> of this regular expression
+	 */
+	private PosTRegular simpleBackward(PosTRegular pr) {
+		final int pos = pr.pos;
+		final TRegular regular = pr.regular;
+		// If no tags, we know the regexp can't change, and we know
+		// its size so we can avoid the traversal
+		if (!regular.hasTags) {
+			int newpos = regular.size >= 0 && pos >= 0 ? regular.size - pos : -1;
+			return new PosTRegular(newpos, regular);
+		}
+					
+		switch (regular.getKind()) {
+		case EPSILON:
+			return pr;
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			return new PosTRegular(characters.eof ? pos : pos - 1, regular);
+		}
+		case TAG: {
+			final Tag tag = (Tag) regular;
+			if (varsInfo.dblVars.contains(tag.tag.id))
+				return pr;
+			recordTagAddr(tag.tag, TagAddr.of(TagAddr.END, pos));
+			return new PosTRegular(pos, TRegular.EPSILON);
+		}
+		case ALTERNATE: {
+			if (pos < 0) return pr;
+			if (regular.size < 0) return new PosTRegular(-1, regular);
+			return new PosTRegular(pos - regular.size, regular);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			PosTRegular pr2 = simpleBackward(new PosTRegular(pos, sequence.second));
+			if (pr2.pos < 0)
+				return new PosTRegular(-1,
+							TRegular.seq(sequence.first, pr2.regular));
+			PosTRegular pr1 = simpleBackward(new PosTRegular(pr2.pos, sequence.first));
+			return new PosTRegular(pr1.pos, TRegular.seq(pr1.regular, pr2.regular));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			if (pos < 0) return pr;
+			return new PosTRegular(-1, repetition);
+		}
+		case ACTION: {
+			throw new IllegalArgumentException();
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	protected TRegular simpleBackward(TRegular r) {
+		if (!r.hasTags) return r;
+		return simpleBackward(new PosTRegular(0, r)).regular;
+	}
+
 }
