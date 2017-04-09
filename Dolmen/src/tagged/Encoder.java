@@ -128,4 +128,5 @@ public final class Encoder {
 	public TRegular encode(Regular regular, Set<String> charVars, int action) {
 		return encode_(Regulars.removeNestedBindings2(regular), charVars, action);
 	}
+	
 }
