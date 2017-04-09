@@ -205,7 +205,7 @@ public abstract class CSet {
 		
 		@Override
 		public boolean isEmpty() {
-			return head != null;
+			return head == null;
 		}
 
 		@Override

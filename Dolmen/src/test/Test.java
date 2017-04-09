@@ -6,6 +6,7 @@ import syntax.Regular;
 import syntax.Regulars;
 import test.TestUnit.Mode;
 import test.regular.TestAnalyseVars;
+import test.regular.TestEncoder;
 import test.regular.TestGenerateMatchers;
 import test.regular.TestGenerateTMatchers;
 import test.regular.TestRemoveNestedBinding;
@@ -48,6 +49,7 @@ public abstract class Test {
 					.addIf(new TestGenerateMatchers(20), 20000, true)
 					.addIf(new TestAnalyseVars(30), 20000, true)
 					.addIf(new TestGenerateTMatchers(20), 20000, true)
+					.addIf(new TestEncoder(20), 20000, true)
 					.done();
 	}
 	
@@ -64,6 +66,6 @@ public abstract class Test {
 		// 3. Regular expression matchers generation
 		testRegularWitnessGeneration();
 		// 4. Regular expression operations tests
-		testRegularOperations().run(Mode.BATCH);
+		testRegularOperations().run(Mode.QUIET);
 	}
 }

@@ -1,5 +1,6 @@
 package tagged;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -142,21 +143,29 @@ public abstract class TRegulars {
 	}
 	
 	private static final Iterable<MatchResult> NO_MATCH = Iterables.empty();
+	@SuppressWarnings("null")
+	private static final EnumSet<TRegular.Kind> AFTER_EOF =
+		EnumSet.of(TRegular.Kind.TAG, TRegular.Kind.ACTION);
 	
 	/**
 	 * @param charSets	the character sets dictionary
 	 * @param regular
 	 * @param input
 	 * @param from
+	 * @param eof	whether end-of-input has already been matched
 	 * @return an iterable of all potential matchings
 	 * 		of (a prefix of) the {@code input} string
 	 * 		starting at offset {@code from}
 	 */
 	private static Iterable<MatchResult>
-		match(List<CSet> charSets, TRegular regular, String input, int from) {
+		match(List<CSet> charSets, TRegular regular, String input, int from, boolean eof) {
 		int rem = input.length() - from;
 		// There's no hope there if not enough remaining characters
 		if (regular.size > rem) return NO_MATCH;
+		
+		// Only TAGs and ACTIONs can be matched after end-of-input
+		if (eof && !AFTER_EOF.contains(regular.getKind()))
+			return NO_MATCH;
 		
 		switch (regular.getKind()) {
 		case EPSILON: {
@@ -184,25 +193,24 @@ public abstract class TRegulars {
 			}
 		}
 		case TAG: {
+			// Tags can match after end-of-input!
 			final Tag tag = (Tag) regular;
 			return Iterables.singleton(
-				new MatchResult(Maps.singleton(tag.tag, from), from, false));
+				new MatchResult(Maps.singleton(tag.tag, from), from, eof));
 		}
 		case ALTERNATE: {
 			final Alternate alternate = (Alternate) regular;
-			Iterable<MatchResult> res1 = match(charSets, alternate.lhs, input, from);
-			Iterable<MatchResult> res2 = match(charSets, alternate.rhs, input, from);
+			Iterable<MatchResult> res1 = match(charSets, alternate.lhs, input, from, eof);
+			Iterable<MatchResult> res2 = match(charSets, alternate.rhs, input, from, eof);
 			return Iterables.concat(res1, res2);
 		}
 		case SEQUENCE: {
 			final Sequence sequence = (Sequence) regular;
-			Iterable<MatchResult> res1 = match(charSets, sequence.first, input, from);
+			Iterable<MatchResult> res1 = match(charSets, sequence.first, input, from, eof);
 			// For each match of the first part, try to match the second part
 			Function<MatchResult, Iterable<MatchResult>> f = mr1 -> {
-				// If already reached end-of-input, nothing more can be matched
-				if (mr1.reachedEOF) return Iterables.empty();
 				Iterable<MatchResult> res2 =
-					match(charSets, sequence.second, input, mr1.matchedLength);
+					match(charSets, sequence.second, input, mr1.matchedLength, mr1.reachedEOF);
 				// If no markers to reconcile
 				if (mr1.markers.isEmpty()) return res2;
 				// Otherwise, we need to extend res1 markers with res2
@@ -243,7 +251,7 @@ public abstract class TRegulars {
 						public @NonNull Iterable<@NonNull MatchResult> next() {
 							if (!hasNext()) throw new NoSuchElementException();
 							Iterable<MatchResult> res =
-								match(charSets, unfolded, input, from);
+								match(charSets, unfolded, input, from, eof);
 							unfolded = TRegular.seq(repetition.reg, unfolded);
 							++level;
 							return res;
@@ -255,7 +263,7 @@ public abstract class TRegulars {
 		case ACTION: {
 			@SuppressWarnings("unused")
 			final Action action = (Action) regular;
-			return Iterables.singleton(new MatchResult(Maps.empty(), from, false));
+			return Iterables.singleton(new MatchResult(Maps.empty(), from, eof));
 		}
 		}
 		throw new IllegalStateException();
@@ -270,7 +278,7 @@ public abstract class TRegulars {
 	 */
 	public static Iterable<MatchResult> 
 		allMatches(List<CSet> charSets, TRegular regular, String input) {
-		return match(charSets, regular, input, 0);
+		return match(charSets, regular, input, 0, false);
 	}
 	
 	/**

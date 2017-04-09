@@ -106,6 +106,7 @@ public interface TestUnit<Input, Output> {
 		Generator<Input> sampler = generator();
 		int success = 0;
 		int failure = 0;
+		int splits = numTests / 10;
 		for (int i = 0; i < numTests; ++i) {
 			if (mode == Mode.INTERACTIVE) {
 				String line = Prompt.getInputLine("Press ENTER to proceed on test #" + i);
@@ -127,6 +128,10 @@ public interface TestUnit<Input, Output> {
 			else ++failure;
 			
 			if (mode != Mode.QUIET) {
+				if (mode != Mode.INTERACTIVE && res != null) {
+					System.out.printf("[Test %d] Input: %s\n", i, input);
+					System.out.printf("[Test %d] Output: %s\n", i, output);
+				}
 				if (mode == Mode.INTERACTIVE || (res != null && failure <= 500)) {
 					String msg = String.format("[%d/%d] %s",
 						i, numTests, res == null ? "success" : res);
@@ -136,6 +141,12 @@ public interface TestUnit<Input, Output> {
 					System.out.printf(
 						"[%d/%d] Already 500 failed tests, not displaying anymore.\n",
 						i, numTests);
+				}
+			}
+			else {
+				if (i % splits == 0) {
+					System.out.printf("..%d%%..", (i * 10) / splits);
+					if ((i * 10) / splits == 90) System.out.println("");
 				}
 			}
 		}

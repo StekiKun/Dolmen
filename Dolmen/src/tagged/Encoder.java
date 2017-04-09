@@ -12,6 +12,7 @@ import syntax.Regular.Binding;
 import syntax.Regular.Characters;
 import syntax.Regular.Repetition;
 import syntax.Regular.Sequence;
+import syntax.Regulars;
 
 /**
  * An instance of {@link Encoder} can be used
@@ -59,6 +60,10 @@ public final class Encoder {
 	}
 	
 	/**
+	 * <b>The regular expression in input must not contain
+	 * 	nested bindings with the same name, or the returned
+	 *  tagged regular expression will not behave correctly.</b>
+	 * 
 	 * @param regular	the regular expression to encode
 	 * @param charVars	bound variables guaranteed to be matching single characters
 	 * @param action	the semantic action associated to this regular expression
@@ -68,7 +73,7 @@ public final class Encoder {
 	 * 	encoder
 	 * @see #getCharacterSets()
 	 */
-	public TRegular encode(Regular regular, Set<String> charVars, int action) {
+	private TRegular encode_(Regular regular, Set<String> charVars, int action) {
 		switch (regular.getKind()) {
 		case EPSILON:
 			return TRegular.EPSILON;
@@ -83,21 +88,21 @@ public final class Encoder {
 		}
 		case ALTERNATE: {
 			final Alternate alternate = (Alternate) regular;
-			return TRegular.or(encode(alternate.lhs, charVars, action),
-							   encode(alternate.rhs, charVars, action));
+			return TRegular.or(encode_(alternate.lhs, charVars, action),
+							   encode_(alternate.rhs, charVars, action));
 		}
 		case SEQUENCE: {
 			final Sequence sequence = (Sequence) regular;
-			return TRegular.seq(encode(sequence.first, charVars, action),
-								encode(sequence.second, charVars, action));
+			return TRegular.seq(encode_(sequence.first, charVars, action),
+								encode_(sequence.second, charVars, action));
 		}
 		case REPETITION: {
 			final Repetition repetition = (Repetition) regular;
-			return TRegular.star(encode(repetition.reg, charVars, action));
+			return TRegular.star(encode_(repetition.reg, charVars, action));
 		}
 		case BINDING: {
 			final Binding binding = (Binding) regular;
-			TRegular tr = encode(binding.reg, charVars, action);
+			TRegular tr = encode_(binding.reg, charVars, action);
 			TRegular tstart = TRegular.tag(binding.name, true, action);
 			if (charVars.contains(binding.name))
 				return TRegular.seq(tstart, tr);
@@ -108,5 +113,19 @@ public final class Encoder {
 		}
 		}
 		throw new IllegalStateException();
+	}
+	
+	/**
+	 * @param regular	the regular expression to encode
+	 * @param charVars	bound variables guaranteed to be matching single characters
+	 * @param action	the semantic action associated to this regular expression
+	 * @return a tagged regular expression corresponding to
+	 * 	the given regular expression {@code regular}. Character
+	 * 	sets in the resulting expression are encoded in this
+	 * 	encoder
+	 * @see #getCharacterSets()
+	 */
+	public TRegular encode(Regular regular, Set<String> charVars, int action) {
+		return encode_(Regulars.removeNestedBindings2(regular), charVars, action);
 	}
 }

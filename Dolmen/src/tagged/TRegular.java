@@ -52,7 +52,14 @@ public abstract class TRegular {
 		 */
 		public final int action;
 		
-		TagInfo(String id, boolean start, int action) {
+		/**
+		 * Creates a new tag bound to name {@code id}
+		 * 
+		 * @param id
+		 * @param start
+		 * @param action
+		 */
+		public TagInfo(String id, boolean start, int action) {
 			this.id = id;
 			this.start = start;
 			this.action = action;

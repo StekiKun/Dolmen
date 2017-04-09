@@ -218,7 +218,6 @@ public abstract class Regular {
 	 * 		one character in the character set {@code chars}
 	 */
 	public static Regular chars(CSet chars) {
-		if (chars.isEmpty()) return EPSILON;
 		return new Characters(chars);
 	}
 	
@@ -350,7 +349,7 @@ public abstract class Regular {
 	 */
 	public static Regular star(Regular reg) {
 		if (reg == EPSILON) return EPSILON;
-		if (reg instanceof Repetition) return reg;
+		 if (reg instanceof Repetition) return reg;
 		return new Repetition(reg);
 	}
 	
@@ -434,7 +433,7 @@ public abstract class Regular {
 			/** Probability to generate a regular expression of the form "ab" */
 			public float sequence = 0.80f;
 			/** Probability to generate a regular expression of the form "a*" */
-			public float repetition = 0.90f;
+			public float repetition = 0.92f;
 			
 			/** Maximum depth of a generated regular expression */
 			public int maxDepth = 8;
