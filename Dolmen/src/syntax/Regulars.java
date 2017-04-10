@@ -243,7 +243,7 @@ public abstract class Regulars {
 	 */
 	public static final class VarsInfo {
 		/** All variables bound in the regular expression */
-		public final Set<String> allVars;
+		public final Set<@NonNull String> allVars;
 		/** All variables optionally matched in the regular expression */
 		public final Set<String> optVars;
 		/** 
