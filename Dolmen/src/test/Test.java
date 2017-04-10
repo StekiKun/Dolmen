@@ -9,6 +9,7 @@ import test.regular.TestAnalyseVars;
 import test.regular.TestEncoder;
 import test.regular.TestGenerateMatchers;
 import test.regular.TestGenerateTMatchers;
+import test.regular.TestOptimiser;
 import test.regular.TestRemoveNestedBinding;
 
 /**
@@ -45,11 +46,12 @@ public abstract class Test {
 	
 	private static TestRegistry testRegularOperations() {
 		return TestRegistry.create()
-					.addIf(new TestRemoveNestedBinding(), 20000, true)
-					.addIf(new TestGenerateMatchers(20), 20000, true)
-					.addIf(new TestAnalyseVars(30), 20000, true)
-					.addIf(new TestGenerateTMatchers(20), 20000, true)
-					.addIf(new TestEncoder(20), 20000, true)
+					.addIf(new TestRemoveNestedBinding(), 20000, false)
+					.addIf(new TestGenerateMatchers(20), 20000, false)
+					.addIf(new TestAnalyseVars(30), 20000, false)
+					.addIf(new TestGenerateTMatchers(20), 20000, false)
+					.addIf(new TestEncoder(20), 20000, false)
+					.addIf(new TestOptimiser(20), 20000, true)
 					.done();
 	}
 	
@@ -66,6 +68,6 @@ public abstract class Test {
 		// 3. Regular expression matchers generation
 		testRegularWitnessGeneration();
 		// 4. Regular expression operations tests
-		testRegularOperations().run(Mode.QUIET);
+		testRegularOperations().run(Mode.INTERACTIVE);
 	}
 }

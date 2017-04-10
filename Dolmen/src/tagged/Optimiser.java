@@ -1,12 +1,12 @@
 package tagged;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Maps;
@@ -122,6 +122,13 @@ public final class Optimiser {
 		private TagAddr(int base, int offset) {
 			this.base = base;
 			this.offset = offset;
+		}
+		
+		@Override
+		public String toString() {
+			if (base == START) return "Sum(Start, " + offset + ")";
+			if (base == END) return "Sum(End, " + offset + ")";
+			return "Sum(" + base + ", " + offset + ")";
 		}
 		
 		/** The special base address representing the start of input */
@@ -437,7 +444,7 @@ public final class Optimiser {
 		 */
 		public final @Nullable TagAddr end;
 		
-		private IdentInfo(boolean optional, TagAddr start, @Nullable TagAddr end) {
+		private IdentInfo(boolean optional,	TagAddr start, @Nullable TagAddr end) {
 			this.optional = optional;
 			this.start = start;
 			this.end = end;
@@ -465,14 +472,19 @@ public final class Optimiser {
 		/** The optimised regular expression */
 		public final TRegular regular;
 		/** Tag addresses for each binding variable's boundaries */
-		public final List<IdentInfo> identInfos;
+		public final Map<String, IdentInfo> identInfos;
 		/** Total number of memory cells for tags */
 		public final int numCells;
 		
-		private Allocated(TRegular regular, List<IdentInfo> identInfos, int numCells) {
+		/** Necessary? Environment from tags to memory cells */
+		public final Map<@NonNull TagKey, @NonNull TagAddr> env;
+		
+		private Allocated(TRegular regular, Map<String, IdentInfo> identInfos, 
+				int numCells, Map<TagKey, TagAddr> env) {
 			this.regular = regular;
 			this.identInfos = identInfos;
 			this.numCells = numCells;
+			this.env = env;
 		}
 		
 		@Override
@@ -492,17 +504,17 @@ public final class Optimiser {
 		TRegular allocatedOpt = allocateAddresses(new AddrTRegular(null, opt)).regular;
 		
 		// Map all binding names to allocated addresses
-		List<IdentInfo> idents = new ArrayList<>();
+		Map<String, IdentInfo> idents = new LinkedHashMap<>();
 		for (String name : varsInfo.allVars) {
 			boolean optional = varsInfo.optVars.contains(name);
 			TagAddr tstart = getTagAddr(new TagKey(name, true));
 			TagAddr tend = null;
 			if (!charVars.contains(name))
 				tend = getTagAddr(new TagKey(name, false));
-			idents.add(new IdentInfo(optional, tstart, tend));
+			idents.put(name, new IdentInfo(optional, tstart, tend));
 		}
 		
-		return new Allocated(allocatedOpt, idents, nextCell);
+		return new Allocated(allocatedOpt, idents, nextCell, env);
 	}
 	
 	/**
@@ -516,4 +528,5 @@ public final class Optimiser {
 	public static Allocated optimise(VarsInfo varsInfo, TRegular regular) {
 		return new Optimiser(varsInfo).optimise(regular);
 	}
+	
 }

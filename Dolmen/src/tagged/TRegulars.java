@@ -158,7 +158,8 @@ public abstract class TRegulars {
 	 * 		starting at offset {@code from}
 	 */
 	private static Iterable<MatchResult>
-		match(List<CSet> charSets, TRegular regular, String input, int from, boolean eof) {
+		match(List<CSet> charSets, TRegular regular, 
+				String input, int from, boolean eof) {
 		int rem = input.length() - from;
 		// There's no hope there if not enough remaining characters
 		if (regular.size > rem) return NO_MATCH;
