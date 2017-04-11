@@ -6,6 +6,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Set;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -14,6 +15,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import common.CSet;
 import common.Iterables;
 import common.Maps;
+import common.Sets;
 import tagged.TRegular.Action;
 import tagged.TRegular.Alternate;
 import tagged.TRegular.Characters;
@@ -388,5 +390,42 @@ public abstract class TRegulars {
 		witnesses(List<CSet> charSets, TRegular regular) {
 		return Iterables.transform(
 				witnesses_(charSets, regular), w -> w.witness);
+	}
+	
+	/**
+	 * @param regular
+	 * @return the set of tags that can potentially be
+	 * 	matched when matching the empty string with {@code regular}
+	 */
+	public static Set<TagInfo> emptyMatched(TRegular regular) {
+		switch (regular.getKind()) {
+		case EPSILON:
+		case CHARACTERS:
+		case ACTION:
+			return Sets.empty();
+		case TAG: {
+			final Tag tag = (Tag) regular;
+			return Sets.singleton(tag.tag);
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			if (alternate.lhs.nullable)
+				return emptyMatched(alternate.lhs);
+			return emptyMatched(alternate.rhs);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			return Sets.union(
+					emptyMatched(sequence.first),
+					emptyMatched(sequence.second));
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			if (repetition.nullable)
+				return emptyMatched(repetition.reg);
+			return Sets.empty();
+		}
+		}
+		throw new IllegalStateException();
 	}
 }
