@@ -50,11 +50,12 @@ public final class Encoder {
 	}
 	
 	private int getCharSet(CSet cset) {
-		int i = 0;
-		for (CSet cs : charSets) {
-			if (CSet.equivalent(cset, cs)) return i;
-			++i;
-		}
+		// No more sharing here!
+//		int i = 0;
+//		for (CSet cs : charSets) {
+//			if (CSet.equivalent(cset, cs)) return i;
+//			++i;
+//		}
 		charSets.add(cset);
 		return nextIndex++;
 	}

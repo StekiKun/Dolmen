@@ -1,6 +1,8 @@
 package tagged;
 
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
@@ -240,4 +242,61 @@ public class NFA {
 		throw new IllegalStateException();
 	}
 	
+	private static class FollowPos {
+		final Set<Transition>[] fpos;
+		
+		@SuppressWarnings("unchecked")
+		FollowPos(int size) {
+			this.fpos = new Set[size];
+			Arrays.fill(fpos, null);
+		}
+		
+		void fill(Set<Transition> transs, TRegular regular) {
+			switch (regular.getKind()) {
+			case EPSILON:
+			case ACTION:
+			case TAG:
+				break;
+			case CHARACTERS: {
+				final Characters characters = (Characters) regular;
+				// Correct because each character set index 
+				// only appears once in tagged regexps
+				fpos[characters.chars] = transs;
+				break;
+			}
+			case ALTERNATE: {
+				final Alternate alternate = (Alternate) regular;
+				fill(transs, alternate.lhs);
+				fill(transs, alternate.rhs);
+				break;
+			}
+			case SEQUENCE: {
+				final Sequence sequence = (Sequence) regular;
+				Set<Transition> tr1 = firstPos(sequence.second);
+				if (sequence.second.nullable) {
+					tr1 = Sets.union(tr1, 
+							addTags(transs, TRegulars.emptyMatched(sequence.second)));
+				}
+				fill(tr1, sequence.first);
+				fill(transs, sequence.second);
+				break;
+			}
+			case REPETITION: {
+				final Repetition repetition = (Repetition) regular;
+				TRegular reg = repetition.reg;
+				fill(Sets.union(firstPos(reg), transs), regular);
+				break;
+			}
+			}
+		}
+	}
+	
+	protected static Set<Transition>[]
+		followPos(int size, List<TRegular> regulars) {
+		FollowPos fp = new FollowPos(size);
+		for (TRegular regular : regulars)
+			fp.fill(new HashSet<>(), regular);
+		return fp.fpos;
+	}
+
 }
