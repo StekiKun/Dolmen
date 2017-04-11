@@ -27,6 +27,10 @@ import tagged.TRegular.TagInfo;
  * @author Stéphane Lescuyer
  */
 public class NFA {
+	
+	private NFA() {
+		// Static utility only
+	}
 
 	/**
 	 * The kinds of events that decorate transitions
@@ -242,6 +246,11 @@ public class NFA {
 		throw new IllegalStateException();
 	}
 	
+	/**
+	 * Computation context for {@link NFA#followPos(int, List)}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static class FollowPos {
 		final Set<Transition>[] fpos;
 		
@@ -290,7 +299,12 @@ public class NFA {
 			}
 		}
 	}
-	
+
+	/**
+	 * @param regulars
+	 * @return the set of transitions which can follow each
+	 * 	character set when matching the given regular expressions
+	 */
 	protected static Set<Transition>[]
 		followPos(int size, List<TRegular> regulars) {
 		FollowPos fp = new FollowPos(size);
