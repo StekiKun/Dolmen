@@ -200,28 +200,27 @@ public final class TestOptimiser
 		case TagAddr.END: base = input.length(); break;
 		default: {
 			// base is a memory cell index
-			// find the remaining tag corresponding to this memory cell
+			// find the remaining tags corresponding to this memory cell
 			// there must be one because tags used as base addresses
 			// are not removed and are matched as soon as depending
 			// tags are matched
-			TagKey found = null;
-			for (Map.Entry<TagKey, TagAddr> entry : allocated.env.entrySet()) {
-				TagAddr ta= entry.getValue();
+			Integer found = null;
+			for (Map.Entry<TagInfo, Integer> marked : markers.entrySet()) {
+				TagInfo ti = marked.getKey();
+				TagKey tk = new TagKey(ti);
+				@Nullable TagAddr ta = Maps.get(allocated.env, tk);
+				if (ta == null) continue;	// it shouldn't actually happen
 				if (ta.base == addr.base && ta.offset == 0) {
-					found = entry.getKey(); break;
+					visited.add(ti);
+					found = marked.getValue(); break;
 				}
 			}
 			if (found == null)
-				return "Tag address " + addr + " is based on memory cell " 
-					+ addr.base + ", but it is not in environment " + allocated.env;
-			TagInfo infoBase = new TagInfo(found.id, found.start, 0);
-			@Nullable Integer pos = Maps.get(markers, infoBase);
-			if (pos == null)
 				return "Tag address " + addr + " is based on memory cell "
-					+ addr.base +", which corresponds to tag " + found + ", but "
-					+ "this tag isn't bound in the matcher " + markers;
-			visited.add(infoBase);	// record that we used this tag
-			base = pos; break;
+					+ addr.base + ", which does not correspond to any tag "
+					+ "bound in the matcher " + markers + 
+					" for \"" + input +"\"";
+			base = found; break;
 		}
 		}
 		return new Integer(base + addr.offset);

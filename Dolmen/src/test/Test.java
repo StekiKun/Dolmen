@@ -46,11 +46,11 @@ public abstract class Test {
 	
 	private static TestRegistry testRegularOperations() {
 		return TestRegistry.create()
-					.addIf(new TestRemoveNestedBinding(), 20000, false)
-					.addIf(new TestGenerateMatchers(20), 20000, false)
-					.addIf(new TestAnalyseVars(30), 20000, false)
-					.addIf(new TestGenerateTMatchers(20), 20000, false)
-					.addIf(new TestEncoder(20), 20000, false)
+					.addIf(new TestRemoveNestedBinding(), 20000, true)
+					.addIf(new TestGenerateMatchers(20), 20000, true)
+					.addIf(new TestAnalyseVars(30), 20000, true)
+					.addIf(new TestGenerateTMatchers(20), 20000, true)
+					.addIf(new TestEncoder(20), 20000, true)
 					.addIf(new TestOptimiser(20), 20000, true)
 					.done();
 	}
