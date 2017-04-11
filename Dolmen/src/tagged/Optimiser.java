@@ -280,6 +280,10 @@ public final class Optimiser {
 	/**
 	 * <i>Should only be applied to regular expressions
 	 * 	  without semantic action nodes.</i>
+	 * <b>Positions are non-negative but they are to be
+	 * 	interpreted negatively in this method, that is a position
+	 * 	of {@code n} means {@code n} characters before the end
+	 *  of the input string.</b>
 	 *
 	 * @param pr	the tagged regular exception to optimize
 	 * 				along with its absolute position with
@@ -296,7 +300,7 @@ public final class Optimiser {
 		// If no tags, we know the regexp can't change, and we know
 		// its size so we can avoid the traversal
 		if (!regular.hasTags) {
-			int newpos = regular.size >= 0 && pos >= 0 ? regular.size - pos : -1;
+			int newpos = regular.size >= 0 && pos >= 0 ? regular.size + pos : -1;
 			if (newpos == pos) return pr;
 			return new PosTRegular(newpos, regular);
 		}
@@ -306,19 +310,20 @@ public final class Optimiser {
 			return pr;
 		case CHARACTERS: {
 			final Characters characters = (Characters) regular;
-			return new PosTRegular(characters.eof ? pos : pos - 1, regular);
+			return new PosTRegular(characters.eof ? pos : pos + 1, regular);
 		}
 		case TAG: {
 			final Tag tag = (Tag) regular;
 			if (varsInfo.dblVars.contains(tag.tag.id))
 				return pr;
-			recordTagAddr(tag.tag, TagAddr.of(TagAddr.END, pos));
+			// The offset in the tag adrdress will be negative
+			recordTagAddr(tag.tag, TagAddr.of(TagAddr.END, -pos));
 			return new PosTRegular(pos, TRegular.EPSILON);
 		}
 		case ALTERNATE: {
 			if (pos < 0) return pr;
 			if (regular.size < 0) return new PosTRegular(-1, regular);
-			return new PosTRegular(pos - regular.size, regular);
+			return new PosTRegular(pos + regular.size, regular);
 		}
 		case SEQUENCE: {
 			final Sequence sequence = (Sequence) regular;
@@ -490,7 +495,8 @@ public final class Optimiser {
 		@Override
 		public String toString() {
 			return "{regular=" + regular +", identInfos=" 
-				+ identInfos + ", numCells=" + numCells + "}";
+				+ identInfos + ", numCells=" + numCells 
+				+ ", env=" + env + "}";
 		}
 	}
 	

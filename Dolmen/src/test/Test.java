@@ -68,6 +68,6 @@ public abstract class Test {
 		// 3. Regular expression matchers generation
 		testRegularWitnessGeneration();
 		// 4. Regular expression operations tests
-		testRegularOperations().run(Mode.INTERACTIVE);
+		testRegularOperations().run(Mode.BATCH);
 	}
 }
