@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import automaton.NFA.Event;
@@ -42,7 +43,7 @@ public class DFA {
 		@SuppressWarnings("javadoc")
 		public final int id;
 		/** Memory addresses associated to each initialized tag */
-		public final Map<TagInfo, Integer> locs;
+		public final Map<TagInfo, @NonNull Integer> locs;
 		
 		MemMap(int id, Map<TagInfo, Integer> locs) {
 			this.id = id;
@@ -86,7 +87,7 @@ public class DFA {
 		 * The NFA states corresponding to these character
 		 * sets are the non-final states in this DFA state.
 		 */
-		public final Map<Integer, MemMap> others;
+		public final Map<@NonNull Integer, MemMap> others;
 		
 		State(int finalAction, MemMap finisher,
 				Map<Integer, MemMap> others) {
@@ -114,6 +115,41 @@ public class DFA {
 		/** Whether the DFA state is final */
 		public boolean isFinal() {
 			return finalAction != NO_ACTION;
+		}
+		
+		/**
+		 * @return the location map associated to the final
+		 *  action in this state, or an empty map if the
+		 *  state isn't final
+		 */
+		public Map<TagInfo, Integer> getFinalLocs() {
+			@Nullable MemMap mmap = finisher;
+			if (mmap == null)
+				return Maps.empty();
+			return mmap.locs;
+		}
+		
+		/**
+		 * @param tr
+		 * @return the location map associated to the given NFA state
+		 * @throws IllegalArgumentException if the given state is not
+		 * 		part of this DFA state (in particular, if it is a different
+		 * 		final action that the one specified in the DFA state)
+		 */
+		public Map<TagInfo, Integer> getLocsFor(NFA.Transition tr) {
+			switch (tr.event.kind) {
+			case ON_CHARS: {
+				@Nullable MemMap mmap = Maps.get(others, tr.event.n);
+				if (mmap == null) throw new IllegalArgumentException();
+				return mmap.locs;
+			}
+			case TO_ACTION: {
+				if (!isFinal()) throw new IllegalArgumentException();
+				if (finalAction != tr.event.n) throw new IllegalArgumentException();
+				return getFinalLocs();
+			}
+			}
+			throw new IllegalStateException();
 		}
 	}
 	
@@ -291,5 +327,99 @@ public class DFA {
 			n -> stateKey.add(NFA.Event.onChars(n)));
 		
 		return new Key(stateKey, memKey);
+	}
+	
+	/**
+	 * Action on memory cells to take when following
+	 * a DFA transition
+	 * <p>
+	 * Actions are of two kinds: either {@link Set setting}
+	 * some memory cell to the current position input, or
+	 * {@link Copy copying} one memory cell's contents into
+	 * another. 
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static abstract class MemAction {
+		private MemAction() { }
+		
+		/**
+		 * @return the destination of this memory action
+		 */
+		public abstract int getDest();
+		/**
+		 * @return the source of this memory action, or
+		 * 		-1 if it is a set action and not a copy
+		 */
+		public abstract int getSrc();
+		
+		/**
+		 * Represents a memory action where some memory
+		 * cells {@link #dst} must be set to the current
+		 * position input
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public static final class Set extends MemAction {
+			/** Memory cell to set */
+			public final int dst;
+			
+			private Set(int dst) { this.dst = dst; }
+
+			@Override
+			public int getDest() {
+				return dst;
+			}
+
+			@Override
+			public int getSrc() {
+				return -1;
+			}
+		}
+		/**
+		 * @param dst
+		 * @return the memory action which sets the memory cell {@code dst}
+		 */
+		public static Set set(int dst) {
+			return new Set(dst);
+		}
+		
+		/**
+		 * Represents a memory action where some meory
+		 * cell {@link #src} must be copied into 
+		 * another cell {@link #dst}
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public static final class Copy extends MemAction {
+			/** The memory cell to copy from */
+			public final int src;
+			/** The memory cell to copy to */
+			public final int dst;
+			
+			private Copy(int src, int dst) {
+				this.src = src;
+				this.dst = dst;
+			}
+
+			@Override
+			public int getDest() {
+				return dst;
+			}
+
+			@Override
+			public int getSrc() {
+				return src;
+			}
+		}
+		/**
+		 * @param src
+		 * @param dst
+		 * @return the memory action which copies the
+		 * 	contents of {@code src} to memory cell {@code dst}
+		 */
+		public static Copy copy(int src, int dst) {
+			return new Copy(src, dst);
+		}
 	}
 }

@@ -54,4 +54,11 @@ public abstract class Maps {
 	public static <K, V> @Nullable V get(Map<? super K, V> m, K key) {
 		return m.get(key);
 	}
+	
+	/**
+	 * @return a frehsly allocated hash-map
+	 */
+	public static <K, V> Map<K, V> create() {
+		return new HashMap<K, V>();
+	}
 }

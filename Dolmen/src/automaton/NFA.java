@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Sets;
@@ -137,7 +138,7 @@ public class NFA {
 		/** The event of the transition */
 		public final Event event;
 		/** The set of tags to be updated in this transition */
-		public final Set<TagInfo> tags;
+		public final Set<@NonNull TagInfo> tags;
 		
 		/**
 		 * @param event

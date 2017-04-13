@@ -104,4 +104,11 @@ public abstract class Sets {
 		if (s2.isEmpty()) return s1;
 		return diff(union(s1, s2), inter(s1, s2));
 	}
+	
+	/**
+	 * @return a freshly allocated hash-set
+	 */
+	public static <T> Set<T> create() {
+		return new HashSet<T>();
+	}
 }
