@@ -40,13 +40,13 @@ public class DFA {
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class MemMap {
-		@SuppressWarnings("javadoc")
-		public final int id;
+		/** Priority */
+		public final int priority;
 		/** Memory addresses associated to each initialized tag */
 		public final Map<TagInfo, @NonNull Integer> locs;
 		
-		MemMap(int id, Map<TagInfo, Integer> locs) {
-			this.id = id;
+		MemMap(int priority, Map<TagInfo, Integer> locs) {
+			this.priority = priority;
 			this.locs = locs;
 		}
 	}
@@ -130,22 +130,22 @@ public class DFA {
 		}
 		
 		/**
-		 * @param tr
+		 * @param event
 		 * @return the location map associated to the given NFA state
 		 * @throws IllegalArgumentException if the given state is not
 		 * 		part of this DFA state (in particular, if it is a different
 		 * 		final action that the one specified in the DFA state)
 		 */
-		public Map<TagInfo, Integer> getLocsFor(NFA.Transition tr) {
-			switch (tr.event.kind) {
+		public Map<TagInfo, Integer> getLocsFor(NFA.Event event) {
+			switch (event.kind) {
 			case ON_CHARS: {
-				@Nullable MemMap mmap = Maps.get(others, tr.event.n);
+				@Nullable MemMap mmap = Maps.get(others, event.n);
 				if (mmap == null) throw new IllegalArgumentException();
 				return mmap.locs;
 			}
 			case TO_ACTION: {
 				if (!isFinal()) throw new IllegalArgumentException();
-				if (finalAction != tr.event.n) throw new IllegalArgumentException();
+				if (finalAction != event.n) throw new IllegalArgumentException();
 				return getFinalLocs();
 			}
 			}
@@ -173,7 +173,7 @@ public class DFA {
 		 * Sets of NFA states which define the tag
 		 * in a common memory cell
 		 */
-		public final Set<Set<NFA.Event>> equiv;
+		public final Set<Set<NFA.@NonNull Event>> equiv;
 		
 		TEquiv(TagInfo tag, Set<Set<NFA.Event>> equiv) {
 			this.tag = tag;
@@ -223,7 +223,7 @@ public class DFA {
 		 * The set of {@link TEquiv} structures which abstract,
 		 * for every tag defined in the DFA state, 
 		 */
-		public final Set<TEquiv> mem;
+		public final Set<@NonNull TEquiv> mem;
 		
 		Key(Set<NFA.Event> state, Set<TEquiv> mem) {
 			this.state = state;
@@ -420,6 +420,34 @@ public class DFA {
 		 */
 		public static Copy copy(int src, int dst) {
 			return new Copy(src, dst);
+		}
+	}
+	
+	/**
+	 * Describes an automaton action, i.e. either jumping
+	 * to another state with number {@link #target},
+	 * or back-tracking
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class GotoAction {
+		/** The state to go to */
+		public final int target;
+		
+		private GotoAction(int target) {
+			this.target = target;
+		}
+		
+		/** Special back-tracking action */
+		public static final GotoAction BACKTRACK =
+			new GotoAction(Integer.MIN_VALUE);
+		/**
+		 * @param n
+		 * @return the action to jum to state {@code n}
+		 */
+		public static GotoAction Goto(int n) {
+			if (n < 0) throw new IllegalArgumentException();
+			return new GotoAction(n);
 		}
 	}
 }

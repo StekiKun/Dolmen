@@ -3,14 +3,19 @@ package automaton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Function;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import automaton.DFA.GotoAction;
 import automaton.DFA.MemAction;
 import automaton.DFA.MemMap;
+import automaton.DFA.TEquiv;
 import common.Maps;
 import common.Sets;
 import tagged.TRegular.TagInfo;
@@ -189,7 +194,8 @@ public class Determinize {
 		Map<Integer, MemMap> newOthers = new HashMap<>();
 		s.others.forEach((k, mmap) -> {
 			newOthers.put(k,
-				new MemMap(mmap.id, allocMap(used, mmap.locs, moves)));
+				new MemMap(mmap.priority, 
+					allocMap(used, mmap.locs, moves)));
 		});
 		
 		// Create updated state
@@ -381,5 +387,117 @@ public class Determinize {
 	void sortMoves(ArrayList<MemAction> memActions) {
 		sortMovesAux(0, memActions, memActions.size() - 1);
 	}
+
+	private void moveTo(Set<TEquiv> memKey,
+		DFA.State src, DFA.State tgt, ArrayList<MemAction> moves) {
+		for (TEquiv teq : memKey) {
+			final TagInfo tag = teq.tag;
+			teq.equiv.forEach(s -> {
+				assert (!s.isEmpty());
+				NFA.Event t = s.iterator().next();
+				int asrc = src.getLocsFor(t).get(tag);
+				int atgt = tgt.getLocsFor(t).get(tag);
+				if (asrc != atgt) {
+					if (isNew(asrc))
+						moves.add(MemAction.set(atgt));
+					else
+						moves.add(MemAction.copy(asrc, atgt));
+				}
+			});
+		}
+		sortMoves(moves);
+		return;
+	}
 	
+	private int getState(DFA.State st, ArrayList<MemAction> moves) {
+		final DFA.Key key = DFA.getKey(st);
+		@Nullable Integer num = Maps.get(stateMap, key);
+		if (num != null) {
+			moveTo(key.mem, st, stateTable.get(num), moves);
+			return num;
+		} else {
+			num = nextStateNum++;
+			DFA.State newst = createNewState(st, moves);
+			stateTable.add(newst);
+			stateMap.put(key, num);
+			todo.push(new StateNum(newst, num));
+			return num;
+		}
+	}
+	
+	private <T> void mapOnAllStates(
+		Function<DFA.State, T> f, List<T> acc) {
+		while (!todo.isEmpty()) {
+			StateNum sn = todo.pop();
+			T r = f.apply(sn.state);
+			acc.add(r);
+		}
+	}
+	
+	private GotoAction gotoState(
+		DFA.State st, ArrayList<MemAction> moves) {
+		if (st.isEmpty()) return GotoAction.BACKTRACK;
+		int num = getState(st, moves);
+		return GotoAction.Goto(num);
+	}
+	
+	private Map<TagInfo, Integer> addTagsToMap(AddressGen gen, 
+		Set<TagInfo> tags, Map<TagInfo, Integer> locs) {
+		if (tags.isEmpty()) return locs; // share if possible
+		Map<TagInfo, Integer> newLocs = new HashMap<>(locs);
+		for (TagInfo tag : tags) {
+			newLocs.remove(tag);
+			newLocs.put(tag, gen.allocNewAddr(tag));
+		}
+		return newLocs;
+	}
+	
+	private DFA.State applyTransition(AddressGen gen,
+		DFA.State st, int priority, Map<TagInfo, Integer> locs,
+		NFA.Transition trans) {
+		final Set<TagInfo> tags = trans.tags;
+		final int n = trans.event.n;
+		switch (trans.event.kind) {
+		case ON_CHARS: {
+			@Nullable MemMap other = Maps.get(st.others, n);
+			if (other != null) {
+				if (priority < other.priority) {
+					st.others.replace(n,
+						new MemMap(priority,
+							addTagsToMap(gen, tags, locs)));
+				}
+			}
+			else {
+				st.others.put(n,
+					new MemMap(priority, addTagsToMap(gen, tags, locs)));
+			}
+			return st;
+		}
+		case TO_ACTION: {
+			int on = st.finalAction;
+			@Nullable MemMap finisher = st.finisher;
+			// If this final state has higher priority than the
+			// one before, if any, update it
+			if (finisher == null || 
+				(n < on || (n == on && priority < finisher.priority))) {
+				Map<TagInfo, Integer> newLocs =
+					addTagsToMap(gen, tags, locs);
+				MemMap newFinisher = new MemMap(priority, newLocs);
+				return new DFA.State(n, newFinisher, st.others);
+			}
+			else return st;
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	private DFA.State applyTransitions(
+		AddressGen gen, DFA.State st, int priority,
+		Map<TagInfo, Integer> locs, Set<NFA.Transition> transs) {
+		DFA.State res = st;
+		for (NFA.Transition tr : transs) {
+			res = applyTransition(gen, res, priority, locs, tr);
+		}
+		return res;
+	}
 }
