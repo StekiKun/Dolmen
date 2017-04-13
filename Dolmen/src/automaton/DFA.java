@@ -7,10 +7,9 @@ import java.util.Set;
 
 import org.eclipse.jdt.annotation.Nullable;
 
+import automaton.NFA.Event;
 import common.Maps;
 import common.Sets;
-import tagged.NFA;
-import tagged.NFA.Event;
 import tagged.TRegular.TagInfo;
 
 /**

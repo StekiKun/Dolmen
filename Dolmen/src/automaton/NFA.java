@@ -1,4 +1,4 @@
-package tagged;
+package automaton;
 
 import java.util.Arrays;
 import java.util.HashSet;
@@ -8,6 +8,8 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Sets;
+import tagged.TRegular;
+import tagged.TRegulars;
 import tagged.TRegular.Action;
 import tagged.TRegular.Alternate;
 import tagged.TRegular.Characters;
