@@ -151,6 +151,21 @@ public class DFA {
 			}
 			throw new IllegalStateException();
 		}
+		
+		/**
+		 * @param n
+		 * @param newMmap
+		 * @return a new DFA state exactly like the receiver except
+		 * 	that the character set {@code n} is mapped to {@code newMap}
+		 */
+		public DFA.State withLocs(int n, MemMap newMmap) {
+			Map<Integer, MemMap> newOthers = new HashMap<>(others);
+			newOthers.put(n, newMmap);
+			if (finisher != null)
+				return new State(finalAction, finisher, newOthers);
+			else
+				return new State(newOthers);
+		}
 	}
 	
 	/**

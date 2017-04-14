@@ -1,6 +1,7 @@
 package automaton;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -16,6 +17,7 @@ import automaton.DFA.GotoAction;
 import automaton.DFA.MemAction;
 import automaton.DFA.MemMap;
 import automaton.DFA.TEquiv;
+import common.CSet;
 import common.Maps;
 import common.Sets;
 import tagged.TRegular.TagInfo;
@@ -455,23 +457,20 @@ public class Determinize {
 	private DFA.State applyTransition(AddressGen gen,
 		DFA.State st, int priority, Map<TagInfo, Integer> locs,
 		NFA.Transition trans) {
+		
 		final Set<TagInfo> tags = trans.tags;
 		final int n = trans.event.n;
 		switch (trans.event.kind) {
 		case ON_CHARS: {
 			@Nullable MemMap other = Maps.get(st.others, n);
-			if (other != null) {
-				if (priority < other.priority) {
-					st.others.replace(n,
+			// If already some state for this char of higher priority,
+			// don't change anything. Otherwise, we add the new
+			// mapping (or remplace the old one)
+			if (other != null && priority >= other.priority)
+				return st;
+			return st.withLocs(n,
 						new MemMap(priority,
 							addTagsToMap(gen, tags, locs)));
-				}
-			}
-			else {
-				st.others.put(n,
-					new MemMap(priority, addTagsToMap(gen, tags, locs)));
-			}
-			return st;
 		}
 		case TO_ACTION: {
 			int on = st.finalAction;
@@ -495,9 +494,82 @@ public class Determinize {
 		AddressGen gen, DFA.State st, int priority,
 		Map<TagInfo, Integer> locs, Set<NFA.Transition> transs) {
 		DFA.State res = st;
-		for (NFA.Transition tr : transs) {
+		for (NFA.Transition tr : transs)
 			res = applyTransition(gen, res, priority, locs, tr);
-		}
 		return res;
 	}
+	
+	private static final class CSetState {
+		final CSet chars;
+		final DFA.State state;
+		
+		CSetState(CSet chars, DFA.State state) {
+			this.chars = chars;
+			this.state = state;
+		}
+	}
+	
+	private void refineCharPartition(
+		AddressGen gen, Set<NFA.Transition> follow,
+		int pos, Map<TagInfo, Integer> locs, CSet chars,
+		List<CSetState> partition, int from) {
+		
+		// If nothing more to do, it's fine
+		// (it can happen if empty charset to start with)
+		if (from == partition.size()) return;
+		
+		// Pick the first partition in the remaining part
+		// of the character set, from char set s1 to state
+		// st1
+		final CSetState p = partition.get(from);
+		final CSet s1 = p.chars;
+		final DFA.State st1 = p.state;
+		
+		// Find the intersection with the current charset
+		final CSet here = CSet.inter(chars, s1);
+		if (here.isEmpty()) {
+			// If empty, we can refine the remainder
+			refineCharPartition(gen,
+				follow, pos, locs, chars, partition, from + 1);
+		}
+		// Chars from chars which will not be accounted for
+		// by splitting s1. If there are any, we need to
+		// refine them in the remainder of the partition
+		final CSet rest = CSet.diff(chars, here);
+		if (!rest.isEmpty()) {
+			refineCharPartition(gen,
+				follow, pos, locs, rest, partition, from + 1);
+			// NB: this only changes the back of the
+			// list, so we can continue local insertions
+		}
+		
+		// Compute the state associated to this refined character
+		// set, and add it to the partition instead of the old one
+		DFA.State newSt =
+			applyTransitions(gen, st1, pos, locs, follow);
+		partition.set(from, new CSetState(here, newSt));
+		
+		// If not all characters from s1 are accounted by chars,
+		// we need to keep them in the partition
+		final CSet stay = CSet.diff(s1, here);
+		if (!stay.isEmpty())
+			partition.add(from, new CSetState(stay, st1));
+	}
+	
+	private List<CSetState> computeShiftTable(
+		AddressGen gen, List<CSet> charsets, 
+		@NonNull Set<NFA.Transition>[] follows, Map<Integer, MemMap> st) {
+		
+		final List<CSetState> partition = new ArrayList<>(4);
+		// Start with a trivial partition: all chars to nowhere
+		partition.add(new CSetState(CSet.ALL, DFA.State.EMPTY));
+		// and refine it for every possible outgoing charset
+		st.forEach((pos, mmap) -> {
+			@NonNull Set<NFA.Transition> follow = follows[pos];
+			refineCharPartition(gen, follow, pos, 
+				mmap.locs, charsets.get(pos), partition, 0);
+		});
+		return partition;
+	}
+	
 }
