@@ -405,6 +405,18 @@ public class Determinize {
 		sortMovesAux(0, memActions, memActions.size() - 1);
 	}
 
+	/**
+	 * When two states {@code src} and {@code tgt} have the
+	 * same key {@code memKey}, {@code tgt} can be used in
+	 * stead of {@code src} provided some memory cells are
+	 * copied. This method computes these memory actions and
+	 * returns them in the given list {@code moves}. 
+	 * 
+	 * @param memKey
+	 * @param src
+	 * @param tgt
+	 * @param moves
+	 */
 	private void moveTo(Set<TEquiv> memKey,
 		DFA.State src, DFA.State tgt, ArrayList<MemAction> moves) {
 		for (TEquiv teq : memKey) {
@@ -426,6 +438,26 @@ public class Determinize {
 		return;
 	}
 	
+	/**
+	 * This method takes a DFA state {@code st} which has 
+	 * been freshly constructed and inserts it into the
+	 * automata being built, either by finding an equivalent
+	 * state in {@link #stateMap}, or by creating a new
+	 * state and pushing it on the {@link #todo} stack.
+	 * 
+	 * In any case, the list of memory actions which must
+	 * be performed when transitioning to this state is
+	 * inserted in the {@code moves} parameter. When a
+	 * former equivalent state is created, these memory 
+	 * actions correspond to copies that 'remap' {@code st}
+	 * into that state, whereas when a new state is created,
+	 * the actions correspond to changes to the freshly
+	 * allocated tags.
+	 * 
+	 * @param st
+	 * @param moves	a list of memory actions to be filled
+	 * @return the state number for the given DFA state
+	 */
 	private int getState(DFA.State st, ArrayList<MemAction> moves) {
 		final DFA.Key key = DFA.getKey(st);
 		@Nullable Integer num = Maps.get(stateMap, key);
@@ -442,6 +474,12 @@ public class Determinize {
 		}
 	}
 	
+	/**
+	 * Packs an element with some integer index
+	 * 
+	 * @author Stéphane Lescuyer
+	 * @param <T>
+	 */
 	private static final class Indexed<T> {
 		final int index;
 		final T elt;
@@ -452,6 +490,20 @@ public class Determinize {
 		}
 	}
 	
+	/**
+	 * Maps the function {@code f} on all states in
+	 * the {@link #todo toto stack}, appending the
+	 * results of {@code f} along with the input state
+	 * index in the provided accumulator {@code acc}.
+	 * <p>
+	 * This method is typically useful when {@code f}
+	 * itself can push new states on the todo stack,
+	 * as it will continue until the stack has been
+	 * exhausted.
+	 * 
+	 * @param f
+	 * @param acc
+	 */
 	private <T> void mapOnAllStates(
 		Function<DFA.State, T> f, List<Indexed<T>> acc) {
 		while (!todo.isEmpty()) {
@@ -461,6 +513,11 @@ public class Determinize {
 		}
 	}
 	
+	/**
+	 * @param st
+	 * @return the transition actions associated to
+	 * 	jumping to the given state {@code st}
+	 */
 	private TransActions gotoState(DFA.State st) {
 		if (st.isEmpty()) return TransActions.BACKTRACK;
 		ArrayList<MemAction> moves = new ArrayList<>(2);
@@ -468,6 +525,13 @@ public class Determinize {
 		return new TransActions(GotoAction.Goto(num), moves);
 	}
 	
+	/**
+	 * @param gen
+	 * @param tags
+	 * @param locs
+	 * @return a copy of {@code locs} extended with potentially
+	 *  fresh addresses for every tag in {@code tags}
+	 */
 	private Map<TagInfo, Integer> addTagsToMap(AddressGen gen, 
 		Set<TagInfo> tags, Map<TagInfo, Integer> locs) {
 		if (tags.isEmpty()) return locs; // share if possible
@@ -479,6 +543,15 @@ public class Determinize {
 		return newLocs;
 	}
 	
+	/**
+	 * @param gen
+	 * @param st
+	 * @param priority
+	 * @param locs
+	 * @param trans
+	 * @return the state obtained by applying the given 
+	 * 	NFA transition to the state {@code st}
+	 */
 	private DFA.State applyTransition(AddressGen gen,
 		DFA.State st, int priority, Map<TagInfo, Integer> locs,
 		NFA.Transition trans) {
@@ -515,6 +588,15 @@ public class Determinize {
 		throw new IllegalStateException();
 	}
 	
+	/**
+	 * @param gen
+	 * @param st
+	 * @param priority
+	 * @param locs
+	 * @param transs
+	 * @return the result of extending the state {@code st}
+	 * 	with all the NFA states provided in {@code transs}
+	 */
 	private DFA.State applyTransitions(
 		AddressGen gen, DFA.State st, int priority,
 		Map<TagInfo, Integer> locs, Set<NFA.Transition> transs) {
@@ -524,6 +606,14 @@ public class Determinize {
 		return res;
 	}
 	
+	/**
+	 * Associates a {@link CSet character set} with
+	 * some DFA state. It is used to describe shifting
+	 * table from one state to another based on the
+	 * encountered character sets.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class CSetState {
 		final CSet chars;
 		final DFA.State state;
@@ -534,6 +624,20 @@ public class Determinize {
 		}
 	}
 	
+	/**
+	 * Refines the given partition from index {@code from}
+	 * to the end of the partition (elements with indices 
+	 * strictly below {@code from} are guaranteed to be untouched)
+	 * with respect to the character set {@code chars}.
+	 * 
+	 * @param gen
+	 * @param follow
+	 * @param pos
+	 * @param locs
+	 * @param chars
+	 * @param partition
+	 * @param from
+	 */
 	private void refineCharPartition(
 		AddressGen gen, Set<NFA.Transition> follow,
 		int pos, Map<TagInfo, Integer> locs, CSet chars,
@@ -581,6 +685,14 @@ public class Determinize {
 			partition.add(from, new CSetState(stay, st1));
 	}
 	
+	/**
+	 * @param gen
+	 * @param charsets	the character set dictionary
+	 * @param follows	the follow sets indexed by character set
+	 * @param st		memory maps per character set
+	 * @return the shifting table, i.e. the association list
+	 * 	between character sets and target states, implied by {@code st}
+	 */
 	private List<CSetState> computeShiftTable(
 		AddressGen gen, List<CSet> charsets, 
 		@NonNull Set<NFA.Transition>[] follows, Map<Integer, MemMap> st) {
@@ -597,6 +709,14 @@ public class Determinize {
 		return partition;
 	}
 	
+	/**
+	 * Computes the reachable states from {@code st}
+	 * 
+	 * @param charsets	the character set dictionary
+	 * @param follows	the follow sets indexed by character set
+	 * @param st		the transition map of the source state
+	 * @return a mapping from character set to transition actions
+	 */
 	private Map<CSet, TransActions> reachable(
 		List<CSet> charsets, @NonNull Set<NFA.Transition>[] follows, 
 		Map<Integer, MemMap> st) {
@@ -614,6 +734,13 @@ public class Determinize {
 		return res;
 	}
 	
+	/**
+	 * @param action
+	 * @param env
+	 * @param t
+	 * @return the memory cell associated to tag {@code t}
+	 * 	in the semantic action with index {@code action}
+	 */
 	private int getTagMem(int action, 
 		@NonNull Map<TagInfo, Integer>[] env, TagInfo t) {
 		Map<TagInfo, Integer> locs = env[action];
@@ -622,6 +749,13 @@ public class Determinize {
 		return res;
 	}
 	
+	/**
+	 * @param action
+	 * @param env
+	 * @param locs
+	 * @return the list of tag actions that must be performed
+	 * 	when reaching the semantic action {@code action}
+	 */
 	private List<TagAction> doTagActions(int action,
 		@NonNull Map<TagInfo, Integer>[] env, Map<TagInfo, Integer> locs) {
 		List<TagAction> actions = new ArrayList<>(locs.size());
@@ -645,6 +779,16 @@ public class Determinize {
 		return actions;
 	}
 	
+	/**
+	 * @param shortest	whether shortest-match rule applies
+	 * @param tags		tag maps for finalizers
+	 * @param charsets	character set dictionary
+	 * @param follows	follow sets indexed by character set
+	 * @param st
+	 * 
+	 * @return the automaton cell that corresponds to the 
+	 * 	state described by {@code st}
+	 */
 	private DFA.Cell translateState(boolean shortest,
 		@NonNull Map<TagInfo, Integer>[] tags, List<CSet> charsets, 
 		@NonNull Set<NFA.Transition>[] follows, DFA.State st) {
@@ -676,6 +820,15 @@ public class Determinize {
 		return new DFA.Shift(remember, reachable(charsets, follows, st.others));
 	}
 	
+	/**
+	 * Extends {@code locs} with tags that are used in
+	 * {@code info} and which correspond to base memory cells
+	 * 
+	 * @param action
+	 * @param id
+	 * @param info
+	 * @param locs
+	 */
 	private static void addTagEntries(int action,
 		String id, IdentInfo info, Map<TagInfo, Integer> locs) {
 		TagAddr start = info.start;
@@ -688,6 +841,16 @@ public class Determinize {
 		}
 	}
 	
+	/**
+	 * Extracts all tags from {@code finishers} which correspond
+	 * to base addresses for themselves or other tags, i.e. that
+	 * correspond to actual memory cells during the execution of
+	 * the automaton.
+	 * 
+	 * @param finishers
+	 * @return a map from all base tags to the corresponding
+	 * 	memory address, for every finisher
+	 */
 	private static @NonNull Map<TagInfo, Integer>[]
 		extractTags(List<Finisher> finishers) {
 		@SuppressWarnings("unchecked")
@@ -709,7 +872,11 @@ public class Determinize {
 	}
 	
 
-	@SuppressWarnings("javadoc")
+	/**
+	 * @param lexer
+	 * @return the deterministic automata that recognize
+	 * 	the rules in the provided lexer definition
+	 */
 	public static Automata lexer(Lexer lexer) {
 		// First get a tagged optimized version of the lexer entries
 		final TLexer tlexer = Encoder.encodeLexer(lexer);
