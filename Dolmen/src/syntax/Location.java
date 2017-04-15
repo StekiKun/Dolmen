@@ -1,5 +1,8 @@
 package syntax;
 
+import java.io.FileReader;
+import java.io.IOException;
+
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
@@ -99,4 +102,19 @@ public final class Location {
 				+ startLine + ", startCol=" + startCol + "]";
 	}
 
+	/**
+	 * @return the string portion described by this location
+	 */
+	public String find() {
+		try (FileReader reader = new FileReader(filename)) {
+			reader.skip(startPos);
+			int length = endPos - startPos + 1;
+			char[] buf = new char[length];
+			for (int i = 0; i < length; ++i)
+				buf[i] = (char) reader.read();
+			return new String(buf);
+		} catch (IOException e) {
+			return "<Could not open file " + filename + ">";
+		}
+	}
 }
