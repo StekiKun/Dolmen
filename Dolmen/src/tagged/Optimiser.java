@@ -477,7 +477,7 @@ public final class Optimiser {
 		/** The optimised regular expression */
 		public final TRegular regular;
 		/** Tag addresses for each binding variable's boundaries */
-		public final Map<String, IdentInfo> identInfos;
+		public final Map<String, @NonNull IdentInfo> identInfos;
 		/** Total number of memory cells for tags */
 		public final int numCells;
 		

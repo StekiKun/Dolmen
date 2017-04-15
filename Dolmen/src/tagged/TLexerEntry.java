@@ -73,6 +73,10 @@ public final class TLexerEntry {
 	
 	/** The name of the lexer entry */
 	public final String name;
+	/** Whether the shortest match priority should be used */
+	public final boolean shortest;
+	/** The list of formal arguments available in semantic actions */
+	public final List<String> args;
 	/** The tagged regular expression encoding all clauses */
 	public final TRegular regexp;
 	/** The number of tags in the encoded entry */
@@ -84,13 +88,17 @@ public final class TLexerEntry {
 	 * Builds an encoded lexer entry based on all the arguments
 	 * 
 	 * @param name
+	 * @param shortest
+	 * @param args
 	 * @param regexp
 	 * @param memTags
 	 * @param actions
 	 */
-	public TLexerEntry(String name, TRegular regexp,
-				int memTags, List<Finisher> actions) {
+	public TLexerEntry(String name, boolean shortest, List<String> args,
+			TRegular regexp, int memTags, List<Finisher> actions) {
 		this.name = name;
+		this.shortest = shortest;
+		this.args = args;
 		this.regexp = regexp;
 		this.memTags = memTags;
 		this.actions = actions;
@@ -99,7 +107,18 @@ public final class TLexerEntry {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		buf.append(name).append(": \n");
+		buf.append(name);
+		if (!args.isEmpty()) {
+			buf.append("(");
+			boolean first = true;
+			for (String arg : args) {
+				if (first) first = false;
+				else buf.append(", ");
+				buf.append(arg);
+			}
+			buf.append(")");
+		}
+		buf.append(": ").append(shortest ? "[shortest]\n" : "\n");
 		buf.append(" regexp: " ).append(regexp).append("\n");
 		buf.append(" tags: ").append(memTags).append("\n");
 		buf.append(" actions: \n");

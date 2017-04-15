@@ -3,9 +3,12 @@ package tagged;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import common.CSet;
+import syntax.Lexer;
+import syntax.Location;
 import syntax.Regular;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
@@ -13,6 +16,9 @@ import syntax.Regular.Characters;
 import syntax.Regular.Repetition;
 import syntax.Regular.Sequence;
 import syntax.Regulars;
+import syntax.Regulars.VarsInfo;
+import tagged.Optimiser.Allocated;
+import tagged.TLexerEntry.Finisher;
 
 /**
  * An instance of {@link Encoder} can be used
@@ -129,5 +135,51 @@ public final class Encoder {
 	public TRegular encode(Regular regular, Set<String> charVars, int action) {
 		return encode_(Regulars.removeNestedBindings2(regular), charVars, action);
 	}
+
+	private TLexerEntry encodeEntry(Lexer.Entry entry) {
+		// Start with empty reg exp, empty actions, no tags
+		TRegular tr = TRegular.EPSILON;
+		List<Finisher> actions = new ArrayList<>(entry.clauses.size());
+		int count = 0;
+		int ntags = 0;
+		// Go through all clauses and encode them, building a giant
+		// disjunction in tr
+		for (Map.Entry<Regular, Location> clause : entry.clauses.entrySet()) {
+			final Regular expr = Regulars.removeNestedBindings2(clause.getKey());
+			final Location act = clause.getValue();
+			final VarsInfo varsInfo = Regulars.analyseVars(expr);
+			final Set<String> charVars = varsInfo.getCharVars();
+			
+			final TRegular texpr = encode_(expr, charVars, count);
+			final Allocated allocated = Optimiser.optimise(varsInfo, texpr);
+			
+			tr = TRegular.or(tr,
+					TRegular.seq(allocated.regular,
+						TRegular.action(count)));
+			actions.add(new Finisher(count, allocated.identInfos, act));
+			++count;
+			if (ntags < allocated.numCells)
+				ntags = allocated.numCells;
+		}
+		
+		return new TLexerEntry(entry.name, entry.shortest, entry.args,
+				tr, ntags, actions);
+	}
 	
+	/**
+	 * @param lexer
+	 * @return a tagged lexer definition from {@code lexer}
+	 * @see TLexer
+	 */
+	public static TLexer encodeLexer(Lexer lexer) {
+		Encoder encoder = new Encoder();
+		List<TLexerEntry> entries = new ArrayList<>(lexer.entryPoints.size());
+		for (Lexer.Entry entry : lexer.entryPoints)
+			entries.add(encoder.encodeEntry(entry));
+		// No need to copy charsets defensively since
+		// we are done with this encoder
+		return new TLexer(lexer.header, 
+			entries, encoder.getCharacterSets(), lexer.footer);
+	}
+
 }

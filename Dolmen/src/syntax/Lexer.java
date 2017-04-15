@@ -41,7 +41,7 @@ public final class Lexer {
 		/** Whether shortest match should be used */
 		public final boolean shortest;
 		/** The list of formal arguments for this rule */
-		public final List<String> args;
+		public final List<@NonNull String> args;
 		/** 
 		 * The various clauses for this entry, associated to
 		 * the locations for the corresponding semantic actions.
@@ -49,7 +49,7 @@ public final class Lexer {
 		 * as priority between same-length matches goes to the
 		 * first matching rule in this map.</b>
 		 */
-		public final Map<Regular, Location> clauses;
+		public final Map<@NonNull Regular, @NonNull Location> clauses;
 		
 		/**
 		 * @param name
@@ -92,7 +92,7 @@ public final class Lexer {
 	/** The location of this lexer's header */
 	public final Location header;
 	/** The list of entrypoints */
-	public final List<Entry> entryPoints;
+	public final List<@NonNull Entry> entryPoints;
 	/** The location of this lexer's footer */
 	public final Location footer;
 	
