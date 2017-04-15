@@ -1,7 +1,9 @@
 package automaton;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -9,6 +11,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import automaton.NFA.Event;
+import common.CSet;
+import common.Hierarchy;
 import common.Maps;
 import common.Sets;
 import tagged.TRegular.TagInfo;
@@ -463,6 +467,222 @@ public class DFA {
 		public static GotoAction Goto(int n) {
 			if (n < 0) throw new IllegalArgumentException();
 			return new GotoAction(n);
+		}
+	}
+	
+	/**
+	 * Describes a <i>tag action</i>, i.e. commands
+	 * which are performed as part of the finisher set
+	 * corresponding to some final action. There are
+	 * two kinds of tag actions:
+	 * <ul>
+	 * <li> {@link TagAction#SetTag(int, int) SetTag}{@code (n, m)}
+	 * 		which describes setting the value of tag {@code n}
+	 * 		from the contents of memory cell {@code m}
+	 * <li> {@link TagAction#EraseTag(int) EraseTag}{@code (n)}
+	 * 		which describes setting the value of tag {@code n}
+	 * 		to -1, i.e. the conventional uninitialized tag value.
+	 * </ul>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class TagAction {
+		/** The memory cell to act on */
+		public final int tag;
+		/** The cell to copy from, if >= 0 */
+		public final int from;
+		
+		private TagAction(int tag, int from) {
+			this.tag = tag;
+			this.from = from;
+		}
+		
+		/**
+		 * @param tag
+		 * @param from
+		 * @return the tag action setting {@code tag} from
+		 * 	the specified memory cell
+		 */
+		public static TagAction SetTag(int tag, int from) {
+			if (from < 0 || tag < 0)
+				throw new IllegalArgumentException();
+			return new TagAction(tag, from);
+		}
+		
+		/**
+		 * @param tag
+		 * @return the tag action erasing {@code tag}
+		 */
+		public static TagAction EraseTag(int tag) {
+			if (tag < 0)
+				throw new IllegalArgumentException();
+			return new TagAction(tag, -1);
+		}
+	}
+	
+	/**
+	 * Describes action that should be taken
+	 * when reaching a final state during traversal
+	 * of the automaton:
+	 * <ul>
+	 * <li> either do {@link Remember#NOTHING nothing}
+	 * <li> or {@link Remember#Remember(int, List) remember} 
+	 *  the associated action number
+	 * 	and tag actions for later (useful when backtracking
+	 * 	for longest match)
+	 * </ul>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Remember {
+		/** The final action to remember, if >= 0 */
+		public final int action;
+		/** The tag actions associated to {@link #action} */
+		public final List<TagAction> tagActions;
+		
+		@SuppressWarnings("null")
+		private Remember() {
+			this.action = -1;
+			this.tagActions = Collections.emptyList();
+		}
+		/** When nothing need to be remembered */
+		public static final Remember NOTHING = new Remember();
+		
+		/**
+		 * Remember the final action and its associated tag actions
+		 * 
+		 * @param action
+		 * @param tagActions
+		 */
+		public Remember(int action, List<TagAction> tagActions) {
+			if (action < 0) throw new IllegalArgumentException();
+			this.action = action;
+			this.tagActions = tagActions;
+		}
+	}
+	
+	/**
+	 * Describes the actual behavior of one cell of
+	 * the automaton, i.e. either performing some
+	 * final action or shifting to another state
+	 * according to a transition table.
+	 * 
+	 * @author Stéphane Lescuyer
+	 * 
+	 * @see Perform
+	 * @see Shift
+	 */
+	@Hierarchy("getKind")
+	public static abstract class Cell {
+		
+		/**
+		 * Enumerates describing the different kinds
+		 * of automata cells
+		 * 
+		 * @author Stéphane Lescuyer
+		 * @see Cell#getKind()
+		 */
+		@SuppressWarnings("javadoc")
+		public enum Kind {
+			PERFORM(Perform.class),
+			SHIFT(Shift.class);
+			
+			private Kind(Class<?> clazz) {}
+		}
+		
+		/**
+		 * @return the {@link Kind kind} of this automaton cell
+		 */
+		public abstract Kind getKind();
+	}
+	
+	/**
+	 * Accepts the input by performing some semantic
+	 * action and the associated finisher list
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Perform extends Cell {
+		/** The semantic action to perform */
+		public final int action;
+		/** The list of associated tag actions, the 'finisher list' */
+		public final List<TagAction> tagActions;
+		
+		/**
+		 * @param action
+		 * @param tagActions
+		 */
+		public Perform(int action, List<TagAction> tagActions) {
+			this.action = action;
+			this.tagActions = tagActions;
+		}
+		
+		@Override
+		public Kind getKind() { 
+			return Kind.PERFORM;
+		}
+	}
+
+	/**
+	 * Packs together everything that describes shifting from
+	 * one automaton cell to another, namely the state to go to
+	 * (or whether to backtrack), and the associated memory 
+	 * actions to execute
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class TransActions {
+		/** The kind of shift performed in this transition */
+		public final GotoAction gotoAction;
+		/** The associated memory actions to perform */
+		public final List<MemAction> memActions;
+		
+		/**
+		 * @param gotoAction
+		 * @param memActions
+		 */
+		public TransActions(GotoAction gotoAction, List<MemAction> memActions) {
+			this.gotoAction = gotoAction;
+			this.memActions = memActions;
+		}
+		
+		/**
+		 * A special singleton to represent transitions
+		 * backtracking to a previously remembered final state
+		 */
+		@SuppressWarnings("null")
+		public final static TransActions BACKTRACK =
+			new TransActions(GotoAction.BACKTRACK, Collections.emptyList());
+	}
+	
+	/**
+	 * Shifts to another state of the automaton, potentially
+	 * performing some side-effects
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Shift extends Cell {
+		/**
+		 * Whether to remember the potentially final state or not
+		 */
+		public final Remember remember;
+		/**
+		 * The transition table between character sets and transition actions
+		 */
+		public final Map<CSet, TransActions> transTable;
+		
+		/**
+		 * @param remember
+		 * @param transTable
+		 */
+		public Shift(Remember remember, Map<CSet, TransActions> transTable) {
+			this.remember = remember;
+			this.transTable = transTable;
+		}
+		
+		@Override
+		public Kind getKind() {
+			return Kind.PERFORM; 
 		}
 	}
 }

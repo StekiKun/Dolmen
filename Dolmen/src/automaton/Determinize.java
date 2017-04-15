@@ -16,7 +16,11 @@ import org.eclipse.jdt.annotation.Nullable;
 import automaton.DFA.GotoAction;
 import automaton.DFA.MemAction;
 import automaton.DFA.MemMap;
+import automaton.DFA.Remember;
+import automaton.DFA.Shift;
 import automaton.DFA.TEquiv;
+import automaton.DFA.TagAction;
+import automaton.DFA.TransActions;
 import common.CSet;
 import common.Maps;
 import common.Sets;
@@ -48,7 +52,11 @@ public class Determinize {
 	 * The map from DFA state keys to a state number
 	 */
 	private Map<DFA.Key, Integer> stateMap;
-	private Stack<StateNum> todo;	// TODO: Object?
+	/**
+	 * The stack of states whose outgoing transitions
+	 * must still be built
+	 */
+	private Stack<StateNum> todo;
 	
 	/** The next unused state number */
 	private int nextStateNum;
@@ -436,11 +444,11 @@ public class Determinize {
 		}
 	}
 	
-	private GotoAction gotoState(
-		DFA.State st, ArrayList<MemAction> moves) {
-		if (st.isEmpty()) return GotoAction.BACKTRACK;
+	private TransActions gotoState(DFA.State st) {
+		if (st.isEmpty()) return TransActions.BACKTRACK;
+		ArrayList<MemAction> moves = new ArrayList<>(2);
 		int num = getState(st, moves);
-		return GotoAction.Goto(num);
+		return new TransActions(GotoAction.Goto(num), moves);
 	}
 	
 	private Map<TagInfo, Integer> addTagsToMap(AddressGen gen, 
@@ -571,5 +579,85 @@ public class Determinize {
 		});
 		return partition;
 	}
+	
+	private Map<CSet, TransActions> reachable(
+		List<CSet> charsets, @NonNull Set<NFA.Transition>[] follows, 
+		Map<Integer, MemMap> st) {
+		final AddressGen gen = new AddressGen();
+		// Build the association list from char set to new states
+		List<CSetState> charMap = computeShiftTable(gen, charsets, follows, st);
+		// Change it into a mapping from char set to goto actions
+		// (in particular this replaces states by their numbers, so
+		//  it takes care of canonizing states, or creating new ones
+		//  on the todo stack)
+		Map<CSet, TransActions> res = new HashMap<>(charMap.size());
+		charMap.forEach(css -> {
+			res.put(css.chars, gotoState(css.state));
+		});
+		return res;
+	}
+	
+	private int getTagMem(int action, 
+		@NonNull Map<TagInfo, Integer>[] env, TagInfo t) {
+		Map<TagInfo, Integer> locs = env[action];
+		@Nullable Integer res = Maps.get(locs, t);
+		if (res == null) throw new IllegalStateException();
+		return res;
+	}
+	
+	private List<TagAction> doTagActions(int action,
+		@NonNull Map<TagInfo, Integer>[] env, Map<TagInfo, Integer> locs) {
+		List<TagAction> actions = new ArrayList<>(locs.size());
+		// First compute the set of used memory cells, and the associated
+		// tag actions
+		Set<Integer> used = Sets.create();
+		locs.forEach((t, m) -> {
+			int a = getTagMem(action, env, t);
+			used.add(a);
+			actions.add(TagAction.SetTag(a, m));
+		});
+		// Now go through the final environment associated to the
+		// action and erase all those that are unused starting tags
+		env[action].forEach((tag, m) -> {
+			if (tag.start && !used.contains(m)) {
+				used.add(m);
+				actions.add(TagAction.EraseTag(m));
+			}
+		});
+		// XXX Shall I reverse the actions list? Is order important?
+		return actions;
+	}
+	
+	private DFA.Cell translateState(boolean shortest,
+		@NonNull Map<TagInfo, Integer>[] tags, List<CSet> charsets, 
+		@NonNull Set<NFA.Transition>[] follows, DFA.State st) {
+		final int n = st.finalAction;
+		final Map<TagInfo, Integer> m = st.getFinalLocs();
+		// If there are no successors after [st], it must be final
+		// and we can just perform the associated semantic action
+		if (st.others.isEmpty()) {
+			if (!st.isFinal()) throw new IllegalStateException();
+			return new DFA.Perform(n, doTagActions(n, tags, m));
+		}
+		// If we are interested in shortest match instead of 
+		// longest match, then we can stop as soon as we reach
+		// a final state, and otherwise we can continue without
+		// taking care to remember the last encountered final state
+		if (shortest) {
+			if (st.isFinal())
+				return new DFA.Perform(n, doTagActions(n, tags, m));
+			else
+				return new DFA.Shift(Remember.NOTHING,
+							reachable(charsets, follows, st.others));
+		}
+		// If we are interested in longest match, we never stop
+		// as long as we can shift, but we make sure to remember
+		// the last encountered final state
+		Remember remember = 
+			!st.isFinal() ? Remember.NOTHING :
+				new Remember(n, doTagActions(n, tags, m));
+		return new DFA.Shift(remember, reachable(charsets, follows, st.others));
+	}
+	
 	
 }
