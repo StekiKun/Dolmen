@@ -25,9 +25,9 @@ public final class TLexer {
 	/** The location of this lexer's header */
 	public final Location header;
 	/** The list of encoded entries */
-	public final List<TLexerEntry> entries;
+	public final List<@NonNull TLexerEntry> entries;
 	/** The character set dictionary */
-	public final List<CSet> charsets;
+	public final List<@NonNull CSet> charsets;
 	/** The location of this lexer's footer */
 	public final Location footer;
 	

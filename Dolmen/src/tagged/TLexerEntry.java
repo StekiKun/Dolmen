@@ -38,7 +38,7 @@ public final class TLexerEntry {
 		 * an interpretation of the identifier in terms of 
 		 * tags and static offsets
 		 */
-		public final Map<String, IdentInfo> tags;
+		public final Map<@NonNull String, @NonNull IdentInfo> tags;
 		/** The location of the semantic action <i>per se</i> */
 		public final Location loc;
 		
@@ -76,13 +76,13 @@ public final class TLexerEntry {
 	/** Whether the shortest match priority should be used */
 	public final boolean shortest;
 	/** The list of formal arguments available in semantic actions */
-	public final List<String> args;
+	public final List<@NonNull String> args;
 	/** The tagged regular expression encoding all clauses */
 	public final TRegular regexp;
 	/** The number of tags in the encoded entry */
 	public final int memTags;
 	/** The list of semantic actions */
-	public final List<Finisher> actions;
+	public final List<@NonNull Finisher> actions;
 
 	/**
 	 * Builds an encoded lexer entry based on all the arguments

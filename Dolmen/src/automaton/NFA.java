@@ -9,6 +9,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Sets;
+import tagged.TLexerEntry;
 import tagged.TRegular;
 import tagged.TRegulars;
 import tagged.TRegular.Action;
@@ -304,15 +305,15 @@ public class NFA {
 	}
 
 	/**
-	 * @param regulars
+	 * @param entries
 	 * @return the set of transitions which can follow each
 	 * 	character set when matching the given regular expressions
 	 */
 	protected static Set<Transition>[]
-		followPos(int size, List<TRegular> regulars) {
+		followPos(int size, List<TLexerEntry> entries) {
 		FollowPos fp = new FollowPos(size);
-		for (TRegular regular : regulars)
-			fp.fill(new HashSet<>(), regular);
+		for (TLexerEntry entry : entries)
+			fp.fill(new HashSet<>(), entry.regexp);
 		return fp.fpos;
 	}
 

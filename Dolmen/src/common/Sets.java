@@ -38,7 +38,7 @@ public abstract class Sets {
 	@SuppressWarnings("null")
 	public static <T> Set<T> singleton(T elt) {
 		return Collections.singleton(elt);
-	}	
+	}
 	
 	/**
 	 * @param elt

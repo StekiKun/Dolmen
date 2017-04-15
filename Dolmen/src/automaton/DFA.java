@@ -49,7 +49,7 @@ public class DFA {
 		/** Memory addresses associated to each initialized tag */
 		public final Map<TagInfo, @NonNull Integer> locs;
 		
-		MemMap(int priority, Map<TagInfo, Integer> locs) {
+		MemMap(int priority, Map<@NonNull TagInfo, @NonNull Integer> locs) {
 			this.priority = priority;
 			this.locs = locs;
 		}

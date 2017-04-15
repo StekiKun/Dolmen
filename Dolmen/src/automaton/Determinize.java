@@ -24,6 +24,13 @@ import automaton.DFA.TransActions;
 import common.CSet;
 import common.Maps;
 import common.Sets;
+import syntax.Lexer;
+import tagged.Encoder;
+import tagged.Optimiser.IdentInfo;
+import tagged.Optimiser.TagAddr;
+import tagged.TLexer;
+import tagged.TLexerEntry;
+import tagged.TLexerEntry.Finisher;
 import tagged.TRegular.TagInfo;
 
 /**
@@ -435,12 +442,22 @@ public class Determinize {
 		}
 	}
 	
+	private static final class Indexed<T> {
+		final int index;
+		final T elt;
+		
+		Indexed(int index, T elt) {
+			this.index = index;
+			this.elt = elt;
+		}
+	}
+	
 	private <T> void mapOnAllStates(
-		Function<DFA.State, T> f, List<T> acc) {
+		Function<DFA.State, T> f, List<Indexed<T>> acc) {
 		while (!todo.isEmpty()) {
 			StateNum sn = todo.pop();
 			T r = f.apply(sn.state);
-			acc.add(r);
+			acc.add(new Indexed<>(sn.num, r));
 		}
 	}
 	
@@ -659,5 +676,101 @@ public class Determinize {
 		return new DFA.Shift(remember, reachable(charsets, follows, st.others));
 	}
 	
+	private static void addTagEntries(int action,
+		String id, IdentInfo info, Map<TagInfo, Integer> locs) {
+		TagAddr start = info.start;
+		if (start.base >= 0 && start.offset == 0) {
+			locs.put(new TagInfo(id, true, action), start.base);
+		}
+		@Nullable TagAddr end = info.end;
+		if (end != null && end.base >= 0 && end.offset == 0) {
+			locs.put(new TagInfo(id, false, action), end.base);
+		}
+	}
+	
+	private static @NonNull Map<TagInfo, Integer>[]
+		extractTags(List<Finisher> finishers) {
+		@SuppressWarnings("unchecked")
+		@NonNull Map<TagInfo, Integer>[] res = 
+			new @NonNull Map[finishers.size()];
+		// Gather all actual tags used as bases in finishers
+		for (Finisher finisher : finishers) {
+			final int act = finisher.action;
+			if (res[act] != null) throw new IllegalStateException();
+			Map<TagInfo, Integer> locs = Maps.create();
+			finisher.tags.forEach((name, info) -> {
+				addTagEntries(act, name, info, locs);
+			});
+		}
+		// Check that all spots are accounted for
+		for (int i = 0; i < res.length; ++i)
+			if (res[i] == null) throw new IllegalStateException();
+		return res;
+	}
+	
+
+	@SuppressWarnings("javadoc")
+	public static Automata lexer(Lexer lexer) {
+		// First get a tagged optimized version of the lexer entries
+		final TLexer tlexer = Encoder.encodeLexer(lexer);
+		// Compute the follow sets for the whole entries
+		Set<NFA.Transition>[] follows =
+			NFA.followPos(tlexer.charsets.size(), tlexer.entries);
+		
+		// Create a fresh determinization context
+		Determinize det = new Determinize();
+		List<Indexed<DFA.Cell>> indexedCells = new ArrayList<>(); 
+		List<Automata.@NonNull Entry> automataEntries =
+			new ArrayList<>(tlexer.entries.size());
+		
+		// For every rule, compute the corresponding initializers
+		// and finishers, and create all the corresponding cells
+		for (final TLexerEntry tentry : tlexer.entries) {
+			// Extract all tags from this entry's actions
+			final @NonNull Map<TagInfo, Integer>[] tags = extractTags(tentry.actions);
+			det.resetPartial(tentry.memTags);
+			
+			// Compute the initial state by looking at the 
+			// set of first possible transitions
+			final Set<NFA.Transition> possible = NFA.firstPos(tentry.regexp);
+			DFA.State initState = det.createInitState(possible);
+			final ArrayList<MemAction> initActions = new ArrayList<>(2);
+			final int initNum = det.getState(initState, initActions);
+			
+			// Perform the closure of all states reachable from
+			// this initial state. This fills the indexedCells array
+			// by side effect
+			det.mapOnAllStates(st ->
+				det.translateState(tentry.shortest, tags, 
+								   tlexer.charsets, follows, st), 
+				indexedCells);
+			
+			// And finally register the automaton entry corresponding
+			// to this lexer entry
+			Automata.Entry autoEntry =
+				new Automata.Entry(tentry.name, tentry.args, 
+						det.tempPending ? det.nextMemCell + 1 : det.nextMemCell, 
+						initNum, initActions, tentry.actions);
+			automataEntries.add(autoEntry);
+		}
+		
+		// Gather all constructed cells in an array
+		if (det.nextStateNum != indexedCells.size())
+			throw new IllegalStateException();
+		DFA.Cell[] cells = new DFA.Cell[det.nextStateNum];
+		indexedCells.forEach(icell -> {
+			if (cells[icell.index] != null)
+				throw new IllegalStateException();
+			cells[icell.index]= icell.elt;
+		});
+		// Because we checked for duplicates and we set
+		// as many cells as the size, we know there are no
+		// nulls anymore
+		@SuppressWarnings("null")
+		DFA.@NonNull Cell[] checkedCells = cells;
+		
+		// Job done! We can return the full deterministic automata
+		return new Automata(automataEntries, checkedCells);
+	}
 	
 }
