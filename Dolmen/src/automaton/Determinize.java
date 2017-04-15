@@ -1,7 +1,6 @@
 package automaton;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,7 +16,6 @@ import automaton.DFA.GotoAction;
 import automaton.DFA.MemAction;
 import automaton.DFA.MemMap;
 import automaton.DFA.Remember;
-import automaton.DFA.Shift;
 import automaton.DFA.TEquiv;
 import automaton.DFA.TagAction;
 import automaton.DFA.TransActions;
@@ -41,7 +39,6 @@ import tagged.TRegular.TagInfo;
  * 
  * @author Stéphane Lescuyer
  */
-@SuppressWarnings("unused")
 public class Determinize {
 
 	/** Used to index DFA states */
@@ -87,6 +84,7 @@ public class Determinize {
 		this.stateTable = new ArrayList<>();
 	}
 
+	@SuppressWarnings("unused")
 	private void reset() {
 		todo.clear();
 		nextStateNum = 0;
@@ -851,6 +849,7 @@ public class Determinize {
 	 * @return a map from all base tags to the corresponding
 	 * 	memory address, for every finisher
 	 */
+	@SuppressWarnings("unused")
 	private static @NonNull Map<TagInfo, Integer>[]
 		extractTags(List<Finisher> finishers) {
 		@SuppressWarnings("unchecked")
@@ -871,7 +870,6 @@ public class Determinize {
 		return res;
 	}
 	
-
 	/**
 	 * @param lexer
 	 * @return the deterministic automata that recognize
