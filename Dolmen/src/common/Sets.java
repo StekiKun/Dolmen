@@ -4,6 +4,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 /**
  * This class contains various utility methods
  * about {@link Set}s.
@@ -36,7 +38,7 @@ public abstract class Sets {
 	 * @return the singleton set containing {@code elt}
 	 */
 	@SuppressWarnings("null")
-	public static <T> Set<T> singleton(T elt) {
+	public static <T> @NonNull Set<T> singleton(T elt) {
 		return Collections.singleton(elt);
 	}
 	
