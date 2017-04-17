@@ -53,7 +53,7 @@ public abstract class CSet {
 		case '_':
 			return "\\" + ch; // printable but escaped
 		}
-		if (Character.isUnicodeIdentifierPart(ch))
+		if (Character.isAlphabetic(ch) || Character.isDigit(ch))
 			return "" + ch; // printable
 		return "\\u" + String.format("%04x", (short)ch);
 	}
@@ -420,8 +420,7 @@ public abstract class CSet {
 		}
 		if (cs2 instanceof Singleton) {
 			char c2 = ((Singleton) cs2).c;
-			if (cs1.contains(c2)) return EMPTY;
-			else return cs2;
+			if (!cs1.contains(c2)) return cs1;
 		}
 		return intervals(
 				idiff(intervalsOf(cs1), intervalsOf(cs2)));

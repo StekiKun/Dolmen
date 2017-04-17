@@ -519,7 +519,7 @@ public class Determinize {
 			debug("States to visit: " + (todo.size() +  1));
 			debug("Picking state " + sn.num + " on todo stack");
 			debug(sn.state.toString());
-			// Prompt.getInputLine("Proceed?");
+//			Prompt.getInputLine("Proceed?");
 			T r = f.apply(sn.state);
 			acc.add(new Indexed<>(sn.num, r));
 		}
@@ -634,6 +634,11 @@ public class Determinize {
 			this.chars = chars;
 			this.state = state;
 		}
+		
+		@Override
+		public String toString() {
+			return chars.toString() + " -> ...";
+		}
 	}
 	
 	/**
@@ -669,9 +674,10 @@ public class Determinize {
 		// Find the intersection with the current charset
 		final CSet here = CSet.inter(chars, s1);
 		if (here.isEmpty()) {
-			// If empty, we can refine the remainder
+			// If empty, we can simply refine the remainder
 			refineCharPartition(gen,
 				follow, pos, locs, chars, partition, from + 1);
+			return;
 		}
 		// Chars from chars which will not be accounted for
 		// by splitting s1. If there are any, we need to
