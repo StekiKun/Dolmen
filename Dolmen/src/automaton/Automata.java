@@ -20,7 +20,7 @@ import tagged.TLexerEntry.Finisher;
  * initializer and finisher actions, etc.
  * 
  * @author Stéphane Lescuyer
- * @see Determinize#lexer(syntax.Lexer)
+ * @see Determinize#lexer(syntax.Lexer, boolean)
  */
 public final class Automata {
 

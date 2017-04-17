@@ -33,13 +33,22 @@ import tagged.TLexerEntry.Finisher;
  */
 public final class Encoder {
 
+	/** 
+	 * Whether tagged regexps should also be optimised
+	 * when tags positions can be statically determined
+	 * with respect to the start or end of the input	
+	 */
+	private boolean optimisation;
+	
 	private int nextIndex;
 	private final List<CSet> charSets;
 
 	/**
+	 * @param optimisation	whether optimisation should be applied
 	 * Returns a freshly initialized encoder 
 	 */
-	public Encoder() {
+	public Encoder(boolean optimisation) {
+		this.optimisation = optimisation;
 		this.nextIndex = 0;
 		this.charSets = new ArrayList<CSet>();
 	}
@@ -151,7 +160,8 @@ public final class Encoder {
 			final Set<String> charVars = varsInfo.getCharVars();
 			
 			final TRegular texpr = encode_(expr, charVars, count);
-			final Allocated allocated = Optimiser.optimise(varsInfo, texpr);
+			final Allocated allocated =
+				Optimiser.optimise(varsInfo, optimisation, texpr);
 			
 			TRegular rclause =
 				TRegular.seq(allocated.regular, TRegular.action(count));
@@ -171,12 +181,13 @@ public final class Encoder {
 	}
 	
 	/**
+	 * @param optimisation	whether optimisation should be applied
 	 * @param lexer
 	 * @return a tagged lexer definition from {@code lexer}
 	 * @see TLexer
 	 */
-	public static TLexer encodeLexer(Lexer lexer) {
-		Encoder encoder = new Encoder();
+	public static TLexer encodeLexer(Lexer lexer, boolean optimisation) {
+		Encoder encoder = new Encoder(optimisation);
 		List<TLexerEntry> entries = new ArrayList<>(lexer.entryPoints.size());
 		for (Lexer.Entry entry : lexer.entryPoints)
 			entries.add(encoder.encodeEntry(entry));

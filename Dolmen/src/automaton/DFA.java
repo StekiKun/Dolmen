@@ -364,8 +364,11 @@ public class DFA {
 		Map<Integer, TagEvents> acc) {
 		m.forEach((tag, addr) -> {
 			@Nullable TagEvents te = Maps.get(acc, addr);
-			if (te == null)
-				acc.put(addr, new TagEvents(tag, Sets.singleton(trans)));
+			if (te == null) {
+				Set<NFA.Event> transs = Sets.create();
+				transs.add(trans);
+				acc.put(addr, new TagEvents(tag, transs));
+			}
 			else {
 				if (!tag.equals(te.tag))
 					throw new IllegalStateException();

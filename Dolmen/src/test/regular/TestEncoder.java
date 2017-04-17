@@ -84,7 +84,7 @@ public final class TestEncoder
 
 	@Override
 	public Result apply(Regular input) {
-		Encoder encoder = new Encoder();
+		Encoder encoder = new Encoder(true);
 		VarsInfo varsInfo = Regulars.analyseVars(input);
 		TRegular tagged = encoder.encode(input, varsInfo.getCharVars(), 0);
 		return new Result(encoder.getCharacterSets(), tagged, varsInfo.getCharVars());

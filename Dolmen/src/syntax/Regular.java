@@ -270,6 +270,19 @@ public abstract class Regular {
 		}
 		return new Alternate(lhs, rhs);
 	}
+	
+	/**
+	 * @param reg1
+	 * @param regs
+	 * @return the regular expression 
+	 *   {@code (((reg1 || regs[0]) || regs[1]) ... || regs[n-1]}
+	 */
+	public static Regular or(Regular reg1, @NonNull Regular... regs) {
+		Regular res = reg1;
+		for (int i = 0; i < regs.length; ++i)
+			res = or(res, regs[i]);
+		return res;
+	}
 
 	/**
 	 * Instances of regular expressions that represent the
@@ -314,6 +327,18 @@ public abstract class Regular {
 		if (first == EPSILON) return second;
 		if (second == EPSILON) return first;
 		return new Sequence(first, second);
+	}
+	
+	/**
+	 * @param regs
+	 * @return the concatenation of all regular expressions
+	 * 	in {@code regs}, in order
+	 */
+	public static Regular seq(@NonNull Regular... regs) {
+		Regular res = EPSILON;
+		for (int i = 0; i < regs.length; ++i)
+			res = seq(res, regs[i]);
+		return res;
 	}
 	
 	/**

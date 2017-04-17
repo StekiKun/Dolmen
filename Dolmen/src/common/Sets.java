@@ -76,7 +76,7 @@ public abstract class Sets {
 	 */
 	public static <T> Set<T> inter(Set<T> s1, Set<T> s2) {
 		if (s1.isEmpty() || s2.isEmpty())
-			return s1;
+			return Sets.empty();
 		Set<T> res = new HashSet<T>(s1);
 		res.retainAll(s2);
 		if (res.isEmpty()) return empty();

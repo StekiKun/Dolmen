@@ -162,12 +162,14 @@ public final class Optimiser {
 		}
 	}
 	
+	private final boolean optimisation;
 	private final VarsInfo varsInfo;
 	private final Set<String> charVars;
 	private final HashMap<TagKey, TagAddr> env;
 	private int nextCell;
 	
-	private Optimiser(VarsInfo varsInfo) {
+	private Optimiser(VarsInfo varsInfo, boolean optimisation) {
+		this.optimisation = optimisation;
 		this.varsInfo = varsInfo;
 		this.charVars = varsInfo.getCharVars();
 		this.env = new HashMap<>();
@@ -506,7 +508,8 @@ public final class Optimiser {
 	 * @see #getTagEnvironment()
 	 */
 	private Allocated optimise(TRegular regular) {
-		TRegular opt = simpleBackward(simpleForward(regular));
+		TRegular opt =
+			optimisation ? simpleBackward(simpleForward(regular)) : regular;
 		TRegular allocatedOpt = allocateAddresses(new AddrTRegular(null, opt)).regular;
 		
 		// Map all binding names to allocated addresses
@@ -525,14 +528,18 @@ public final class Optimiser {
 	
 	/**
 	 * @param varsInfo	variable analysis for {@code regular}
+	 * @param optimisation 
+	 * 		whether optimisation of tags with respect to the 
+	 * 		start or end of input should be applied
 	 * @param regular
 	 * @return an optimised tagged regular expression along
 	 * 		with the environment that maps every binding's
 	 * 		boundaries to locations relative to memory cells
 	 * @see Allocated
 	 */
-	public static Allocated optimise(VarsInfo varsInfo, TRegular regular) {
-		return new Optimiser(varsInfo).optimise(regular);
+	public static Allocated optimise(
+			VarsInfo varsInfo, boolean optimisation, TRegular regular) {
+		return new Optimiser(varsInfo, optimisation).optimise(regular);
 	}
 	
 }

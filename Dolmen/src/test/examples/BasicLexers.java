@@ -32,8 +32,16 @@ public abstract class BasicLexers {
 	/**
 	 * A simple lexer definition example with
 	 * a single entry matching basic identifiers:
-	 * 
+	 * <pre>
 	 *  rule ident: [_a-zA-Z][_a-zA-Z0-9]* { dummy action }
+	 * </pre>
+	 * The expected DFA should have two states and be like this:
+	 * <pre>
+	 *  state 0: {initial}
+	 *  	[_a-zA-Z] -> Goto 1
+	 *  state 1: {final -> action 0}
+	 *  	[_a-zA-Z0-9] -> Goto 1
+	 * </pre>
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -59,8 +67,18 @@ public abstract class BasicLexers {
 	 * a single entry matching basic identifiers ending
 	 * with a '$' sign. Yeah, string identifiers from
 	 * good ol' Basic.
-	 * 
+	 * <pre>
 	 *  rule ident: [_a-zA-Z][_a-zA-Z0-9]*$ { dummy action }
+ 	 * </pre>
+	 * The expected DFA should have three states and be like this:
+	 * <pre>
+	 *  state 0: {initial}
+	 *  	[_a-zA-Z]    -> Goto 1
+	 *  state 1:
+	 *  	[_a-zA-Z0-9] -> Goto 1
+	 *  	$            -> Goto 2
+	 *  state 2: {final -> action 0}
+	 * </pre>
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -75,15 +93,54 @@ public abstract class BasicLexers {
 		final static Lexer LEXER = 
 			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
 	}
+
+	/**
+	 * A simple lexer definition example with
+	 * a single entry matching basic identifiers ending
+	 * with a '$' sign, and binding the part before the '$'
+	 * sign to the name 'id'.
+	 * <pre>
+	 *  rule ident: ([_a-zA-Z][_a-zA-Z0-9]* as id)$ { dummy action }
+	 * </pre>
+	 * The expected DFA should be exactly as for {@link BasicIDs}
+	 * if <i>optimisation</i> is activated (because all tags should
+	 * be removed), and otherwise should look like this:
+	 *  	 * </pre>
+	 * The expected DFA should have three states and be like this,
+	 * for some cells N and M:
+	 * <pre>
+	 *  state 0: {initial (Set(N))}
+	 *  	[_a-zA-Z]    -> Goto 1 (Set(M))
+	 *  state 1:
+	 *  	[_a-zA-Z0-9] -> Goto 1 (Set(M))
+	 *  	$            -> Goto 2
+	 *  state 2: {final -> action 0}
+	 *  	Perform action 0, id.start <- N, id.end <- M
+	 * </pre>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static abstract class BoundIDs {
+		private final static Regular ident =
+			Regular.seq(
+				Regular.binding(SimpleIDs.ident, "id", Location.DUMMY), 
+				Regular.chars(CSet.singleton('$')));
+		private final static Lexer.Entry entry =
+			new Lexer.Entry("ident", false, Lists.empty(),
+				Maps.singleton(ident, Location.DUMMY));
+		
+		final static Lexer LEXER = 
+			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
+	}
 	
-	private static void test(Lexer lexer) {
+	private static void test(Lexer lexer, boolean opt) {
 		System.out.println("=========LEXER========");
 		System.out.println(lexer);
 		System.out.println("--------ENCODED-------");
-		TLexer tlexer = Encoder.encodeLexer(lexer);
-		System.out.println(tlexer);
+		TLexer tlexer = Encoder.encodeLexer(lexer, opt);
+		System.out.println(tlexer);		
 		System.out.println("--------AUTOMATA------");
-		Automata aut = Determinize.lexer(lexer);
+		Automata aut = Determinize.lexer(lexer, opt);
 		System.out.println(aut);
 	}
 	
@@ -91,8 +148,10 @@ public abstract class BasicLexers {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		test(SimpleIDs.LEXER);
-		test(BasicIDs.LEXER);
+		test(SimpleIDs.LEXER, true);
+		test(BasicIDs.LEXER, true);
+		test(BoundIDs.LEXER, true);
+		test(BoundIDs.LEXER, false);
 	}
 	
 }

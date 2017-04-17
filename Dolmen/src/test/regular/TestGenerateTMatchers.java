@@ -82,7 +82,7 @@ public final class TestGenerateTMatchers
 
 	@Override
 	public Result apply(Regular input) {
-		Encoder encoder = new Encoder();
+		Encoder encoder = new Encoder(true);
 		VarsInfo varsInfo = Regulars.analyseVars(input);
 		final Set<String> charVars = varsInfo.getCharVars();
 		

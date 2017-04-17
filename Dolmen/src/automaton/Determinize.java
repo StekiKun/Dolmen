@@ -123,7 +123,9 @@ public class Determinize {
 	 */
 	private int allocCell(Set<Integer> used, TagInfo tag) {
 		Set<Integer> available =
-			tagCells.getOrDefault(tag, Sets.empty());
+			tagCells.getOrDefault(tag, Sets.create());
+		if (available.isEmpty())
+			tagCells.put(tag, available);
 		Set<Integer> free = Sets.diff(available, used);
 		if (!free.isEmpty())
 			return free.iterator().next();
@@ -336,12 +338,12 @@ public class Determinize {
 			// traverse actions which do not read the modified
 			// cfrom --> ...
 			while (cfrom < cto &&
-				!modified.contains(memActions.get(cfrom)))
+				!modified.contains(memActions.get(cfrom).getSrc()))
 				++cfrom;
 			// traverse actions which do read the modified
 			// ... <-- cto
 			while (cfrom < cto &&
-				modified.contains(memActions.get(cto)))
+				modified.contains(memActions.get(cto).getSrc()))
 				--cto;
 			// if we're not done, let's swap the bad guys
 			if (cfrom >= cto) break;
@@ -367,6 +369,7 @@ public class Determinize {
 	 */
 	private void sortMovesAux(
 		int from, ArrayList<MemAction> memActions, int to) {
+		if (from == to) return;
 		// Compute all memory cells modified by the actions in the slice
 		Set<Integer> modified = Sets.create();
 		for (int i = from; i <= to; ++i)
@@ -895,12 +898,13 @@ public class Determinize {
 	
 	/**
 	 * @param lexer
-	 * @return the deterministic automata that recognize
+	 * @param optimisation
+	 * @return a deterministic automata that recognize
 	 * 	the rules in the provided lexer definition
 	 */
-	public static Automata lexer(Lexer lexer) {
+	public static Automata lexer(Lexer lexer, boolean optimisation) {
 		// First get a tagged optimized version of the lexer entries
-		final TLexer tlexer = Encoder.encodeLexer(lexer);
+		final TLexer tlexer = Encoder.encodeLexer(lexer, optimisation);
 		// Compute the follow sets for the whole entries
 		Set<NFA.Transition>[] follows =
 			NFA.followPos(tlexer.charsets.size(), tlexer.entries);

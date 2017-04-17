@@ -94,10 +94,10 @@ public final class TestOptimiser
 
 	@Override
 	public Result apply(Regular input) {
-		Encoder encoder = new Encoder();
+		Encoder encoder = new Encoder(true);
 		VarsInfo varsInfo = Regulars.analyseVars(input);
 		TRegular tagged = encoder.encode(input, varsInfo.getCharVars(), 0);
-		Allocated allocated = Optimiser.optimise(varsInfo, tagged);
+		Allocated allocated = Optimiser.optimise(varsInfo, true, tagged);
 		return new Result(encoder.getCharacterSets(), varsInfo, tagged, allocated);
 	}
 
