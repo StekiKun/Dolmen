@@ -1,5 +1,8 @@
 package test.examples;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import automaton.Automata;
 import automaton.Determinize;
 import common.CSet;
@@ -104,10 +107,8 @@ public abstract class BasicLexers {
 	 * </pre>
 	 * The expected DFA should be exactly as for {@link BasicIDs}
 	 * if <i>optimisation</i> is activated (because all tags should
-	 * be removed), and otherwise should look like this:
-	 *  	 * </pre>
-	 * The expected DFA should have three states and be like this,
-	 * for some cells N and M:
+	 * be removed), and otherwise should look like this, for some
+	 * cells N and M:
 	 * <pre>
 	 *  state 0: {initial (Set(N))}
 	 *  	[_a-zA-Z]    -> Goto 1 (Set(M))
@@ -133,6 +134,110 @@ public abstract class BasicLexers {
 			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
 	}
 	
+	/**
+	 * A simple lexer definition example with
+	 * a single entry matching both basic identifiers and
+	 * integer literals.
+	 * <pre>
+	 *  rule ident_int: 
+	 *  | [_a-zA-Z][_a-zA-Z0-9]* { dummy action }
+	 *  | [0-9]+                 { dmumy action }
+	 * </pre>
+	 * The expected DFA should have three states and look
+	 * like this:
+	 * <pre>
+	 *  state 0: {initial}
+	 *  	[_a-zA-Z] -> Goto 2
+	 *      [0-9]     -> Goto 1
+	 *  state 1: {final -> action 1}
+	 *      [0-9] -> Goto 1
+	 *  state 2: {final -> action 0}
+	 *  	[_a-zA-Z0-9] -> Goto 2
+	 * </pre>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static abstract class IDsIntegers {
+		private final static Regular integer =
+			Regular.seq(
+				Regular.chars(digit),
+				Regular.star(Regular.chars(digit)));
+		private final static Regular ident = SimpleIDs.ident;
+		
+		private final static Map<Regular, Location> clauses =
+			new LinkedHashMap<>();
+		static {
+			clauses.put(ident, Location.DUMMY);
+			clauses.put(integer, Location.DUMMY);
+		}
+		private final static Lexer.Entry entry =
+			new Lexer.Entry("ident_int", false, Lists.empty(), clauses);
+		
+		final static Lexer LEXER = 
+			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
+	}
+	
+	/**
+	 * A simple lexer definition example with
+	 * a single entry matching both basic identifiers and
+	 * also a couple of keywords 'DO' and 'FOR'. The keywords
+	 * must be given priority over identifiers, but when
+	 * longest match, identifiers can have a keyword as prefix.
+	 * <pre>
+	 *  rule identkw:
+	 *  | "DO"					 { dummy action }
+	 *  | "FOR"                  { dummy action }
+	 *  | [_a-zA-Z][_a-zA-Z0-9]* { dummy action }
+	 * </pre>
+	 * The expected DFA should have seven states and look
+	 * like this:
+	 * <pre>
+	 *  state 0: {initial}
+	 *  	[_a-zA-CEG-Z] -> Goto 1
+	 *      F             -> Goto 2
+	 *      D             -> Goto 3
+	 *  state 1: {final -> action 2}	# not a keyword
+	 *      [_a-zA-Z0-9] -> Goto 1
+	 *  state 2: {final -> action 2}	# F.. 
+	 *  	[_a-zA-NP-Z0-9] -> Goto 1
+	 *      O               -> Goto 5
+	 *  state 3: {final -> action 2}	# D.. 
+	 *  	[_a-zA-NP-Z0-9] -> Goto 1
+	 *      O               -> Goto 4
+	 *  state 4: {final -> action 0}	# DO.. 
+	 *  	[_a-zA-Z0-9] -> Goto 1
+	 *  state 5: {final -> action 2}    # FO..
+	 *  	[_a-zA-QS-Z0-9] -> Goto 1
+	 *      R               -> Goto 6
+	 *  state 6: {final -> action 1}    # FOR..
+	 *      [_a-zA-Z0-9] -> Goto 1
+	 * </pre>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static abstract class IDsKeywords {
+		private final static Regular DO = Regular.string("DO");
+		private final static Regular FOR = Regular.string("FOR");
+		private final static Regular ident = SimpleIDs.ident;
+		
+		private final static Map<Regular, Location> clauses =
+			new LinkedHashMap<>();
+		static {
+			clauses.put(DO, Location.DUMMY);
+			clauses.put(FOR, Location.DUMMY);
+			clauses.put(ident, Location.DUMMY);
+		}
+		private final static Lexer.Entry entry =
+			new Lexer.Entry("identkw", false, Lists.empty(), clauses);
+		private final static Lexer.Entry sh_entry =
+				new Lexer.Entry("identkw", true, Lists.empty(), clauses);
+		
+		final static Lexer LEXER =
+			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
+		final static Lexer SHORTEST = 
+			new Lexer(Location.DUMMY, Lists.singleton(sh_entry), Location.DUMMY);
+	}
+	
 	private static void test(Lexer lexer, boolean opt) {
 		System.out.println("=========LEXER========");
 		System.out.println(lexer);
@@ -152,6 +257,9 @@ public abstract class BasicLexers {
 		test(BasicIDs.LEXER, true);
 		test(BoundIDs.LEXER, true);
 		test(BoundIDs.LEXER, false);
+		test(IDsIntegers.LEXER, true);
+		test(IDsKeywords.LEXER, true);
+		test(IDsKeywords.SHORTEST, true);
 	}
 	
 }

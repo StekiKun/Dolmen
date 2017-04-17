@@ -220,6 +220,19 @@ public abstract class Regular {
 	public static Regular chars(CSet chars) {
 		return new Characters(chars);
 	}
+	/**
+	 * @param s
+	 * @return a regular expression matching exactly
+	 * 	the given string {@code s}
+	 */
+	public static Regular string(String s) {
+		@SuppressWarnings("null")
+		@NonNull Regular[] chars = new Regular[s.length()];
+		for (int i = 0; i < s.length(); ++i)
+			chars[i] = chars(CSet.singleton(s.charAt(i)));
+		return seq(chars);
+	}
+	
 	
 	/**
 	 * Instances of regular expressions that represent a choice
