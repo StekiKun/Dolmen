@@ -10,9 +10,9 @@ import org.eclipse.jdt.annotation.Nullable;
  * in files, and are used to link parsed entities with
  * their concrete representation in the original sources.
  * 
- * @author St�phane Lescuyer
+ * @author Stéphane Lescuyer
  */
-public final class Location {
+public class Location {
 
 	/**
 	 * The absolute filename where the location should be interpreted
@@ -120,5 +120,53 @@ public final class Location {
 		} catch (IOException e) {
 			return "<Could not open file " + filename + ">";
 		}
+	}
+	
+	private static final class Inlined extends Location {
+		/** The inlined contents that this location represents */
+		private final String contents;
+		
+		Inlined(String contents) {
+			super("<inlined>", -1, -1, -1, -1);
+			this.contents = contents;
+		}
+		
+		@Override
+		public int length() {
+			return contents.length();
+		}
+		
+		@Override
+		public int hashCode() {
+			return contents.hashCode();
+		}
+		
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) return true;
+			if (o == null) return false;
+			if (this.getClass() != o.getClass()) return false;
+			Inlined inl = (Inlined) o;
+			if (!contents.equals(inl.contents))
+				return false;
+			return true;
+		}
+		
+		@Override
+		public String toString() {
+			return "Location INLINED";
+		}
+		
+		@Override
+		public String find() {
+			return contents;
+		}
+	}
+	/**
+	 * @param contents
+	 * @return an inlined location with the given {@code contents}
+	 */
+	public static Location inlined(String contents) {
+		return new Inlined(contents);
 	}
 }

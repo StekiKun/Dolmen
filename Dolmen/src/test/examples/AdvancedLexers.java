@@ -1,7 +1,10 @@
 package test.examples;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.Map;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
 import common.Lists;
@@ -23,6 +26,27 @@ public abstract class AdvancedLexers {
 	}
 
 	/**
+	 * @param objs	clauses and inlined contents, interleaved
+	 * @return a list of ordered clauses with inlined locations
+	 */
+	static Map<Regular, Location> inlinedClauses(@NonNull Object... objs) {
+		if (objs.length % 2 != 0) throw new IllegalArgumentException();
+		int n = objs.length / 2;
+		Map<Regular, Location> res = new LinkedHashMap<>(n);
+		for (int i = 0; i < n; ++i) {
+			int k = 2 * i;
+			Object reg = objs[k];
+			Object msg = objs[k+1];
+			if (!(reg instanceof Regular)
+				|| !(msg instanceof String))
+				throw new IllegalArgumentException();
+			res.put((Regular) reg, Location.inlined((String) msg));
+		}
+		return res;
+	}
+
+	
+	/**
 	 * A lexer which handles arithmetic expressions
 	 * with four operations, identifiers, decimal and
 	 * hexadecimal literals, Java-like multiline 
@@ -30,12 +54,12 @@ public abstract class AdvancedLexers {
 	 * main one and one for comments:
 	 * <pre>
 	 * rule main:
-	 * | ('\b'  | '\t' | ' ')*		{ main(lexbuf); }
-	 * | ('\r''\n' | '\n')			{ newline(); main(lexbuf); } 
+	 * | ('\b'  | '\t' | ' ')*		{ return main(lexbuf); }
+	 * | ('\r''\n' | '\n')			{ newline(); return main(lexbuf); } 
 	 * | [_a-zA-Z][_a-zA-Z0-9]*		{ return IDENT; }
 	 * | [0-9]+						{ return INT; }
 	 * | "0x" [0-9a-fA-F]+			{ return HEX; }
-	 * | "/*"       { comment(lexbuf); main(lexbuf); }
+	 * | "/*"       { comment(lexbuf); return main(lexbuf); }
 	 * | '+'		{ return PLUS; }
 	 * | '-'        { return MINUS; }
 	 * | '*'        { return MULT; }
@@ -43,13 +67,14 @@ public abstract class AdvancedLexers {
 	 * | '('        { return LPAREN; }
 	 * | ')'        { return RPAREN; }
 	 * | eof        { return EOF; }
-	 * | _          { throw new LexicalError(); }
+	 * | _          { throw new LexicalError("Unexpected char"); }
 	 * 
 	 * rule comment:
 	 * | '*' '/'	{ return; }
-	 * | '\n'       { newline(); comment(lexbuf); }
-	 * | '*'        { comment(lexbuf); }
-	 * | [^*\r\n]   { comment(lexbuf); }
+	 * | '\n'       { newline(); return comment(lexbuf); }
+	 * | '*'        { return comment(lexbuf); }
+	 * | [^*\r\n]   { return comment(lexbuf); }
+	 * | eof		{ throw new LexicalError("EOF in comment"); }
 	 * </pre>
 	 * 
 	 * @author Stéphane Lescuyer
@@ -87,32 +112,34 @@ public abstract class AdvancedLexers {
 				Regular.star(Regular.chars(hexdigit)));
 		
 		private static final Map<Regular, Location> mainClauses =
-			BasicLexers.clauses(
-					ws,
-					newline,
-					ident,
-					decimal,
-					hexadecimal,
-					Regular.string("/*"),
-					Regular.string("+"),
-					Regular.string("-"),
-					Regular.string("*"),
-					Regular.string("/"),
-					Regular.string("("),
-					Regular.string(")"),
-					Regular.chars(CSet.EOF),
-					Regular.chars(CSet.ALL));
+			inlinedClauses(
+				ws,						" return main(lexbuf); ",
+				newline,				" newline(); return main(lexbuf); ",
+				ident,					" return IDENT; ",
+				decimal,				" return INT; ",
+				hexadecimal,			" return HEX; ",
+				Regular.string("/*"),	" comment(lexbuf); return main(lexbuf); ",
+				Regular.string("+"),	" return PLUS; ",
+				Regular.string("-"),	" return MINUS; ",
+				Regular.string("*"),	" return MULT; ",
+				Regular.string("/"),	" return DIV; ",
+				Regular.string("("),	" return LPAREN; ",
+				Regular.string(")"),	" return RPAREN; ",
+				Regular.chars(CSet.EOF),	" return EOF; ",
+				Regular.chars(CSet.ALL),	" throw new LexicalError(\"Unexpected char\"); "
+			);
 		
 		private static final CSet inComment =
 			CSet.complement(
 				CSet.union(CSet.singleton('\r'), CSet.singleton('\n')));
 		private static final Map<Regular, Location> commentClauses =
-			BasicLexers.clauses(
-					Regular.string("*/"),
-					Regular.string("*"),
-					newline,
-					Regular.chars(inComment));
-		
+			inlinedClauses(
+				Regular.string("*/"),		" return; ",
+				newline,		 			" newline(); return comment(lexbuf); ",
+				Regular.string("*"), 		" return comment(lexbuf); ",
+				Regular.chars(inComment),   " return comment(lexbuf); ",
+				Regular.chars(CSet.EOF),    " throw new LexicalError(\"EOF in comment\"); "
+			);
 		private final static Lexer.Entry mainEntry =
 			new Lexer.Entry("main", false, Lists.empty(), mainClauses);
 		private final static Lexer.Entry commentEntry =
