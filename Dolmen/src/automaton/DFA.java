@@ -670,6 +670,12 @@ public class DFA {
 		public abstract Kind getKind();
 		
 		@Override public abstract String toString();
+		
+		/**
+		 * Performs some sanity checks on this automaton cell
+		 * @return {@code true} if the checks are OK
+		 */
+		public abstract boolean sanityCheck();
 	}
 	
 	/**
@@ -702,6 +708,11 @@ public class DFA {
 		public String toString() {
 			return "Perform(" + action + ", "
 				+ tagActions +")";
+		}
+
+		@Override
+		public boolean sanityCheck() {
+			return true;
 		}
 	}
 
@@ -776,6 +787,33 @@ public class DFA {
 		@Override
 		public String toString() {
 			return "Shift(" + remember + ", " + transTable + ")";
+		}
+
+		@Override
+		public boolean sanityCheck() {
+			// Check that the shifting table is a complete partition
+			// of all characters
+			CSet total = CSet.EMPTY;
+			for (CSet cset : transTable.keySet()) {
+				total = CSet.union(total, cset);
+				for (CSet cother : transTable.keySet()) {
+					if (cother == cset) continue;
+					CSet inter = CSet.inter(cset, cother);
+					if (inter.isEmpty()) continue;
+					System.err.println("The following shifting table is ambiguous:");
+					System.err.println("  " + transTable);
+					System.err.println("Overlapping sets: " + cset + " and " + cother);
+					System.err.println("Common characters: " + inter);
+				}
+			}
+			if (!CSet.equivalent(total, CSet.ALL)) {
+				System.err.println("The following shifting table is not complete:");
+				System.err.println("  " + transTable);
+				System.err.println("Characters mapped: " + total);
+				System.err.println("Characters unmapped: " + CSet.diff(CSet.ALL, total));
+				return false;
+			}
+			return true;
 		}
 	}
 }

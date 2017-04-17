@@ -112,8 +112,16 @@ public final class Automata {
 		DFA.@NonNull Cell[] automataCells) {
 		this.automataEntries = automataEntries;
 		this.automataCells = automataCells;
+		if (!sanityCheck())
+			throw new IllegalArgumentException("Sanity check failed");
 	}
-	
+
+	private boolean sanityCheck() {
+		for (DFA.Cell cell : automataCells)
+			if (!cell.sanityCheck()) return false;
+		return true;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
