@@ -59,7 +59,8 @@ public abstract class CSet {
 	}
 	
 	/**
-	 * The set of <b>all</b> possible characters
+	 * The set of <b>all</b> possible characters, including
+	 * the special end-of-file marker.
 	 * <p>
 	 * <i>Warning: also contains character values which
 	 * do not correspond to a valid Unicode character.</i>
@@ -341,7 +342,7 @@ public abstract class CSet {
 			return iinter(i1.next, i2);
 		} else if (i2.last < i1.first){
 			return iinter(i1, i2.next);
-		} else if (i2.last < i2.last) {
+		} else if (i1.last < i2.last) {
 			return new Interval(maxChar(i1.first, i2.first), 
 						i1.last,
 						iinter(i1.next, i2));
@@ -367,6 +368,7 @@ public abstract class CSet {
 		if (cs2 instanceof Singleton) {
 			char c2 = ((Singleton) cs2).c;
 			if (cs1.contains(c2)) return cs2;
+			else return EMPTY;
 		}
 		return intervals(
 				iinter(intervalsOf(cs1), intervalsOf(cs2)));
@@ -390,11 +392,11 @@ public abstract class CSet {
 			return idiff(i1, i2.next);
 		} else {
 			Interval r = i1.next;
-			if (i2.last < i2.first)
+			if (i2.last < i1.last)
 				r = new Interval((char) (i2.last + 1), 
-							i2.first, r);
+							i1.last, r);
 			if (i1.first < i2.first) {
-				return new Interval(i1.first, (char) (i1.last - 1),
+				return new Interval(i1.first, (char) (i2.first - 1),
 							idiff(r, i2.next));
 			} else {
 				return idiff(r, i2.next);
@@ -418,7 +420,8 @@ public abstract class CSet {
 		}
 		if (cs2 instanceof Singleton) {
 			char c2 = ((Singleton) cs2).c;
-			if (!cs1.contains(c2)) return cs1;
+			if (cs1.contains(c2)) return EMPTY;
+			else return cs2;
 		}
 		return intervals(
 				idiff(intervalsOf(cs1), intervalsOf(cs2)));

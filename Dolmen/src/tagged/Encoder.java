@@ -153,9 +153,13 @@ public final class Encoder {
 			final TRegular texpr = encode_(expr, charVars, count);
 			final Allocated allocated = Optimiser.optimise(varsInfo, texpr);
 			
-			tr = TRegular.or(tr,
-					TRegular.seq(allocated.regular,
-						TRegular.action(count)));
+			TRegular rclause =
+				TRegular.seq(allocated.regular, TRegular.action(count));
+			if (count == 0)
+				tr = rclause;
+			else
+				tr = TRegular.or(tr, rclause);
+					
 			actions.add(new Finisher(count, allocated.identInfos, act));
 			++count;
 			if (ntags < allocated.numCells)

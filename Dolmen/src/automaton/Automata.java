@@ -75,6 +75,25 @@ public final class Automata {
 			this.finishers = finishers;
 		}
 		
+		StringBuilder append(StringBuilder buf) {
+			buf.append(name);
+			args.forEach(arg -> buf.append(" " + arg));
+			buf.append("\n memSize = ").append(memSize);
+			buf.append("\n initial = ").append(initialState);
+			buf.append("\n initializer = ").append(initializer);
+			buf.append("\n finishers = ");
+			finishers.forEach(fi -> buf.append("\n   ").append(fi));
+			return buf;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder buf = new StringBuilder();
+			append(buf);
+			@SuppressWarnings("null")
+			@NonNull String res = buf.toString();
+			return res;			
+		}
 	}
 
 	/** The list of automata entries, one for each lexer rule */
@@ -93,6 +112,25 @@ public final class Automata {
 		DFA.@NonNull Cell[] automataCells) {
 		this.automataEntries = automataEntries;
 		this.automataCells = automataCells;
+	}
+	
+	@Override
+	public String toString() {
+		StringBuilder buf = new StringBuilder();
+		int num = 0;
+		for (Entry entry : automataEntries) {
+			buf.append("Entry ").append(num).append(": ");
+			buf.append(entry);
+			++num;
+		}
+		buf.append("\nCells (").append(automataCells.length).append("):");
+		for (int i = 0; i < automataCells.length; ++i) {
+			buf.append("\n ").append(i).append(": ");
+			buf.append(automataCells[i]);
+		}
+		@SuppressWarnings("null")
+		@NonNull String res = buf.toString();
+		return res;
 	}
 	
 }

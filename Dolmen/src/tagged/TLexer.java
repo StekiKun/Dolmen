@@ -52,7 +52,14 @@ public final class TLexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		buf.append(header).append("\n");
+		buf.append(header);
+		buf.append("\nchar sets:");
+		int i = 0;
+		for (CSet cset : charsets) {
+			buf.append("\n " + i).append(" -> ");
+			buf.append(cset);
+			++i;
+		}
 		for (TLexerEntry entry : entries) {
 			buf.append("\n");
 			buf.append(entry);

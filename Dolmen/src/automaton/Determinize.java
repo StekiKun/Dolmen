@@ -83,6 +83,11 @@ public class Determinize {
 		this.tagCells = new HashMap<>();
 		this.stateTable = new ArrayList<>();
 	}
+	
+	private static boolean withDebug = false;
+	private void debug(String msg) {
+		if (withDebug) System.out.println(msg);
+	}
 
 	@SuppressWarnings("unused")
 	private void reset() {
@@ -352,7 +357,9 @@ public class Determinize {
 	/**
 	 * Auxiliary function used by {@link #sortMoves(ArrayList)}
 	 * to sort the range of elements from {@code from} to {@code to}
-	 * (inclusive)
+	 * (inclusive).
+	 * <p>
+	 * This method must not be called with {@code to < from}.
 	 * 
 	 * @param from
 	 * @param memActions
@@ -400,6 +407,7 @@ public class Determinize {
 	 * @param memActions
 	 */
 	void sortMoves(ArrayList<MemAction> memActions) {
+		if (memActions.isEmpty()) return;
 		sortMovesAux(0, memActions, memActions.size() - 1);
 	}
 
@@ -460,6 +468,8 @@ public class Determinize {
 		final DFA.Key key = DFA.getKey(st);
 		@Nullable Integer num = Maps.get(stateMap, key);
 		if (num != null) {
+			debug("Found equivalent state for " + st);
+			debug("  rep is: " + stateTable.get(num));
 			moveTo(key.mem, st, stateTable.get(num), moves);
 			return num;
 		} else {
@@ -506,6 +516,10 @@ public class Determinize {
 		Function<DFA.State, T> f, List<Indexed<T>> acc) {
 		while (!todo.isEmpty()) {
 			StateNum sn = todo.pop();
+			debug("States to visit: " + (todo.size() +  1));
+			debug("Picking state " + sn.num + " on todo stack");
+			debug(sn.state.toString());
+			// Prompt.getInputLine("Proceed?");
 			T r = f.apply(sn.state);
 			acc.add(new Indexed<>(sn.num, r));
 		}
@@ -849,25 +863,28 @@ public class Determinize {
 	 * @return a map from all base tags to the corresponding
 	 * 	memory address, for every finisher
 	 */
-	@SuppressWarnings("unused")
 	private static @NonNull Map<TagInfo, Integer>[]
 		extractTags(List<Finisher> finishers) {
 		@SuppressWarnings("unchecked")
-		@NonNull Map<TagInfo, Integer>[] res = 
-			new @NonNull Map[finishers.size()];
+		Map<TagInfo, Integer>[] res = 
+			new @Nullable Map[finishers.size()];
 		// Gather all actual tags used as bases in finishers
 		for (Finisher finisher : finishers) {
 			final int act = finisher.action;
 			if (res[act] != null) throw new IllegalStateException();
-			Map<TagInfo, Integer> locs = Maps.create();
+			Map<@NonNull TagInfo, @NonNull Integer> locs = Maps.create();
 			finisher.tags.forEach((name, info) -> {
 				addTagEntries(act, name, info, locs);
 			});
+			res[act] = locs.isEmpty() ? Maps.empty() : locs;
 		}
-		// Check that all spots are accounted for
+		// Check that all spots are accounted for, so we can 
+		// cast it to NonNull safely
 		for (int i = 0; i < res.length; ++i)
 			if (res[i] == null) throw new IllegalStateException();
-		return res;
+		@SuppressWarnings("null")
+		@NonNull Map<TagInfo, Integer>[] checkedRes = res;
+		return checkedRes;
 	}
 	
 	/**

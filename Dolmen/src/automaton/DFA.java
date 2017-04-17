@@ -53,6 +53,11 @@ public class DFA {
 			this.priority = priority;
 			this.locs = locs;
 		}
+		
+		@Override
+		public String toString() {
+			return "(" + priority + ", " + locs + ")";
+		}
 	}
 	
 	/**
@@ -104,6 +109,30 @@ public class DFA {
 			this.finalAction = NO_ACTION;
 			this.finisher = null;
 			this.others = others;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder buf = new StringBuilder();
+			buf.append("[final=");
+			if (finisher != null) {
+				buf.append(finalAction).append(", finisher=")
+				   .append(finisher).append("\n");
+			}
+			else
+				buf.append("NOT FINAL\n");
+			buf.append(" others=");
+			if (others.isEmpty())
+				buf.append("NONE\n");
+			else
+				others.forEach((n, mmap) -> {
+					buf.append("\n  ").append(n)
+					   .append(" -> ").append(mmap);
+				});
+			buf.append("\n]");
+			@SuppressWarnings("null")
+			@NonNull String res = buf.toString();
+			return res;
 		}
 		
 		/** The empty state */
@@ -248,6 +277,31 @@ public class DFA {
 			this.state = state;
 			this.mem = mem;
 		}
+
+		@Override
+		public int hashCode() {
+			final int prime = 31;
+			int result = 1;
+			result = prime * result + mem.hashCode();
+			result = prime * result + state.hashCode();
+			return result;
+		}
+
+		@Override
+		public boolean equals(@Nullable Object obj) {
+			if (this == obj)
+				return true;
+			if (obj == null)
+				return false;
+			if (getClass() != obj.getClass())
+				return false;
+			Key other = (Key) obj;
+			if (!mem.equals(other.mem))
+				return false;
+			if (!state.equals(other.state))
+				return false;
+			return true;
+		}
 	}
 	
 	/**
@@ -339,9 +393,9 @@ public class DFA {
 		
 		// The state part of the key is all the NFA states
 		// appearing in s
-		Set<NFA.Event> stateKey =
-			s.isFinal() ? Sets.empty() :
-				Sets.singleton(NFA.Event.toAction(s.finalAction));
+		Set<NFA.Event> stateKey = Sets.create();
+		if (s.isFinal())
+			stateKey.add(NFA.Event.toAction(s.finalAction));
 		s.others.keySet().forEach(
 			n -> stateKey.add(NFA.Event.onChars(n)));
 		
@@ -371,6 +425,13 @@ public class DFA {
 		 * 		-1 if it is a set action and not a copy
 		 */
 		public abstract int getSrc();
+		
+		@Override
+		public final String toString() {
+			if (getSrc() < 0)
+				return "Set(" + getDest() + ")";
+			return "Copy(" + getDest() + " <- " + getSrc() + ")";
+		}
 		
 		/**
 		 * Represents a memory action where some memory
@@ -497,6 +558,13 @@ public class DFA {
 			this.from = from;
 		}
 		
+		@Override
+		public String toString() {
+			if (from >= 0)
+				return "SET(" + tag + "<-" + from + ")";
+			return "ERASE(" + tag + ")";
+		}
+		
 		/**
 		 * @param tag
 		 * @param from
@@ -548,6 +616,12 @@ public class DFA {
 		/** When nothing need to be remembered */
 		public static final Remember NOTHING = new Remember();
 		
+		@Override
+		public String toString() {
+			if (this == NOTHING) return "NoRemember";
+			return "Remember(" + action + ", " + tagActions + ")";
+		}
+		
 		/**
 		 * Remember the final action and its associated tag actions
 		 * 
@@ -594,6 +668,8 @@ public class DFA {
 		 * @return the {@link Kind kind} of this automaton cell
 		 */
 		public abstract Kind getKind();
+		
+		@Override public abstract String toString();
 	}
 	
 	/**
@@ -620,6 +696,12 @@ public class DFA {
 		@Override
 		public Kind getKind() { 
 			return Kind.PERFORM;
+		}
+		
+		@Override
+		public String toString() {
+			return "Perform(" + action + ", "
+				+ tagActions +")";
 		}
 	}
 
@@ -653,6 +735,12 @@ public class DFA {
 		@SuppressWarnings("null")
 		public final static TransActions BACKTRACK =
 			new TransActions(GotoAction.BACKTRACK, Collections.emptyList());
+		
+		@Override
+		public String toString() {
+			if (this == BACKTRACK) return "Backtrack";
+			return "Goto(" + gotoAction.target + ", " + memActions + ")";
+		}
 	}
 	
 	/**
@@ -682,7 +770,12 @@ public class DFA {
 		
 		@Override
 		public Kind getKind() {
-			return Kind.PERFORM; 
+			return Kind.SHIFT; 
+		}
+		
+		@Override
+		public String toString() {
+			return "Shift(" + remember + ", " + transTable + ")";
 		}
 	}
 }

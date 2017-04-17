@@ -74,7 +74,7 @@ public final class Lexer {
 			buf.append(" = ").append(shortest ? "shortest" : "parse");
 			clauses.forEach((reg, act) -> {
 				buf.append("\n| ").append(reg);
-				buf.append(" {").append(act.find()).append(" }");
+				buf.append(" {").append(act.find()).append("}");
 			});
 			return buf;
 		}
@@ -112,14 +112,14 @@ public final class Lexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		buf.append("{\n").append(header.find()).append("}\n");
+		buf.append("{\n").append(header.find()).append("\n}");
 		boolean first = true;
 		for (Entry entry : entryPoints) {
 			buf.append("\n");
 			entry.append(buf, first ? "rule" : "and");
 			first = false;
 		}
-		buf.append("{\n").append(footer.find()).append("}\n");
+		buf.append("\n{\n").append(footer.find()).append("\n}");
 		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
 		return res;

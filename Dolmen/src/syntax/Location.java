@@ -97,6 +97,7 @@ public final class Location {
 
 	@Override
 	public String toString() {
+		if (this == DUMMY) return "Location DUMMY";
 		return "Location [filename=" + filename + ", startPos=" + startPos 
 				+ ", endPos=" + endPos + ", startLine="
 				+ startLine + ", startCol=" + startCol + "]";
@@ -106,6 +107,9 @@ public final class Location {
 	 * @return the string portion described by this location
 	 */
 	public String find() {
+		if (this == DUMMY)
+			return "<DUMMY>";
+
 		try (FileReader reader = new FileReader(filename)) {
 			reader.skip(startPos);
 			int length = endPos - startPos + 1;

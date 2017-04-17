@@ -297,7 +297,7 @@ public class NFA {
 			case REPETITION: {
 				final Repetition repetition = (Repetition) regular;
 				TRegular reg = repetition.reg;
-				fill(Sets.union(firstPos(reg), transs), regular);
+				fill(Sets.union(firstPos(reg), transs), reg);
 				break;
 			}
 			}
