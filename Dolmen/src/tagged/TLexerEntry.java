@@ -121,9 +121,9 @@ public final class TLexerEntry {
 		buf.append(": ").append(shortest ? "[shortest]\n" : "\n");
 		buf.append(" regexp: " ).append(regexp).append("\n");
 		buf.append(" tags: ").append(memTags).append("\n");
-		buf.append(" actions: \n");
+		buf.append(" actions:");
 		actions.forEach(fi -> { 
-			buf.append(" - ");
+			buf.append("\n - ");
 			fi.append(buf);
 		});
 		@SuppressWarnings("null")

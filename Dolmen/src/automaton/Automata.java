@@ -127,6 +127,7 @@ public final class Automata {
 		StringBuilder buf = new StringBuilder();
 		int num = 0;
 		for (Entry entry : automataEntries) {
+			if (num > 0) buf.append("\n");
 			buf.append("Entry ").append(num).append(": ");
 			buf.append(entry);
 			++num;

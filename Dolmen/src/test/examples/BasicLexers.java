@@ -3,6 +3,8 @@ package test.examples;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import automaton.Automata;
 import automaton.Determinize;
 import common.CSet;
@@ -28,9 +30,18 @@ public abstract class BasicLexers {
 
 	// Common regular expressions
 	
-	private final static CSet lalpha = CSet.interval('a', 'z');
-	private final static CSet ualpha = CSet.interval('A', 'Z');
-	private final static CSet digit = CSet.interval('0', '9');
+	final static CSet lalpha = CSet.interval('a', 'z');
+	final static CSet ualpha = CSet.interval('A', 'Z');
+	final static CSet digit = CSet.interval('0', '9');
+	
+	// Ordered clauses
+	
+	static Map<Regular, Location> clauses(@NonNull Regular... regs) {
+		Map<Regular, Location> res = new LinkedHashMap<>(regs.length);
+		for (int i = 0; i < regs.length; ++i)
+			res.put(regs[i], Location.DUMMY);
+		return res;
+	}
 	
 	/**
 	 * A simple lexer definition example with
@@ -165,11 +176,7 @@ public abstract class BasicLexers {
 		private final static Regular ident = SimpleIDs.ident;
 		
 		private final static Map<Regular, Location> clauses =
-			new LinkedHashMap<>();
-		static {
-			clauses.put(ident, Location.DUMMY);
-			clauses.put(integer, Location.DUMMY);
-		}
+			clauses(ident, integer);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry("ident_int", false, Lists.empty(), clauses);
 		
@@ -233,12 +240,7 @@ public abstract class BasicLexers {
 		private final static Regular ident = SimpleIDs.ident;
 		
 		private final static Map<Regular, Location> clauses =
-			new LinkedHashMap<>();
-		static {
-			clauses.put(DO, Location.DUMMY);
-			clauses.put(FOR, Location.DUMMY);
-			clauses.put(ident, Location.DUMMY);
-		}
+			clauses(DO, FOR, ident);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry("identkw", false, Lists.empty(), clauses);
 		private final static Lexer.Entry sh_entry =
@@ -250,7 +252,7 @@ public abstract class BasicLexers {
 			new Lexer(Location.DUMMY, Lists.singleton(sh_entry), Location.DUMMY);
 	}
 	
-	private static void test(Lexer lexer, boolean opt) {
+	static void test(Lexer lexer, boolean opt) {
 		System.out.println("=========LEXER========");
 		System.out.println(lexer);
 		System.out.println("--------ENCODED-------");
