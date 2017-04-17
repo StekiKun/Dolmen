@@ -212,6 +212,18 @@ public abstract class BasicLexers {
 	 *  state 6: {final -> action 1}    # FOR..
 	 *      [_a-zA-Z0-9] -> Goto 1
 	 * </pre>
+	 * With <i>shortest-match rule</i> instead, the
+	 * keywords are never matched and the DFA has four states,
+	 * but could be reduced to two if minimized:
+	 * <pre>
+	 *  state 0: {initial}
+	 *  	[_a-zA-CEG-Z] -> Goto 1
+	 *      F             -> Goto 2
+	 *      D             -> Goto 3
+	 *  state 1: {final -> action 2}
+	 *  state 2: {final -> action 2}
+	 *  state 3: {final -> action 2}
+	 * </pre>
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
