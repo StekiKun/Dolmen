@@ -39,20 +39,20 @@ public final class Automata {
 		/** The name of this rule */
 		public final String name;
 		/** The formal arguments for this rule */
-		public final List<String> args;
+		public final List<@NonNull String> args;
 		/** The number of memory cells required */
 		public final int memSize;
 		
 		/** The number of the initial state for this rule */
 		public final int initialState;
 		/** The initial memory actions */
-		public final List<MemAction> initializer;
+		public final List<@NonNull MemAction> initializer;
 		
 		/** 
 		 * The list of finishers associated to 
 		 * semantic actions for this rule
 		 */
-		public final List<Finisher> finishers;
+		public final List<@NonNull Finisher> finishers;
 		
 		/**
 		 * Builds an automaton entry from the given arguments
@@ -97,7 +97,7 @@ public final class Automata {
 	}
 
 	/** The list of automata entries, one for each lexer rule */
-	public final List<Entry> automataEntries;
+	public final List<@NonNull Entry> automataEntries;
 	/** The cells of the various automata implementing the rules */
 	public final DFA.@NonNull Cell[] automataCells;
 	

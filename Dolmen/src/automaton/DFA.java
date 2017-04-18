@@ -609,7 +609,7 @@ public class DFA {
 		/** The final action to remember, if >= 0 */
 		public final int action;
 		/** The tag actions associated to {@link #action} */
-		public final List<TagAction> tagActions;
+		public final List<@NonNull TagAction> tagActions;
 		
 		@SuppressWarnings("null")
 		private Remember() {
@@ -691,7 +691,7 @@ public class DFA {
 		/** The semantic action to perform */
 		public final int action;
 		/** The list of associated tag actions, the 'finisher list' */
-		public final List<TagAction> tagActions;
+		public final List<@NonNull TagAction> tagActions;
 		
 		/**
 		 * @param action
@@ -731,7 +731,7 @@ public class DFA {
 		/** The kind of shift performed in this transition */
 		public final GotoAction gotoAction;
 		/** The associated memory actions to perform */
-		public final List<MemAction> memActions;
+		public final List<@NonNull MemAction> memActions;
 		
 		/**
 		 * @param gotoAction
@@ -771,7 +771,7 @@ public class DFA {
 		/**
 		 * The transition table between character sets and transition actions
 		 */
-		public final Map<CSet, TransActions> transTable;
+		public final Map<@NonNull CSet, @NonNull TransActions> transTable;
 		
 		/**
 		 * @param remember

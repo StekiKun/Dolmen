@@ -1,6 +1,7 @@
 package common;
 
 import java.util.Random;
+import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -32,6 +33,11 @@ public abstract class CSet {
 	 * @return whether this character set contains {@code ch}
 	 */
 	public abstract boolean contains(char ch);
+	
+	/**
+	 * @return the number of characters in this set
+	 */
+	public abstract int cardinal();
 	
 	@Override
 	public abstract String toString();
@@ -75,6 +81,11 @@ public abstract class CSet {
 		public boolean contains(char ch) {
 			return true;
 		}
+
+		@Override
+		public int cardinal() {
+			return 0x10000;
+		}
 		
 		@Override
 		public String toString() {
@@ -94,6 +105,11 @@ public abstract class CSet {
 		@Override
 		public boolean contains(char ch) {
 			return false;
+		}
+		
+		@Override
+		public int cardinal() {
+			return 0;
 		}
 		
 		@Override
@@ -122,6 +138,11 @@ public abstract class CSet {
 		@Override
 		public boolean contains(char ch) {
 			return ch == c;
+		}
+		
+		@Override
+		public int cardinal() {
+			return 1;
 		}
 
 		@Override
@@ -221,6 +242,17 @@ public abstract class CSet {
 		}
 
 		@Override
+		public int cardinal() {
+			int res = 0;
+			Interval cur = head;
+			while (cur != null) {
+				res += cur.last - cur.first + 1;
+				cur = cur.next;
+			}
+			return res;
+		}
+		
+		@Override
 		public String toString() {
 			StringBuilder buf = new StringBuilder();
 			buf.append("[");
@@ -252,6 +284,22 @@ public abstract class CSet {
 		if (i.first == i.last) return new Singleton(i.first);
 		if (i.first == 0 && i.last == 0xFFFF) return ALL;
 		return new Intervals(i);
+	}
+	
+	/**
+	 * Applies the function {@code f} to all characters
+	 * in the character set
+	 * 
+	 * @param f
+	 */
+	public void forEach(Consumer<? super Character> f) {
+		@Nullable Interval cur = intervalsOf(this);
+		while (cur != null) {
+			for (char c = cur.first; c <= cur.last; ++c)
+				f.accept(c);
+			cur = cur.next;
+		}
+		return;
 	}
 	
 	/*
