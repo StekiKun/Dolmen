@@ -962,7 +962,8 @@ public class Determinize {
 		DFA.@NonNull Cell[] checkedCells = cells;
 		
 		// Job done! We can return the full deterministic automata
-		return new Automata(automataEntries, checkedCells);
+		return new Automata(tlexer.header, tlexer.footer, 
+				automataEntries, checkedCells);
 	}
 	
 }

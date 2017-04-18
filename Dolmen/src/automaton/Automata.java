@@ -5,6 +5,7 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 
 import automaton.DFA.MemAction;
+import syntax.Location;
 import tagged.TLexerEntry.Finisher;
 
 /**
@@ -96,20 +97,27 @@ public final class Automata {
 		}
 	}
 
+	/** The location of this lexer's header */
+	public final Location header;
 	/** The list of automata entries, one for each lexer rule */
 	public final List<@NonNull Entry> automataEntries;
 	/** The cells of the various automata implementing the rules */
 	public final DFA.@NonNull Cell[] automataCells;
-	
+	/** The location of this lexer's footer */
+	public final Location footer;
+
 	/**
 	 * Builds the automata from the given entries and cells
 	 * 
+	 * @param header
+	 * @param footer
 	 * @param automataEntries
 	 * @param automataCells
 	 */
-	public Automata(
-		List<Entry> automataEntries,
-		DFA.@NonNull Cell[] automataCells) {
+	public Automata(Location header, Location footer,
+		List<Entry> automataEntries, DFA.@NonNull Cell[] automataCells) {
+		this.header = header;
+		this.footer = footer;
 		this.automataEntries = automataEntries;
 		this.automataCells = automataCells;
 		if (!sanityCheck())

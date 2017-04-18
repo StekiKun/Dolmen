@@ -1,5 +1,8 @@
 package test.examples;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -7,6 +10,7 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import automaton.Automata;
 import automaton.Determinize;
+import codegen.AutomataOutput;
 import common.CSet;
 import common.Lists;
 import common.Maps;
@@ -262,18 +266,53 @@ public abstract class BasicLexers {
 		Automata aut = Determinize.lexer(lexer, opt);
 		System.out.println(aut);
 	}
+
+	static void testOutput(String className, Lexer lexer, boolean opt) {
+		System.out.println("=========LEXER========");
+		System.out.println(lexer);
+		System.out.println("--------ENCODED-------");
+		TLexer tlexer = Encoder.encodeLexer(lexer, opt);
+		System.out.println(tlexer);		
+		System.out.println("--------AUTOMATA------");
+		Automata aut = Determinize.lexer(lexer, opt);
+		System.out.println(aut);
+		File file = new File("src-gen/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			AutomataOutput.output(writer, className, aut);
+			System.out.println("----------JAVA--------");
+			System.out.println("Generated in " + file.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		// StringWriter writer = new StringWriter(1024);
+//		try {
+//			AutomataOutput.output(writer, className, aut);
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
+//		System.out.println("----------JAVA--------");
+//		System.out.println(writer.toString());
+	}
 	
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		test(SimpleIDs.LEXER, true);
-		test(BasicIDs.LEXER, true);
-		test(BoundIDs.LEXER, true);
-		test(BoundIDs.LEXER, false);
-		test(IDsIntegers.LEXER, true);
-		test(IDsKeywords.LEXER, true);
-		test(IDsKeywords.SHORTEST, true);
+//		test(SimpleIDs.LEXER, true);
+//		test(BasicIDs.LEXER, true);
+//		test(BoundIDs.LEXER, true);
+//		test(BoundIDs.LEXER, false);
+//		test(IDsIntegers.LEXER, true);
+//		test(IDsKeywords.LEXER, true);
+//		test(IDsKeywords.SHORTEST, true);
+		testOutput("SimpleIDs", SimpleIDs.LEXER, true);
+		testOutput("BasicIDs", BasicIDs.LEXER, true);
+		testOutput("BoundIDs", BoundIDs.LEXER, true);
+		testOutput("BoundIDsNoOpt", BoundIDs.LEXER, false);
+		testOutput("IDsIntegers", IDsIntegers.LEXER, true);
+		testOutput("IDsKeywords", IDsKeywords.LEXER, true);
+		testOutput("IDsKeywordsShortest", IDsKeywords.SHORTEST, true);
 	}
 	
 }

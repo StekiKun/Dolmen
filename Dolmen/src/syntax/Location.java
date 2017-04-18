@@ -107,8 +107,7 @@ public class Location {
 	 * @return the string portion described by this location
 	 */
 	public String find() {
-		if (this == DUMMY)
-			return "<DUMMY>";
+		if (this == DUMMY) return "";
 
 		try (FileReader reader = new FileReader(filename)) {
 			reader.skip(startPos);

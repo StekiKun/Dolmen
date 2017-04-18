@@ -12,6 +12,7 @@ import syntax.Lexer;
 import syntax.Location;
 import syntax.Regular;
 import static test.examples.BasicLexers.test;
+import static test.examples.BasicLexers.testOutput;
 
 /**
  * More advanced lexer definitions, manually
@@ -157,6 +158,7 @@ public abstract class AdvancedLexers {
 	 */
 	public static void main(String[] args) {
 		test(ArithExprsComment.LEXER, true);
+		testOutput("ArithExprsComment", ArithExprsComment.LEXER, true);
 	}
 	
 }
