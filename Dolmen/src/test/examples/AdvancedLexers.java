@@ -116,17 +116,17 @@ public abstract class AdvancedLexers {
 			inlinedClauses(
 				ws,						" return main(); ",
 				newline,				" newline(); return main(); ",
-				ident,					" return IDENT; ",
-				decimal,				" return INT; ",
-				hexadecimal,			" return HEX; ",
+				ident,					" return Token.IDENT; ",
+				decimal,				" return Token.INT; ",
+				hexadecimal,			" return Token.HEX; ",
 				Regular.string("/*"),	" comment(); return main(); ",
-				Regular.string("+"),	" return PLUS; ",
-				Regular.string("-"),	" return MINUS; ",
-				Regular.string("*"),	" return MULT; ",
-				Regular.string("/"),	" return DIV; ",
-				Regular.string("("),	" return LPAREN; ",
-				Regular.string(")"),	" return RPAREN; ",
-				Regular.chars(CSet.EOF),	" return EOF; ",
+				Regular.string("+"),	" return Token.PLUS; ",
+				Regular.string("-"),	" return Token.MINUS; ",
+				Regular.string("*"),	" return Token.MULT; ",
+				Regular.string("/"),	" return Token.DIV; ",
+				Regular.string("("),	" return Token.LPAREN; ",
+				Regular.string(")"),	" return Token.RPAREN; ",
+				Regular.chars(CSet.EOF),	" return Token.EOF; ",
 				Regular.chars(CSet.ALL),	" throw new LexicalError(\"Unexpected char\"); "
 			);
 		
@@ -142,7 +142,7 @@ public abstract class AdvancedLexers {
 				Regular.chars(CSet.EOF),    " throw new LexicalError(\"EOF in comment\"); "
 			);
 		private final static Lexer.Entry mainEntry =
-			new Lexer.Entry("main", Location.inlined("Object"), false, 
+			new Lexer.Entry("main", Location.inlined("Token"), false, 
 					Lists.empty(), mainClauses);
 		private final static Lexer.Entry commentEntry =
 			new Lexer.Entry("comment", Location.inlined("void"), false, 
@@ -151,7 +151,10 @@ public abstract class AdvancedLexers {
 		@SuppressWarnings("null")
 		final static Lexer LEXER =
 			new Lexer(
-				Location.inlined("private void newline() { }"),
+				Location.inlined("public enum Token { " + 
+						"IDENT, INT, HEX, PLUS, MINUS, MULT, " + 
+						"DIV, LPAREN, RPAREN, EOF; }\n\n" +
+						"private void newline() { }\n"),
 				Arrays.asList(mainEntry, commentEntry), 
 				Location.DUMMY);
 	}
