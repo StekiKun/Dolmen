@@ -176,7 +176,8 @@ public final class Encoder {
 				ntags = allocated.numCells;
 		}
 		
-		return new TLexerEntry(entry.name, entry.shortest, entry.args,
+		return new TLexerEntry(entry.name, entry.returnType, 
+				entry.shortest, entry.args,
 				tr, ntags, actions);
 	}
 	

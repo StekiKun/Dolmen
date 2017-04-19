@@ -80,6 +80,18 @@ public final class AutomataOutput {
 		//      Optional<String> subLexemeOpt(int, int)
 	}
 	
+	private void genHeader() {
+		String hdr = aut.header.find();
+		if (hdr.isEmpty()) return;
+		buf.newline().emitln(aut.header.find());
+	}
+
+	private void genFooter() {
+		String ftr = aut.footer.find();
+		if (ftr.isEmpty()) return;
+		buf.newline().emitln(aut.footer.find());
+	}
+	
 	private static String cellName(int idx) {
 		return "cell" + idx;
 	}
@@ -113,9 +125,13 @@ public final class AutomataOutput {
 	}
 	
 	private void genPattern(CSet cset) {
+		System.out.println("CSet pattern of cardinality " 
+				+ cset.cardinal() + ": " + cset);
 		buf.emit("// ").emit(cset.toString());
-		cset.forEach(c -> 
-			buf.newline().emit("case " + (int)c + ":"));
+		cset.forEach(c -> {
+			System.out.println("accepting " + c);
+			buf.newline().emit("case " + (int)c + ":");
+		});
 	}
 	
 	private void genMemActions(List<@NonNull MemAction> memActions) {
@@ -287,13 +303,13 @@ public final class AutomataOutput {
 		buf.decrIndent().newline();
 	}
 	
-	// TODO: Add Java return type to entries!
 	private void genEntry(Automata.Entry entry) {
 		buf.newline()
 		    .emitln("/**")
 		    .emit(" * Entry point for rule ").emitln(entry.name)
 		    .emitln(" */")
-			.emit("public Object ").emit(entry.name).emit("(");
+			.emit("public ").emit(entry.returnType.find()).emit(" ")
+			.emit(entry.name).emit("(");
 		genEntryArgs(entry.args);
 		buf.emit(")").openBlock();
 		// Initialization of lexer variables for this entry
@@ -327,7 +343,7 @@ public final class AutomataOutput {
 		buf.emit("public final class ").emit(name).openBlock();
 		genLexicalError();
 		
-		buf.emitln(aut.header.find());
+		genHeader();
 		genFields();
 		genMethods();
 		
@@ -340,7 +356,7 @@ public final class AutomataOutput {
 		for (int i = 0; i < aut.automataCells.length; ++i)
 			genCell(i, aut.automataCells[i]);
 		
-		buf.emitln(aut.footer.find());
+		genFooter();
 		buf.closeBlock();
 	}
 	

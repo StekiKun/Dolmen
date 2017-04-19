@@ -20,8 +20,8 @@ public final class Lexer {
 	/**
 	 * A lexer rule entry is a seequence of regular expressions
 	 * associated to semantic actions. A rule has a
-	 * {@link #name name} and may have some some 
-	 * {@link #args arguments}. The regular expressions
+	 * {@link #name name}, a {@link #returnType return type} and may 
+	 * have some {@link #args arguments}. The regular expressions
 	 * that form the rule are called the {@link #clauses clauses}
 	 * are normally interpreted with the <i>longest match 
 	 * priority</i>, unless {@link #shortest specified otherwise}.
@@ -42,6 +42,9 @@ public final class Lexer {
 		public final boolean shortest;
 		/** The list of formal arguments for this rule */
 		public final List<@NonNull String> args;
+		/** The return type of semantic actions for this entry */
+		public final Location returnType;
+		
 		/** 
 		 * The various clauses for this entry, associated to
 		 * the locations for the corresponding semantic actions.
@@ -53,6 +56,7 @@ public final class Lexer {
 		
 		/**
 		 * @param name
+		 * @param returnType
 		 * @param shortest
 		 * @param args
 		 * @param clauses
@@ -60,9 +64,10 @@ public final class Lexer {
 		 * Builds a new lexer entry with the provided arguments.
 		 * Beware that order in {@code clauses} is relevant.
 		 */
-		public Entry(String name, boolean shortest,
+		public Entry(String name, Location returnType, boolean shortest,
 				List<String> args, Map<Regular, Location> clauses) {
 			this.name = name;
+			this.returnType = returnType;
 			this.shortest = shortest;
 			this.args = args;
 			this.clauses = clauses;
@@ -71,6 +76,7 @@ public final class Lexer {
 		StringBuilder append(StringBuilder buf, String kword) {
 			buf.append(kword).append(" ").append(name);
 			args.forEach(arg -> buf.append(" " + arg));
+			buf.append(" : ").append(returnType.find());
 			buf.append(" = ").append(shortest ? "shortest" : "parse");
 			clauses.forEach((reg, act) -> {
 				buf.append("\n| ").append(reg);

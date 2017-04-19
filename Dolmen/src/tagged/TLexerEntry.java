@@ -75,6 +75,8 @@ public final class TLexerEntry {
 	public final String name;
 	/** Whether the shortest match priority should be used */
 	public final boolean shortest;
+	/** The return type of the semantic actions for this lexer entry */
+	public final Location returnType;
 	/** The list of formal arguments available in semantic actions */
 	public final List<@NonNull String> args;
 	/** The tagged regular expression encoding all clauses */
@@ -88,16 +90,19 @@ public final class TLexerEntry {
 	 * Builds an encoded lexer entry based on all the arguments
 	 * 
 	 * @param name
+	 * @param returnType
 	 * @param shortest
 	 * @param args
 	 * @param regexp
 	 * @param memTags
 	 * @param actions
 	 */
-	public TLexerEntry(String name, boolean shortest, List<String> args,
+	public TLexerEntry(String name, Location returnType,
+			boolean shortest, List<String> args,
 			TRegular regexp, int memTags, List<Finisher> actions) {
 		this.name = name;
 		this.shortest = shortest;
+		this.returnType = returnType;
 		this.args = args;
 		this.regexp = regexp;
 		this.memTags = memTags;
@@ -118,7 +123,8 @@ public final class TLexerEntry {
 			}
 			buf.append(")");
 		}
-		buf.append(": ").append(shortest ? "[shortest]\n" : "\n");
+		buf.append(": ").append(returnType);
+		buf.append(shortest ? "[shortest]\n" : "\n");
 		buf.append(" regexp: " ).append(regexp).append("\n");
 		buf.append(" tags: ").append(memTags).append("\n");
 		buf.append(" actions:");

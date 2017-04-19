@@ -32,6 +32,8 @@ public abstract class BasicLexers {
 		// Static utility only
 	}
 
+	final static Location VOID = Location.inlined("void");
+	
 	// Common regular expressions
 	
 	final static CSet lalpha = CSet.interval('a', 'z');
@@ -73,7 +75,7 @@ public abstract class BasicLexers {
 			Regular.seq(Regular.chars(idstart), 
 				Regular.star(Regular.chars(idbody)));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", false, Lists.empty(),
+			new Lexer.Entry("ident", VOID, false, Lists.empty(),
 				Maps.singleton(ident, Location.DUMMY));
 		
 		final static Lexer LEXER = 
@@ -105,7 +107,7 @@ public abstract class BasicLexers {
 			Regular.seq(SimpleIDs.ident, 
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", false, Lists.empty(),
+			new Lexer.Entry("ident", VOID, false, Lists.empty(),
 				Maps.singleton(ident, Location.DUMMY));
 		
 		final static Lexer LEXER = 
@@ -142,7 +144,7 @@ public abstract class BasicLexers {
 				Regular.binding(SimpleIDs.ident, "id", Location.DUMMY), 
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", false, Lists.empty(),
+			new Lexer.Entry("ident", VOID, false, Lists.empty(),
 				Maps.singleton(ident, Location.DUMMY));
 		
 		final static Lexer LEXER = 
@@ -182,7 +184,7 @@ public abstract class BasicLexers {
 		private final static Map<Regular, Location> clauses =
 			clauses(ident, integer);
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident_int", false, Lists.empty(), clauses);
+			new Lexer.Entry("ident_int", VOID, false, Lists.empty(), clauses);
 		
 		final static Lexer LEXER = 
 			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
@@ -246,9 +248,9 @@ public abstract class BasicLexers {
 		private final static Map<Regular, Location> clauses =
 			clauses(DO, FOR, ident);
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("identkw", false, Lists.empty(), clauses);
+			new Lexer.Entry("identkw", VOID, false, Lists.empty(), clauses);
 		private final static Lexer.Entry sh_entry =
-				new Lexer.Entry("identkw", true, Lists.empty(), clauses);
+				new Lexer.Entry("identkw", VOID, true, Lists.empty(), clauses);
 		
 		final static Lexer LEXER =
 			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);

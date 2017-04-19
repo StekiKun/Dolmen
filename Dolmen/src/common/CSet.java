@@ -295,8 +295,8 @@ public abstract class CSet {
 	public void forEach(Consumer<? super Character> f) {
 		@Nullable Interval cur = intervalsOf(this);
 		while (cur != null) {
-			for (char c = cur.first; c <= cur.last; ++c)
-				f.accept(c);
+			for (int c = cur.first; c <= cur.last; ++c)
+				f.accept((char) c);
 			cur = cur.next;
 		}
 		return;

@@ -940,7 +940,7 @@ public class Determinize {
 			// And finally register the automaton entry corresponding
 			// to this lexer entry
 			Automata.Entry autoEntry =
-				new Automata.Entry(tentry.name, tentry.args, 
+				new Automata.Entry(tentry.name, tentry.returnType, tentry.args, 
 						det.tempPending ? det.nextMemCell + 1 : det.nextMemCell, 
 						initNum, initActions, tentry.actions);
 			automataEntries.add(autoEntry);

@@ -39,6 +39,8 @@ public final class Automata {
 	public static final class Entry {
 		/** The name of this rule */
 		public final String name;
+		/** The return type of this rule */
+		public final Location returnType;
 		/** The formal arguments for this rule */
 		public final List<@NonNull String> args;
 		/** The number of memory cells required */
@@ -59,16 +61,18 @@ public final class Automata {
 		 * Builds an automaton entry from the given arguments
 		 * 
 		 * @param name
+		 * @param returnType
 		 * @param args
 		 * @param memSize
 		 * @param initialState
 		 * @param initializer
 		 * @param finishers
 		 */
-		public Entry(String name, List<String> args,
+		public Entry(String name, Location returnType, List<String> args,
 			int memSize, int initialState, List<MemAction> initializer,
 			List<Finisher> finishers) {
 			this.name = name;
+			this.returnType = returnType;
 			this.args = args;
 			this.memSize = memSize;
 			this.initialState = initialState;
