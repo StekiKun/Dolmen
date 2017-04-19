@@ -1,0 +1,83 @@
+== LEXER DESCRIPTION SYNTAX ==
+
+# Lexical conventions
+
+- Identifiers: [_a-zA-Z][_a-zA-Z0-9]*
+- Java snippets and semantic actions can be
+  arbitrary valid Java code. Misformed comments
+  or string literals in these blocks can mess up
+  the lexer definition lexer/parser.
+- Comments can appear anywhere in the lexer
+  definition, both single-line and multi-line
+  Java comments
+- Newlines, as in Java: \r | \n | \r\n
+  
+# Syntax
+
+## A lexer definition (.jl) [LEXER]
+
+IMPORT*			// Java imports
+{ JAVA }		// header
+REGEXP_DEF*			// regular expression definitions
+ENTRY+			// lexer entries
+{ JAVA }		// footer
+
+## Imports [IMPORT]
+
+Exactly like in Java
+
+## Regular expression definition [REGEXP_DEF]
+
+Definitions can use other regexps defined above.
+
+ident = REGEXP
+
+## Lexer entries [ENTRY]
+
+VIS { JAVA } rule IDENT ARGS? = shortest?
+CLAUSE+
+
+## Lexer entry clauses [CLAUSE]
+
+  | REGEXP	{ JAVA }	// semantic action
+
+## Visibility [VIS]
+
+Exactly like in Java
+
+## Entry arguments [ARGS]
+
+| ( JAVA )				// Entry args prototype
+|						// no args
+
+## Regular expression [REGEXP] and [REGEXP1]
+
+| REGEXP1 as IDENT	// bound regexp
+| REGEXP1 OR REGEXP	// choice
+| REGEXP1			// tighter regexp
+
+| REGEXP0 REGEXP1	// concatenation
+| REGEXP0 *			// zero, one or more of
+| REGEXP0 +			// one or more of
+| REGEXP0 ?			// zero or one
+| REGEXP0 # REGEXP0 // char sets difference
+| REGEXP0			// atomic regexp
+
+## Atomic regular expressions [REGEXP0]
+
+| _			// any character
+| eof		// end-of-input
+| 'c'		// character literal
+| "..."		// string literal
+| IDENT		// reference to defined regexp
+| [CSET]	// character set
+| (REGEXP)	// parenthesized regexp
+
+## Character set [CSET] and positive character set [CSET0]
+
+| ^ CSET0
+| CSET0
+
+| CHAR - CHAR	// character range
+| CHAR			// single char
+| CSET0 CSET0	// concatenation
