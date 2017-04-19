@@ -174,15 +174,23 @@ public class LexBuffer {
     	curPos = lastPos;
     	return lastAction;
     }
+
+    /**
+     * @return the substring between the last started token
+     * 	and the current position (exclusive)
+     */
+    protected final String getLexeme() {
+    	return new String(tokenBuf, startPos, curPos - startPos);
+    }
     
     /**
      * @param start
      * @param end
      * @return the substring between positions {@code pos}
-     *  and {@code end} in the token buffer
+     *  and {@code end} (exclusive) in the token buffer
      */
     protected final String getSubLexeme(int start, int end) {
-    	return new String(tokenBuf, start, end - start + 1);
+    	return new String(tokenBuf, start, end - start);
     }
 
     /**

@@ -1,5 +1,8 @@
 package test.examples;
 
+import static test.examples.BasicLexers.test;
+import static test.examples.BasicLexers.testOutput;
+
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -11,8 +14,6 @@ import common.Lists;
 import syntax.Lexer;
 import syntax.Location;
 import syntax.Regular;
-import static test.examples.BasicLexers.test;
-import static test.examples.BasicLexers.testOutput;
 
 /**
  * More advanced lexer definitions, manually
@@ -57,9 +58,9 @@ public abstract class AdvancedLexers {
 	 * rule main:
 	 * | ('\b'  | '\t' | ' ')*		{ return main(); }
 	 * | ('\r''\n' | '\n')			{ newline(); return main(); } 
-	 * | [_a-zA-Z][_a-zA-Z0-9]*		{ return IDENT; }
-	 * | [0-9]+						{ return INT; }
-	 * | "0x" [0-9a-fA-F]+			{ return HEX; }
+	 * | [_a-zA-Z][_a-zA-Z0-9]*		{ return IDENT(getLexeme()); }
+	 * | [0-9]+						{ return INT(getLexeme(), 10); }
+	 * | "0x" ([0-9a-fA-F]+	as hex)	{ return INT(hex, 16); }
 	 * | "/*"       { comment(); return main(); }
 	 * | '+'		{ return PLUS; }
 	 * | '-'        { return MINUS; }
@@ -110,15 +111,17 @@ public abstract class AdvancedLexers {
 				Regular.star(Regular.chars(BasicLexers.digit)));
 		private static final Regular hexadecimal =
 			Regular.seq(Regular.string("0x"),
-				Regular.star(Regular.chars(hexdigit)));
+				Regular.binding(
+					Regular.star(Regular.chars(hexdigit)),
+					"hex", Location.DUMMY));
 		
 		private static final Map<Regular, Location> mainClauses =
 			inlinedClauses(
 				ws,						" return main(); ",
 				newline,				" newline(); return main(); ",
-				ident,					" return Token.IDENT; ",
-				decimal,				" return Token.INT; ",
-				hexadecimal,			" return Token.HEX; ",
+				ident,					" return Token.IDENT(getLexeme()); ",
+				decimal,				" return Token.INT(getLexeme(), 10); ",
+				hexadecimal,			" return Token.INT(hex, 16); ",
 				Regular.string("/*"),	" comment(); return main(); ",
 				Regular.string("+"),	" return Token.PLUS; ",
 				Regular.string("-"),	" return Token.MINUS; ",
@@ -151,12 +154,55 @@ public abstract class AdvancedLexers {
 		@SuppressWarnings("null")
 		final static Lexer LEXER =
 			new Lexer(
-				Location.inlined("public enum Token { " + 
-						"IDENT, INT, HEX, PLUS, MINUS, MULT, " + 
-						"DIV, LPAREN, RPAREN, EOF; }\n\n" +
-						"private void newline() { }\n"),
+				Location.inlined(
+		"@SuppressWarnings(\"javadoc\")\n" +
+		"public static abstract class Token {\n" +
+		"	private String rep;\n" +
+		"\n" +
+		"	private Token(String rep) { this.rep = rep; }\n" +
+		"\n" +
+		"	@Override public String toString() { return rep; }\n" +
+		"\n" +
+		"   public static class Ident extends Token {\n" +
+		"   	public final String id;\n" +
+		"		private Ident(String id) {\n" +
+		"			super(String.format(\"IDENT(%s)\", id));\n" +
+		"			this.id = id;\n" +
+		"		}\n" +
+		"	}\n" +
+		"	public static Ident IDENT(String id) { return new Ident(id); }\n" +
+		"\n" +
+		"   public static class Int extends Token {\n" +
+		"   	public final int val;\n" +
+		"		private Int(int val) {\n" +
+		"			super(String.format(\"INT(%d)\", val));\n" +
+		"			this.val = val;\n" +
+		"		}\n" +
+		"	}\n" +
+		"	public static Int INT(String sval, int radix) {\n" +
+		"		return new Int(Integer.parseInt(sval, radix));\n" +
+		"	}\n" +
+		"\n" +
+		"	public final static Token PLUS = new Token(\"PLUS\") {};\n" +
+		"	public final static Token MINUS = new Token(\"MINUS\") {};\n" +
+		"	public final static Token MULT = new Token(\"MULT\") {};\n" +
+		"	public final static Token DIV = new Token(\"DIV\") {};\n" +
+		"	public final static Token LPAREN = new Token(\"LPAREN\") {};\n" +
+		"	public final static Token RPAREN = new Token(\"RPAREN\") {};\n" +
+		"	public final static Token EOF = new Token(\"EOF\") {};\n" +
+		"}\n" +
+		"\n" +
+		"private void newline() { }\n"),
 				Arrays.asList(mainEntry, commentEntry), 
-				Location.DUMMY);
+				Location.inlined(
+		"@SuppressWarnings(\"javadoc\")\n" +
+		"public static void main(String[] args) throws java.io.IOException {\n" +
+    	"    ArithExprsComment lexer = new ArithExprsComment(\n" +
+    	"        new java.io.InputStreamReader(System.in));\n" +
+    	"    Token tok;\n" +
+    	"    while ((tok = lexer.main()) != Token.EOF)\n" +
+    	"        System.out.println(tok);\n" +
+    	"}\n"));
 	}
 	
 	/**
