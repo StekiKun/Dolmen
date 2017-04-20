@@ -392,15 +392,6 @@ public abstract class Regular {
 	}
 	
 	/**
-	 * @param reg
-	 * @return the regular expression one or more
-	 * 	repetitions of {@code reg}
-	 */
-	public static Regular plus(Regular reg) {
-		return seq(reg, star(reg));
-	}
-	
-	/**
 	 * Instances of regular expressions that represent
 	 * expressions whose matchers will be bound to
 	 * a specified name
