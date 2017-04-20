@@ -1,5 +1,6 @@
 package syntax;
 
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -92,6 +93,77 @@ public final class Lexer {
 			@SuppressWarnings("null")
 			@NonNull String res = buf.toString();
 			return res;
+		}
+		
+		/**
+		 * A builder class for {@link Lexer.Entry lexer entries},
+		 * which lets one add clauses incrementally
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public static final class Builder {
+			private final String name;
+			private boolean shortest;
+			private final List<@NonNull String> args;
+			private final Location returnType;
+			private final Map<@NonNull Regular, @NonNull Location> clauses;
+
+			/**
+			 * Constructs a fresh builder with longest-match rule
+			 * and an empty set of clauses
+			 * 
+			 * @param name
+			 * @param returnType
+			 * @param args
+			 */
+			public Builder(String name, Location returnType, List<String> args) {
+				this.name = name;
+				this.shortest = false;
+				this.args = args;
+				this.returnType = returnType;
+				this.clauses = new LinkedHashMap<>();
+			}
+			
+			/**
+			 * Use the shortest-match rule for this entry
+			 * @return the receiver
+			 */
+			public Builder setShortest() {
+				shortest = true;
+				return this;
+			}
+			
+			/**
+			 * Adds the clause formed by the given regular expression
+			 * and semantic action
+			 * @param regular
+			 * @param loc
+			 * @return the receiver
+			 */
+			public Builder add(Regular regular, Location loc) {
+				clauses.put(regular, loc);
+				return this;
+			}
+			
+			/**
+			 * Adds the clause formed by the given regular expression
+			 * and inlined semantic action
+			 * @param regular
+			 * @param inlined
+			 * @return the receiver
+			 */
+			public Builder add(Regular regular, String inlined) {
+				clauses.put(regular, Location.inlined(inlined));
+				return this;
+			}
+			
+			/**
+			 * @return a new lexer entry based on this builder
+			 */
+			public Entry build() {
+				return new Entry(name, returnType, shortest, args, 
+						new LinkedHashMap<>(clauses));
+			}
 		}
 	}
 

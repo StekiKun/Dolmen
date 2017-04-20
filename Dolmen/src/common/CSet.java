@@ -159,11 +159,6 @@ public abstract class CSet {
 	}
 	
 	/**
-	 * Special character set used to denote end-of-file
-	 */
-	public static final CSet EOF = singleton((char)0xFFFF);
-	
-	/**
 	 * Describes a single contiguous interval of characters,
 	 * from {@link #first} to {@link #last}, inclusive.
 	 * 
@@ -277,6 +272,18 @@ public abstract class CSet {
 		if (first == last) return new Singleton(first);
 		return new Intervals(new Interval(first, last, null));
 	}
+
+	/**
+	 * Special character set used to denote end-of-file
+	 */
+	public static final CSet EOF = singleton((char)0xFFFF);
+
+	/**
+	 * Like {@link #ALL} but does not contain the special
+	 * end-of-input marker
+	 */
+	public static final CSet ALL_BUT_EOF =
+		interval((char)0, (char)0xFFFE);
 	
 	private static CSet intervals(@Nullable Interval i) {
 		if (i == null) return EMPTY;
@@ -369,6 +376,28 @@ public abstract class CSet {
 		// No EMPTY, no ALL
 		return intervals(
 				iunion(intervalsOf(cs1), intervalsOf(cs2)));		
+	}
+	
+	/**
+	 * @param charSets
+	 * @return the union of all the given character sets
+	 */
+	public static CSet union(@NonNull CSet... charSets) {
+		CSet res = EMPTY;
+		for (int i = 0; i < charSets.length; ++i)
+			res = union(res, charSets[i]);
+		return res;
+	}
+	
+	/**
+	 * @param chars
+	 * @return the character set containing exactly the given characters
+	 */
+	public static CSet chars(char... chars) {
+		CSet res = EMPTY;
+		for (int i = 0; i < chars.length; ++i)
+			res = union(res, singleton(chars[i]));
+		return res;
 	}
 	
 	private static char maxChar(char c1, char c2) {
@@ -476,10 +505,11 @@ public abstract class CSet {
 	
 	/**
 	 * @param cs
-	 * @return the complement of the character set {@code cs}
+	 * @return the complement of the character set {@code cs},
+	 * 	<b>excluding the end-of-input marker</b>
 	 */
 	public static CSet complement(CSet cs) {
-		return diff(ALL, cs);
+		return diff(ALL_BUT_EOF, cs);
 	}
 	
 	private static boolean iequivalent(
