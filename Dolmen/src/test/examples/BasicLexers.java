@@ -145,7 +145,7 @@ public abstract class BasicLexers {
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry("ident", VOID, false, Lists.empty(),
-				Maps.singleton(ident, Location.DUMMY));
+				Maps.singleton(ident, Location.inlined("System.out.println(id); return;")));
 		
 		final static Lexer LEXER = 
 			new Lexer(Location.DUMMY, Lists.singleton(entry), Location.DUMMY);
