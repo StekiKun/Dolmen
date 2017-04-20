@@ -19,10 +19,13 @@ public class LexBuffer {
 
     /**
      * Constructs a new lexer buffer based on the given character stream
+     * @param filename
      * @param reader
      */
-    public LexBuffer(java.io.@Nullable Reader reader) {
-    	if (reader == null) throw new IllegalArgumentException();
+    public LexBuffer(@Nullable String filename, java.io.@Nullable Reader reader) {
+    	if (filename == null || reader == null)
+    		throw new IllegalArgumentException();
+    	this.filename = filename;
     	this.reader = reader;
     	this.tokenBuf = new char[1024];
     	this.bufLimit = 0;
@@ -34,6 +37,12 @@ public class LexBuffer {
     	this.lastPos = 0;
     	this.memory = new int[0];
     }
+
+    /**
+     * The name of the input, for locations 
+     * (for error reports only, need not be an actual filename) 
+     */
+    protected final String filename;
     
     /** The character stream to feed the lexer */
     private final java.io.Reader reader;

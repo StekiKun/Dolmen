@@ -61,7 +61,7 @@ public abstract class CSet {
 		}
 		if (Character.isAlphabetic(ch) || Character.isDigit(ch))
 			return "" + ch; // printable
-		return "\\u" + String.format("%04x", (short)ch);
+		return "0x" + String.format("%04x", (short)ch);
 	}
 	
 	/**

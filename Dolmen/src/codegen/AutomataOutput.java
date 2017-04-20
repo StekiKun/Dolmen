@@ -62,10 +62,11 @@ public final class AutomataOutput {
 		buf.newline();
 	    buf.emitln("/**");
 	    buf.emitln(" * Returns a fresh lexer based on the given character stream");
+	    buf.emitln(" * @param inputname");
 	    buf.emitln(" * @param reader");
 	    buf.emitln(" */");
-		buf.emit("public ").emit(name).emit("(java.io.Reader reader)").openBlock();
-	    buf.emit("super(reader);");
+		buf.emit("public ").emit(name).emit("(String inputname, java.io.Reader reader)").openBlock();
+	    buf.emit("super(inputname, reader);");
 	    buf.closeBlock();
 	}
 		

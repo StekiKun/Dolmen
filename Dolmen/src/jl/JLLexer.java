@@ -6,13 +6,21 @@ import static syntax.Regular.plus;
 import static syntax.Regular.seq;
 import static syntax.Regular.string;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.Arrays;
 
+import automaton.Automata;
+import automaton.Determinize;
+import codegen.AutomataOutput;
 import common.CSet;
 import common.Lists;
 import syntax.Lexer;
 import syntax.Location;
 import syntax.Regular;
+import tagged.Encoder;
+import tagged.TLexer;
 
 /**
  * Manual construction of a {@link Lexer} description
@@ -62,15 +70,15 @@ public abstract class JLLexer {
 		Regular.seq(string("//"), Regular.star(notnl));
 	
 	/**
-	 * public { JLToken } 
+	 * public { jl.JLToken } 
 	 * rule main =
 	 * | ws+			{ return main(); }
 	 * | newline		{ newline(); return main(); }
 	 * | "/*"			{ comment(); return main(); }
 	 * | "//" [^\r\n]*	{ return main(); }
-	 * | '"'			{ stringBuffer.clear();
+	 * | '"'			{ stringBuffer.setLength(0);
 	 * 					  string();
-	 * 					  return STRING(stringBuffer.toString()); 
+	 * 					  return LSTRING(stringBuffer.toString()); 
 	 * 				    }
 	 * | '{'			{ braceDepth = 1;
 	 * 					  .. record current position ..
@@ -84,9 +92,9 @@ public abstract class JLLexer {
 	 * 					  ... _ -> IDENT(getLexeme())
 	 * 					}
 	 * | "'" ([^\\] as c) "'"
-	 * 					{ return CHAR(c); }
+	 * 					{ return LCHAR(c); }
 	 * | "'" '\\' (escaped as c) "'"
-	 * 					{ return CHAR(forBackslash(c)); }
+	 * 					{ return LCHAR(forBackslash(c)); }
 	 * // other character syntaxes? like \\uxxxx and \377 
 	 * | '_'			{ return UNDERSCORE; }
 	 * | '='			{ return EQUAL; }
@@ -105,24 +113,32 @@ public abstract class JLLexer {
 	 * | _				{ throw new LexicalError("..."); }
 	 */
 	private final static Lexer.Entry mainEntry =
-		new Lexer.Entry.Builder("main", Location.inlined("Token"), Lists.empty())
+		new Lexer.Entry.Builder("main", Location.inlined("jl.JLToken"), Lists.empty())
 			.add(plus(chars(ws)), "return main();")
 			.add(nl, "newline(); return main();")
 			.add(string("/*"), "comment(); return main();")
 			.add(seq(string("//"), plus(notnl)), "return main();")
-		 	.add(rchar('"'), "stringBuffer.clear();\n" +
+		 	.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();\n" +
-							 "return STRING(stringBuffer.toString());")
-			.add(rchar('{'), "TODO")
-			.add(ident, "TODO")
+							 "@SuppressWarnings(\"null\")\n" +
+							 "jl.JLToken res = LSTRING(stringBuffer.toString());\n" +
+							 "return res;")
+			.add(rchar('{'), 
+				"int startLine = loc; int startOffset = curPos;\n" +
+				"int startCol = absPos - bol;\n" +
+				"int endOffset = action();\n" +
+				"syntax.Location loc = new syntax.Location(\n" +
+				"    filename, startOffset, endOffset, startLine, startCol);\n" +
+				"return ACTION(loc);")
+			.add(ident, "return identOrKeyword(getLexeme());")
 			.add(seq(rchar('\''),
 					binding(chars(CSet.complement(CSet.singleton('\\'))), 
 							"c", Location.DUMMY),
 					rchar('\'')),
-				"return CHAR(c);")
+				"return LCHAR(c);")
 			.add(seq(rchar('\''), rchar('\\'), 
 					binding(escaped, "c", Location.DUMMY), rchar('\'')),
-				"return CHAR(forBackslash(c));")
+				"return LCHAR(forBackslash(c));")
 			.add(rchar('_'), "return UNDERSCORE;")
 			.add(rchar('='), "return EQUAL;")
 			.add(rchar('|'), "return OR;")
@@ -147,9 +163,9 @@ public abstract class JLLexer {
 	/**
 	 * private rule comment =
 	 * | '*' '/'		{ return; }
-	 * | '"'			{ stringBuffer.clear();
+	 * | '"'			{ stringBuffer.setLength(0);
 	 * 					  string();
-	 * 					  stringBuffer.clear();
+	 * 					  stringBuffer.setLength(0);
 	 * 					  comment(); return; }
 	 * | "'"			{ skipChar(); comment(); return; }
 	 * | eof			{ throw new LexicalError("Unterminated comment"); }
@@ -160,9 +176,9 @@ public abstract class JLLexer {
 	private final static Lexer.Entry commentEntry =
 		new Lexer.Entry.Builder("comment", VOID, Lists.empty())
 			.add(string("*/"), "return;")
-			.add(rchar('"'), "stringBuffer.clear();\n" +
+			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 						     "string();\n" +
-						     "stringBuffer.clear();" +
+						     "stringBuffer.setLength(0);" +
 						     "comment(); return;\n")
 			.add(rchar('\''), "skipChar(); comment(); return;")
 			.add(chars(CSet.EOF), "throw new LexicalError(\"Unterminated comment\");")
@@ -188,12 +204,12 @@ public abstract class JLLexer {
 		new Lexer.Entry.Builder("string", VOID, Lists.empty())
 			.add(rchar('"'), "return;")
 			.add(seq(rchar('\\'), binding(escaped, "c", Location.DUMMY)), 
-					"stringBuffer.appends(forBackslash(c)); string(); return;")
+					"stringBuffer.append(forBackslash(c)); string(); return;")
 			.add(seq(rchar('\\'), binding(any, "c", Location.DUMMY)),
-					"stringBuffer.append('\\').append(c); string(); return;")
+					"stringBuffer.append('\\\\').append(c); string(); return;")
 			.add(chars(CSet.EOF), "throw new LexicalError(\"Unterminated string\");")
 			.add(plus(inString), 
-					"stringBuffer.appends(getLexeme()); string(); return;")
+					"stringBuffer.append(getLexeme()); string(); return;")
 			.build();
 	
 	private final static Regular inAction =
@@ -206,9 +222,9 @@ public abstract class JLLexer {
 	 * | '}'			{ --braceDepth;
 	 * 					  if (braceDepth == 0) return absPos;
 	 * 					  return action(); }
-	 * | '"'			{ stringBuffer.clear();
+	 * | '"'			{ stringBuffer.setLength(0);
 	 * 					  string();
-	 * 					  stringBuffer.clear();
+	 * 					  stringBuffer.setLength(0);
 	 * 					  return action(); }
 	 * | "'"			{ skipChar(); return action(); }
 	 * | "/*"			{ comment(); return action(); }
@@ -224,9 +240,9 @@ public abstract class JLLexer {
 			.add(rchar('}'), "--braceDepth;\n" + 
 							 "if (braceDepth == 0) return absPos;\n" +
 							 "return action();")
-			.add(rchar('"'), "stringBuffer.clear();\n" +
+			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();" +
-							 "stringBuffer.clear();\n" +
+							 "stringBuffer.setLength(0);\n" +
 							 "return action();")
 			.add(rchar('\''), "skipChar(); return action();")
 			.add(string("/*"), "comment(); return action();")
@@ -253,7 +269,35 @@ public abstract class JLLexer {
 			.add(Regular.EPSILON, "return;")
 			.build();
 	
-	private final static String header = "";
+	private final static String header = 
+	"\n" +
+	"    private final StringBuilder stringBuffer = new StringBuilder();\n" +
+	"    private int braceDepth = 0;\n" +
+	"    \n" +
+	"    private int loc = 1;\n" +
+	"    private int bol = 0;\n" +
+	"    \n" +
+	"    private void newline() {\n" +
+	"        ++loc; bol = curPos;\n" +
+	"    }\n" +
+	"    \n" +
+	"    private char forBackslash(char c) {\n" +
+	"        switch (c) {\n" +
+	"        case 'n': return '\\012';\n" +	// 10
+	"        case 'r': return '\\015';\n" +	// 13
+	"        case 'b': return '\\010';\n" +	// 8
+	"        case 't': return '\\011';\n" +	// 9
+	"        default: return c;\n" +
+	"        }\n" +
+	"    }\n" +
+	"    \n" +
+	"    private jl.JLToken identOrKeyword(String id) {\n" +
+	"        if (id.equals(\"rule\")) return RULE;\n" +
+	"        else if (id.equals(\"shortest\")) return SHORTEST;\n" +
+	"        else if (id.equals(\"eof\")) return EOF;\n" +
+	"        else if (id.equals(\"as\")) return AS;\n" +
+	"        else return IDENT(id);\n" +
+	"    }\n";
 	private final static String footer = "";
 	
 	/**
@@ -261,8 +305,36 @@ public abstract class JLLexer {
 	 */
 	@SuppressWarnings("null")
 	public final static Lexer INSTANCE =
-		new Lexer(Location.inlined(header),
-				Arrays.asList(mainEntry, commentEntry, 
-					stringEntry, actionEntry, skipCharEntry),
-					Location.inlined(footer));
+		new Lexer(
+			Location.inlined(header),
+			Arrays.asList(mainEntry, commentEntry, 
+				stringEntry, actionEntry, skipCharEntry),
+			Location.inlined(footer));
+	
+	private static void testOutput(String className, Lexer lexer, boolean opt) {
+		System.out.println("=========LEXER========");
+		System.out.println(lexer);
+		System.out.println("--------ENCODED-------");
+		TLexer tlexer = Encoder.encodeLexer(lexer, opt);
+		System.out.println(tlexer);		
+		System.out.println("--------AUTOMATA------");
+		Automata aut = Determinize.lexer(lexer, opt);
+		System.out.println(aut);
+		File file = new File("src-gen/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			AutomataOutput.output(writer, className, aut);
+			System.out.println("----------JAVA--------");
+			System.out.println("Generated in " + file.getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+		testOutput("JLLexerGenerated", INSTANCE, true);
+	}
+	
 }

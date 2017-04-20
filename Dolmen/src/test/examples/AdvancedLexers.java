@@ -198,7 +198,7 @@ public abstract class AdvancedLexers {
 		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static void main(String[] args) throws java.io.IOException {\n" +
     	"    ArithExprsComment lexer = new ArithExprsComment(\n" +
-    	"        new java.io.InputStreamReader(System.in));\n" +
+    	"        \"-\", new java.io.InputStreamReader(System.in));\n" +
     	"    Token tok;\n" +
     	"    while ((tok = lexer.main()) != Token.EOF)\n" +
     	"        System.out.println(tok);\n" +
