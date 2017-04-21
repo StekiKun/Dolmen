@@ -194,7 +194,7 @@ public final class Encoder {
 			entries.add(encoder.encodeEntry(entry));
 		// No need to copy charsets defensively since
 		// we are done with this encoder
-		return new TLexer(lexer.header, 
+		return new TLexer(lexer.imports, lexer.header, 
 			entries, encoder.getCharacterSets(), lexer.footer);
 	}
 

@@ -16,6 +16,8 @@ public abstract class JLToken {
 		SHORTEST,
 		EOF,
 		AS,
+		IMPORT,
+		STATIC,
 		UNDERSCORE,
 		EQUAL,
 		OR,
@@ -29,6 +31,8 @@ public abstract class JLToken {
 		CARET,
 		DASH,
 		HASH,
+		DOT,
+		SEMICOL,
 		END
 	}
 	
@@ -145,6 +149,8 @@ public abstract class JLToken {
 	public static JLToken SHORTEST = new Singleton(Kind.SHORTEST) {};
 	public static JLToken EOF = new Singleton(Kind.EOF) {};
 	public static JLToken AS = new Singleton(Kind.AS) {};
+	public static JLToken IMPORT = new Singleton(Kind.IMPORT) {};
+	public static JLToken STATIC = new Singleton(Kind.STATIC) {};
 	public static JLToken UNDERSCORE = new Singleton(Kind.UNDERSCORE) {};
 	public static JLToken EQUAL = new Singleton(Kind.EQUAL) {};
 	public static JLToken OR = new Singleton(Kind.OR) {};
@@ -158,6 +164,8 @@ public abstract class JLToken {
 	public static JLToken CARET = new Singleton(Kind.CARET) {};
 	public static JLToken DASH = new Singleton(Kind.DASH) {};
 	public static JLToken HASH= new Singleton(Kind.HASH) {};
+	public static JLToken DOT = new Singleton(Kind.DOT) {};
+	public static JLToken SEMICOL = new Singleton(Kind.SEMICOL) {};
 	public static JLToken END = new Singleton(Kind.END) {};
 	
 }

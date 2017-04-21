@@ -101,6 +101,8 @@ public final class Automata {
 		}
 	}
 
+	/** The imports to be added to the generated lexer */
+	public final List<@NonNull String> imports;
 	/** The location of this lexer's header */
 	public final Location header;
 	/** The list of automata entries, one for each lexer rule */
@@ -113,13 +115,15 @@ public final class Automata {
 	/**
 	 * Builds the automata from the given entries and cells
 	 * 
+	 * @param imports
 	 * @param header
 	 * @param footer
 	 * @param automataEntries
 	 * @param automataCells
 	 */
-	public Automata(Location header, Location footer,
+	public Automata(List<String> imports, Location header, Location footer,
 		List<Entry> automataEntries, DFA.@NonNull Cell[] automataCells) {
+		this.imports = imports;
 		this.header = header;
 		this.footer = footer;
 		this.automataEntries = automataEntries;

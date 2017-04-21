@@ -89,6 +89,8 @@ public abstract class JLLexer {
 	 * 					  ... "shortest" -> SHORTEST
 	 * 					  ... "eof" -> EOF
 	 * 					  ... "as" -> AS
+	 * 					  ... "import" -> IMPORT
+	 * 					  ... "static" -> STATIC
 	 * 					  ... _ -> IDENT(getLexeme())
 	 * 					}
 	 * | "'" ([^\\] as c) "'"
@@ -109,6 +111,8 @@ public abstract class JLLexer {
 	 * | '^'			{ return CARET; }
 	 * | '-'			{ return DASH;	}
 	 * | '#'			{ return HASH; }
+	 * | '.'			{ return DOT; }
+	 * | ';'			{ return SEMICOL; }
 	 * | eof			{ return END; }
 	 * | _				{ throw new LexicalError("..."); }
 	 */
@@ -152,6 +156,8 @@ public abstract class JLLexer {
 			.add(rchar('^'), "return CARET;")
 			.add(rchar('-'), "return DASH;")
 			.add(rchar('#'), "return HASH;")
+			.add(rchar('.'), "return DOT;")
+			.add(rchar(';'), "return SEMICOL;")
 			.add(chars(CSet.EOF), "return END;")
 			.add(any, "throw new LexicalError(\"Unfinished token\");")
 			.build();
@@ -296,6 +302,8 @@ public abstract class JLLexer {
 	"        else if (id.equals(\"shortest\")) return SHORTEST;\n" +
 	"        else if (id.equals(\"eof\")) return EOF;\n" +
 	"        else if (id.equals(\"as\")) return AS;\n" +
+	"        else if (id.equals(\"import\")) return IMPORT;\n" +
+	"        else if (id.equals(\"static\")) return STATIC;\n" +
 	"        else return IDENT(id);\n" +
 	"    }\n";
 	private final static String footer = "";
@@ -306,6 +314,7 @@ public abstract class JLLexer {
 	@SuppressWarnings("null")
 	public final static Lexer INSTANCE =
 		new Lexer(
+			Lists.singleton("import static jl.JLToken.*;"),
 			Location.inlined(header),
 			Arrays.asList(mainEntry, commentEntry, 
 				stringEntry, actionEntry, skipCharEntry),

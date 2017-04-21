@@ -22,6 +22,8 @@ import syntax.Location;
  */
 public final class TLexer {
 
+	/** The imports to be added to the generated lexer */
+	public List<@NonNull String> imports;
 	/** The location of this lexer's header */
 	public final Location header;
 	/** The list of encoded entries */
@@ -35,14 +37,16 @@ public final class TLexer {
 	 * Builds a tagged lexer definition from the
 	 * given arguments
 	 * 
+	 * @param imports
 	 * @param header
 	 * @param entries
 	 * @param charsets
 	 * @param footer
 	 */
-	public TLexer(Location header,
+	public TLexer(List<String> imports, Location header,
 			List<TLexerEntry> entries, List<CSet> charsets,
 			Location footer) {
+		this.imports = imports;
 		this.header = header;
 		this.entries = entries;
 		this.charsets = charsets;
@@ -52,6 +56,7 @@ public final class TLexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
+		imports.forEach(imp -> System.out.println(imp));
 		buf.append(header);
 		buf.append("\nchar sets:");
 		int i = 0;

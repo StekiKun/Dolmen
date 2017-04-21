@@ -19,7 +19,7 @@ import org.eclipse.jdt.annotation.NonNull;
 public final class Lexer {
 
 	/**
-	 * A lexer rule entry is a seequence of regular expressions
+	 * A lexer rule entry is a sequence of regular expressions
 	 * associated to semantic actions. A rule has a
 	 * {@link #name name}, a {@link #returnType return type} and may 
 	 * have some {@link #args arguments}. The regular expressions
@@ -167,7 +167,9 @@ public final class Lexer {
 		}
 	}
 
-	/** The location of this lexer's header */
+	/** The Java imports to be added to the generated lexer */
+	public final List<@NonNull String> imports;
+	/** The location of this lexer's class header */
 	public final Location header;
 	/** The list of entrypoints */
 	public final List<@NonNull Entry> entryPoints;
@@ -175,13 +177,16 @@ public final class Lexer {
 	public final Location footer;
 	
 	/**
+	 * @param imports
 	 * @param header
 	 * @param entryPoints
 	 * @param footer
 	 * 
 	 * Builds a lexer with the provided data
 	 */
-	public Lexer(Location header, List<Entry> entryPoints, Location footer) {
+	public Lexer(List<String> imports, 
+			Location header, List<Entry> entryPoints, Location footer) {
+		this.imports = imports;
 		this.header = header;
 		this.entryPoints = entryPoints;
 		this.footer = footer;
@@ -190,6 +195,7 @@ public final class Lexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
+		imports.forEach(imp -> System.out.println(imp));
 		buf.append("{\n").append(header.find()).append("\n}");
 		boolean first = true;
 		for (Entry entry : entryPoints) {

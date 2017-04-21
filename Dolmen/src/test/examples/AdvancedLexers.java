@@ -154,6 +154,7 @@ public abstract class AdvancedLexers {
 		@SuppressWarnings("null")
 		final static Lexer LEXER =
 			new Lexer(
+				Lists.empty(),
 				Location.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static abstract class Token {\n" +
