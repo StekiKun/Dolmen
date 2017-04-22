@@ -1,8 +1,11 @@
 package jl;
 
+import static jl.JLToken.AS;
 import static jl.JLToken.DOT;
 import static jl.JLToken.END;
+import static jl.JLToken.HASH;
 import static jl.JLToken.IMPORT;
+import static jl.JLToken.OR;
 import static jl.JLToken.STATIC;
 
 import java.io.FileReader;
@@ -10,8 +13,11 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
+import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
@@ -20,13 +26,17 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import common.CSet;
 import common.Lists;
+import common.Maps;
 import common.Prompt;
 import jl.JLToken.Action;
 import jl.JLToken.Ident;
 import jl.JLToken.Kind;
 import jl.JLToken.LChar;
+import jl.JLToken.LString;
 import syntax.Lexer;
 import syntax.Location;
+import syntax.Regular;
+import syntax.Regular.Characters;
 
 /**
  * A manually written top-down parser for lexer descriptions,
@@ -82,6 +92,7 @@ public class JLParser {
 		this.tokens = tokens;
 		// this.stack = new Stack<>();
 		this.nextToken = null;
+		this.definitions = Maps.empty();
 	}
 	
 	/**
@@ -99,7 +110,7 @@ public class JLParser {
 			
 			@Override
 			public boolean hasNext() {
-				return nextToken != terminal;
+				return nextToken != null;
 			}
 
 			@Override
@@ -142,6 +153,7 @@ public class JLParser {
 	 * 	token stream that was given to this parsing object
 	 */
 	public Lexer parseLexer() {
+		definitions = new HashMap<>();
 		List<String> imports = parseImports();
 		Action header = (Action) (eat(Kind.ACTION));
 		return new Lexer(imports, header.value, Lists.empty(), Location.DUMMY);
@@ -187,7 +199,158 @@ public class JLParser {
 		eat(Kind.SEMICOL);
 	}
 	
-	protected CSet parseCharClass() {
+	/** Environment for regular expression definitions */
+	private Map<String, Regular> definitions;
+
+	/**
+	 * Regular :=
+	 * | Regular AS IDENT			(allows r as bla as foo)
+	 * | AltRegular
+	 * 
+	 * AltRegular :=
+	 * | SeqRegular OR AltRegular
+	 * | SeqRegular
+	 * 
+	 * SeqRegular :=
+	 * | PostfixRegular SeqRegular	(FIRST(SeqRegular) = FIRST(AtomicRegular) = 
+	 * | PostfixRegular                UNDERSCORE EOF LCHAR LSTRING IDENT LBRACKET LPAREN)
+	 * 
+	 * PostfixRegular :=
+	 * | DiffRegular STAR
+	 * | DiffRegular PLUS
+	 * | DiffRegular MAYBE
+	 * | DiffRegular
+	 * 
+	 * DiffRegular :=
+	 * | AtomicRegular HASH AtomicRegular	(only if char sets)
+	 * | AtomicRegular	 
+	 * 
+	 * AtomicRegular :=
+	 * 	 UNDERSCORE
+	 * | EOF
+	 * | LCHAR
+	 * | LSTRING
+	 * | IDENT
+	 * | LBRACKET CSet RBRACKET
+	 * | LPAREN Regular RPAREN
+	 */
+	
+	protected Regular parseRegular() {
+		/**
+		 * Manual left-factoring of the Regular rule
+		 * Regular := AltRegular (AS IDENT)*
+		 */
+		Regular res = parseAltRegular();
+		while (peek() == AS) {
+			eat();
+			Ident id = (Ident) eat(Kind.IDENT);
+			res = Regular.binding(res, id.value, Location.DUMMY);
+		}
+		return res;
+	}
+	
+	private Regular parseAltRegular() {
+		Regular r = parseSeqRegular();
+		if (peek() == OR) {
+			eat();
+			Regular r2 = parseAltRegular();
+			return Regular.or(r, r2);
+		}
+		return r;
+	}
+	
+	private Regular parseSeqRegular() {
+		Regular r = parsePostfixRegular();
+		EnumSet<Kind> first =
+			EnumSet.of(Kind.UNDERSCORE, Kind.EOF, Kind.LCHAR, Kind.LSTRING,
+					Kind.IDENT, Kind.LBRACKET, Kind.LPAREN);
+		if (first.contains(peek().getKind())) {
+			Regular r2 = parseSeqRegular();
+			return Regular.seq(r, r2);
+		}
+		return r;
+	}
+	
+	private Regular parsePostfixRegular() {
+		Regular r = parseDiffRegular();
+		switch (peek().getKind()) {
+		case STAR: 
+			eat(); return Regular.star(r);
+		case PLUS:
+			eat(); return Regular.plus(r);
+		case MAYBE:
+			eat(); return Regular.or(Regular.EPSILON, r);
+		default:
+			return r;
+		}
+	}
+	
+	private Regular parseDiffRegular() {
+		Regular r1 = parseAtomicRegular();
+		if (peek() == HASH) {
+			eat();
+			Regular r2 = parseAtomicRegular();
+			return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2)));
+		}
+		return r1;
+	}
+	
+	private CSet asCSet(Regular reg) {
+		switch (reg.getKind()) {
+		case EPSILON:
+		case EOF:
+		case ALTERNATE:
+		case SEQUENCE:
+		case REPETITION:
+		case BINDING:
+			throw new ParsingException
+				("Regular expression " + reg + " is not a character set.");
+		case CHARACTERS: {
+			final Characters characters = (Characters) reg;
+			return characters.chars;
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	private Regular parseAtomicRegular() {
+		switch (peek().getKind()) {
+		case UNDERSCORE:
+			eat();
+			return Regular.chars(CSet.ALL_BUT_EOF);
+		case EOF:
+			eat();
+			return Regular.chars(CSet.EOF);
+		case LCHAR: {
+			LChar tok = (LChar) eat(Kind.LCHAR);
+			return Regular.chars(CSet.singleton(tok.value));
+		}
+		case LSTRING: {
+			LString tok = (LString) eat(Kind.LSTRING);
+			return Regular.string(tok.value);
+		}
+		case IDENT: {
+			Ident tok = (Ident) eat(Kind.IDENT);
+			@Nullable Regular reg = Maps.get(definitions, tok.value);
+			if (reg == null)
+				throw new ParsingException("Undefined regular expression " + tok.value);
+			return reg;
+		}
+		case LBRACKET:
+			return Regular.chars(parseCharClass());
+		case LPAREN: {
+			eat(Kind.LPAREN);
+			Regular res = parseRegular();
+			eat(Kind.RPAREN);
+			return res;
+		}
+		default:
+			throw error(peek(), Kind.UNDERSCORE, Kind.EOF, Kind.LCHAR, 
+					Kind.LSTRING, Kind.IDENT, Kind.LBRACKET);
+		}
+	}
+	
+	private CSet parseCharClass() {
 		eat(Kind.LBRACKET);
 		CSet res = parseCharSet();
 		eat(Kind.RBRACKET);
@@ -238,7 +401,7 @@ public class JLParser {
 		}, END);
 	}
 	
-	private static void testParse(String filename) throws IOException {
+	static void testParse(String filename) throws IOException {
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		JLParser parser = of(lexer);
@@ -247,7 +410,7 @@ public class JLParser {
 		System.out.println(lexerDef.toString());
 	}
 	
-	private static void testCharClass(String contents) throws IOException {
+	static void testCharClass(String contents) throws IOException {
 		Reader reader = new StringReader(contents);
 		JLLexerGenerated lexer = new JLLexerGenerated("-", reader);
 		JLParser parser = of(lexer);
@@ -255,7 +418,16 @@ public class JLParser {
 		reader.close();
 		System.out.println(cset.toString());
 	}
-	
+
+	static void testRegular(String contents) throws IOException {
+		Reader reader = new StringReader(contents);
+		JLLexerGenerated lexer = new JLLexerGenerated("-", reader);
+		JLParser parser = of(lexer);
+		Regular reg = parser.parseRegular();
+		reader.close();
+		System.out.println(reg.toString());
+	}
+
 	/**
 	 * @param args
 	 * @throws IOException
@@ -264,7 +436,11 @@ public class JLParser {
 		testParse("tests/jl/test1.jl");
 		String prompt;
 		while ((prompt = Prompt.getInputLine(">")) != null) {
-			testCharClass(prompt);
+			try {
+				testRegular(prompt);
+			} catch (ParsingException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 }

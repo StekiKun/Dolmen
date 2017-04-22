@@ -85,6 +85,7 @@ public abstract class JLLexer {
 	 * 					  action();
 	 * 					  return ACTION(.. recorded pos, current pos..);
 	 * 					}
+	 * | '_'			{ return UNDERSCORE; }
 	 * | ident			{ ... "rule" -> RULE
 	 * 					  ... "shortest" -> SHORTEST
 	 * 					  ... "eof" -> EOF
@@ -98,7 +99,6 @@ public abstract class JLLexer {
 	 * | "'" '\\' (escaped as c) "'"
 	 * 					{ return LCHAR(forBackslash(c)); }
 	 * // other character syntaxes? like \\uxxxx and \377 
-	 * | '_'			{ return UNDERSCORE; }
 	 * | '='			{ return EQUAL; }
 	 * | '|'			{ return OR; }
 	 * | '['			{ return LBRACKET; }
@@ -135,6 +135,7 @@ public abstract class JLLexer {
 				"syntax.Location loc = new syntax.Location(\n" +
 				"    filename, startOffset, endOffset, startLine, startCol);\n" +
 				"return ACTION(loc);")
+			.add(rchar('_'), "return UNDERSCORE;")
 			.add(ident, "return identOrKeyword(getLexeme());")
 			.add(seq(rchar('\''),
 					binding(chars(CSet.complement(CSet.singleton('\\'))), 
@@ -144,7 +145,6 @@ public abstract class JLLexer {
 			.add(seq(rchar('\''), rchar('\\'), 
 					binding(escaped, "c", Location.DUMMY), rchar('\'')),
 				"return LCHAR(forBackslash(c));")
-			.add(rchar('_'), "return UNDERSCORE;")
 			.add(rchar('='), "return EQUAL;")
 			.add(rchar('|'), "return OR;")
 			.add(rchar('['), "return LBRACKET;")

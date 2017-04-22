@@ -107,18 +107,18 @@ syntax.Location loc = new syntax.Location(
 return ACTION(loc);
         }
         case 6:  {
-            return identOrKeyword(getLexeme());
+            return UNDERSCORE;
         }
         case 7:  {
+            return identOrKeyword(getLexeme());
+        }
+        case 8:  {
             final char c = getSubLexemeChar(startPos + 1);
             return LCHAR(c);
         }
-        case 8:  {
+        case 9:  {
             final char c = getSubLexemeChar(startPos + 2);
             return LCHAR(forBackslash(c));
-        }
-        case 9:  {
-            return UNDERSCORE;
         }
         case 10:  {
             return EQUAL;
@@ -182,7 +182,7 @@ return ACTION(loc);
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
         start();
-        int result = cell33();
+        int result = cell34();
         switch (result) {
         case 0:  {
             return;
@@ -219,7 +219,7 @@ stringBuffer.setLength(0);comment(); return;
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
         start();
-        int result = cell42();
+        int result = cell43();
         switch (result) {
         case 0:  {
             return;
@@ -252,7 +252,7 @@ stringBuffer.setLength(0);comment(); return;
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
         start();
-        int result = cell49();
+        int result = cell50();
         switch (result) {
         case 0:  {
             ++braceDepth; return action();
@@ -299,7 +299,7 @@ return action();
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
         start();
-        int result = cell61();
+        int result = cell62();
         switch (result) {
         case 0:  {
             return;
@@ -340,7 +340,7 @@ return action();
         }
         // 0x000a
         case 10: {
-            return cell22();
+            return cell23();
         }
         // 0x0029
         case 41: {
@@ -356,7 +356,7 @@ return action();
         }
         // 0x007b
         case 123: {
-            return cell19();
+            return cell20();
         }
         // 0x003b
         case 59: {
@@ -382,15 +382,15 @@ return action();
         case 9:
         case 12:
         case 32: {
-            return cell24();
+            return cell25();
         }
         // 0x000d
         case 13: {
-            return cell23();
+            return cell24();
         }
         // 0x002f
         case 47: {
-            return cell21();
+            return cell22();
         }
         // 0x0023
         case 35: {
@@ -453,7 +453,7 @@ return action();
         }
         // \_
         case 95: {
-            return cell18();
+            return cell19();
         }
         // 0x0027
         case 39: {
@@ -461,7 +461,7 @@ return action();
         }
         // 0x0022
         case 34: {
-            return cell20();
+            return cell21();
         }
         // 0x002b
         case 43: {
@@ -541,24 +541,24 @@ return action();
     private int cell17() throws java.io.IOException {
         mark(25);
         switch (getNextChar()) {
+        // \\
+        case 92: {
+            return cell29();
+        }
         // 0xffff
         case 65535: {
             return rewind();
             
         }
-        // \\
-        case 92: {
-            return cell28();
-        }
         default:  {
-            return cell29();
+            return cell30();
         }
         }
         
     }
     
     private int cell18() throws java.io.IOException {
-        mark(6);
+        mark(7);
         switch (getNextChar()) {
         // [0-9A-Z\_a-z]
         case 48:
@@ -635,23 +635,100 @@ return action();
     }
     
     private int cell19() throws java.io.IOException {
-        return 5;
+        mark(6);
+        switch (getNextChar()) {
+        // [0-9A-Z\_a-z]
+        case 48:
+        case 49:
+        case 50:
+        case 51:
+        case 52:
+        case 53:
+        case 54:
+        case 55:
+        case 56:
+        case 57:
+        case 65:
+        case 66:
+        case 67:
+        case 68:
+        case 69:
+        case 70:
+        case 71:
+        case 72:
+        case 73:
+        case 74:
+        case 75:
+        case 76:
+        case 77:
+        case 78:
+        case 79:
+        case 80:
+        case 81:
+        case 82:
+        case 83:
+        case 84:
+        case 85:
+        case 86:
+        case 87:
+        case 88:
+        case 89:
+        case 90:
+        case 95:
+        case 97:
+        case 98:
+        case 99:
+        case 100:
+        case 101:
+        case 102:
+        case 103:
+        case 104:
+        case 105:
+        case 106:
+        case 107:
+        case 108:
+        case 109:
+        case 110:
+        case 111:
+        case 112:
+        case 113:
+        case 114:
+        case 115:
+        case 116:
+        case 117:
+        case 118:
+        case 119:
+        case 120:
+        case 121:
+        case 122: {
+            return cell18();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
     }
     
     private int cell20() throws java.io.IOException {
-        return 4;
+        return 5;
     }
     
     private int cell21() throws java.io.IOException {
+        return 4;
+    }
+    
+    private int cell22() throws java.io.IOException {
         mark(25);
         switch (getNextChar()) {
         // 0x002f
         case 47: {
-            return cell25();
+            return cell26();
         }
         // 0x002a
         case 42: {
-            return cell26();
+            return cell27();
         }
         default:  {
             return rewind();
@@ -661,33 +738,16 @@ return action();
         
     }
     
-    private int cell22() throws java.io.IOException {
+    private int cell23() throws java.io.IOException {
         return 1;
     }
     
-    private int cell23() throws java.io.IOException {
+    private int cell24() throws java.io.IOException {
         mark(1);
         switch (getNextChar()) {
         // 0x000a
         case 10: {
-            return cell22();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int cell24() throws java.io.IOException {
-        mark(0);
-        switch (getNextChar()) {
-        // [0x00090x000c0x0020]
-        case 9:
-        case 12:
-        case 32: {
-            return cell24();
+            return cell23();
         }
         default:  {
             return rewind();
@@ -698,6 +758,23 @@ return action();
     }
     
     private int cell25() throws java.io.IOException {
+        mark(0);
+        switch (getNextChar()) {
+        // [0x00090x000c0x0020]
+        case 9:
+        case 12:
+        case 32: {
+            return cell25();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int cell26() throws java.io.IOException {
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
         case 10:
@@ -707,17 +784,17 @@ return action();
             
         }
         default:  {
-            return cell27();
+            return cell28();
         }
         }
         
     }
     
-    private int cell26() throws java.io.IOException {
+    private int cell27() throws java.io.IOException {
         return 2;
     }
     
-    private int cell27() throws java.io.IOException {
+    private int cell28() throws java.io.IOException {
         mark(3);
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
@@ -728,13 +805,13 @@ return action();
             
         }
         default:  {
-            return cell27();
+            return cell28();
         }
         }
         
     }
     
-    private int cell28() throws java.io.IOException {
+    private int cell29() throws java.io.IOException {
         switch (getNextChar()) {
         // [0x00200x00220x0027\\bnrt]
         case 32:
@@ -745,38 +822,6 @@ return action();
         case 110:
         case 114:
         case 116: {
-            return cell31();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int cell29() throws java.io.IOException {
-        switch (getNextChar()) {
-        // 0x0027
-        case 39: {
-            return cell30();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int cell30() throws java.io.IOException {
-        return 7;
-    }
-    
-    private int cell31() throws java.io.IOException {
-        switch (getNextChar()) {
-        // 0x0027
-        case 39: {
             return cell32();
         }
         default:  {
@@ -787,44 +832,76 @@ return action();
         
     }
     
-    private int cell32() throws java.io.IOException {
-        return 8;
-    }
-    
-    private int cell33() throws java.io.IOException {
+    private int cell30() throws java.io.IOException {
         switch (getNextChar()) {
-        // 0x0022
-        case 34: {
-            return cell39();
-        }
-        // 0xffff
-        case 65535: {
-            return cell37();
-        }
-        // 0x000a
-        case 10: {
-            return cell35();
-        }
-        // 0x002a
-        case 42: {
-            return cell40();
-        }
-        // 0x000d
-        case 13: {
-            return cell36();
-        }
         // 0x0027
         case 39: {
-            return cell38();
+            return cell31();
         }
         default:  {
-            return cell34();
+            return rewind();
+            
         }
         }
         
     }
     
+    private int cell31() throws java.io.IOException {
+        return 8;
+    }
+    
+    private int cell32() throws java.io.IOException {
+        switch (getNextChar()) {
+        // 0x0027
+        case 39: {
+            return cell33();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int cell33() throws java.io.IOException {
+        return 9;
+    }
+    
     private int cell34() throws java.io.IOException {
+        switch (getNextChar()) {
+        // 0x002a
+        case 42: {
+            return cell41();
+        }
+        // 0x0027
+        case 39: {
+            return cell39();
+        }
+        // 0xffff
+        case 65535: {
+            return cell38();
+        }
+        // 0x0022
+        case 34: {
+            return cell40();
+        }
+        // 0x000a
+        case 10: {
+            return cell36();
+        }
+        // 0x000d
+        case 13: {
+            return cell37();
+        }
+        default:  {
+            return cell35();
+        }
+        }
+        
+    }
+    
+    private int cell35() throws java.io.IOException {
         mark(5);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002a0xffff]
@@ -838,22 +915,22 @@ return action();
             
         }
         default:  {
-            return cell34();
+            return cell35();
         }
         }
         
     }
     
-    private int cell35() throws java.io.IOException {
+    private int cell36() throws java.io.IOException {
         return 4;
     }
     
-    private int cell36() throws java.io.IOException {
+    private int cell37() throws java.io.IOException {
         mark(4);
         switch (getNextChar()) {
         // 0x000a
         case 10: {
-            return cell35();
+            return cell36();
         }
         default:  {
             return rewind();
@@ -861,25 +938,25 @@ return action();
         }
         }
         
-    }
-    
-    private int cell37() throws java.io.IOException {
-        return 3;
     }
     
     private int cell38() throws java.io.IOException {
-        return 2;
+        return 3;
     }
     
     private int cell39() throws java.io.IOException {
-        return 1;
+        return 2;
     }
     
     private int cell40() throws java.io.IOException {
+        return 1;
+    }
+    
+    private int cell41() throws java.io.IOException {
         switch (getNextChar()) {
         // 0x002f
         case 47: {
-            return cell41();
+            return cell42();
         }
         default:  {
             return rewind();
@@ -889,32 +966,32 @@ return action();
         
     }
     
-    private int cell41() throws java.io.IOException {
+    private int cell42() throws java.io.IOException {
         return 0;
     }
     
-    private int cell42() throws java.io.IOException {
+    private int cell43() throws java.io.IOException {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
-            return cell44();
+            return cell45();
         }
         // \\
         case 92: {
-            return cell45();
+            return cell46();
         }
         // 0x0022
         case 34: {
-            return cell46();
+            return cell47();
         }
         default:  {
-            return cell43();
+            return cell44();
         }
         }
         
     }
     
-    private int cell43() throws java.io.IOException {
+    private int cell44() throws java.io.IOException {
         mark(4);
         switch (getNextChar()) {
         // [0x0022\\0xffff]
@@ -925,17 +1002,17 @@ return action();
             
         }
         default:  {
-            return cell43();
+            return cell44();
         }
         }
         
     }
     
-    private int cell44() throws java.io.IOException {
+    private int cell45() throws java.io.IOException {
         return 3;
     }
     
-    private int cell45() throws java.io.IOException {
+    private int cell46() throws java.io.IOException {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -951,77 +1028,77 @@ return action();
         case 110:
         case 114:
         case 116: {
-            return cell48();
+            return cell49();
         }
         default:  {
-            return cell47();
+            return cell48();
         }
         }
         
-    }
-    
-    private int cell46() throws java.io.IOException {
-        return 0;
     }
     
     private int cell47() throws java.io.IOException {
-        return 2;
+        return 0;
     }
     
     private int cell48() throws java.io.IOException {
-        return 1;
+        return 2;
     }
     
     private int cell49() throws java.io.IOException {
-        switch (getNextChar()) {
-        // 0xffff
-        case 65535: {
-            return cell58();
-        }
-        // 0x000a
-        case 10: {
-            return cell56();
-        }
-        // 0x0022
-        case 34: {
-            return cell52();
-        }
-        // 0x007b
-        case 123: {
-            return cell54();
-        }
-        // 0x007d
-        case 125: {
-            return cell53();
-        }
-        // 0x002f
-        case 47: {
-            return cell50();
-        }
-        // 0x0027
-        case 39: {
-            return cell51();
-        }
-        // 0x000d
-        case 13: {
-            return cell57();
-        }
-        default:  {
-            return cell55();
-        }
-        }
-        
+        return 1;
     }
     
     private int cell50() throws java.io.IOException {
         switch (getNextChar()) {
+        // 0xffff
+        case 65535: {
+            return cell59();
+        }
+        // 0x000a
+        case 10: {
+            return cell57();
+        }
+        // 0x0027
+        case 39: {
+            return cell52();
+        }
+        // 0x007d
+        case 125: {
+            return cell54();
+        }
+        // 0x0022
+        case 34: {
+            return cell53();
+        }
+        // 0x007b
+        case 123: {
+            return cell55();
+        }
         // 0x002f
         case 47: {
-            return cell60();
+            return cell51();
+        }
+        // 0x000d
+        case 13: {
+            return cell58();
+        }
+        default:  {
+            return cell56();
+        }
+        }
+        
+    }
+    
+    private int cell51() throws java.io.IOException {
+        switch (getNextChar()) {
+        // 0x002f
+        case 47: {
+            return cell61();
         }
         // 0x002a
         case 42: {
-            return cell59();
+            return cell60();
         }
         default:  {
             return rewind();
@@ -1031,23 +1108,23 @@ return action();
         
     }
     
-    private int cell51() throws java.io.IOException {
+    private int cell52() throws java.io.IOException {
         return 3;
     }
     
-    private int cell52() throws java.io.IOException {
+    private int cell53() throws java.io.IOException {
         return 2;
     }
     
-    private int cell53() throws java.io.IOException {
+    private int cell54() throws java.io.IOException {
         return 1;
     }
     
-    private int cell54() throws java.io.IOException {
+    private int cell55() throws java.io.IOException {
         return 0;
     }
     
-    private int cell55() throws java.io.IOException {
+    private int cell56() throws java.io.IOException {
         mark(8);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002f0x007b0x007d0xffff]
@@ -1063,22 +1140,22 @@ return action();
             
         }
         default:  {
-            return cell55();
+            return cell56();
         }
         }
         
     }
     
-    private int cell56() throws java.io.IOException {
+    private int cell57() throws java.io.IOException {
         return 7;
     }
     
-    private int cell57() throws java.io.IOException {
+    private int cell58() throws java.io.IOException {
         mark(7);
         switch (getNextChar()) {
         // 0x000a
         case 10: {
-            return cell56();
+            return cell57();
         }
         default:  {
             return rewind();
@@ -1088,15 +1165,15 @@ return action();
         
     }
     
-    private int cell58() throws java.io.IOException {
+    private int cell59() throws java.io.IOException {
         return 6;
     }
     
-    private int cell59() throws java.io.IOException {
+    private int cell60() throws java.io.IOException {
         return 4;
     }
     
-    private int cell60() throws java.io.IOException {
+    private int cell61() throws java.io.IOException {
         mark(5);
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
@@ -1107,41 +1184,27 @@ return action();
             
         }
         default:  {
-            return cell60();
-        }
-        }
-        
-    }
-    
-    private int cell61() throws java.io.IOException {
-        mark(2);
-        switch (getNextChar()) {
-        // \\
-        case 92: {
-            return cell62();
-        }
-        // [0x00270xffff]
-        case 39:
-        case 65535: {
-            return rewind();
-            
-        }
-        default:  {
-            return cell63();
+            return cell61();
         }
         }
         
     }
     
     private int cell62() throws java.io.IOException {
+        mark(2);
         switch (getNextChar()) {
-        // 0xffff
+        // [0x00270xffff]
+        case 39:
         case 65535: {
             return rewind();
             
         }
+        // \\
+        case 92: {
+            return cell63();
+        }
         default:  {
-            return cell65();
+            return cell64();
         }
         }
         
@@ -1149,27 +1212,23 @@ return action();
     
     private int cell63() throws java.io.IOException {
         switch (getNextChar()) {
-        // 0x0027
-        case 39: {
-            return cell64();
-        }
-        default:  {
+        // 0xffff
+        case 65535: {
             return rewind();
             
+        }
+        default:  {
+            return cell66();
         }
         }
         
     }
     
     private int cell64() throws java.io.IOException {
-        return 0;
-    }
-    
-    private int cell65() throws java.io.IOException {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
-            return cell66();
+            return cell65();
         }
         default:  {
             return rewind();
@@ -1179,7 +1238,25 @@ return action();
         
     }
     
+    private int cell65() throws java.io.IOException {
+        return 0;
+    }
+    
     private int cell66() throws java.io.IOException {
+        switch (getNextChar()) {
+        // 0x0027
+        case 39: {
+            return cell67();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int cell67() throws java.io.IOException {
         return 1;
     }
     
