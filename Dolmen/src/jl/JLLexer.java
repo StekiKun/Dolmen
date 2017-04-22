@@ -114,7 +114,7 @@ public abstract class JLLexer {
 	 * | '.'			{ return DOT; }
 	 * | ';'			{ return SEMICOL; }
 	 * | eof			{ return END; }
-	 * | _				{ throw new LexicalError("..."); }
+	 * | _				{ throw error("..."); }
 	 */
 	private final static Lexer.Entry mainEntry =
 		new Lexer.Entry.Builder("main", Location.inlined("jl.JLToken"), Lists.empty())
@@ -128,8 +128,9 @@ public abstract class JLLexer {
 							 "jl.JLToken res = LSTRING(stringBuffer.toString());\n" +
 							 "return res;")
 			.add(rchar('{'), 
-				"int startLine = loc; int startOffset = curPos;\n" +
-				"int startCol = absPos - bol;\n" +
+				"braceDepth = 1;\n" +
+				"int startLine = loc; int startOffset = absPos + curPos;\n" +
+				"int startCol = startOffset - bol;\n" +
 				"int endOffset = action();\n" +
 				"syntax.Location loc = new syntax.Location(\n" +
 				"    filename, startOffset, endOffset, startLine, startCol);\n" +
@@ -159,7 +160,7 @@ public abstract class JLLexer {
 			.add(rchar('.'), "return DOT;")
 			.add(rchar(';'), "return SEMICOL;")
 			.add(chars(CSet.EOF), "return END;")
-			.add(any, "throw new LexicalError(\"Unfinished token\");")
+			.add(any, "throw error(\"Unfinished token\");")
 			.build();
 	
 	
@@ -174,7 +175,7 @@ public abstract class JLLexer {
 	 * 					  stringBuffer.setLength(0);
 	 * 					  comment(); return; }
 	 * | "'"			{ skipChar(); comment(); return; }
-	 * | eof			{ throw new LexicalError("Unterminated comment"); }
+	 * | eof			{ throw error("Unterminated comment"); }
 	 * | newline		{ newline(); comment(); return; }
 	 * // cannot do char-by-char without tail-call elimination
 	 * | [^*"'\r\n]+	{ comment(); return; }
@@ -187,7 +188,7 @@ public abstract class JLLexer {
 						     "stringBuffer.setLength(0);" +
 						     "comment(); return;\n")
 			.add(rchar('\''), "skipChar(); comment(); return;")
-			.add(chars(CSet.EOF), "throw new LexicalError(\"Unterminated comment\");")
+			.add(chars(CSet.EOF), "throw error(\"Unterminated comment\");")
 			.add(nl, "newline(); comment(); return;")
 			.add(plus(inComment), "comment(); return;")
 			.build();
@@ -202,7 +203,7 @@ public abstract class JLLexer {
 	 * 							  string(); return; }
 	 * | '\\' (_ as c)			{ stringBuffer.appends('\\').appends(c);
 	 * 							  string(); return; }
-	 * | eof					{ throw new LexicalError("Unterminated string"); }
+	 * | eof					{ throw error("Unterminated string"); }
 	 * | [^"\\]+				{ stringBuffer.appends(getLexeme());
 	 * 							  string(); return; }
 	 */
@@ -213,7 +214,7 @@ public abstract class JLLexer {
 					"stringBuffer.append(forBackslash(c)); string(); return;")
 			.add(seq(rchar('\\'), binding(any, "c", Location.DUMMY)),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
-			.add(chars(CSet.EOF), "throw new LexicalError(\"Unterminated string\");")
+			.add(chars(CSet.EOF), "throw error(\"Unterminated string\");")
 			.add(plus(inString), 
 					"stringBuffer.append(getLexeme()); string(); return;")
 			.build();
@@ -226,7 +227,7 @@ public abstract class JLLexer {
 	 * rule action =
 	 * | '{'			{ ++braceDepth; return action(); }
 	 * | '}'			{ --braceDepth;
-	 * 					  if (braceDepth == 0) return absPos;
+	 * 					  if (braceDepth == 0) return absPos + curPos;
 	 * 					  return action(); }
 	 * | '"'			{ stringBuffer.setLength(0);
 	 * 					  string();
@@ -235,7 +236,7 @@ public abstract class JLLexer {
 	 * | "'"			{ skipChar(); return action(); }
 	 * | "/*"			{ comment(); return action(); }
 	 * | "//" [^\r\n]*	{ return action(); }
-	 * | eof			{ throw new LexicalError("Unterminated action"); }
+	 * | eof			{ throw error("Unterminated action"); }
 	 * | newline		{ newline(); return action(); }
 	 * // cannot do char-by-char without tail-call elimination
 	 * | [^{}"'/\r\n]+  { return action(); }
@@ -243,8 +244,8 @@ public abstract class JLLexer {
 	private final static Lexer.Entry actionEntry =
 		new Lexer.Entry.Builder("action", Location.inlined("int"), Lists.empty())
 			.add(rchar('{'), "++braceDepth; return action();")
-			.add(rchar('}'), "--braceDepth;\n" + 
-							 "if (braceDepth == 0) return absPos;\n" +
+			.add(rchar('}'), "--braceDepth;\n" +
+							 "if (braceDepth == 0) return absPos + startPos - 1;\n" +
 							 "return action();")
 			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();" +
@@ -253,7 +254,7 @@ public abstract class JLLexer {
 			.add(rchar('\''), "skipChar(); return action();")
 			.add(string("/*"), "comment(); return action();")
 			.add(slcomment, "return action();")
-			.add(chars(CSet.EOF), "throw new LexicalError(\"Unterminated action\");")
+			.add(chars(CSet.EOF), "throw error(\"Unterminated action\");")
 			.add(nl, "newline(); return action();")
 			.add(plus(inAction), "return action();")
 			.build();
@@ -284,7 +285,7 @@ public abstract class JLLexer {
 	"    private int bol = 0;\n" +
 	"    \n" +
 	"    private void newline() {\n" +
-	"        ++loc; bol = curPos;\n" +
+	"        ++loc; bol = absPos + curPos;\n" +
 	"    }\n" +
 	"    \n" +
 	"    private char forBackslash(char c) {\n" +
@@ -305,7 +306,14 @@ public abstract class JLLexer {
 	"        else if (id.equals(\"import\")) return IMPORT;\n" +
 	"        else if (id.equals(\"static\")) return STATIC;\n" +
 	"        else return IDENT(id);\n" +
-	"    }\n";
+	"    }\n" +
+	"    \n" +
+	"    private LexicalError error(String msg) {\n" +
+	"        String res = String.format(\"%s (line %d, col %d)\",\n" +
+	"            msg, loc, absPos + curPos - bol);\n" +
+	"        return new LexicalError(res);\n" +
+	"    }\n"
+	;
 	private final static String footer = "";
 	
 	/**
@@ -314,7 +322,7 @@ public abstract class JLLexer {
 	@SuppressWarnings("null")
 	public final static Lexer INSTANCE =
 		new Lexer(
-			Lists.singleton("import static jl.JLToken.*;"),
+			Arrays.asList("package jl;", "import static jl.JLToken.*;"),
 			Location.inlined(header),
 			Arrays.asList(mainEntry, commentEntry, 
 				stringEntry, actionEntry, skipCharEntry),
@@ -329,7 +337,7 @@ public abstract class JLLexer {
 		System.out.println("--------AUTOMATA------");
 		Automata aut = Determinize.lexer(lexer, opt);
 		System.out.println(aut);
-		File file = new File("src-gen/" + className + ".java");
+		File file = new File("src/jl/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			AutomataOutput.output(writer, className, aut);
 			System.out.println("----------JAVA--------");
