@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -146,6 +147,9 @@ public class JLParser {
 	}
 	
 	/**
+	 * Lexer :=
+	 * 	Import* ACTION Definition* Entry+ ACTION
+	 * 
 	 * <i>NB: One can technically parse several lexers in
 	 * 	a row with one token stream.</i> 
 	 * 
@@ -156,9 +160,22 @@ public class JLParser {
 		definitions = new HashMap<>();
 		List<String> imports = parseImports();
 		Action header = (Action) (eat(Kind.ACTION));
-		return new Lexer(imports, header.value, Lists.empty(), Location.DUMMY);
+		parseDefinitions();
+		List<Lexer.Entry> entries = parseEntries();
+		Action footer= (Action) (eat(Kind.ACTION));
+		return new Lexer(imports, header.value, entries, footer.value);
 	}
 	
+	/**
+	 * Import :=
+	 * | IMPORT STATIC? TypeName SEMICOL
+	 * 
+	 * TypeName :=
+	 * | IDENT
+	 * | IDENT DOT TypeName
+	 * | IDENT DOT STAR
+	 */
+
 	private List<String> parseImports() {
 		List<String> imports = new ArrayList<>(2);
 		while (peek() == IMPORT)
@@ -202,6 +219,114 @@ public class JLParser {
 	/** Environment for regular expression definitions */
 	private Map<String, Regular> definitions;
 
+	/**
+	 * <i>NB: Ending semi-colon is necessary to avoid lookahead of
+	 * 	2 to distinguish new definition from concatenation with 
+	 *  an ident</i>
+	 * 
+	 * Definitions :=
+	 * 	Definition*
+	 * 
+	 * Definition :=
+	 * 	IDENT EQUAL Regular SEMICOL
+	 */
+	private void parseDefinitions() {
+		while (peek().getKind() == Kind.IDENT) {
+			Ident id = (Ident) eat(Kind.IDENT);
+			eat(Kind.EQUAL);
+			Regular reg = parseRegular();
+			eat(Kind.SEMICOL);
+			definitions.put(id.value, reg);
+		}
+	}
+	
+	/**
+	 * Entries :=
+	 * | Entry Entries
+	 * | Entry
+	 *  
+	 * Entry :=
+	 * | Visibility ACTION RULE IDENT ACTION?
+	 * 		EQUAL SHORTEST? Clauses
+	 * 
+	 * Visibility :=
+	 * | PUBLIC | PRIVATE
+	 */
+	
+	private List<Lexer.Entry> parseEntries() {
+		List<Lexer.Entry> entries = new ArrayList<>();
+		// At least one entry
+		entries.add(parseEntry());
+		while (peek().getKind() != Kind.ACTION) {
+			entries.add(parseEntry());
+		}
+		return entries;
+	}
+	
+	private Lexer.Entry parseEntry() {
+		boolean vis = parseVisibility();
+		Action returnType = (Action) eat(Kind.ACTION);
+		
+		eat(Kind.RULE);
+		
+		Ident name = (Ident) eat(Kind.IDENT);
+		
+		@Nullable Action args = null;
+		if (peek().getKind() == Kind.ACTION) {
+			args = (Action) eat(Kind.ACTION);
+		}
+		
+		eat(Kind.EQUAL);
+		boolean shortest = false;
+		if (peek().getKind() == Kind.SHORTEST) {
+			eat();
+			shortest =true;
+		}
+		
+		Map<Regular, Location> clauses = parseClauses();
+		
+		return new Lexer.Entry(vis, name.value, returnType.value, shortest, 
+				args == null ? null : args.value, clauses);
+	}
+
+	private boolean parseVisibility() {
+		switch (peek().getKind()) {
+		case PUBLIC:
+			eat(); return true;
+		case PRIVATE:
+			eat(); return false;
+		default:
+			throw error(peek(), Kind.PUBLIC, Kind.PRIVATE);
+		}
+	}
+	
+	/**
+	 * Clauses :=
+	 * 	Clause Clause*
+	 * 
+	 * Clause :=
+	 * 	OR Regular ACTION
+	 */
+	
+	private Map<Regular, Location> parseClauses() {
+		Map<Regular, Location> clauses = new LinkedHashMap<Regular, Location>();
+		parseClause(clauses);
+		while (peek().getKind() == Kind.OR)
+			parseClause(clauses);
+		return clauses;
+	}
+	
+	private void parseClause(Map<Regular, Location> acc) {
+		eat(Kind.OR);
+		Regular reg = parseRegular();
+		Action action = (Action) eat(Kind.ACTION);
+		if (acc.containsKey(reg)) {
+			// Ignore, but warn
+			System.out.println("Ignoring useless clause " + reg);
+		}
+		acc.put(reg, action.value);
+	}
+	
 	/**
 	 * Regular :=
 	 * | Regular AS IDENT			(allows r as bla as foo)

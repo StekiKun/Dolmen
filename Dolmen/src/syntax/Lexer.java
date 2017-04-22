@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * A lexer definition is a set of {@link Entry lexer rules}
@@ -37,12 +38,14 @@ public final class Lexer {
 	 * @author Stéphane Lescuyer
 	 */
 	public final static class Entry {
+		/** The visibility of this entry point */
+		public final boolean visibility;
 		/** The name of this entry */
 		public final String name;
 		/** Whether shortest match should be used */
 		public final boolean shortest;
-		/** The list of formal arguments for this rule */
-		public final List<@NonNull String> args;
+		/** The formal arguments for this rule */
+		public final @Nullable Location args;
 		/** The return type of semantic actions for this entry */
 		public final Location returnType;
 		
@@ -56,6 +59,7 @@ public final class Lexer {
 		public final Map<@NonNull Regular, @NonNull Location> clauses;
 		
 		/**
+		 * @param visibility
 		 * @param name
 		 * @param returnType
 		 * @param shortest
@@ -65,8 +69,10 @@ public final class Lexer {
 		 * Builds a new lexer entry with the provided arguments.
 		 * Beware that order in {@code clauses} is relevant.
 		 */
-		public Entry(String name, Location returnType, boolean shortest,
-				List<String> args, Map<Regular, Location> clauses) {
+		public Entry(boolean visibility, 
+				String name, Location returnType, boolean shortest,
+				@Nullable Location args, Map<Regular, Location> clauses) {
+			this.visibility = visibility;
 			this.name = name;
 			this.returnType = returnType;
 			this.shortest = shortest;
@@ -76,7 +82,9 @@ public final class Lexer {
 		
 		StringBuilder append(StringBuilder buf, String kword) {
 			buf.append(kword).append(" ").append(name);
-			args.forEach(arg -> buf.append(" " + arg));
+			Location args_ = args;
+			if (args_ == null) buf.append("()");
+			else buf.append("(").append(args_.find()).append(")");
 			buf.append(" : ").append(returnType.find());
 			buf.append(" = ").append(shortest ? "shortest" : "parse");
 			clauses.forEach((reg, act) -> {
@@ -102,9 +110,10 @@ public final class Lexer {
 		 * @author Stéphane Lescuyer
 		 */
 		public static final class Builder {
+			private final boolean visibility;
 			private final String name;
 			private boolean shortest;
-			private final List<@NonNull String> args;
+			private final @Nullable Location args;
 			private final Location returnType;
 			private final Map<@NonNull Regular, @NonNull Location> clauses;
 
@@ -112,11 +121,14 @@ public final class Lexer {
 			 * Constructs a fresh builder with longest-match rule
 			 * and an empty set of clauses
 			 * 
+			 * @param visibility
 			 * @param name
 			 * @param returnType
 			 * @param args
 			 */
-			public Builder(String name, Location returnType, List<String> args) {
+			public Builder(boolean visibility, 
+					String name, Location returnType, @Nullable Location args) {
+				this.visibility = visibility;
 				this.name = name;
 				this.shortest = false;
 				this.args = args;
@@ -161,8 +173,8 @@ public final class Lexer {
 			 * @return a new lexer entry based on this builder
 			 */
 			public Entry build() {
-				return new Entry(name, returnType, shortest, args, 
-						new LinkedHashMap<>(clauses));
+				return new Entry(visibility, name, returnType, shortest,
+						args, new LinkedHashMap<>(clauses));
 			}
 		}
 	}

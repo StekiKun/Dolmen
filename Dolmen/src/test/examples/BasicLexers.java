@@ -75,7 +75,7 @@ public abstract class BasicLexers {
 			Regular.seq(Regular.chars(idstart), 
 				Regular.star(Regular.chars(idbody)));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", VOID, false, Lists.empty(),
+			new Lexer.Entry(true, "ident", VOID, false, null,
 				Maps.singleton(ident, Location.DUMMY));
 		
 		final static Lexer LEXER = 
@@ -108,7 +108,7 @@ public abstract class BasicLexers {
 			Regular.seq(SimpleIDs.ident, 
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", VOID, false, Lists.empty(),
+			new Lexer.Entry(true, "ident", VOID, false, null,
 				Maps.singleton(ident, Location.DUMMY));
 		
 		final static Lexer LEXER = 
@@ -146,7 +146,7 @@ public abstract class BasicLexers {
 				Regular.binding(SimpleIDs.ident, "id", Location.DUMMY), 
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident", VOID, false, Lists.empty(),
+			new Lexer.Entry(true, "ident", VOID, false, null,
 				Maps.singleton(ident, Location.inlined("System.out.println(id); return;")));
 		
 		final static Lexer LEXER = 
@@ -187,7 +187,7 @@ public abstract class BasicLexers {
 		private final static Map<Regular, Location> clauses =
 			clauses(ident, integer);
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("ident_int", VOID, false, Lists.empty(), clauses);
+			new Lexer.Entry(true, "ident_int", VOID, false, null, clauses);
 		
 		final static Lexer LEXER = 
 			new Lexer(Lists.empty(), Location.DUMMY, 
@@ -252,9 +252,9 @@ public abstract class BasicLexers {
 		private final static Map<Regular, Location> clauses =
 			clauses(DO, FOR, ident);
 		private final static Lexer.Entry entry =
-			new Lexer.Entry("identkw", VOID, false, Lists.empty(), clauses);
+			new Lexer.Entry(true, "identkw", VOID, false, null, clauses);
 		private final static Lexer.Entry sh_entry =
-				new Lexer.Entry("identkw", VOID, true, Lists.empty(), clauses);
+			new Lexer.Entry(true, "identkw", VOID, true, null, clauses);
 		
 		final static Lexer LEXER =
 			new Lexer(Lists.empty(), Location.DUMMY, 

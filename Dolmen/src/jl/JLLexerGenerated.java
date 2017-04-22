@@ -49,6 +49,8 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
         else if (id.equals("as")) return AS;
         else if (id.equals("import")) return IMPORT;
         else if (id.equals("static")) return STATIC;
+        else if (id.equals("public")) return PUBLIC;
+        else if (id.equals("private")) return PRIVATE;
         else return IDENT(id);
     }
     
@@ -177,7 +179,7 @@ return ACTION(loc);
     /**
      * Entry point for rule comment
      */
-    public void comment() throws java.io.IOException {
+    private void comment() throws java.io.IOException {
         // Initialize lexer for this automaton
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
@@ -188,21 +190,24 @@ return ACTION(loc);
             return;
         }
         case 1:  {
+            comment(); return;
+        }
+        case 2:  {
             stringBuffer.setLength(0);
 string();
 stringBuffer.setLength(0);comment(); return;
 
         }
-        case 2:  {
+        case 3:  {
             skipChar(); comment(); return;
         }
-        case 3:  {
+        case 4:  {
             throw error("Unterminated comment");
         }
-        case 4:  {
+        case 5:  {
             newline(); comment(); return;
         }
-        case 5:  {
+        case 6:  {
             comment(); return;
         }
         default:
@@ -214,7 +219,7 @@ stringBuffer.setLength(0);comment(); return;
     /**
      * Entry point for rule string
      */
-    public void string() throws java.io.IOException {
+    private void string() throws java.io.IOException {
         // Initialize lexer for this automaton
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
@@ -247,7 +252,7 @@ stringBuffer.setLength(0);comment(); return;
     /**
      * Entry point for rule action
      */
-    public int action() throws java.io.IOException {
+    private int action() throws java.io.IOException {
         // Initialize lexer for this automaton
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
@@ -294,7 +299,7 @@ return action();
     /**
      * Entry point for rule skipChar
      */
-    public void skipChar() throws java.io.IOException {
+    private void skipChar() throws java.io.IOException {
         // Initialize lexer for this automaton
         memory = new int[0];
         java.util.Arrays.fill(memory, -1);
@@ -870,39 +875,85 @@ return action();
     
     private int cell34() throws java.io.IOException {
         switch (getNextChar()) {
-        // 0x002a
-        case 42: {
-            return cell41();
-        }
-        // 0x0027
-        case 39: {
+        // 0x0022
+        case 34: {
             return cell39();
         }
         // 0xffff
         case 65535: {
-            return cell38();
-        }
-        // 0x0022
-        case 34: {
-            return cell40();
+            return cell37();
         }
         // 0x000a
         case 10: {
-            return cell36();
+            return cell35();
+        }
+        // 0x002a
+        case 42: {
+            return cell40();
         }
         // 0x000d
         case 13: {
-            return cell37();
+            return cell36();
+        }
+        // 0x0027
+        case 39: {
+            return cell38();
         }
         default:  {
-            return cell35();
+            return cell41();
         }
         }
         
     }
     
     private int cell35() throws java.io.IOException {
+        return 5;
+    }
+    
+    private int cell36() throws java.io.IOException {
         mark(5);
+        switch (getNextChar()) {
+        // 0x000a
+        case 10: {
+            return cell35();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int cell37() throws java.io.IOException {
+        return 4;
+    }
+    
+    private int cell38() throws java.io.IOException {
+        return 3;
+    }
+    
+    private int cell39() throws java.io.IOException {
+        return 2;
+    }
+    
+    private int cell40() throws java.io.IOException {
+        mark(1);
+        switch (getNextChar()) {
+        // 0x002f
+        case 47: {
+            return cell42();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int cell41() throws java.io.IOException {
+        mark(6);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002a0xffff]
         case 10:
@@ -915,52 +966,7 @@ return action();
             
         }
         default:  {
-            return cell35();
-        }
-        }
-        
-    }
-    
-    private int cell36() throws java.io.IOException {
-        return 4;
-    }
-    
-    private int cell37() throws java.io.IOException {
-        mark(4);
-        switch (getNextChar()) {
-        // 0x000a
-        case 10: {
-            return cell36();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int cell38() throws java.io.IOException {
-        return 3;
-    }
-    
-    private int cell39() throws java.io.IOException {
-        return 2;
-    }
-    
-    private int cell40() throws java.io.IOException {
-        return 1;
-    }
-    
-    private int cell41() throws java.io.IOException {
-        switch (getNextChar()) {
-        // 0x002f
-        case 47: {
-            return cell42();
-        }
-        default:  {
-            return rewind();
-            
+            return cell41();
         }
         }
         
@@ -1053,78 +1059,60 @@ return action();
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
+            return cell58();
+        }
+        // 0x002f
+        case 47: {
             return cell59();
-        }
-        // 0x000a
-        case 10: {
-            return cell57();
-        }
-        // 0x0027
-        case 39: {
-            return cell52();
         }
         // 0x007d
         case 125: {
-            return cell54();
-        }
-        // 0x0022
-        case 34: {
             return cell53();
         }
         // 0x007b
         case 123: {
-            return cell55();
+            return cell54();
         }
-        // 0x002f
-        case 47: {
+        // 0x0027
+        case 39: {
             return cell51();
+        }
+        // 0x000a
+        case 10: {
+            return cell56();
+        }
+        // 0x0022
+        case 34: {
+            return cell52();
         }
         // 0x000d
         case 13: {
-            return cell58();
+            return cell57();
         }
         default:  {
-            return cell56();
+            return cell55();
         }
         }
         
     }
     
     private int cell51() throws java.io.IOException {
-        switch (getNextChar()) {
-        // 0x002f
-        case 47: {
-            return cell61();
-        }
-        // 0x002a
-        case 42: {
-            return cell60();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int cell52() throws java.io.IOException {
         return 3;
     }
     
-    private int cell53() throws java.io.IOException {
+    private int cell52() throws java.io.IOException {
         return 2;
     }
     
-    private int cell54() throws java.io.IOException {
+    private int cell53() throws java.io.IOException {
         return 1;
     }
     
-    private int cell55() throws java.io.IOException {
+    private int cell54() throws java.io.IOException {
         return 0;
     }
     
-    private int cell56() throws java.io.IOException {
+    private int cell55() throws java.io.IOException {
         mark(8);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002f0x007b0x007d0xffff]
@@ -1140,22 +1128,22 @@ return action();
             
         }
         default:  {
-            return cell56();
+            return cell55();
         }
         }
         
     }
     
-    private int cell57() throws java.io.IOException {
+    private int cell56() throws java.io.IOException {
         return 7;
     }
     
-    private int cell58() throws java.io.IOException {
+    private int cell57() throws java.io.IOException {
         mark(7);
         switch (getNextChar()) {
         // 0x000a
         case 10: {
-            return cell57();
+            return cell56();
         }
         default:  {
             return rewind();
@@ -1165,8 +1153,26 @@ return action();
         
     }
     
-    private int cell59() throws java.io.IOException {
+    private int cell58() throws java.io.IOException {
         return 6;
+    }
+    
+    private int cell59() throws java.io.IOException {
+        switch (getNextChar()) {
+        // 0x002a
+        case 42: {
+            return cell60();
+        }
+        // 0x002f
+        case 47: {
+            return cell61();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
     }
     
     private int cell60() throws java.io.IOException {
@@ -1193,15 +1199,15 @@ return action();
     private int cell62() throws java.io.IOException {
         mark(2);
         switch (getNextChar()) {
+        // \\
+        case 92: {
+            return cell63();
+        }
         // [0x00270xffff]
         case 39:
         case 65535: {
             return rewind();
             
-        }
-        // \\
-        case 92: {
-            return cell63();
         }
         default:  {
             return cell64();

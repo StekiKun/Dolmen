@@ -3,6 +3,7 @@ package automaton;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import automaton.DFA.MemAction;
 import syntax.Location;
@@ -37,12 +38,14 @@ public final class Automata {
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class Entry {
+		/** Whether this rule is public or not */
+		public final boolean visibility;
 		/** The name of this rule */
 		public final String name;
 		/** The return type of this rule */
 		public final Location returnType;
 		/** The formal arguments for this rule */
-		public final List<@NonNull String> args;
+		public final @Nullable Location args;
 		/** The number of memory cells required */
 		public final int memSize;
 		
@@ -68,9 +71,10 @@ public final class Automata {
 		 * @param initializer
 		 * @param finishers
 		 */
-		public Entry(String name, Location returnType, List<String> args,
-			int memSize, int initialState, List<MemAction> initializer,
-			List<Finisher> finishers) {
+		public Entry(boolean visibility, String name, Location returnType,
+				@Nullable Location args, int memSize, int initialState, 
+				List<MemAction> initializer, List<Finisher> finishers) {
+			this.visibility = visibility;
 			this.name = name;
 			this.returnType = returnType;
 			this.args = args;
@@ -82,7 +86,9 @@ public final class Automata {
 		
 		StringBuilder append(StringBuilder buf) {
 			buf.append(name);
-			args.forEach(arg -> buf.append(" " + arg));
+			Location args_ = args;
+			if (args_ == null) buf.append("()");
+			else buf.append("(").append(args_.find()).append(")");
 			buf.append("\n memSize = ").append(memSize);
 			buf.append("\n initial = ").append(initialState);
 			buf.append("\n initializer = ").append(initializer);

@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import syntax.Location;
 import tagged.Optimiser.IdentInfo;
@@ -71,6 +72,8 @@ public final class TLexerEntry {
 		}
 	}
 	
+	/** Whether this entry is public or not */
+	public final boolean visibility;
 	/** The name of the lexer entry */
 	public final String name;
 	/** Whether the shortest match priority should be used */
@@ -78,7 +81,7 @@ public final class TLexerEntry {
 	/** The return type of the semantic actions for this lexer entry */
 	public final Location returnType;
 	/** The list of formal arguments available in semantic actions */
-	public final List<@NonNull String> args;
+	public final @Nullable Location args;
 	/** The tagged regular expression encoding all clauses */
 	public final TRegular regexp;
 	/** The number of tags in the encoded entry */
@@ -89,6 +92,7 @@ public final class TLexerEntry {
 	/**
 	 * Builds an encoded lexer entry based on all the arguments
 	 * 
+	 * @param visibility
 	 * @param name
 	 * @param returnType
 	 * @param shortest
@@ -97,9 +101,10 @@ public final class TLexerEntry {
 	 * @param memTags
 	 * @param actions
 	 */
-	public TLexerEntry(String name, Location returnType,
-			boolean shortest, List<String> args,
+	public TLexerEntry(boolean visibility, String name, Location returnType,
+			boolean shortest, @Nullable Location args,
 			TRegular regexp, int memTags, List<Finisher> actions) {
+		this.visibility = visibility;
 		this.name = name;
 		this.shortest = shortest;
 		this.returnType = returnType;
@@ -113,16 +118,9 @@ public final class TLexerEntry {
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append(name);
-		if (!args.isEmpty()) {
-			buf.append("(");
-			boolean first = true;
-			for (String arg : args) {
-				if (first) first = false;
-				else buf.append(", ");
-				buf.append(arg);
-			}
-			buf.append(")");
-		}
+		Location args_ = args;
+		if (args_ == null) buf.append("()");
+		else buf.append("(").append(args_.find()).append(")");
 		buf.append(": ").append(returnType);
 		buf.append(shortest ? "[shortest]\n" : "\n");
 		buf.append(" regexp: " ).append(regexp).append("\n");

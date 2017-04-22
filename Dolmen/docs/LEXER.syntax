@@ -30,7 +30,7 @@ Exactly like in Java
 
 Definitions can use other regexps defined above.
 
-ident = REGEXP
+ident = REGEXP;
 
 ## Lexer entries [ENTRY]
 

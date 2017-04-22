@@ -217,13 +217,9 @@ public final class AutomataOutput {
 		buf.closeBlock();
 	}
 	
-	private void genEntryArgs(List<@NonNull String> args) {
-		boolean first = true;
-		for (String arg : args) {
-			if (first) first = false;
-			else buf.emit(", ");
-			buf.emit(arg);
-		}
+	private void genEntryArgs(@Nullable Location args) {
+		if (args == null) return;
+		buf.emit(args.find());
 	}
 	
 	private void genTagAddr(TagAddr addr) {
@@ -298,7 +294,8 @@ public final class AutomataOutput {
 		    .emitln("/**")
 		    .emit(" * Entry point for rule ").emitln(entry.name)
 		    .emitln(" */")
-			.emit("public ").emit(entry.returnType.find()).emit(" ")
+			.emit(entry.visibility ? "public " : "private ")
+			.emit(entry.returnType.find()).emit(" ")
 			.emit(entry.name).emit("(");
 		genEntryArgs(entry.args);
 		buf.emit(") throws java.io.IOException").openBlock();

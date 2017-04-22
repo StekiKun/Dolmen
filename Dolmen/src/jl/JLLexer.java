@@ -15,7 +15,6 @@ import automaton.Automata;
 import automaton.Determinize;
 import codegen.AutomataOutput;
 import common.CSet;
-import common.Lists;
 import syntax.Lexer;
 import syntax.Location;
 import syntax.Regular;
@@ -92,6 +91,8 @@ public abstract class JLLexer {
 	 * 					  ... "as" -> AS
 	 * 					  ... "import" -> IMPORT
 	 * 					  ... "static" -> STATIC
+	 * 					  ... "public" -> PUBLIC
+	 * 					  ... "private" -> PRIVATE
 	 * 					  ... _ -> IDENT(getLexeme())
 	 * 					}
 	 * | "'" ([^\\] as c) "'"
@@ -117,7 +118,7 @@ public abstract class JLLexer {
 	 * | _				{ throw error("..."); }
 	 */
 	private final static Lexer.Entry mainEntry =
-		new Lexer.Entry.Builder("main", Location.inlined("jl.JLToken"), Lists.empty())
+		new Lexer.Entry.Builder(true, "main", Location.inlined("jl.JLToken"), null)
 			.add(plus(chars(ws)), "return main();")
 			.add(nl, "newline(); return main();")
 			.add(string("/*"), "comment(); return main();")
@@ -170,6 +171,7 @@ public abstract class JLLexer {
 	/**
 	 * private rule comment =
 	 * | '*' '/'		{ return; }
+	 * | '*'			{ comment(); return; }
 	 * | '"'			{ stringBuffer.setLength(0);
 	 * 					  string();
 	 * 					  stringBuffer.setLength(0);
@@ -181,8 +183,9 @@ public abstract class JLLexer {
 	 * | [^*"'\r\n]+	{ comment(); return; }
 	 */
 	private final static Lexer.Entry commentEntry =
-		new Lexer.Entry.Builder("comment", VOID, Lists.empty())
+		new Lexer.Entry.Builder(false, "comment", VOID, null)
 			.add(string("*/"), "return;")
+			.add(rchar('*'), "comment(); return;")
 			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 						     "string();\n" +
 						     "stringBuffer.setLength(0);" +
@@ -208,7 +211,7 @@ public abstract class JLLexer {
 	 * 							  string(); return; }
 	 */
 	private final static Lexer.Entry stringEntry =
-		new Lexer.Entry.Builder("string", VOID, Lists.empty())
+		new Lexer.Entry.Builder(false, "string", VOID, null)
 			.add(rchar('"'), "return;")
 			.add(seq(rchar('\\'), binding(escaped, "c", Location.DUMMY)), 
 					"stringBuffer.append(forBackslash(c)); string(); return;")
@@ -242,7 +245,7 @@ public abstract class JLLexer {
 	 * | [^{}"'/\r\n]+  { return action(); }
 	 */
 	private final static Lexer.Entry actionEntry =
-		new Lexer.Entry.Builder("action", Location.inlined("int"), Lists.empty())
+		new Lexer.Entry.Builder(false, "action", Location.inlined("int"), null)
 			.add(rchar('{'), "++braceDepth; return action();")
 			.add(rchar('}'), "--braceDepth;\n" +
 							 "if (braceDepth == 0) return absPos + startPos - 1;\n" +
@@ -270,7 +273,7 @@ public abstract class JLLexer {
 	 * | ""					{ return; }
 	 */
 	private final static Lexer.Entry skipCharEntry =
-		new Lexer.Entry.Builder("skipChar", VOID, Lists.empty())
+		new Lexer.Entry.Builder(false, "skipChar", VOID, null)
 			.add(seq(inChar,  rchar('\'')), "return;")
 			.add(seq(rchar('\\'), any, rchar('\'')), "return;")
 			.add(Regular.EPSILON, "return;")
@@ -305,6 +308,8 @@ public abstract class JLLexer {
 	"        else if (id.equals(\"as\")) return AS;\n" +
 	"        else if (id.equals(\"import\")) return IMPORT;\n" +
 	"        else if (id.equals(\"static\")) return STATIC;\n" +
+	"        else if (id.equals(\"public\")) return PUBLIC;\n" +
+	"        else if (id.equals(\"private\")) return PRIVATE;\n" +
 	"        else return IDENT(id);\n" +
 	"    }\n" +
 	"    \n" +

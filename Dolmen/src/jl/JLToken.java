@@ -14,6 +14,8 @@ public abstract class JLToken {
 		ACTION,
 		RULE,
 		SHORTEST,
+		PUBLIC,
+		PRIVATE,
 		EOF,
 		AS,
 		IMPORT,
@@ -151,6 +153,8 @@ public abstract class JLToken {
 	public static JLToken AS = new Singleton(Kind.AS) {};
 	public static JLToken IMPORT = new Singleton(Kind.IMPORT) {};
 	public static JLToken STATIC = new Singleton(Kind.STATIC) {};
+	public static JLToken PUBLIC = new Singleton(Kind.PUBLIC) {};
+	public static JLToken PRIVATE = new Singleton(Kind.PRIVATE) {};
 	public static JLToken UNDERSCORE = new Singleton(Kind.UNDERSCORE) {};
 	public static JLToken EQUAL = new Singleton(Kind.EQUAL) {};
 	public static JLToken OR = new Singleton(Kind.OR) {};
