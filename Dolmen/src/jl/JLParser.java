@@ -23,9 +23,27 @@ import jl.JLToken.Kind;
 import syntax.Lexer;
 import syntax.Location;
 
+/**
+ * A manually written top-down parser for lexer descriptions,
+ * fed by a stream of {@link JLToken}s as provided by the
+ * generated lexer {@link JLLexerGenerated}.
+ * 
+ * @author Stéphane Lescuyer
+ */
 public class JLParser {
 
+	/**
+	 * Exception raised by parsing errors
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public static class ParsingException extends RuntimeException {
+		private static final long serialVersionUID = 1L;
+
+		/**
+		 * A parsing error exception with the given error message
+		 * @param s
+		 */
 		public ParsingException(String s) {
 			super(s);
 		}
@@ -49,19 +67,34 @@ public class JLParser {
 	
 	// private final Stack<List<JLToken>> stack;
 	
-	public JLParser(Iterator<JLToken> tokens) {
+	/**
+	 * Construct a new parser which will feed on the
+	 * given iterator of tokens
+	 * 
+	 * @param tokens
+	 */
+	private JLParser(Iterator<JLToken> tokens) {
 		this.tokens = tokens;
 		// this.stack = new Stack<>();
 		this.nextToken = null;
 	}
 	
-	public static JLParser of(Supplier<JLToken> tokenizer) {
+	/**
+	 * 
+	 * @param tokenizer	a supplier of tokens
+	 * @param terminal	the special token that terminates the stream
+	 * @return a parser based on the given token supplier and 
+	 * 	terminated by {@code terminal}. It is guaranteed that 
+	 * 	{@code tokenizer} will not be called after the first {@code terminal}
+	 * 	token has been met.
+	 */
+	public static JLParser of(Supplier<JLToken> tokenizer, JLToken terminal) {
 		return new JLParser(new Iterator<JLToken>() {
 			@Nullable JLToken nextToken = tokenizer.get();
 			
 			@Override
 			public boolean hasNext() {
-				return nextToken != END;
+				return nextToken != terminal;
 			}
 
 			@Override
@@ -69,7 +102,7 @@ public class JLParser {
 				JLToken tok = nextToken;
 				if (tok == null)
 					throw new NoSuchElementException();
-				if (tok == END) nextToken = null;
+				if (tok == terminal) nextToken = null;
 				else nextToken = tokenizer.get();
 				return tok;
 			}
@@ -96,6 +129,13 @@ public class JLParser {
 		return ctoken;
 	}
 	
+	/**
+	 * <i>NB: One can technically parse several lexers in
+	 * 	a row with one token stream.</i> 
+	 * 
+	 * @return a lexer definition parsed from the
+	 * 	token stream that was given to this parsing object
+	 */
 	public Lexer parseLexer() {
 		List<String> imports = parseImports();
 		Action header = (Action) (eat(Kind.ACTION));
@@ -142,29 +182,37 @@ public class JLParser {
 		eat(Kind.SEMICOL);
 	}
 	
-	public static void main(String[] args) throws IOException {
-		JLLexerGenerated lexer = new JLLexerGenerated("tests/jl/test1.jl",
-			new FileReader("tests/jl/test1.jl"));
-//		JLToken tok;
-//		while (true) {
-//			tok = lexer.main();
-//			System.out.println(tok);
-//			if (tok == END) break;
-//		}
-		
+	/** Whether tokens should be printed along the way, for debug */
+	private static boolean tokenize = true;
+	
+	private static void testParse(String filename) throws IOException {
+		FileReader reader = new FileReader(filename);
+		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		JLParser parser = of(new Supplier<JLToken>() {
 			@SuppressWarnings("null")
 			@Override
 			public JLToken get() {
 				try {
-					return lexer.main();
+					JLToken tok = lexer.main();
+					if (tokenize)
+						System.out.println(tok);
+					return tok;
 				} catch (IOException e) {
 					e.printStackTrace();
 					return END;
 				}
 			}
-		});
+		}, END);
 		Lexer lexerDef = parser.parseLexer();
+		reader.close();
 		System.out.println(lexerDef.toString());
+	}
+	
+	/**
+	 * @param args
+	 * @throws IOException
+	 */
+	public static void main(String[] args) throws IOException {
+		testParse("tests/jl/test1.jl");
 	}
 }
