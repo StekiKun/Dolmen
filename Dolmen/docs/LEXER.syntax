@@ -81,3 +81,16 @@ Exactly like in Java
 | CHAR - CHAR	// character range
 | CHAR			// single char
 | CSET0 CSET0	// concatenation
+
+
+R or R1 or ..
+---
+(R or R1) or ... % left
+R or (R1 or R2)  % right
+error			 % nonassoc
+
+R as foo as ...
+---
+(R as foo1) as ... % left
+R as (foo1 as ..)  % right Makes no sense
+error			   % nonassoc

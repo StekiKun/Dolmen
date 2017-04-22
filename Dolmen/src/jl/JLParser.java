@@ -7,6 +7,8 @@ import static jl.JLToken.STATIC;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -16,10 +18,13 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import common.CSet;
 import common.Lists;
+import common.Prompt;
 import jl.JLToken.Action;
 import jl.JLToken.Ident;
 import jl.JLToken.Kind;
+import jl.JLToken.LChar;
 import syntax.Lexer;
 import syntax.Location;
 
@@ -182,13 +187,41 @@ public class JLParser {
 		eat(Kind.SEMICOL);
 	}
 	
+	protected CSet parseCharClass() {
+		eat(Kind.LBRACKET);
+		CSet res = parseCharSet();
+		eat(Kind.RBRACKET);
+		return res;
+	}
+	
+	private CSet parseCharSet() {
+		if (peek() == JLToken.CARET) {
+			eat();
+			return CSet.complement(parsePositiveCharSet());
+		}
+		return parsePositiveCharSet();
+	}
+	
+	private CSet parsePositiveCharSet() {
+		CSet res;
+		LChar ch1 = (LChar) eat(Kind.LCHAR);
+		if (peek() == JLToken.DASH) {
+			eat();
+			LChar ch2 = (LChar) eat(Kind.LCHAR);
+			res = CSet.interval(ch1.value, ch2.value); 
+		}
+		else
+			res = CSet.singleton(ch1.value);
+		if (peek().getKind() == Kind.LCHAR)
+			return CSet.union(res, parsePositiveCharSet());
+		return res;
+	}
+	
 	/** Whether tokens should be printed along the way, for debug */
 	private static boolean tokenize = true;
-	
-	private static void testParse(String filename) throws IOException {
-		FileReader reader = new FileReader(filename);
-		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
-		JLParser parser = of(new Supplier<JLToken>() {
+
+	private static JLParser of(JLLexerGenerated lexer) {
+		return of(new Supplier<JLToken>() {
 			@SuppressWarnings("null")
 			@Override
 			public JLToken get() {
@@ -203,9 +236,24 @@ public class JLParser {
 				}
 			}
 		}, END);
+	}
+	
+	private static void testParse(String filename) throws IOException {
+		FileReader reader = new FileReader(filename);
+		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
+		JLParser parser = of(lexer);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
 		System.out.println(lexerDef.toString());
+	}
+	
+	private static void testCharClass(String contents) throws IOException {
+		Reader reader = new StringReader(contents);
+		JLLexerGenerated lexer = new JLLexerGenerated("-", reader);
+		JLParser parser = of(lexer);
+		CSet cset = parser.parseCharClass();
+		reader.close();
+		System.out.println(cset.toString());
 	}
 	
 	/**
@@ -214,5 +262,9 @@ public class JLParser {
 	 */
 	public static void main(String[] args) throws IOException {
 		testParse("tests/jl/test1.jl");
+		String prompt;
+		while ((prompt = Prompt.getInputLine(">")) != null) {
+			testCharClass(prompt);
+		}
 	}
 }
