@@ -167,7 +167,7 @@ public abstract class JLToken {
 	public static JLToken RPAREN = new Singleton(Kind.RPAREN) {};
 	public static JLToken CARET = new Singleton(Kind.CARET) {};
 	public static JLToken DASH = new Singleton(Kind.DASH) {};
-	public static JLToken HASH= new Singleton(Kind.HASH) {};
+	public static JLToken HASH = new Singleton(Kind.HASH) {};
 	public static JLToken DOT = new Singleton(Kind.DOT) {};
 	public static JLToken SEMICOL = new Singleton(Kind.SEMICOL) {};
 	public static JLToken END = new Singleton(Kind.END) {};

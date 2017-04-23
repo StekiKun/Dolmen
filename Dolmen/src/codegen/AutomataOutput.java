@@ -88,7 +88,11 @@ public final class AutomataOutput {
 	}
 	
 	private static String cellName(int idx) {
-		return "cell" + idx;
+		return "_jl_cell" + idx;
+	}
+	
+	private static String memoryName(String entryName) {
+		return "_jl_mem_" + entryName;
 	}
 	
 	private void genMemAccess(int addr) {
@@ -301,8 +305,10 @@ public final class AutomataOutput {
 		buf.emit(") throws java.io.IOException").openBlock();
 		// Initialization of lexer variables for this entry
 		buf.emitln("// Initialize lexer for this automaton");
-		buf.emit("memory = new int[").emit("" + entry.memSize).emitln("];");
-		buf.emitln("java.util.Arrays.fill(memory, -1);");
+		if (entry.memSize > 0) {
+			buf.emit("memory = ").emit(memoryName(entry.name)).emitln(";");
+			buf.emitln("java.util.Arrays.fill(memory, -1);");
+		}
 		buf.emitln("start();");
 		// Perform initial memory actions if any
 		if (!entry.initializer.isEmpty()) {
@@ -319,6 +325,13 @@ public final class AutomataOutput {
 		genFinishers(entry.finishers);
 		buf.emitln("}");
 		buf.closeBlock();
+		// Add a final field for the memory used by this entry
+		if (entry.memSize > 0) {
+			buf.emit("private final int ")
+				.emit("@org.eclipse.jdt.annotation.NonNull [] ")
+				.emit(memoryName(entry.name))
+				.emit(" = new int[").emit("" + entry.memSize).emitln("];");
+		}
 	}
 	
 	private void genClass(String name) {

@@ -360,7 +360,7 @@ public class JLParser {
 	 * | LPAREN Regular RPAREN
 	 */
 	
-	protected Regular parseRegular() {
+	private Regular parseRegular() {
 		/**
 		 * Manual left-factoring of the Regular rule
 		 * Regular := AltRegular (AS IDENT)*
