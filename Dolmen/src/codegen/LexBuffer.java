@@ -3,12 +3,13 @@ package codegen;
 import java.io.IOException;
 import java.util.Optional;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * Instances of buffers used by generated lexers.
  * <p>
- * Lexical anlysers actually extend this class to inherit
+ * Lexical analysers actually extend this class to inherit
  * a buffer with markers for token positions, final states,
  * and methods which are used by the generated automata,
  * as well as methods that can be used in semantic actions.
@@ -17,6 +18,84 @@ import org.eclipse.jdt.annotation.Nullable;
  */
 public class LexBuffer {
 
+	/**
+	 * Instances of this class describe a <i>position</i> in some input
+	 * (most frequently a file, but could be a string or any char sequence).
+	 * A position is given by the {@link #filename description} of the input,
+	 * the {@link #offset absolute position} in said input, the {@link #line}
+	 * number in the input where this position occurs, and the 
+	 * {@link #bol offset of said line} in the input. The column number can
+	 * be retrieved via {@link #column()}.
+	 * <p>
+	 * {@link LexBuffer} uses {@link Position} to register the positions in 
+	 * the current input of the last lexeme start and the current position (which
+	 * happens to be the last lexeme <i>end</i> when in a semantic action).
+	 * {@link LexBuffer} do not manage line numbers by themselves, only absolute
+	 * character offsets, so that updating {@link #line} and {@link #bol} is
+	 * the responsiblity of the lexer's semantic actions.
+	 * See {@link LexBuffer#newline()}.
+	 * <p>
+	 * Instances of this class are <i>immutable</i> so the lexer must create
+	 * new ones when updating them, but a parser using this lexer or semantic
+	 * actions can safely use positions without having to copy them defensively.
+	 * 
+	 * @author Stéphane Lescuyer
+	 * @see LexBuffer#newline
+	 * @see LexBuffer#getLexemeStart
+	 * @see LexBuffer#getLexemeEnd
+	 */
+	public static final class Position {
+		/** 
+		 * The filename that this position relates to, or a
+		 * description of the input if not a regular file 
+		 */
+		public final String filename;
+		/** The character offset of this position, starting at 0 */
+		public final int offset;
+		/** The line of this position, starting at 1 */
+		public final int line;
+		/** The offset of the beginning of the line of this position */
+		public final int bol;
+		
+		/**
+		 * Returns the initial position in the given file
+		 * @param filename
+		 */
+		public Position(String filename) {
+			this(filename, 0, 1, 0);
+		}
+		
+		/**
+		 * Builds a position from the given parameters
+		 * @param filename
+		 * @param offset
+		 * @param line
+		 * @param bol
+		 */
+		public Position(String filename, int offset, int line, int bol) {
+			this.filename = filename;
+			this.offset = offset;
+			this.line = line;
+			this.bol = bol;
+		}
+		
+		/**
+		 * @return the column offset (1-based) of this position
+		 */
+		public int column() {
+			return offset - bol + 1;
+		}
+		
+		@Override
+		public @NonNull String toString() {
+			@SuppressWarnings("null")
+			@NonNull String res = String.format(
+				"[file=%s, char=%d, line=%d, col=%d]",
+				filename, offset, line, column());
+			return res;
+		}
+	}
+	
     /**
      * Constructs a new lexer buffer based on the given character stream
      * @param filename
@@ -36,6 +115,8 @@ public class LexBuffer {
     	this.lastAction = -1;
     	this.lastPos = 0;
     	this.memory = new int[0];
+    	this.startLoc = new Position(filename);
+    	this.curLoc = startLoc;
     }
 
     /**
@@ -76,6 +157,12 @@ public class LexBuffer {
     
     /** Memory cells */
     protected int memory[];
+    
+    /** Position of the last token start */
+    protected Position startLoc;
+    
+    /** Current token position */
+    protected Position curLoc;
     
     /**
      * Tries to refill the token buffer from the character
@@ -158,7 +245,7 @@ public class LexBuffer {
     /**
      * Starts the matching of a new token
      */
-    protected final void start() {
+    protected final void startToken() {
     	startPos = curPos;
     	lastPos = curPos;
     	lastAction = -1;
@@ -183,6 +270,15 @@ public class LexBuffer {
     	curPos = lastPos;
     	return lastAction;
     }
+    
+    /**
+     * Ends the matching of the current token
+     */
+    protected final void endToken() {
+    	startLoc = curLoc;
+    	curLoc = new Position(startLoc.filename,
+    		absPos + curPos, startLoc.line, startLoc.bol);
+    }
 
     /**
      * @return the substring between the last started token
@@ -190,6 +286,20 @@ public class LexBuffer {
      */
     protected final String getLexeme() {
     	return new String(tokenBuf, startPos, curPos - startPos);
+    }
+    
+    /**
+     * @return the position of the last lexeme start
+     */
+    public final Position getLexemeStart() {
+    	return startLoc;
+    }
+    
+    /**
+     * @return the position of the last lexeme end
+     */
+    public final Position getLexemeEnd() {
+    	return curLoc;
     }
     
     /**
@@ -234,5 +344,15 @@ public class LexBuffer {
     	if (pos < 0)
     		return Optional.empty();
     	return Optional.of(tokenBuf[pos]);
+    }
+    
+    /**
+     * Updates the current position to account for a line change.
+     * Is not called automatically by the lexer, but can be used
+     * in semantic actions when matching a newline character.
+     */
+    protected final void newline() {
+    	Position pos = curLoc;
+    	curLoc = new Position(pos.filename, pos.offset, pos.line + 1, pos.offset);
     }
 }

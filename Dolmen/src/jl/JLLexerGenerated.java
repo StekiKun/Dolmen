@@ -25,13 +25,6 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
     private final StringBuilder stringBuffer = new StringBuilder();
     private int braceDepth = 0;
     
-    private int loc = 1;
-    private int bol = 0;
-    
-    private void newline() {
-        ++loc; bol = absPos + curPos;
-    }
-    
     private char forBackslash(char c) {
         switch (c) {
         case 'n': return '\012';
@@ -55,8 +48,9 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
     }
     
     private LexicalError error(String msg) {
+		 Position p = getLexemeStart();
         String res = String.format("%s (line %d, col %d)",
-            msg, loc, absPos + curPos - bol);
+            msg, p.line, p.column());
         return new LexicalError(res);
     }
 
@@ -75,8 +69,9 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
      */
     public jl.JLToken main() throws java.io.IOException {
         // Initialize lexer for this automaton
-        start();
+        startToken();
         int result = _jl_cell0();
+        endToken();
         switch (result) {
         case 0:  {
             return main();
@@ -99,11 +94,10 @@ return res;
         }
         case 5:  {
             braceDepth = 1;
-int startLine = loc; int startOffset = absPos + curPos;
-int startCol = startOffset - bol;
+Position p = getLexemeEnd();
 int endOffset = action();
 syntax.Location loc = new syntax.Location(
-    filename, startOffset, endOffset, startLine, startCol);
+    filename, p.offset, endOffset, p.line, p.column());
 return ACTION(loc);
         }
         case 6:  {
@@ -179,8 +173,9 @@ return ACTION(loc);
      */
     private void comment() throws java.io.IOException {
         // Initialize lexer for this automaton
-        start();
+        startToken();
         int result = _jl_cell34();
+        endToken();
         switch (result) {
         case 0:  {
             return;
@@ -217,8 +212,9 @@ stringBuffer.setLength(0);comment(); return;
      */
     private void string() throws java.io.IOException {
         // Initialize lexer for this automaton
-        start();
+        startToken();
         int result = _jl_cell43();
+        endToken();
         switch (result) {
         case 0:  {
             return;
@@ -248,15 +244,16 @@ stringBuffer.setLength(0);comment(); return;
      */
     private int action() throws java.io.IOException {
         // Initialize lexer for this automaton
-        start();
+        startToken();
         int result = _jl_cell50();
+        endToken();
         switch (result) {
         case 0:  {
             ++braceDepth; return action();
         }
         case 1:  {
             --braceDepth;
-if (braceDepth == 0) return absPos + startPos - 1;
+if (braceDepth == 0) return getLexemeStart().offset - 1;
 return action();
         }
         case 2:  {
@@ -293,8 +290,9 @@ return action();
      */
     private void skipChar() throws java.io.IOException {
         // Initialize lexer for this automaton
-        start();
+        startToken();
         int result = _jl_cell62();
+        endToken();
         switch (result) {
         case 0:  {
             return;

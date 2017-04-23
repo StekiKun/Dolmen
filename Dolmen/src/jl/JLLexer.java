@@ -130,11 +130,10 @@ public abstract class JLLexer {
 							 "return res;")
 			.add(rchar('{'), 
 				"braceDepth = 1;\n" +
-				"int startLine = loc; int startOffset = absPos + curPos;\n" +
-				"int startCol = startOffset - bol;\n" +
+				"Position p = getLexemeEnd();\n" +
 				"int endOffset = action();\n" +
 				"syntax.Location loc = new syntax.Location(\n" +
-				"    filename, startOffset, endOffset, startLine, startCol);\n" +
+				"    filename, p.offset, endOffset, p.line, p.column());\n" +
 				"return ACTION(loc);")
 			.add(rchar('_'), "return UNDERSCORE;")
 			.add(ident, "return identOrKeyword(getLexeme());")
@@ -248,7 +247,7 @@ public abstract class JLLexer {
 		new Lexer.Entry.Builder(false, "action", Location.inlined("int"), null)
 			.add(rchar('{'), "++braceDepth; return action();")
 			.add(rchar('}'), "--braceDepth;\n" +
-							 "if (braceDepth == 0) return absPos + startPos - 1;\n" +
+							 "if (braceDepth == 0) return getLexemeStart().offset - 1;\n" +
 							 "return action();")
 			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();" +
@@ -284,13 +283,13 @@ public abstract class JLLexer {
 	"    private final StringBuilder stringBuffer = new StringBuilder();\n" +
 	"    private int braceDepth = 0;\n" +
 	"    \n" +
-	"    private int loc = 1;\n" +
-	"    private int bol = 0;\n" +
-	"    \n" +
-	"    private void newline() {\n" +
-	"        ++loc; bol = absPos + curPos;\n" +
-	"    }\n" +
-	"    \n" +
+//	"    private int loc = 1;\n" +
+//	"    private int bol = 0;\n" +
+//	"    \n" +
+//	"    private void newline() {\n" +
+//	"        ++loc; bol = absPos + curPos;\n" +
+//	"    }\n" +
+//	"    \n" +
 	"    private char forBackslash(char c) {\n" +
 	"        switch (c) {\n" +
 	"        case 'n': return '\\012';\n" +	// 10
@@ -314,8 +313,9 @@ public abstract class JLLexer {
 	"    }\n" +
 	"    \n" +
 	"    private LexicalError error(String msg) {\n" +
+	"		 Position p = getLexemeStart();\n" +
 	"        String res = String.format(\"%s (line %d, col %d)\",\n" +
-	"            msg, loc, absPos + curPos - bol);\n" +
+	"            msg, p.line, p.column());\n" +
 	"        return new LexicalError(res);\n" +
 	"    }\n"
 	;

@@ -192,8 +192,7 @@ public abstract class AdvancedLexers {
 		"	public final static Token RPAREN = new Token(\"RPAREN\") {};\n" +
 		"	public final static Token EOF = new Token(\"EOF\") {};\n" +
 		"}\n" +
-		"\n" +
-		"private void newline() { }\n"),
+		"\n"),
 				Arrays.asList(mainEntry, commentEntry), 
 				Location.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +

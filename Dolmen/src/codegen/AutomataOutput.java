@@ -309,7 +309,7 @@ public final class AutomataOutput {
 			buf.emit("memory = ").emit(memoryName(entry.name)).emitln(";");
 			buf.emitln("java.util.Arrays.fill(memory, -1);");
 		}
-		buf.emitln("start();");
+		buf.emitln("startToken();");
 		// Perform initial memory actions if any
 		if (!entry.initializer.isEmpty()) {
 			buf.emitln("// Memory actions for the initial state");
@@ -318,6 +318,8 @@ public final class AutomataOutput {
 		// Launch the recognition...
 		buf.emit("int result = ").emit(cellName(entry.initialState))
 								 .emitln("();");
+		// ...update positions on return...
+		buf.emitln("endToken();");
 		// ...and switch on the returned action
 		// (if Backtrack is encountered before a final state,
 		//  lastAction will be -1)
