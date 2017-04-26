@@ -40,6 +40,7 @@ CLAUSE+
 ## Lexer entry clauses [CLAUSE]
 
   | REGEXP	{ JAVA }	// semantic action
+  | ORELSE	{ JAVA }	// default progress clause
 
 ## Visibility [VIS]
 

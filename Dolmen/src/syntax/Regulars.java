@@ -645,4 +645,41 @@ public abstract class Regulars {
 	public static Iterable<String> witnesses(Regular regular) {
 		return Iterables.transform(witnesses_(regular), w -> w.witness);
 	}
+	
+	/**
+	 * @param regular
+	 * @return the set of characters that can start a
+	 * 	(non-empty) match of the given regular expression
+	 */
+	public static CSet first(Regular regular) {
+		switch (regular.getKind()) {
+		case EPSILON:
+		case EOF:
+			return CSet.EMPTY;
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			return characters.chars;
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			return CSet.union(first(alternate.lhs), first(alternate.rhs));
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			CSet res = first(sequence.first);
+			if (sequence.first.nullable)
+				res = CSet.union(res, first(sequence.second));
+			return res;
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			return first(repetition.reg);
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			return first(binding.reg);
+		}
+		}
+		throw new IllegalStateException();
+	}
 }

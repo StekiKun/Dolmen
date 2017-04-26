@@ -89,6 +89,7 @@ public abstract class JLLexer {
 	 * 					  ... "shortest" -> SHORTEST
 	 * 					  ... "eof" -> EOF
 	 * 					  ... "as" -> AS
+	 * 					  ... "orelse" -> ORELSE
 	 * 					  ... "import" -> IMPORT
 	 * 					  ... "static" -> STATIC
 	 * 					  ... "public" -> PUBLIC
@@ -305,6 +306,7 @@ public abstract class JLLexer {
 	"        else if (id.equals(\"shortest\")) return SHORTEST;\n" +
 	"        else if (id.equals(\"eof\")) return EOF;\n" +
 	"        else if (id.equals(\"as\")) return AS;\n" +
+	"        else if (id.equals(\"orelse\")) return ORELSE;\n" +
 	"        else if (id.equals(\"import\")) return IMPORT;\n" +
 	"        else if (id.equals(\"static\")) return STATIC;\n" +
 	"        else if (id.equals(\"public\")) return PUBLIC;\n" +

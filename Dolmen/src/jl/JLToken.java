@@ -18,6 +18,7 @@ public abstract class JLToken {
 		PRIVATE,
 		EOF,
 		AS,
+		ORELSE,
 		IMPORT,
 		STATIC,
 		UNDERSCORE,
@@ -151,6 +152,7 @@ public abstract class JLToken {
 	public static JLToken SHORTEST = new Singleton(Kind.SHORTEST) {};
 	public static JLToken EOF = new Singleton(Kind.EOF) {};
 	public static JLToken AS = new Singleton(Kind.AS) {};
+	public static JLToken ORELSE = new Singleton(Kind.ORELSE) {};
 	public static JLToken IMPORT = new Singleton(Kind.IMPORT) {};
 	public static JLToken STATIC = new Singleton(Kind.STATIC) {};
 	public static JLToken PUBLIC = new Singleton(Kind.PUBLIC) {};

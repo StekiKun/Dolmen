@@ -38,6 +38,7 @@ import syntax.Lexer;
 import syntax.Location;
 import syntax.Regular;
 import syntax.Regular.Characters;
+import syntax.Regulars;
 
 /**
  * A manually written top-down parser for lexer descriptions,
@@ -318,11 +319,30 @@ public class JLParser {
 	
 	private void parseClause(Map<Regular, Location> acc) {
 		eat(Kind.OR);
-		Regular reg = parseRegular();
+		Regular reg;
+		if (peek().getKind() == Kind.ORELSE) {
+			eat(Kind.ORELSE);
+			// Deal with the special default clause by finding
+			// all possible first characters matched by other
+			// clauses
+			CSet possible = CSet.EMPTY;
+			for (Regular r : acc.keySet())
+				possible = CSet.union(possible, Regulars.first(r));
+			CSet others = CSet.complement(possible);
+			if (others.isEmpty()) {
+				// Ignore, but warn
+				System.out.println("Ignoring empty orelse clause");
+				return;
+			}
+			reg = Regular.plus(Regular.chars(others));
+		}
+		else
+			reg = parseRegular();
 		Action action = (Action) eat(Kind.ACTION);
 		if (acc.containsKey(reg)) {
 			// Ignore, but warn
 			System.out.println("Ignoring useless clause " + reg);
+			return;
 		}
 		acc.put(reg, action.value);
 	}

@@ -42,6 +42,7 @@ public { Object } rule arithExpr =
 private { void } rule comment =
 | "*/" { return; }
 | '*' [^'/'] [^'*']*  { comment(); return; }
-| [^'*']+             { comment(); return; }
+| orelse              { comment(); return; }
+| eof				  { throw new LexicalError("Unterminated comment"); }
 
 { }

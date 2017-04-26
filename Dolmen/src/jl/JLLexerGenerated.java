@@ -40,6 +40,7 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
         else if (id.equals("shortest")) return SHORTEST;
         else if (id.equals("eof")) return EOF;
         else if (id.equals("as")) return AS;
+        else if (id.equals("orelse")) return ORELSE;
         else if (id.equals("import")) return IMPORT;
         else if (id.equals("static")) return STATIC;
         else if (id.equals("public")) return PUBLIC;
