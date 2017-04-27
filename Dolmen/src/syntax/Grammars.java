@@ -9,6 +9,7 @@ import java.util.Stack;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Maps;
+import common.Sets;
 
 /**
  * Static utilities about {@link Grammar}s
@@ -108,7 +109,7 @@ public abstract class Grammars {
 	 * @return the set of non-terminals in {@code grammar} 
 	 * 	which can produce empty sequence of tokens 
 	 */
-	public static Set<String> nullable(Dependencies deps, Grammar grammar) {
+	protected static Set<String> nullable(Dependencies deps, Grammar grammar) {
 		Map<String, Boolean> nullable = new HashMap<>(grammar.rules.size());
 		
 		Stack<String> todo = new Stack<>();
@@ -140,6 +141,42 @@ public abstract class Grammars {
 		
 		Set<String> res = new HashSet<>();
 		nullable.forEach((s, b) -> { if (b) res.add(s); });
+		return res;
+	}
+	
+	protected static Map<String, Set<String>>
+		first(Dependencies deps, Grammar grammar, Set<String> nullable) {
+		Map<String, Set<String>> res = new HashMap<>(grammar.rules.size());
+		
+		Stack<String> todo = new Stack<>();
+		grammar.rules.keySet().forEach(key -> todo.push(key));
+		while (!todo.isEmpty()) {
+			final String name = todo.pop();
+			Set<String> first;
+			if (!res.containsKey(name)) {
+				first = new HashSet<>();
+				res.put(name, first);
+			}
+			else
+				first = res.get(name);
+			
+			final GrammarRule rule = grammar.rules.get(name);
+			boolean changed = false;
+			prod:
+			for (Production prod : rule.productions) {
+				for (Production.Item item : prod.items) {
+					if (item.isTerminal()) {
+						changed |= first.add(item.item);
+						continue prod;
+					}
+					changed |= first.addAll(res.getOrDefault(item.item, Sets.empty()));
+					if (!nullable.contains(item.item)) break;
+				}
+			}
+			if (changed)
+				todo.addAll(deps.backward.get(name));
+		}
+		
 		return res;
 	}
 }
