@@ -96,7 +96,7 @@ public final class Production {
 		StringBuilder buf = new StringBuilder();
 		for (Item item : items)
 			buf.append(item);
-		buf.append(action.toString());
+		buf.append("{").append(action.toString()).append("}");
 		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
 		return res;
