@@ -18,7 +18,7 @@
 
 IMPORT*			// Java imports
 { JAVA }		// header
-REGEXP_DEF*			// regular expression definitions
+REGEXP_DEF*		// regular expression definitions
 ENTRY+			// lexer entries
 { JAVA }		// footer
 
@@ -40,7 +40,7 @@ CLAUSE+
 ## Lexer entry clauses [CLAUSE]
 
   | REGEXP	{ JAVA }	// semantic action
-  | ORELSE	{ JAVA }	// default progress clause
+  | orelse	{ JAVA }	// default progress clause
 
 ## Visibility [VIS]
 
@@ -48,7 +48,7 @@ Exactly like in Java
 
 ## Entry arguments [ARGS]
 
-| ( JAVA )				// Entry args prototype
+| { JAVA }				// Entry args prototype
 |						// no args
 
 ## Regular expression [REGEXP] and [REGEXP1]
@@ -82,16 +82,3 @@ Exactly like in Java
 | CHAR - CHAR	// character range
 | CHAR			// single char
 | CSET0 CSET0	// concatenation
-
-
-R or R1 or ..
----
-(R or R1) or ... % left
-R or (R1 or R2)  % right
-error			 % nonassoc
-
-R as foo as ...
----
-(R as foo1) as ... % left
-R as (foo1 as ..)  % right Makes no sense
-error			   % nonassoc

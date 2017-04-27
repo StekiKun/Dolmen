@@ -1,0 +1,48 @@
+== GRAMMAR DESCRIPTION SYNTAX ==
+
+# Lexical conventions
+
+Same lexical conventions as LEXER.syntax
+Moreover, tokens begin with an uppercase
+letter whereas grammar rules begin with
+a lowercase letter (_ is neither uppercase
+nor lowercase).
+
+# Syntax
+
+## A grammar definition (.jy) [PARSER]
+
+IMPORT*		// Java imports
+TOKEN_DECL+ // Token declarations
+{ JAVA }	// Java header
+RULE+		// Grammar rules
+{ JAVA } 	// Java footer
+
+## Imports [IMPORT]
+
+Exactly like in Java
+
+## Token declarations [TOKEN_DECL]
+
+token { JAVA }? UIDENT
+
+## Grammar rules [RULE]
+
+VIS { JAVA } rule LIDENT ARGS? = PRODUCTION+
+
+## Visibility [VIS]
+
+Exactly like in Java
+
+## Entry arguments [ARGS]
+
+| { JAVA }				// Entry args prototype
+|						// no args
+
+## Grammar productions [PRODUCTION]
+
+  | ITEM* { JAVA }
+  
+## Production items [ITEM]
+
+(IDENT =)? IDENT
