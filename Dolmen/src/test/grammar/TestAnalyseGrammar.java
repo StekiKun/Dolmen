@@ -31,6 +31,14 @@ public final class TestAnalyseGrammar {
 		return builder.build();
 	}
 	
+	private static GrammarRule rule(String name, 
+		@NonNull Production... productions) {
+		GrammarRule.Builder builder = new GrammarRule.Builder(false, Location.DUMMY, name, Location.DUMMY);
+		for (int i = 0; i < productions.length; ++i)
+			builder.addProduction(productions[i]);
+		return builder.build();
+	}
+	
 	/**
 	 * (An ambiguous grammar)
 	 * 
@@ -145,6 +153,54 @@ public final class TestAnalyseGrammar {
 	}
 	
 	/**
+	 * A simplistic Latex grammar which enforces well-formed
+	 * {@code \begin}/{@code \end} environments and bracket blocks,
+	 * but is not LL(1).
+	 * 
+	 * <pre>
+	 *   s' -> s EOF
+	 *   
+	 *   s ->
+	 *   s -> x s
+	 *   
+	 *   b -> SLASH BEGIN LBRACE WORD RBRACE
+	 *   e -> SLASH END LBRACE WORD RBRACE
+	 *   
+	 *   x -> b s e
+	 *   x -> LBRACE s RBRACE
+	 *   x -> WORD
+	 *   x -> BEGIN
+	 *   x -> END
+	 *   x -> SLASH WORD
+	 * </pre>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private final static class TestLatex {
+		
+		final static Grammar grammar =
+			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+				.addRule(rule("s'", production("s", "EOF")))
+				.addRule(rule("s",
+							production(),
+							production("x", "s")))
+				.addRule(rule("b",
+							production("BEGIN", "LBRACE", "WORD", "RBRACE")))
+				.addRule(rule("e",
+							production("SLASH", "END", "LBRACE", "WORD", "RBRACE")))
+				.addRule(rule("cmd",
+							production("b", "s", "e"),
+							production("WORD")))
+				.addRule(rule("x",
+							production("LBRACE", "s", "RBRACE"),
+							production("WORD"),
+							production("BEGIN"),
+							production("END"),
+							production("SLASH", "cmd")))
+				.build();
+	}
+	
+	/**
 	 * Computes analyses on the given {@code grammar}
 	 * and displays them
 	 * 
@@ -167,6 +223,7 @@ public final class TestAnalyseGrammar {
 	public static void main(String[] args) {
 		test(Test1.grammar);
 		test(Test2.grammar);
+		test(TestLatex.grammar);
 	}
 
 }
