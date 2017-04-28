@@ -95,7 +95,7 @@ public final class Production {
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		for (Item item : items)
-			buf.append(item);
+			buf.append(item).append(" ");
 		buf.append("{").append(action.toString()).append("}");
 		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
@@ -126,8 +126,9 @@ public final class Production {
 		 * Adds a production item
 		 * @param item
 		 */
-		public void addItem(Item item) {
+		public Builder addItem(Item item) {
 			items.add(item);
+			return this;
 		}
 		
 		/**

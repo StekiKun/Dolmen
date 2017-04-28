@@ -1,5 +1,6 @@
 package syntax;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -72,4 +73,51 @@ public final class GrammarRule {
 		return res;
 	}
 	
+	/**
+	 * A builder class for {@link GrammarRule grammar rules}, 
+	 * where productions can be added incrementally
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Builder {
+		private final boolean visibility;
+		private final Location returnType;
+		private final String name;
+		private final @Nullable Location args;
+		private final List<Production> productions;
+		
+		/**
+		 * Returns a fresh builder with the given parameters
+		 * @param visibility
+		 * @param returnType
+		 * @param name
+		 * @param args
+		 */
+		public Builder(boolean visibility, Location returnType,
+			String name, @Nullable Location args) {
+			this.visibility = visibility;
+			this.returnType = returnType;
+			this.name = name;
+			this.args = args;
+			this.productions = new ArrayList<>();
+		}
+		
+		/**
+		 * Adds the given production to the builder
+		 * @param prod
+		 * @return the new state of the builder
+		 */
+		public Builder addProduction(Production prod) {
+			this.productions.add(prod);
+			return this;
+		}
+		
+		/**
+		 * @return the grammar rule from this builder
+		 */
+		public GrammarRule build() {
+			return new GrammarRule(visibility, returnType, 
+				name, args, productions);
+		}
+	}
 }

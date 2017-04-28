@@ -1,11 +1,14 @@
 package syntax;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Maps;
@@ -51,6 +54,21 @@ public abstract class Grammars {
 		public Dependencies(Map<String, Set<String>> forward, Map<String, Set<String>> backward) {
 			this.forward = forward;
 			this.backward = backward;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder buf = new StringBuilder();
+			buf.append("{ forward=");
+			forward.forEach((nterm, s) ->
+				buf.append("\n  ").append(nterm).append(" -> ").append(s));
+			buf.append("\n  backward=");
+			backward.forEach((nterm, s) ->
+				buf.append("\n  ").append(nterm).append(" -> ").append(s));
+			buf.append("\n}");
+			@SuppressWarnings("null")
+			@NonNull String res = buf.toString();
+			return res;
 		}
 	}
 	
@@ -128,6 +146,18 @@ public abstract class Grammars {
 		}
 		
 		/**
+		 * @param prod
+		 * @return whether the production {@code prod} is nullable
+		 */
+		public boolean nullable(Production prod) {
+			for (Production.Item item : prod.items) {
+				if (item.isTerminal()) return false;
+				if (!nullable(item.item)) return false;
+			}
+			return true;
+		}
+		
+		/**
 		 * @param nterm
 		 * @return the set of terminals that can begin strings
 		 * 	derived from the non-terminal {@code nterm}
@@ -165,9 +195,9 @@ public abstract class Grammars {
 		
 		@Override
 		public String toString() {
-			return "{" +
-				"nullable = " + nullable + ", " +
-				"first = " + first + ", " +
+			return "{ " +
+				"nullable = " + nullable + ",\n  " +
+				"first = " + first + ",\n  " +
 				"follow = " + follow +
 				"}";
 		}
@@ -179,9 +209,9 @@ public abstract class Grammars {
 			if (item.isTerminal()) return false;
 			String id = item.item;
 			@Nullable Boolean b = Maps.get(nullable, id);
-			if (b != null) return b;
+			if (b == null || !b) return b;
 		}
-		return null;
+		return true;
 	}
 	
 	/**
@@ -207,15 +237,15 @@ public abstract class Grammars {
 			boolean allNonNull = true;
 			for (Production prod : rule.productions) {
 				@Nullable Boolean b = nullableProd(prod, nullable);
-				if (b == null) {
-					allNonNull = false; continue;
-				}
-				if (b) {
+				if (b == null)
+					allNonNull = false;
+				else if (b) {
 					// Now we know it is nullable, let's add all
 					// backward dependers to the todo stack and proceed
+					allNonNull = false;
 					nullable.put(name, true);
 					todo.addAll(deps.backward.get(name));
-					continue;
+					break;
 				}
 			}
 			// If all certainly non-empty, no need to retry 
@@ -282,12 +312,12 @@ public abstract class Grammars {
 
 			final GrammarRule rule = grammar.rules.get(name);
 			changed.clear();
-			Set<String> follow = res.get(name);	// beware: for R only
 			for (Production prod : rule.productions) {
 				// For each production, we go through the items in reverse
 				// order by remembering the set of possible following terminals
 				// the last non-terminal such that all items in-between 
 				// are nullable.
+				Set<String> follow = res.get(name);	// beware: for R only
 				for (int k = prod.items.size() - 1; k >= 0; --k) {
 					Production.Item item = prod.items.get(k);
 					if (item.isTerminal()) {
@@ -313,9 +343,8 @@ public abstract class Grammars {
 				}
 			}
 			// For every non-terminal whose follow set changed,
-			// revisit the non-terminals on which it depends
-			for (String ch : changed)
-				todo.addAll(deps.forward.get(ch));
+			// revisit all its productions
+			todo.addAll(changed);
 		}
 		
 		return res;
@@ -327,13 +356,146 @@ public abstract class Grammars {
 	 * sets.
 	 * 
 	 * @param grammar
+	 * @param deps_	{@code null}, or dependencies already computed for
+	 * 				the given grammar
 	 * @return the results of the analysis
 	 */
-	public static NTermsInfo analyseGrammar(Grammar grammar) {
-		Dependencies deps = dependencies(grammar);
+	public static NTermsInfo 
+			analyseGrammar(Grammar grammar, @Nullable Dependencies deps_) {
+		Dependencies deps = deps_ == null ? dependencies(grammar) : deps_;
 		Set<String> nullable = nullable(deps, grammar);
 		Map<String, Set<String>> first = first(deps, grammar, nullable);
 		Map<String, Set<String>> follow = follow(deps, grammar, nullable, first);
 		return new NTermsInfo(nullable, first, follow);
+	}
+	
+	/**
+	 * Instances of this class hold a <i>prediction table</i> for some
+	 * grammar.
+	 * <p> 
+	 * The table associates a transition table to every non-terminal
+	 * in the grammar. This transition table associates terminals to
+	 * productions, describing what production should be used depending on
+	 * the next terminal returned by the lexer. 
+	 * <p>
+	 * Prediction tables are not guaranteed to be unambiguous because
+	 * there can be more than one production associated to some 
+	 * non-terminal/terminal combination (in which case the associated
+	 * grammar is not LL(1).
+	 * 
+	 * @author Stéphane Lescuyer
+	 * @see Builder
+	 * @see Grammars#predictionTable(Grammar, NTermsInfo)
+	 */
+	public static final class PredictionTable {
+		private final Map<String, Map<String, List<Production>>> table;
+		
+		private PredictionTable(Map<String, Map<String, List<Production>>> table) {
+			this.table = table;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder buf = new StringBuilder();
+			table.forEach((nterm, trans) -> {
+				buf.append(nterm).append(" :=");
+				trans.forEach((term, prods) -> {
+					if (prods.isEmpty()) return;
+					buf.append("\n ").append(term).append(" -> ");
+					if (prods.size() == 1) buf.append(prods.get(0));
+					else {
+						for (Production prod : prods)
+							buf.append("\n  [CONFLICT] ").append(prod);
+					}
+				});
+				buf.append("\n");
+			});
+			@SuppressWarnings("null")
+			@NonNull String res = buf.toString();
+			return res;
+		}
+		
+		/**
+		 * A builder class for prediction tables
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
+		public final static class Builder {
+			private final Map<String, Map<String, List<Production>>> table;
+			
+			/**
+			 * Creates a fresh builder for a partition table based
+			 * on the given {@code grammar}
+			 * @param grammar
+			 */
+			public Builder(Grammar grammar) {
+				this.table = new HashMap<>(grammar.rules.size());
+				for (String nterm : grammar.rules.keySet())
+					this.table.put(nterm, new HashMap<>());
+			}
+			
+			/**
+			 * Extends the partition table in this builder by associating
+			 * the production {@code prod} to the given combination of
+			 * non-terminal and terminal. If the production is already
+			 * associated to these tokens, this does nothing. If it is
+			 * not the first production recorded for this combination, 
+			 * prints out a conflict warning message on System.err.
+			 * 
+			 * @param nterm
+			 * @param term
+			 * @param prod
+			 * @return the new state of the builder
+			 */
+			public Builder add(String nterm, String term, Production prod) {
+				@Nullable Map<String, List<Production>> trans = Maps.get(this.table, nterm);
+				if (trans == null)
+					throw new IllegalArgumentException("Unknown non-terminal " + nterm);
+				List<Production> prods;
+				if (!trans.containsKey(term)) {
+					prods = new ArrayList<>(2);
+					trans.put(term, prods);
+				}
+				else
+					prods = trans.get(term);
+				if (prods.contains(prod)) return this;
+				if (!prods.isEmpty())
+					System.err.println("(Adding conflicting production for " + 
+										nterm + " and " + term + ")");
+				prods.add(prod);
+				return this;
+			}
+			
+			/**
+			 * @return the prediction table prepared in this builder
+			 */
+			public PredictionTable build() {
+				return new PredictionTable(table);
+			}
+		}
+	}
+	
+	/**
+	 * Constructs a <i>prediction table</i> for the given grammar. The
+	 * nullable, first and follow sets for the grammar's non-terminals
+	 * must be provided in {@code infos}.
+	 * 
+	 * @param grammar
+	 * @param infos
+	 * @return the prediction table computed for {@code grammar}
+	 */
+	public static PredictionTable predictionTable(Grammar grammar, NTermsInfo infos) {
+		PredictionTable.Builder builder = new PredictionTable.Builder(grammar);
+		for (GrammarRule rule : grammar.rules.values()) {
+			String nterm = rule.name;
+			for (Production prod : rule.productions) {
+				for (String term : infos.first(prod))
+					builder.add(nterm, term, prod);
+				if (infos.nullable(prod))
+					for (String term : infos.follow(nterm))
+						builder.add(nterm, term, prod);
+			}
+		}
+		return builder.build();
 	}
 }
