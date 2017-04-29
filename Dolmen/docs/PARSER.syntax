@@ -24,7 +24,7 @@ Exactly like in Java
 
 ## Token declarations [TOKEN_DECL]
 
-token { JAVA }? UIDENT
+token { JAVA }? ALL_UP_IDENT
 
 ## Grammar rules [RULE]
 

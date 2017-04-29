@@ -20,6 +20,10 @@ import syntax.Grammars.PredictionTable;
  */
 public final class TestAnalyseGrammar {
 
+	private static Grammar.TokenDecl token(String name) {
+		return new Grammar.TokenDecl(name, Location.DUMMY);
+	}
+	
 	private static Production.Item item(String s) {
 		return new Production.Item(null, s);
 	}
@@ -79,6 +83,7 @@ public final class TestAnalyseGrammar {
 		
 		final static Grammar grammar =
 			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+				.addToken(token("A")).addToken(token("C")).addToken(token("D"))
 				.addRule(ruleZ).addRule(ruleY).addRule(ruleX).build();
 	}
 	
@@ -147,6 +152,10 @@ public final class TestAnalyseGrammar {
 		
 		final static Grammar grammar =
 			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+				.addToken(token("PLUS")).addToken(token("MINUS"))
+				.addToken(token("MULT")).addToken(token("DIV"))
+				.addToken(token("EOF")).addToken(token("LPAREN")).addToken(token("RPAREN"))
+				.addToken(token("ID")).addToken(token("NUM"))
 				.addRule(ruleF).addRule(ruleT_).addRule(ruleT)
 				.addRule(ruleE_).addRule(ruleE).addRule(ruleS)
 				.build();
@@ -180,6 +189,9 @@ public final class TestAnalyseGrammar {
 		
 		final static Grammar grammar =
 			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
+				.addToken(token("LBRACE")).addToken(token("WORD")).addToken(token("RBRACE"))
+				.addToken(token("EOF"))
 				.addRule(rule("s'", production("s", "EOF")))
 				.addRule(rule("s",
 							production(),

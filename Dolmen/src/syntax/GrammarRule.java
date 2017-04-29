@@ -42,6 +42,8 @@ public final class GrammarRule {
 	 */
 	public GrammarRule(boolean visibility, Location returnType,
 			String name, @Nullable Location args, List<Production> productions) {
+		if (!Character.isLowerCase(name.charAt(0)))
+			throw new IllegalArgumentException("Rule name should start with a lower case");
 		this.visibility = visibility;
 		this.returnType = returnType;
 		this.name = name;
