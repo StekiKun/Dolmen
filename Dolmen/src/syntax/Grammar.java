@@ -80,7 +80,7 @@ public final class Grammar {
 	/** The Java imports to be added to the generated parser */
 	public final List<@NonNull String> imports;
 	/** The declarations for all terminals of this grammar */
-	public final List<TokenDecl> tokenDecls;
+	public final List<@NonNull TokenDecl> tokenDecls;
 	/** The location of this parser class' header */
 	public final Location header;
 	/** The map of all grammar rules in the parser, indexed by their name */

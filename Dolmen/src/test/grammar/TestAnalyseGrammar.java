@@ -21,7 +21,11 @@ import syntax.Grammars.PredictionTable;
 public final class TestAnalyseGrammar {
 
 	private static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(name, Location.DUMMY);
+		return new Grammar.TokenDecl(name, null);
+	}
+	
+	private static Grammar.TokenDecl vtoken(String name, String valType) {
+		return new Grammar.TokenDecl(name, Location.inlined(valType));
 	}
 	
 	private static Production.Item item(String s) {
@@ -61,7 +65,7 @@ public final class TestAnalyseGrammar {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	private final static class Test1 {
+	final static class Test1 {
 		
 		private final static GrammarRule ruleZ =
 			new GrammarRule.Builder(true, Location.DUMMY, "z", Location.DUMMY)
@@ -112,7 +116,7 @@ public final class TestAnalyseGrammar {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	private final static class Test2 {
+	final static class Test2 {
 
 		private final static GrammarRule ruleS =
 				new GrammarRule.Builder(false, Location.DUMMY, "s", Location.DUMMY)
@@ -155,7 +159,7 @@ public final class TestAnalyseGrammar {
 				.addToken(token("PLUS")).addToken(token("MINUS"))
 				.addToken(token("MULT")).addToken(token("DIV"))
 				.addToken(token("EOF")).addToken(token("LPAREN")).addToken(token("RPAREN"))
-				.addToken(token("ID")).addToken(token("NUM"))
+				.addToken(vtoken("ID", "String")).addToken(vtoken("NUM", "int"))
 				.addRule(ruleF).addRule(ruleT_).addRule(ruleT)
 				.addRule(ruleE_).addRule(ruleE).addRule(ruleS)
 				.build();
@@ -185,13 +189,13 @@ public final class TestAnalyseGrammar {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	private final static class TestLatex {
+	final static class TestLatex {
 		
 		final static Grammar grammar =
 			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
-				.addToken(token("LBRACE")).addToken(token("WORD")).addToken(token("RBRACE"))
-				.addToken(token("EOF"))
+				.addToken(token("LBRACE")).addToken(token("RBRACE"))
+				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))
 				.addRule(rule("s'", production("s", "EOF")))
 				.addRule(rule("s",
 							production(),
