@@ -2,7 +2,6 @@ package jl;
 
 import static jl.JLToken.AS;
 import static jl.JLToken.DOT;
-import static jl.JLToken.END;
 import static jl.JLToken.HASH;
 import static jl.JLToken.IMPORT;
 import static jl.JLToken.OR;
@@ -15,16 +14,15 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.LexBuffer.LexicalError;
 import common.CSet;
 import common.Lists;
 import common.Maps;
@@ -79,59 +77,37 @@ public class JLParser {
 		return new ParsingException(res);
 	}
 	
-	private final Iterator<JLToken> tokens;
+	private final Supplier<JLToken> tokens;
 	private @Nullable JLToken nextToken;
 	
 	// private final Stack<List<JLToken>> stack;
 	
 	/**
 	 * Construct a new parser which will feed on the
-	 * given iterator of tokens
+	 * given tokenizer. The parser is responsible for
+	 * not calling the supplier unless at least one more
+	 * token must be consumed:
+	 * <ul>
+	 * <li> the same supplier can be used to parse several
+	 * 	top-level entries if applicable;
+	 * <li> it is down to the parser to stop asking for
+	 * 	tokens once end-of-input has been reached (which in
+	 * 	turn is usually down to the lexer to generate one special
+	 * 	token for end-of-input).
+	 * </ul>
 	 * 
 	 * @param tokens
 	 */
-	private JLParser(Iterator<JLToken> tokens) {
+	private JLParser(Supplier<JLToken> tokens) {
 		this.tokens = tokens;
 		// this.stack = new Stack<>();
 		this.nextToken = null;
 		this.definitions = Maps.empty();
 	}
 	
-	/**
-	 * 
-	 * @param tokenizer	a supplier of tokens
-	 * @param terminal	the special token that terminates the stream
-	 * @return a parser based on the given token supplier and 
-	 * 	terminated by {@code terminal}. It is guaranteed that 
-	 * 	{@code tokenizer} will not be called after the first {@code terminal}
-	 * 	token has been met.
-	 */
-	public static JLParser of(Supplier<JLToken> tokenizer, JLToken terminal) {
-		return new JLParser(new Iterator<JLToken>() {
-			@Nullable JLToken nextToken = tokenizer.get();
-			
-			@Override
-			public boolean hasNext() {
-				return nextToken != null;
-			}
-
-			@Override
-			public @NonNull JLToken next() {
-				JLToken tok = nextToken;
-				if (tok == null)
-					throw new NoSuchElementException();
-				if (tok == terminal) nextToken = null;
-				else nextToken = tokenizer.get();
-				return tok;
-			}
-		});
-	}
-
 	private JLToken peek() {
 		if (nextToken != null) return nextToken;
-		if (!tokens.hasNext())
-			throw new ParsingException("No more tokens!");
-		nextToken = tokens.next();
+		nextToken = tokens.get();
 		return nextToken;
 	}
 	
@@ -156,6 +132,12 @@ public class JLParser {
 	 * 
 	 * @return a lexer definition parsed from the
 	 * 	token stream that was given to this parsing object
+	 * @throws LexicalError	if no token can be read using
+	 * 	the supplier, either because the input does not
+	 * 	correspond to a token, or because of a lower-level
+	 * 	IO error
+	 * @throws ParsingException if some unexpected token
+	 * 	is encountered
 	 */
 	public Lexer parseLexer() {
 		definitions = new HashMap<>();
@@ -528,17 +510,19 @@ public class JLParser {
 	/** Whether tokens should be printed along the way, for debug */
 	private static boolean tokenize = true;
 
+	@SuppressWarnings("null")
 	private static JLParser of(JLLexerGenerated lexer) {
-		return of(new Supplier<JLToken>() {
-			@SuppressWarnings("null")
-			@Override
-			public JLToken get() {
-				JLToken tok = lexer.main();
-				if (tokenize)
-					System.out.println(tok);
-				return tok;
-			}
-		}, END);
+		if (!tokenize)
+			return new JLParser(lexer::main);
+		else
+			return new JLParser(new Supplier<JLToken>() {
+				@Override
+				public @NonNull JLToken get() {
+					JLToken res = lexer.main();
+					System.out.println(res);
+					return res;
+				}
+			});
 	}
 	
 	static void testParse(String filename) throws IOException {
