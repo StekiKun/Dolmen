@@ -97,6 +97,24 @@ public class LexBuffer {
 	}
 	
     /**
+     * Exception which can be raised by generated lexers which
+     * extend {@link LexBuffer}, and which is raised also by
+     * {@link LexBuffer#getNextChar()} in place of potential
+     * {@link IOException}s. 
+     */
+    public static final class LexicalError extends RuntimeException {
+        private static final long serialVersionUID = 1L;
+        
+        /**
+         * @param msg	error message
+         */
+        public LexicalError(@Nullable String msg) {
+            super(msg);
+        }
+    }
+
+	
+    /**
      * Constructs a new lexer buffer based on the given character stream
      * @param filename
      * @param reader
@@ -227,13 +245,18 @@ public class LexBuffer {
      * @return the next character in buffer,
      * 	with the special value 0xFFFF used to denote end-of-input
      */
-    protected final char getNextChar() throws IOException {
+    protected final char getNextChar() {
     	// If there aren't any more valid characters in the buffer
     	if (curPos >= bufLimit) {
     		// either we've reached end-of-file or we
     		// need to refill
     		if (eofReached) return 0xFFFF;
-    		refill();
+    		try {
+				refill();
+			} catch (IOException e) {
+				// re-throw as unchecked lexical error exception
+				throw new LexicalError("IOException: " + e.getLocalizedMessage());
+			}
     		// NB: refill() can only make bufLen grow,
     		// or set eofReached, so it's one recursive call at most
     		return getNextChar();

@@ -46,22 +46,22 @@ public final class AutomataOutput {
 		this.buf = new CodeBuilder(0);
 	}
 
-	private void genLexicalError() {
-		buf.newline();
-		buf.emitln("/**");
-		buf.emitln(" * Exception raised by generated lexer");
-		buf.emitln(" */");
-		buf.emit("public static final class LexicalError extends RuntimeException")
-		   .openBlock();
-		buf.emitln("private static final long serialVersionUID = 1L;");
-    	buf.newline();
-		buf.emitln("/**");
-		buf.emitln(" * @param msg	error message");
-		buf.emitln(" */");
-		buf.emit("public LexicalError(String msg)").openBlock();
-		buf.emit("super(msg);").closeBlock();
-		buf.closeBlock();
-    }
+//	private void genLexicalError() {
+//		buf.newline();
+//		buf.emitln("/**");
+//		buf.emitln(" * Exception raised by generated lexer");
+//		buf.emitln(" */");
+//		buf.emit("public static final class LexicalError extends RuntimeException")
+//		   .openBlock();
+//		buf.emitln("private static final long serialVersionUID = 1L;");
+//    	buf.newline();
+//		buf.emitln("/**");
+//		buf.emitln(" * @param msg	error message");
+//		buf.emitln(" */");
+//		buf.emit("public LexicalError(String msg)").openBlock();
+//		buf.emit("super(msg);").closeBlock();
+//		buf.closeBlock();
+//    }
 	
 	private void genConstructor(String name) {
 		buf.newline();
@@ -203,7 +203,7 @@ public final class AutomataOutput {
 	private void genCell(int cellIdx, DFA.Cell cell) {
 		buf.newline()
 			.emit("private int ").emit(cellName(cellIdx))
-			.emit("(").emit(") throws java.io.IOException").openBlock();
+			.emit("(").emit(")").openBlock();
 		switch (cell.getKind()) {
 		case PERFORM: {
 			final Perform perform = (Perform) cell;
@@ -302,7 +302,7 @@ public final class AutomataOutput {
 			.emit(entry.returnType.find()).emit(" ")
 			.emit(entry.name).emit("(");
 		genEntryArgs(entry.args);
-		buf.emit(") throws java.io.IOException").openBlock();
+		buf.emit(")").openBlock();
 		// Initialization of lexer variables for this entry
 		buf.emitln("// Initialize lexer for this automaton");
 		if (entry.memSize > 0) {
@@ -344,7 +344,7 @@ public final class AutomataOutput {
 		buf.emitln("@org.eclipse.jdt.annotation.NonNullByDefault({})");
 		buf.emit("public final class ").emit(name);
 		buf.emit(" extends codegen.LexBuffer").openBlock();
-		genLexicalError();
+		// genLexicalError();
 		
 		genHeader();
 		genConstructor(name);

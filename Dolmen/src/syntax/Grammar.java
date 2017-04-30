@@ -60,6 +60,14 @@ public final class Grammar {
 			this.valueType = valueType;
 		}
 		
+		/**
+		 * @return {@code true} iff tokens of this type bear
+		 * 	a semantic value at run-time
+		 */
+		public boolean isValued() {
+			return valueType != null;
+		}
+		
 		@Override
 		public String toString() {
 			@Nullable Location valueType_ = valueType;

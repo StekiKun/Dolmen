@@ -6,21 +6,6 @@ import static jl.JLToken.*;
 @org.eclipse.jdt.annotation.NonNullByDefault({})
 public final class JLLexerGenerated extends codegen.LexBuffer {
     
-    /**
-     * Exception raised by generated lexer
-     */
-    public static final class LexicalError extends RuntimeException {
-        private static final long serialVersionUID = 1L;
-        
-        /**
-         * @param msg	error message
-         */
-        public LexicalError(String msg) {
-            super(msg);
-        }
-        
-    }
-    
     
     private final StringBuilder stringBuffer = new StringBuilder();
     private int braceDepth = 0;
@@ -68,7 +53,7 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
     /**
      * Entry point for rule main
      */
-    public jl.JLToken main() throws java.io.IOException {
+    public jl.JLToken main() {
         // Initialize lexer for this automaton
         startToken();
         int result = _jl_cell0();
@@ -172,7 +157,7 @@ return ACTION(loc);
     /**
      * Entry point for rule comment
      */
-    private void comment() throws java.io.IOException {
+    private void comment() {
         // Initialize lexer for this automaton
         startToken();
         int result = _jl_cell34();
@@ -211,7 +196,7 @@ stringBuffer.setLength(0);comment(); return;
     /**
      * Entry point for rule string
      */
-    private void string() throws java.io.IOException {
+    private void string() {
         // Initialize lexer for this automaton
         startToken();
         int result = _jl_cell43();
@@ -243,7 +228,7 @@ stringBuffer.setLength(0);comment(); return;
     /**
      * Entry point for rule action
      */
-    private int action() throws java.io.IOException {
+    private int action() {
         // Initialize lexer for this automaton
         startToken();
         int result = _jl_cell50();
@@ -289,7 +274,7 @@ return action();
     /**
      * Entry point for rule skipChar
      */
-    private void skipChar() throws java.io.IOException {
+    private void skipChar() {
         // Initialize lexer for this automaton
         startToken();
         int result = _jl_cell62();
@@ -310,7 +295,7 @@ return action();
         
     }
     
-    private int _jl_cell0() throws java.io.IOException {
+    private int _jl_cell0() {
         switch (getNextChar()) {
         // 0x0028
         case 40: {
@@ -468,71 +453,71 @@ return action();
         
     }
     
-    private int _jl_cell1() throws java.io.IOException {
+    private int _jl_cell1() {
         return 25;
     }
     
-    private int _jl_cell2() throws java.io.IOException {
+    private int _jl_cell2() {
         return 24;
     }
     
-    private int _jl_cell3() throws java.io.IOException {
+    private int _jl_cell3() {
         return 23;
     }
     
-    private int _jl_cell4() throws java.io.IOException {
+    private int _jl_cell4() {
         return 22;
     }
     
-    private int _jl_cell5() throws java.io.IOException {
+    private int _jl_cell5() {
         return 21;
     }
     
-    private int _jl_cell6() throws java.io.IOException {
+    private int _jl_cell6() {
         return 20;
     }
     
-    private int _jl_cell7() throws java.io.IOException {
+    private int _jl_cell7() {
         return 19;
     }
     
-    private int _jl_cell8() throws java.io.IOException {
+    private int _jl_cell8() {
         return 18;
     }
     
-    private int _jl_cell9() throws java.io.IOException {
+    private int _jl_cell9() {
         return 17;
     }
     
-    private int _jl_cell10() throws java.io.IOException {
+    private int _jl_cell10() {
         return 16;
     }
     
-    private int _jl_cell11() throws java.io.IOException {
+    private int _jl_cell11() {
         return 15;
     }
     
-    private int _jl_cell12() throws java.io.IOException {
+    private int _jl_cell12() {
         return 14;
     }
     
-    private int _jl_cell13() throws java.io.IOException {
+    private int _jl_cell13() {
         return 13;
     }
     
-    private int _jl_cell14() throws java.io.IOException {
+    private int _jl_cell14() {
         return 12;
     }
     
-    private int _jl_cell15() throws java.io.IOException {
+    private int _jl_cell15() {
         return 11;
     }
     
-    private int _jl_cell16() throws java.io.IOException {
+    private int _jl_cell16() {
         return 10;
     }
     
-    private int _jl_cell17() throws java.io.IOException {
+    private int _jl_cell17() {
         mark(25);
         switch (getNextChar()) {
         // \\
@@ -551,7 +536,7 @@ return action();
         
     }
     
-    private int _jl_cell18() throws java.io.IOException {
+    private int _jl_cell18() {
         mark(7);
         switch (getNextChar()) {
         // [0-9A-Z\_a-z]
@@ -628,7 +613,7 @@ return action();
         
     }
     
-    private int _jl_cell19() throws java.io.IOException {
+    private int _jl_cell19() {
         mark(6);
         switch (getNextChar()) {
         // [0-9A-Z\_a-z]
@@ -705,15 +690,15 @@ return action();
         
     }
     
-    private int _jl_cell20() throws java.io.IOException {
+    private int _jl_cell20() {
         return 5;
     }
     
-    private int _jl_cell21() throws java.io.IOException {
+    private int _jl_cell21() {
         return 4;
     }
     
-    private int _jl_cell22() throws java.io.IOException {
+    private int _jl_cell22() {
         mark(25);
         switch (getNextChar()) {
         // 0x002f
@@ -732,11 +717,11 @@ return action();
         
     }
     
-    private int _jl_cell23() throws java.io.IOException {
+    private int _jl_cell23() {
         return 1;
     }
     
-    private int _jl_cell24() throws java.io.IOException {
+    private int _jl_cell24() {
         mark(1);
         switch (getNextChar()) {
         // 0x000a
@@ -751,7 +736,7 @@ return action();
         
     }
     
-    private int _jl_cell25() throws java.io.IOException {
+    private int _jl_cell25() {
         mark(0);
         switch (getNextChar()) {
         // [0x00090x000c0x0020]
@@ -768,7 +753,7 @@ return action();
         
     }
     
-    private int _jl_cell26() throws java.io.IOException {
+    private int _jl_cell26() {
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
         case 10:
@@ -784,11 +769,11 @@ return action();
         
     }
     
-    private int _jl_cell27() throws java.io.IOException {
+    private int _jl_cell27() {
         return 2;
     }
     
-    private int _jl_cell28() throws java.io.IOException {
+    private int _jl_cell28() {
         mark(3);
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
@@ -805,7 +790,7 @@ return action();
         
     }
     
-    private int _jl_cell29() throws java.io.IOException {
+    private int _jl_cell29() {
         switch (getNextChar()) {
         // [0x00200x00220x0027\\bnrt]
         case 32:
@@ -826,7 +811,7 @@ return action();
         
     }
     
-    private int _jl_cell30() throws java.io.IOException {
+    private int _jl_cell30() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
@@ -840,11 +825,11 @@ return action();
         
     }
     
-    private int _jl_cell31() throws java.io.IOException {
+    private int _jl_cell31() {
         return 8;
     }
     
-    private int _jl_cell32() throws java.io.IOException {
+    private int _jl_cell32() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
@@ -858,11 +843,11 @@ return action();
         
     }
     
-    private int _jl_cell33() throws java.io.IOException {
+    private int _jl_cell33() {
         return 9;
     }
     
-    private int _jl_cell34() throws java.io.IOException {
+    private int _jl_cell34() {
         switch (getNextChar()) {
         // 0x0022
         case 34: {
@@ -895,11 +880,11 @@ return action();
         
     }
     
-    private int _jl_cell35() throws java.io.IOException {
+    private int _jl_cell35() {
         return 5;
     }
     
-    private int _jl_cell36() throws java.io.IOException {
+    private int _jl_cell36() {
         mark(5);
         switch (getNextChar()) {
         // 0x000a
@@ -914,19 +899,19 @@ return action();
         
     }
     
-    private int _jl_cell37() throws java.io.IOException {
+    private int _jl_cell37() {
         return 4;
     }
     
-    private int _jl_cell38() throws java.io.IOException {
+    private int _jl_cell38() {
         return 3;
     }
     
-    private int _jl_cell39() throws java.io.IOException {
+    private int _jl_cell39() {
         return 2;
     }
     
-    private int _jl_cell40() throws java.io.IOException {
+    private int _jl_cell40() {
         mark(1);
         switch (getNextChar()) {
         // 0x002f
@@ -941,7 +926,7 @@ return action();
         
     }
     
-    private int _jl_cell41() throws java.io.IOException {
+    private int _jl_cell41() {
         mark(6);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002a0xffff]
@@ -961,11 +946,11 @@ return action();
         
     }
     
-    private int _jl_cell42() throws java.io.IOException {
+    private int _jl_cell42() {
         return 0;
     }
     
-    private int _jl_cell43() throws java.io.IOException {
+    private int _jl_cell43() {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -986,7 +971,7 @@ return action();
         
     }
     
-    private int _jl_cell44() throws java.io.IOException {
+    private int _jl_cell44() {
         mark(4);
         switch (getNextChar()) {
         // [0x0022\\0xffff]
@@ -1003,11 +988,11 @@ return action();
         
     }
     
-    private int _jl_cell45() throws java.io.IOException {
+    private int _jl_cell45() {
         return 3;
     }
     
-    private int _jl_cell46() throws java.io.IOException {
+    private int _jl_cell46() {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -1032,19 +1017,19 @@ return action();
         
     }
     
-    private int _jl_cell47() throws java.io.IOException {
+    private int _jl_cell47() {
         return 0;
     }
     
-    private int _jl_cell48() throws java.io.IOException {
+    private int _jl_cell48() {
         return 2;
     }
     
-    private int _jl_cell49() throws java.io.IOException {
+    private int _jl_cell49() {
         return 1;
     }
     
-    private int _jl_cell50() throws java.io.IOException {
+    private int _jl_cell50() {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -1085,23 +1070,23 @@ return action();
         
     }
     
-    private int _jl_cell51() throws java.io.IOException {
+    private int _jl_cell51() {
         return 3;
     }
     
-    private int _jl_cell52() throws java.io.IOException {
+    private int _jl_cell52() {
         return 2;
     }
     
-    private int _jl_cell53() throws java.io.IOException {
+    private int _jl_cell53() {
         return 1;
     }
     
-    private int _jl_cell54() throws java.io.IOException {
+    private int _jl_cell54() {
         return 0;
     }
     
-    private int _jl_cell55() throws java.io.IOException {
+    private int _jl_cell55() {
         mark(8);
         switch (getNextChar()) {
         // [0x000a0x000d0x00220x00270x002f0x007b0x007d0xffff]
@@ -1123,11 +1108,11 @@ return action();
         
     }
     
-    private int _jl_cell56() throws java.io.IOException {
+    private int _jl_cell56() {
         return 7;
     }
     
-    private int _jl_cell57() throws java.io.IOException {
+    private int _jl_cell57() {
         mark(7);
         switch (getNextChar()) {
         // 0x000a
@@ -1142,11 +1127,11 @@ return action();
         
     }
     
-    private int _jl_cell58() throws java.io.IOException {
+    private int _jl_cell58() {
         return 6;
     }
     
-    private int _jl_cell59() throws java.io.IOException {
+    private int _jl_cell59() {
         switch (getNextChar()) {
         // 0x002a
         case 42: {
@@ -1164,11 +1149,11 @@ return action();
         
     }
     
-    private int _jl_cell60() throws java.io.IOException {
+    private int _jl_cell60() {
         return 4;
     }
     
-    private int _jl_cell61() throws java.io.IOException {
+    private int _jl_cell61() {
         mark(5);
         switch (getNextChar()) {
         // [0x000a0x000d0xffff]
@@ -1185,7 +1170,7 @@ return action();
         
     }
     
-    private int _jl_cell62() throws java.io.IOException {
+    private int _jl_cell62() {
         mark(2);
         switch (getNextChar()) {
         // \\
@@ -1205,7 +1190,7 @@ return action();
         
     }
     
-    private int _jl_cell63() throws java.io.IOException {
+    private int _jl_cell63() {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -1219,7 +1204,7 @@ return action();
         
     }
     
-    private int _jl_cell64() throws java.io.IOException {
+    private int _jl_cell64() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
@@ -1233,11 +1218,11 @@ return action();
         
     }
     
-    private int _jl_cell65() throws java.io.IOException {
+    private int _jl_cell65() {
         return 0;
     }
     
-    private int _jl_cell66() throws java.io.IOException {
+    private int _jl_cell66() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
@@ -1251,7 +1236,7 @@ return action();
         
     }
     
-    private int _jl_cell67() throws java.io.IOException {
+    private int _jl_cell67() {
         return 1;
     }
     

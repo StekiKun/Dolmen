@@ -533,15 +533,10 @@ public class JLParser {
 			@SuppressWarnings("null")
 			@Override
 			public JLToken get() {
-				try {
-					JLToken tok = lexer.main();
-					if (tokenize)
-						System.out.println(tok);
-					return tok;
-				} catch (IOException e) {
-					e.printStackTrace();
-					return END;
-				}
+				JLToken tok = lexer.main();
+				if (tokenize)
+					System.out.println(tok);
+				return tok;
 			}
 		}, END);
 	}
