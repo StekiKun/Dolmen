@@ -394,6 +394,29 @@ public abstract class Grammars {
 			this.table = table;
 		}
 		
+		/**
+		 * @param nterm
+		 * @return the prediction table for the non-terminal {@code nterm}
+		 */
+		public Map<String, List<Production>> tableFor(String nterm) {
+			@Nullable Map<String, List<Production>> res = Maps.get(table, nterm);
+			if (res == null) throw new IllegalArgumentException();
+			return res;
+		}
+		
+		/**
+		 * @return {@code true} if and only if the prediction table
+		 * 	is suitable for LL(1) top-down parsing
+		 */
+		public boolean isLL1() {
+			for (Map<String, List<Production>> trans : table.values()) {
+				for (List<Production> prods : trans.values()) {
+					if (prods.size() > 1) return false;
+				}
+			}
+			return true;
+		}
+		
 		@Override
 		public String toString() {
 			StringBuilder buf = new StringBuilder();

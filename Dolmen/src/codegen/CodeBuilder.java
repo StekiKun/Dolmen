@@ -41,6 +41,15 @@ public final class CodeBuilder {
 		this.buf = new StringBuilder(8092);
 		this.indentLevel = level * PER_LEVEL;
 	}
+	
+	/**
+	 * @return the current indentation level
+	 * (not the number of spaces, but the number of
+	 * 	nested blocks, starting at 0)
+	 */
+	public int getCurrentLevel() {
+		return indentLevel / PER_LEVEL;
+	}
 
 	/**
 	 * Increments the indentation level by 1

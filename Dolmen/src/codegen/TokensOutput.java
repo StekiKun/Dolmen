@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 
+import org.eclipse.jdt.annotation.NonNull;
+
 import syntax.Grammar.TokenDecl;
 import syntax.Location;
 
@@ -31,8 +33,16 @@ public final class TokensOutput {
 
 	private final String className;
 	private final boolean nested;
-	private final List<TokenDecl> tokenDecls;
+	private final List<@NonNull TokenDecl> tokenDecls;
 	private final CodeBuilder buf;
+	
+	protected TokensOutput(String className,
+			List<TokenDecl> tokenDecls, CodeBuilder buf) {
+		this.className = className;
+		this.nested = buf.getCurrentLevel() > 0;
+		this.tokenDecls = tokenDecls;
+		this.buf = buf;
+	}
 	
 	private TokensOutput(String className,
 			List<TokenDecl> tokenDecls, int level) {
@@ -69,15 +79,17 @@ public final class TokensOutput {
 	
 	private void genValuedToken(TokenDecl decl) {
 		Location loc = decl.valueType;
+		final @NonNull String name = decl.name;
 		if (loc == null) throw new IllegalArgumentException();
 		final String valType = loc.find();
 		
 		buf.emit("public final static class ")
-		   .emit(decl.name).emit(" extends ").emit(className).openBlock();
+		   .emit(name).emit(" extends ").emit(className).openBlock();
 		
 		buf.emit("public final ").emit(valType).emitln(" value;");
+		buf.newline();
 		
-		buf.emit("private ").emit(decl.name).emit("(")
+		buf.emit("private ").emit(name).emit("(")
 		   .emit(valType).emit(" value)").openBlock();
 		buf.emit("this.value = value;");
 		buf.closeBlock();
@@ -85,20 +97,20 @@ public final class TokensOutput {
 		
 		buf.emitln("@Override");
 		buf.emit("public String toString()").openBlock();
-		buf.emit("return \"").emit(decl.name).emit("(\" + value + \")\";");
+		buf.emit("return \"").emit(name).emit("(\" + value + \")\";");
 		buf.closeBlock();
 		buf.newline();
 		
 		buf.emitln("@Override");
 		buf.emit("public Kind getKind()").openBlock();
-		buf.emit("return Kind.").emit(decl.name).emit(";");
+		buf.emit("return Kind.").emit(name).emit(";");
 		buf.closeBlock();
 		
 		buf.closeBlock();
 
-		buf.emit("public static ").emit(decl.name).emit(" ")
-		   .emit(decl.name).emit("(").emit(valType).emit(" value)").openBlock();
-		buf.emit("return new ").emit(decl.name).emit("(value);");
+		buf.emit("public static ").emit(name).emit(" ")
+		   .emit(name).emit("(").emit(valType).emit(" value)").openBlock();
+		buf.emit("return new ").emit(name).emit("(value);");
 		buf.closeBlock();
 		buf.newline();
 	}
@@ -114,7 +126,7 @@ public final class TokensOutput {
 		buf.emit("private static abstract class Singleton extends ")
 		   .emit(className).openBlock();
 		buf.emitln("private final Kind kind;");
-		buf.emitln("Singleton(Kind kind) { this.kind = kind; }");
+		buf.emitln("private Singleton(Kind kind) { this.kind = kind; }");
 		buf.newline();
 		// buf.emitln("@SuppressWarnings(\"null\")");
 		buf.emitln("@Override");
@@ -144,8 +156,10 @@ public final class TokensOutput {
 	}
 	
 	protected void genTokens() {
-		buf.emitln("@SuppressWarnings(\"javadoc\")");
-		buf.emitln("@org.eclipse.jdt.annotation.NonNullByDefault({})");
+		if (!nested) {
+			buf.emitln("@SuppressWarnings(\"javadoc\")");
+			buf.emitln("@org.eclipse.jdt.annotation.NonNullByDefault({})");
+		}
 		buf.emit("public ").emit(nested ? "static " : "")
 		   .emit("abstract class ").emit(className).openBlock();
 		buf.newline();

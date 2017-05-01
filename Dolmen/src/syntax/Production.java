@@ -77,7 +77,7 @@ public final class Production {
 	}
 	
 	/** The list of production items in this production, in order */
-	public final List<Item> items;
+	public final List<@NonNull Item> items;
 	/** The semantic action associated to this production */
 	public final Location action;
 	

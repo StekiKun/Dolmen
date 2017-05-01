@@ -1,7 +1,7 @@
 package syntax;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -146,7 +146,7 @@ public final class Grammar {
 			this.tokenDecls = new ArrayList<>();
 			this.header = header;
 			this.footer = footer;
-			this.rules = new HashMap<>();
+			this.rules = new LinkedHashMap<>();
 		}
 		
 		/**

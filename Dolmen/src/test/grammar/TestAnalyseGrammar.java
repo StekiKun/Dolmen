@@ -20,32 +20,44 @@ import syntax.Grammars.PredictionTable;
  */
 public final class TestAnalyseGrammar {
 
-	private static Grammar.TokenDecl token(String name) {
+	static Grammar.TokenDecl token(String name) {
 		return new Grammar.TokenDecl(name, null);
 	}
 	
-	private static Grammar.TokenDecl vtoken(String name, String valType) {
+	static Grammar.TokenDecl vtoken(String name, String valType) {
 		return new Grammar.TokenDecl(name, Location.inlined(valType));
 	}
 	
-	private static Production.Item item(String s) {
+	static Production.Item item(String s) {
 		return new Production.Item(null, s);
 	}
 	
-	private static Production production(@NonNull String... items) {
-		Production.Builder builder = new Production.Builder(Location.DUMMY);
+	static final Location VOID = Location.inlined("void");
+	static final Location RETURN = Location.inlined("return;");
+	
+	static Production production(@NonNull String... items) {
+		Production.Builder builder = new Production.Builder(RETURN);
 		for (int i = 0; i < items.length; ++i)
 			builder.addItem(item(items[i]));
 		return builder.build();
 	}
 	
-	private static GrammarRule rule(String name, 
+	static GrammarRule rule(String name,
 		@NonNull Production... productions) {
-		GrammarRule.Builder builder = new GrammarRule.Builder(false, Location.DUMMY, name, Location.DUMMY);
+		GrammarRule.Builder builder = new GrammarRule.Builder(false, VOID, name, null);
 		for (int i = 0; i < productions.length; ++i)
 			builder.addProduction(productions[i]);
 		return builder.build();
 	}
+
+	static GrammarRule prule(String name,
+		@NonNull Production... productions) {
+		GrammarRule.Builder builder = new GrammarRule.Builder(true, VOID, name, null);
+		for (int i = 0; i < productions.length; ++i)
+			builder.addProduction(productions[i]);
+		return builder.build();
+	}
+
 	
 	/**
 	 * (An ambiguous grammar)
@@ -68,19 +80,19 @@ public final class TestAnalyseGrammar {
 	final static class Test1 {
 		
 		private final static GrammarRule ruleZ =
-			new GrammarRule.Builder(true, Location.DUMMY, "z", Location.DUMMY)
+			new GrammarRule.Builder(true, VOID, "z", null)
 				.addProduction(production("D"))
 				.addProduction(production("x", "y", "z"))
 				.build();
 		
 		private final static GrammarRule ruleY =
-			new GrammarRule.Builder(false, Location.DUMMY, "y", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "y", null)
 				.addProduction(production())
 				.addProduction(production("C"))
 				.build();
 		
 		private final static GrammarRule ruleX =
-			new GrammarRule.Builder(false, Location.DUMMY, "x", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "x", null)
 				.addProduction(production("y"))
 				.addProduction(production("A"))
 				.build();
@@ -119,36 +131,36 @@ public final class TestAnalyseGrammar {
 	final static class Test2 {
 
 		private final static GrammarRule ruleS =
-				new GrammarRule.Builder(false, Location.DUMMY, "s", Location.DUMMY)
+				new GrammarRule.Builder(true, VOID, "s", null)
 					.addProduction(production("e", "EOF"))
 					.build();
 
 		private final static GrammarRule ruleE =
-			new GrammarRule.Builder(false, Location.DUMMY, "e", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "e", null)
 				.addProduction(production("t", "e_"))
 				.build();
 			
 		private final static GrammarRule ruleE_ =
-			new GrammarRule.Builder(false, Location.DUMMY, "e_", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "e_", null)
 				.addProduction(production("PLUS", "t", "e_"))
 				.addProduction(production("MINUS", "t", "e_"))
 				.addProduction(production())
 				.build();
 		
 		private final static GrammarRule ruleT =
-			new GrammarRule.Builder(false, Location.DUMMY, "t", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "t", null)
 				.addProduction(production("f", "t_"))
 				.build();
 		
 		private final static GrammarRule ruleT_ =
-			new GrammarRule.Builder(false, Location.DUMMY, "t_", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "t_", null)
 				.addProduction(production("MULT", "f", "t_"))
 				.addProduction(production("DIV", "f", "t_"))
 				.addProduction(production())
 				.build();
 		
 		private final static GrammarRule ruleF =
-			new GrammarRule.Builder(false, Location.DUMMY, "f", Location.DUMMY)
+			new GrammarRule.Builder(false, VOID, "f", null)
 				.addProduction(production("ID"))
 				.addProduction(production("NUM"))
 				.addProduction(production("LPAREN", "e", "RPAREN"))
@@ -171,7 +183,7 @@ public final class TestAnalyseGrammar {
 	 * but is not LL(1).
 	 * 
 	 * <pre>
-	 *   s' -> s EOF
+	 *   start -> s EOF
 	 *   
 	 *   s ->
 	 *   s -> x s
@@ -196,23 +208,86 @@ public final class TestAnalyseGrammar {
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
 				.addToken(token("LBRACE")).addToken(token("RBRACE"))
 				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))
-				.addRule(rule("s'", production("s", "EOF")))
+				.addRule(prule("start", production("s", "EOF")))
 				.addRule(rule("s",
 							production(),
 							production("x", "s")))
 				.addRule(rule("b",
-							production("BEGIN", "LBRACE", "WORD", "RBRACE")))
+							production("SLASH", "BEGIN", "LBRACE", "WORD", "RBRACE")))
 				.addRule(rule("e",
 							production("SLASH", "END", "LBRACE", "WORD", "RBRACE")))
-				.addRule(rule("cmd",
-							production("b", "s", "e"),
-							production("WORD")))
 				.addRule(rule("x",
+							production("b", "s", "e"),
 							production("LBRACE", "s", "RBRACE"),
 							production("WORD"),
 							production("BEGIN"),
 							production("END"),
-							production("SLASH", "cmd")))
+							production("SLASH", "WORD")))
+				.build();
+	}
+	
+	/**
+	 * A simplistic Latex grammar which enforces well-formed
+	 * {@code \begin}/{@code \end} environments and bracket blocks,
+	 * and is LL(1).
+	 * 
+	 * <pre>
+	 *   start -> s EOF
+	 *   
+	 *   s ->
+	 *   s -> SLASH cmd
+	 *   s -> x s
+	 *   
+	 *   cmd -> b s_env
+	 *   cmd -> WORD s
+	 *	
+	 *	 s_env -> SLASH s_env_cmd
+	 *	 s_env -> x s_env
+	 *
+	 *	 s_env_cmd -> WORD s_env
+	 *   s_env_cmd -> e
+	 *
+	 *   b -> BEGIN LBRACE WORD RBRACE
+	 *   e -> END LBRACE WORD RBRACE
+	 *   
+	 *   x -> WORD
+	 *   x -> BEGIN
+	 *   x -> END
+	 *   x -> LBRACE s RBRACE
+	 * </pre>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	final static class TestLatexLL1 {
+		
+		final static Grammar grammar =
+			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
+				.addToken(token("LBRACE")).addToken(token("RBRACE"))
+				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))
+				.addRule(prule("start", production("s", "EOF")))
+				.addRule(rule("s",
+							production(),
+							production("SLASH", "cmd"),
+							production("x", "s")))
+				.addRule(rule("cmd",
+							production("b", "s_env"),
+							production("WORD", "s")))
+				.addRule(rule("s_env",
+							production("SLASH", "s_env_cmd"),
+							production("x", "s_env")))
+				.addRule(rule("s_env_cmd",
+							production("WORD", "s_env"),
+							production("e")))
+				.addRule(rule("b",
+							production("BEGIN", "LBRACE", "WORD", "RBRACE")))
+				.addRule(rule("e",
+							production("END", "LBRACE", "WORD", "RBRACE")))
+				.addRule(rule("x",
+							production("LBRACE", "s", "RBRACE"),
+							production("WORD"),
+							production("BEGIN"),
+							production("END")))
 				.build();
 	}
 	
@@ -240,6 +315,7 @@ public final class TestAnalyseGrammar {
 		test(Test1.grammar);
 		test(Test2.grammar);
 		test(TestLatex.grammar);
+		test(TestLatexLL1.grammar);
 	}
 
 }
