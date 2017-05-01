@@ -22,6 +22,7 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.BaseParser;
 import codegen.LexBuffer.LexicalError;
 import common.CSet;
 import common.Lists;
@@ -45,43 +46,8 @@ import syntax.Regulars;
  * 
  * @author Stéphane Lescuyer
  */
-public class JLParser {
+public final class JLParser extends BaseParser<JLToken> {
 
-	/**
-	 * Exception raised by parsing errors
-	 * 
-	 * @author Stéphane Lescuyer
-	 */
-	public static class ParsingException extends RuntimeException {
-		private static final long serialVersionUID = 1L;
-
-		/**
-		 * A parsing error exception with the given error message
-		 * @param s
-		 */
-		public ParsingException(String s) {
-			super(s);
-		}
-	}
-	private static ParsingException error(JLToken token, Kind...expected) {
-		StringBuilder buf = new StringBuilder();
-		buf.append("Found token ").append(token);
-		buf.append(", expected any of {");
-		for (int i = 0; i < expected.length; ++i) {
-			if (i != 0) buf.append(',');
-			buf.append(expected[i]);
-		}
-		buf.append('}');
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return new ParsingException(res);
-	}
-	
-	private final Supplier<JLToken> tokens;
-	private @Nullable JLToken nextToken;
-	
-	// private final Stack<List<JLToken>> stack;
-	
 	/**
 	 * Construct a new parser which will feed on the
 	 * given tokenizer. The parser is responsible for
@@ -99,27 +65,15 @@ public class JLParser {
 	 * @param tokens
 	 */
 	private JLParser(Supplier<JLToken> tokens) {
-		this.tokens = tokens;
-		// this.stack = new Stack<>();
-		this.nextToken = null;
+		super(tokens);
 		this.definitions = Maps.empty();
-	}
-	
-	private JLToken peek() {
-		if (nextToken != null) return nextToken;
-		nextToken = tokens.get();
-		return nextToken;
-	}
-	
-	private void eat() {
-		peek(); nextToken = null;
 	}
 	
 	private JLToken eat(JLToken.Kind kind) {
 		JLToken ctoken = peek();
 		if (kind != ctoken.getKind())
-			throw error(ctoken, kind);
-		nextToken = null;
+			throw tokenError(ctoken, kind);
+		_jl_nextToken = null;
 		return ctoken;
 	}
 	
@@ -193,7 +147,7 @@ public class JLParser {
 			case STAR:
 				buf.append('*'); eat(); break typename;
 			default:
-				throw error(ctoken, Kind.IDENT, Kind.STAR);
+				throw tokenError(ctoken, Kind.IDENT, Kind.STAR);
 			}
 		}
 		eat(Kind.SEMICOL);
@@ -279,7 +233,7 @@ public class JLParser {
 		case PRIVATE:
 			eat(); return false;
 		default:
-			throw error(peek(), Kind.PUBLIC, Kind.PRIVATE);
+			throw tokenError(peek(), Kind.PUBLIC, Kind.PRIVATE);
 		}
 	}
 	
@@ -472,7 +426,7 @@ public class JLParser {
 			return res;
 		}
 		default:
-			throw error(peek(), Kind.UNDERSCORE, Kind.EOF, Kind.LCHAR, 
+			throw tokenError(peek(), Kind.UNDERSCORE, Kind.EOF, Kind.LCHAR, 
 					Kind.LSTRING, Kind.IDENT, Kind.LBRACKET);
 		}
 	}
