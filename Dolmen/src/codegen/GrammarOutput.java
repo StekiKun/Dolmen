@@ -67,6 +67,7 @@ public final class GrammarOutput {
 		   .emit("(java.util.function.Supplier<Token> tokens)")
 		   .openBlock();
 		buf.emit("super(tokens);").closeBlock();
+		buf.newline();
 	}
 	
 	private void genMethods() {
@@ -144,7 +145,7 @@ public final class GrammarOutput {
 		// NB: it is up to the semantic action to
 		//	either return; or return val; depending
 		//  on whether the return type is void.
-		buf.emit(prod.action.find());
+		buf.newline().emit(prod.action.find());
 	}
 	
 	private void genRule(GrammarRule rule, Map<String, List<Production>> trans) {
@@ -184,9 +185,9 @@ public final class GrammarOutput {
 				buf.emit("throw tokenError(peek()");
 				trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));
 				buf.emit(");");
-				buf.closeBlock();
+				buf.closeBlock0();
 			}
-			buf.closeBlock();
+			buf.closeBlock0();
 		}
 		
 		buf.closeBlock();

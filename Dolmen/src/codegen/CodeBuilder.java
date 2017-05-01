@@ -120,6 +120,25 @@ public final class CodeBuilder {
 
 	/**
 	 * Closes a curly-braced block with decremented
+	 * indentation and without breaking the line after
+	 * the closing brace, i.e. is equivalent to:
+	 * <pre>
+	 *  decrIndent();
+	 * 	newline();
+	 *  emit("}");
+	 * </pre>
+	 * It is useful when closing several blocks in a row
+	 * to avoid empty lines.	
+	 */
+	public CodeBuilder closeBlock0() {
+		decrIndent();
+		newline();
+		emit("}");
+		return this;
+	}
+
+	/**
+	 * Closes a curly-braced block with decremented
 	 * indentation, i.e. is equivalent to:
 	 * <pre>
 	 *  decrIndent();
@@ -129,9 +148,7 @@ public final class CodeBuilder {
 	 * </pre>
 	 */
 	public CodeBuilder closeBlock() {
-		decrIndent();
-		newline();
-		emit("}");
+		closeBlock0();
 		newline();
 		return this;
 	}

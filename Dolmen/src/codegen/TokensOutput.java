@@ -104,7 +104,7 @@ public final class TokensOutput {
 		buf.emitln("@Override");
 		buf.emit("public Kind getKind()").openBlock();
 		buf.emit("return Kind.").emit(name).emit(";");
-		buf.closeBlock();
+		buf.closeBlock0();
 		
 		buf.closeBlock();
 
@@ -135,20 +135,20 @@ public final class TokensOutput {
 		buf.newline();
 		buf.emitln("@Override");
 		buf.emit("public Kind getKind()").openBlock();
-		buf.emit("return kind;").closeBlock();
+		buf.emit("return kind;").closeBlock0();
 		buf.closeBlock();
 	}
 	
 	private void genSingletonToken(TokenDecl decl) {
+		buf.newline();
 		buf.emit("public static ").emit(className).emit(" " + decl.name)
-		   .emit(" = new Singleton(Kind.").emit(decl.name).emitln(") {};");
+		   .emit(" = new Singleton(Kind.").emit(decl.name).emit(") {};");
 	}
 	
 	private void genSingletonTokens() {
 		if (tokenDecls.stream().allMatch(TokenDecl::isValued))
 			return;
 		genSingleton();
-		buf.newline();
 		for (TokenDecl decl : tokenDecls) {
 			if (decl.isValued()) continue;
 			genSingletonToken(decl);
