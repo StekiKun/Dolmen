@@ -64,7 +64,7 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 
 	 * @param tokens
 	 */
-	private JLParser(Supplier<JLToken> tokens) {
+	public JLParser(Supplier<JLToken> tokens) {
 		super(tokens);
 		this.definitions = Maps.empty();
 	}
@@ -143,7 +143,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			JLToken ctoken = peek();
 			switch (ctoken.getKind()) {
 			case IDENT:
-				buf.append(((Ident) id).value); eat(); break;
+				buf.append(((Ident) ctoken).value); eat(); break;
 			case STAR:
 				buf.append('*'); eat(); break typename;
 			default:
@@ -151,6 +151,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			}
 		}
 		eat(Kind.SEMICOL);
+		buf.append(';');
 	}
 	
 	/** Environment for regular expression definitions */

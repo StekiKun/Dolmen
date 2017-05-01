@@ -1,18 +1,25 @@
 package test.examples;
 
 import java.io.File;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 
 import org.eclipse.jdt.annotation.NonNull;
 
+import automaton.Automata;
+import automaton.Determinize;
+import codegen.AutomataOutput;
 import codegen.GrammarOutput;
 import common.Lists;
+import jl.JLLexerGenerated;
+import jl.JLParser;
 import syntax.Grammar;
 import syntax.GrammarRule;
 import syntax.Grammars;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
+import syntax.Lexer;
 import syntax.Location;
 import syntax.Production;
 
@@ -86,6 +93,8 @@ public abstract class BasicGrammars {
 	 * compute the result of the expression.
 	 * 
 	 * <pre>
+	 * start -> exp EOF
+	 * 
 	 * exp -> factor exp_rhs
 	 * exp_rhs -> PLUS exp
 	 * exp_rhs -> MINUS exp
@@ -99,9 +108,36 @@ public abstract class BasicGrammars {
 	 * atomic -> INT
 	 * </pre>
 	 * 
+	 * The lexer description for this parser is
+	 * in the `tests/jl/ArithGroundLexer.jl` file.
+	 * 
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class ArithGround {
+		/**
+		 * The name of the file containing 
+		 * the lexer description for this grammar
+		 */
+		public static final String LEXER = "tests/jl/ArithGroundLexer.jl";
+		
+		private static final String footer =
+				"/**\n" +
+			"     * Testing this parser\n" +
+			"     */\n" +
+			"    public static void main(String[] args) throws java.io.IOException {\n" +
+			"		String prompt;\n" +
+			"       while ((prompt = common.Prompt.getInputLine(\">\")) != null) {\n" +
+			"			try {\n" +
+			"				ArithGroundLexer lexer = new ArithGroundLexer(\"-\",\n" +
+			"					new java.io.StringReader(prompt));\n" +
+			"				ArithGroundParser parser = new ArithGroundParser(lexer::main);\n" +
+			"				int e = parser.exp();\n" +
+			"				System.out.println(e);\n" +
+			"			} catch (ParsingException e) {\n" +
+			"				e.printStackTrace();\n" +
+			"			}\n" +
+			"		}\n" +
+			"	}\n";
 		
 		/**
 		 * The grammar description for ground
@@ -109,15 +145,19 @@ public abstract class BasicGrammars {
 		 * @see ArithGround
 		 */
 		public static final Grammar GRAMMAR =
-			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+			new Grammar.Builder(
+				Lists.empty(), Location.DUMMY, Location.inlined(footer))
 				// INT of int | PLUS | MINUS | TIMES | EOF
 				.addToken(vtoken("INT", "int"))
 				.addToken(token("PLUS"))
 				.addToken(token("MINUS"))
 				.addToken(token("TIMES"))
 				.addToken(token("EOF"))
+				
+				.addRule(prule("start", "int",
+					production("n = exp", "EOF", "return n;")))
 				// exp
-				.addRule(prule("exp", "int",
+				.addRule(rule("exp", "int",
 					production("n1 = factor", "n2 = exp_rhs", "return n1 + n2;")))
 				.addRule(rule("exp_rhs", "int",
 					production("PLUS", "n = exp", "return n;"),
@@ -159,10 +199,51 @@ public abstract class BasicGrammars {
 		}
 	}
 	
+	static void generateLexer(String filename) throws IOException {
+		System.out.println("Parsing lexer description " + filename + "...");
+		FileReader reader = new FileReader(filename);
+		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
+		@SuppressWarnings("null")
+		JLParser parser = new JLParser(lexer::main);
+		Lexer lexerDef = parser.parseLexer();
+		reader.close();
+		System.out.println("Computing automata...");
+		Automata aut = Determinize.lexer(lexerDef, true);
+		final String className = "ArithGroundLexer";
+		File file = new File("src/test/examples/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			writer.append("package test.examples;\n");
+			AutomataOutput.output(writer, className, aut);
+		}
+		System.out.println("Generated in " + file.getAbsolutePath());
+	}
+	
+	static void generateParser(String className, Grammar grammar)
+			throws IOException {
+		System.out.println("Analysing grammar description...");
+		NTermsInfo infos = Grammars.analyseGrammar(grammar, null);
+		PredictionTable predictTable = Grammars.predictionTable(grammar, infos);
+		
+		File file = new File("src/test/examples/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			writer.append("package test.examples;\n");
+			if (!predictTable.isLL1()) {
+				System.out.println("Cannot generate parser for non-LL(1) grammar:");
+				printConflicts(predictTable);
+				return;
+			}
+			GrammarOutput.output(writer, className, grammar, predictTable);
+
+		}
+		System.out.println("Generated in " + file.getAbsolutePath());
+	}
+	
 	/**
 	 * @param args
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws IOException {
 		testOutput("ArithGround", ArithGround.GRAMMAR);
+		generateLexer(ArithGround.LEXER);
+		generateParser("ArithGroundParser", ArithGround.GRAMMAR);
 	}
 }
