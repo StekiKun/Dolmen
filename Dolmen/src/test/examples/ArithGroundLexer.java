@@ -57,6 +57,14 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
         case 43: {
             return _jl_cell4();
         }
+        // 0xffff
+        case 65535: {
+            return _jl_cell1();
+        }
+        // \-
+        case 45: {
+            return _jl_cell2();
+        }
         // [0x0008-0x000a0x000d0x0020]
         case 8:
         case 9:
@@ -64,14 +72,6 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
         case 13:
         case 32: {
             return _jl_cell6();
-        }
-        // \-
-        case 45: {
-            return _jl_cell2();
-        }
-        // 0xffff
-        case 65535: {
-            return _jl_cell1();
         }
         // [0-9]
         case 48:
