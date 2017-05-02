@@ -181,6 +181,7 @@ public abstract class BasicGrammars {
 		System.out.println(table.toString());
 	}
 	
+	@SuppressWarnings("unused")
 	private static void testOutput(String className, Grammar grammar) {
 		File file = new File("src-gen/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
@@ -242,7 +243,6 @@ public abstract class BasicGrammars {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException {
-		testOutput("ArithGround", ArithGround.GRAMMAR);
 		generateLexer(ArithGround.LEXER);
 		generateParser("ArithGroundParser", ArithGround.GRAMMAR);
 	}
