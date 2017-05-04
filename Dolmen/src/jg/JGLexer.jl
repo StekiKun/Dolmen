@@ -60,12 +60,6 @@ public {jg.JGToken} rule main =
 | nl		{ newline(); return main(); }
 | "/*"		{ comment(); return main(); }
 | slcomment	{ return main(); }
-| '"'		{ stringBuffer.setLength(0);
-			  string();
-			  @SuppressWarnings("null")
-			  jg.JGToken res = LSTRING(stringBuffer.toString());
-			  return res;
-			}
 | '{'		{ braceDepth = 1;
 			  Position p = getLexemeEnd();
 			  int endOffset = action();
@@ -74,10 +68,6 @@ public {jg.JGToken} rule main =
 			  return ACTION(loc);
 			}
 | ident		{ return identOrKeyword(getLexeme()); }
-| "'" ([^\\] as c) "'"
-			{ return LCHAR(c); }
-| "'" '\\' (escaped as c) "'"
-			{ return LCHAR(forBackslash(c)); }
 | '='		{ return EQUAL; }
 | '|'		{ return BAR; }
 | eof		{ return EOF; }
@@ -86,12 +76,12 @@ public {jg.JGToken} rule main =
 private {void} rule comment =
 | "*/"		{ return; }
 | "*"		{ comment(); return; }
-| '"'		{ stringBuffer.setLength(0);
-			  string();
-			  stringBuffer.setLength(0);
-			  comment(); return;
-			}
-| "'"		{ skipChar(); comment(); return; }
+// | '"'		{ stringBuffer.setLength(0);
+//  			  string();
+//  			  stringBuffer.setLength(0);
+//  			  comment(); return;
+//  			}
+// | "'"		{ skipChar(); comment(); return; }
 | eof		{ throw error("Unterminated comment"); }
 | nl		{ newline(); comment(); return; }
 | orelse	{ comment(); return; }
