@@ -29,7 +29,7 @@ public final class TestAnalyseGrammar {
 	}
 	
 	static Production.Actual actual(String s) {
-		return new Production.Actual(null, s);
+		return new Production.Actual(null, s, null);
 	}
 	
 	static final Location VOID = Location.inlined("void");

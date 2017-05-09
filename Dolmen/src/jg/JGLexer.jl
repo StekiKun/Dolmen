@@ -9,6 +9,8 @@ import static jg.JGToken.*;
 	private final StringBuilder stringBuffer = new StringBuilder();
 	// The current depth of { } blocks
 	private int braceDepth = 0;
+	// The current depth of ( ) blocks
+	private int parenDepth = 0;
 	
 	private char forBackslash(char c) {
 		switch (c) {
@@ -67,6 +69,13 @@ public {jg.JGToken} rule main =
 			  	filename, p.offset, endOffset, p.line, p.column());
 			  return ACTION(loc);
 			}
+| '('		{ parenDepth = 1;
+			  Position p = getLexemeEnd();
+			  int endOffset = arguments();
+			  syntax.Location loc = new syntax.Location(
+			    filename, p.offset, endOffset, p.line, p.column());
+			  return ARGUMENTS(loc);
+			}			
 | ident		{ return identOrKeyword(getLexeme()); }
 | ';'		{ return SEMICOL; }
 | '.'		{ return DOT; }
@@ -120,6 +129,24 @@ private {int} rule action =
 | eof		{ throw error("Unterminated action"); }
 | nl		{ newline(); return action(); }
 | orelse	{ return action(); }
+
+private {int} rule arguments =
+| '('		{ ++parenDepth; return arguments(); }
+| ')'		{ --parenDepth;
+			  if (parenDepth == 0) return getLexemeStart().ofset - 1;
+			  return arguments();
+			}
+| '"'		{ stringBuffer.setLength(0);
+			  string();
+			  stringBuffer.setLength(0);
+			  return arguments();
+			}
+| "'"		{ skipChar(); return arguments(); }
+| "/*"		{ comment(); return arguments(); }
+| slcomment { return arguments(); }
+| eof		{ throw error("Unterminated arguments"); }
+| nl		{ newline(); return arguments(); }
+| orelse	{ return arguments(); }
 
 private {void} rule skipChar =
 | [^ '\\' '\''] "'"

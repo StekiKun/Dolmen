@@ -115,7 +115,7 @@ public final class Grammar {
 		buf.append("\n{").append(header.find()).append("}");
 		rules.forEach((entry, rule) -> 
 			{ buf.append("\n"); rule.append(buf); });
-		buf.append("{").append(footer.find()).append("}");
+		buf.append("\n{").append(footer.find()).append("}");
 		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
 		return res;

@@ -88,7 +88,7 @@ public final class Production {
 		
 		@Override
 		public String toString() {
-			return "{" + location.toString() + "}";
+			return "{" + location.find() + "}";
 		}
 	}
 	
@@ -119,15 +119,26 @@ public final class Production {
 		 * with a lowercase or uppercase character.
 		 */
 		public final String item;
+		/**
+		 * The Java arguments to the production item, if any.
+		 * Arguments only make sense if {@link #item} is
+		 * a non-terminal.
+		 */
+		public final @Nullable Location args;
 		
 		/**
 		 * Builds a production item based on the given parameters
 		 * @param binding
 		 * @param item
+		 * @param args
 		 */
-		public Actual(@Nullable String binding, String item) {
+		public Actual(@Nullable String binding,
+				String item, @Nullable Location args) {
 			this.binding = binding;
 			this.item = item;
+			this.args = args;
+			if (isTerminal() && args != null)
+				throw new IllegalArgumentException();
 		}
 		
 		@Override
@@ -151,7 +162,17 @@ public final class Production {
 		
 		@Override
 		public String toString() {
-			return (binding == null ? "" : binding + " = ") + item;
+			StringBuilder buf = new StringBuilder();
+			if (binding != null)
+				buf.append(binding).append(" = ");
+			buf.append(item);
+			@Nullable Location args_ = args;
+			if (args_ != null)
+				buf.append("(").append(args_.find()).append(")");
+			
+			@SuppressWarnings("null")
+			@NonNull String res = buf.toString();
+			return res;
 		}
 	}
 	

@@ -11,11 +11,12 @@ import org.eclipse.jdt.annotation.Nullable;
  * description. The rule can be {@link #visibility public or private}
  * which will impact the visibility of the corresponding generated
  * method, it specifies the {@link #returnType return type} of the
- * associated semantic actions and can have some {@link #args formal arguments}.
+ * associated semantic actions and can have some
+ * {@link #args formal arguments}.
  * <p>
- * The relative order of {@link #productions productions} for this grammar rule
- * is the one from the original source but is not semantically relevant for
- * the produced grammar.
+ * The relative order of {@link #productions productions} for this
+ * grammar rule is the one from the original source but is not
+ * semantically relevant for the produced grammar.
  * 
  * @author Stéphane Lescuyer
  */

@@ -36,7 +36,7 @@ Exactly like in Java
 
 ## Entry arguments [ARGS]
 
-| { JAVA }				// Entry args prototype
+| ( JAVA )				// Entry args prototype
 |						// no args
 
 ## Grammar productions [PRODUCTION]
@@ -45,5 +45,5 @@ Exactly like in Java
   
 ## Production items [ITEM]
 
-| (IDENT =)? IDENT	// Term or non-term, possibly bound
-| { JAVA }			// Action item
+| (IDENT =)? IDENT ARGS?	// Term or non-term, possibly bound
+| { JAVA }					// Action item

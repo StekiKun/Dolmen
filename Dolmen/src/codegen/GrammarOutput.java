@@ -134,8 +134,13 @@ public final class GrammarOutput {
 				buf.emit(").value");
 			buf.emit(";");
 		}
-		else
-			buf.emit(ruleName(name)).emit("();");
+		else {
+			buf.emit(ruleName(name)).emit("(");
+			@Nullable Location args = actual.args;
+			if (args != null)
+				buf.emit(args.find());
+			buf.emit(");");
+		}
 	}
 	
 	private void genProduction(Production prod) {

@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import automaton.Automata;
 import automaton.Determinize;
@@ -46,11 +47,26 @@ public abstract class BasicGrammars {
 	static Production.Actual actual(String s) {
 		int ndx = s.indexOf('=');
 		if (ndx < 0)
-			return new Production.Actual(null, s);
+			return new Production.Actual(null, s, null);
 		String binding = s.substring(0, ndx).trim();
+		
+		@Nullable final Location args;
+		final int bnd;
+		int act = s.indexOf('(', ndx);
+		if (act >= 0) {
+			bnd = act;
+			assert (s.charAt(s.length() - 1) == ')');
+			@SuppressWarnings("null")
+			@NonNull String args_ = s.substring(act + 1, s.length() - 1);
+			args = Location.inlined(args_);
+		}
+		else {
+			bnd = s.length();
+			args = null;
+		}
 		@SuppressWarnings("null")
-		@NonNull String item = s.substring(ndx + 1).trim();
-		return new Production.Actual(binding, item);
+		@NonNull String item = s.substring(ndx + 1, bnd).trim();
+		return new Production.Actual(binding, item, args);
 	}
 	
 	static final Location VOID = Location.inlined("void");
@@ -66,14 +82,33 @@ public abstract class BasicGrammars {
 	}
 	
 	private static GrammarRule vrule(boolean vis,
-		String name, @NonNull Object... productions) {
+		String name_, @NonNull Object... productions) {
+		// Find name/args in name parameter
+		int par = name_.indexOf('(');
+		@NonNull String name;
+		@Nullable Location args;
+		if (par < 0) {
+			name = name_;
+			args = null;
+		} else {
+			assert (name_.charAt(name_.length() - 1) == ')');
+			@SuppressWarnings("null")
+			@NonNull String tmp =  name_.substring(0, par);
+			name = tmp;
+			@SuppressWarnings("null")
+			@NonNull String args_ = name_.substring(par + 1, name_.length() - 1);
+			args = Location.inlined(args_);
+		}
+		
+		// Find return type, if any
 		Location retType = VOID;
 		int first = 0;
 		if (productions[0] instanceof String) {
 			retType = Location.inlined((String) productions[0]);
 			++first;
 		}
-		GrammarRule.Builder builder = new GrammarRule.Builder(vis, retType, name, null);
+		
+		GrammarRule.Builder builder = new GrammarRule.Builder(vis, retType, name, args);
 		for (int i = first; i < productions.length; ++i)
 			builder.addProduction((Production) productions[i]);
 		return builder.build();		
@@ -181,6 +216,8 @@ public abstract class BasicGrammars {
 	 * Straight-line arithmetic programs with
 	 * variables, statements and printing, which
 	 * can be interpreted in semantic actions.
+	 * Also, this test introduces rule-arguments, which
+	 * are particularly useful in cases of left-factoring.
 	 * 
 	 * <pre>
 	 * program -> stmts EOF
@@ -227,18 +264,6 @@ public abstract class BasicGrammars {
 		public static final String LEXER = "tests/jl/StraightLineLexer.jl";
 		
 		private static final String header =
-				"/**\n" +
-			"     * Packs a boolean and an integer\n" +
-			"     */\n" +
-			"    private static final class OpInt {\n" +
-			"        final boolean mult;\n" +
-			"        final int val;\n" +
-			"        \n" +
-			"        OpInt(boolean mult, int val) {\n" +
-			"            this.mult = mult; this.val = val;\n" +
-			"        }\n" +
-			"    }\n" +
-			"    \n" +
 			"    private java.util.Map<String, Integer> env =\n" +
 			"        new java.util.HashMap<>();\n" +
 			"    \n" +
@@ -318,19 +343,18 @@ public abstract class BasicGrammars {
 					// production("stmts", "COMMA", "n = expr", "return n;")))
 				// term
 				.addRule(rule("term", "int",
-					production("n1 = factor", "n2 = term_rhs", "return n1 + n2;")))
-				.addRule(rule("term_rhs", "int",
-					production("PLUS", "n = term", "return n;"),
-					production("MINUS", "n = term", "return -n;"),
-					production("return 0;")))
+					production("n1 = factor", "res = term_rhs(n1)", "return res;")))
+				.addRule(rule("term_rhs(int lhs)", "int",
+					production("PLUS", "n = term", "return lhs + n;"),
+					production("MINUS", "n = term", "return lhs - n;"),
+					production("return lhs;")))
 				// factor
 				.addRule(rule("factor", "int",
-					production("n1 = atomic", "op_n2 = factor_rhs",
-						"return op_n2.mult ? n1 * op_n2.val : n1 / op_n2.val;")))
-				.addRule(rule("factor_rhs", "OpInt",
-					production("TIMES", "n = factor", "return new OpInt(true, n);"),
-					production("DIV", "n = factor", "return new OpInt(false, n);"),
-					production("return new OpInt(true, 1);")))
+					production("n1 = atomic", "res = factor_rhs(n1)", "return res;")))
+				.addRule(rule("factor_rhs(int lhs)", "int",
+					production("TIMES", "n = factor", "return lhs * n;"),
+					production("DIV", "n = factor", "return lhs / n;"),
+					production("return lhs;")))
 				// atomic
 				.addRule(rule("atomic", "int",
 					production("id = ID", "return lookup(id);"),
@@ -404,10 +428,11 @@ public abstract class BasicGrammars {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException {
-		// generateLexer(ArithGround.LEXER, "ArithGroundLexer");
-		// generateParser("ArithGroundParser", ArithGround.GRAMMAR);
+		 generateLexer(ArithGround.LEXER, "ArithGroundLexer");
+		 generateParser("ArithGroundParser", ArithGround.GRAMMAR);
 
-		generateLexer(StraightLineProgram.LEXER, "StraightLineLexer");
-		generateParser("StraightLineParser", StraightLineProgram.GRAMMAR);
+		 System.out.println(StraightLineProgram.GRAMMAR);
+		 generateLexer(StraightLineProgram.LEXER, "StraightLineLexer");
+		 generateParser("StraightLineParser", StraightLineProgram.GRAMMAR);
 	}
 }
