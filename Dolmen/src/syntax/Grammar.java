@@ -1,9 +1,12 @@
 package syntax;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -97,7 +100,7 @@ public final class Grammar {
 	 * @param rules
 	 * @param footer
 	 */
-	public Grammar(List<String> imports, List<TokenDecl> tokenDecls, 
+	private Grammar(List<String> imports, List<TokenDecl> tokenDecls, 
 			Location header, Map<String, GrammarRule> rules, Location footer) {
 		this.imports = imports;
 		this.tokenDecls = tokenDecls;
@@ -179,9 +182,84 @@ public final class Grammar {
 		
 		/**
 		 * @return a grammar description from this builder
+		 * @throws IllegalArgumentException if the described grammar
+		 * 	is not well-formed
 		 */
 		public Grammar build() {
+			@Nullable String report = sanityCheck(tokenDecls, rules);
+			if (report != null)
+				throw new IllegalArgumentException(
+					"Ill-formed grammar description: " + report);
+				
 			return new Grammar(imports, tokenDecls, header, rules, footer);
+		}
+		
+		/**
+		 * Performs well-formedness checks on the given grammar description
+		 * 
+		 * @param tokenDecls
+		 * @param rules
+		 * @return {@code null} if all checks passed, or a description
+		 * 	of a well-formedness issue otherwise
+		 */
+		private @Nullable String sanityCheck(
+			List<TokenDecl> tokenDecls, Map<String, GrammarRule> rules) {
+			// Prepare sets of declared tokens and non-terminals
+			Set<String> tokens = new HashSet<String>();
+			Set<String> valuedTokens = new HashSet<String>();
+			for (TokenDecl token : tokenDecls) {
+				tokens.add(token.name);
+				if (token.isValued())
+					valuedTokens.add(token.name);
+			}
+			Set<String> nonterms = rules.keySet();
+			Set<String> argnterms = new HashSet<String>();
+			Set<String> voidnterms = new HashSet<String>();
+			for (GrammarRule rule : rules.values()) {
+				if (rule.args != null)
+					argnterms.add(rule.name);
+				if (rule.returnType.find().trim().equals("void"))
+					voidnterms.add(rule.name);
+			}
+			// Go through every rule and check every item
+			// used makes some sense
+			for (GrammarRule rule : rules.values()) {
+				int i = 0;
+				for (Production prod : rule.productions) {
+					++i;
+					for (Production.Actual actual : prod.actuals()) {
+						final int j = i;
+						Function<String, String> report =
+							msg -> scMessage(rule, j, actual, msg);
+						final String name = actual.item;
+						if (actual.isTerminal()) {
+							if (!tokens.contains(name))
+								return report.apply(name + " is not a defined token");
+							if (actual.isBound() &&
+								!valuedTokens.contains(name))
+								return report.apply(name + " is not bound to any value");
+						} else {
+							if (!nonterms.contains(name))
+								return report.apply(name + " is not a defined non-terminal");
+							if (actual.args != null &&
+								!argnterms.contains(name))
+								return report.apply(name + " does not expect parameters");
+							// Not complete of course but better than nothing
+							if (actual.isBound() &&
+								voidnterms.contains(name))
+								return report.apply(name + " is bound to a void-rule");
+						}
+					}
+				}
+			}
+			return null;
+		}
+		
+		@SuppressWarnings("null")
+		private static String scMessage(
+			GrammarRule rule, int i, Production.Actual actual, String msg) {
+			return String.format("In rule %s, production %d, item %s: %s",
+				rule.name, i, actual, msg);
 		}
 	}
 }

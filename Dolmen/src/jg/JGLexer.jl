@@ -1,7 +1,8 @@
 /**
  * Lexer description for Dolmen grammar descriptions ('.jg' files)
  */
-import static jg.JGToken.*;
+import static jg.JGParserGenerated.Token.*;
+import jg.JGParserGenerated.Token;
 
 // JGLexer class header
 {
@@ -22,7 +23,7 @@ import static jg.JGToken.*;
 		}
 	}
 	
-	private jg.JGToken identOrKeyword(String id) {
+	private Token identOrKeyword(String id) {
 		if (id.equals("import")) return IMPORT;
 		else if (id.equals("static")) return STATIC;
 		else if (id.equals("public")) return PUBLIC;
@@ -41,7 +42,7 @@ import static jg.JGToken.*;
 }
 
 // Auxiliary definitions for lexer rules
-ws = [' ' '\t' '\f'];
+ws = [' ' '\t' '\b'];
 digit = ['0'-'9'];
 nzdigit = ['1'-'9'];
 
@@ -57,7 +58,7 @@ escaped = ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '];
 slcomment = "//" notnl*;
 
 // Lexer rules
-public {jg.JGToken} rule main =
+public {Token} rule main =
 | ws+		{ return main(); }
 | nl		{ newline(); return main(); }
 | "/*"		{ comment(); return main(); }
@@ -100,22 +101,22 @@ private {void} rule comment =
 private {void} rule string =
 | '"'		{ return; }
 | '\\' (escaped as c)
-			{ stringBuffer.appends(forBackslash(c));
+			{ stringBuffer.append(forBackslash(c));
 			  string(); return; 
 			}
 | '\\' (_ as c)
-			{ stringBuffer.appends('\\').appends(c);
+			{ stringBuffer.append('\\').append(c);
 			  string(); return; 
 			}
 | eof 		{ throw error("Unterminated string literal"); }
-| orelse	{ stringBuffer.appends(getLexeme()); 
+| orelse	{ stringBuffer.append(getLexeme()); 
 			  string(); return; 
 			}
 
 private {int} rule action =
 | '{'		{ ++braceDepth; return action(); }
 | '}'		{ --braceDepth;
-			  if (braceDepth == 0) return getLexemeStart().ofset - 1;
+			  if (braceDepth == 0) return getLexemeStart().offset - 1;
 			  return action();
 			}
 | '"'		{ stringBuffer.setLength(0);
@@ -133,7 +134,7 @@ private {int} rule action =
 private {int} rule arguments =
 | '('		{ ++parenDepth; return arguments(); }
 | ')'		{ --parenDepth;
-			  if (parenDepth == 0) return getLexemeStart().ofset - 1;
+			  if (parenDepth == 0) return getLexemeStart().offset - 1;
 			  return arguments();
 			}
 | '"'		{ stringBuffer.setLength(0);
