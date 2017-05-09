@@ -137,12 +137,19 @@ public abstract class JGParser {
 	private static final List<String> imports =
 		Arrays.asList(
 			"import org.eclipse.jdt.annotation.Nullable;",
+			"import org.eclipse.jdt.annotation.NonNull;",
 			"import java.util.List;", "import java.util.ArrayList;",
-			"import syntax.Location;"
-//			, "import syntax.Grammar;",
-//			"import syntax.GrammarRule;", "import syntax.Grammar.TokenDecl;"
+			"import common.Lists;",
+			"import syntax.Location;", "import syntax.Grammar.TokenDecl;",
+			"import syntax.GrammarRule;", "import syntax.Grammar;"
 			);
-	private static final String header = "";
+	private static final String header =
+			"/**\n" +
+		"     * Returns {@code true} if the given string contains a lower-case letter\n" +
+		"     */\n" +
+		"     private static boolean isLowerId(String name) {\n" +
+		"         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));\n" +
+		"     }\n";
 	
 	private static final String footer =
 			"/**\n" +
@@ -171,9 +178,9 @@ public abstract class JGParser {
 			// IDENT of String | ACTION of Location | ARGUMENTS of Location 
 			// | EQUAL | BAR | SEMICOL | IMPORT | STATIC | DOT | STAR 
 			// | PUBLIC | PRIVATE | TOKEN | RULE | EOF
-			.addToken(vtoken("IDENT", "String"))
-			.addToken(vtoken("ACTION", "Location"))
-			.addToken(vtoken("ARGUMENTS", "Location"))
+			.addToken(vtoken("IDENT", "@NonNull String"))
+			.addToken(vtoken("ACTION", "@NonNull Location"))
+			.addToken(vtoken("ARGUMENTS", "@NonNull Location"))
 			.addToken(token("EQUAL"))
 			.addToken(token("BAR"))
 			.addToken(token("DOT"))
@@ -191,12 +198,14 @@ public abstract class JGParser {
 			 * start -> imports tokens ACTION rules ACTION EOF
 			 * </pre>
 			 */
-			.addRule(prule("start", "List<String>",
-				production("imp = imports(null)", "@return imp;")))
-//			.addRule(prule("start", "Grammar",
-//				production("imp = imports(null)", "tdecls = tokens",
-//						"header = ACTION", "rules = rules", "footer = ACTION", "EOF",
-//						"@return new Grammar(imp, tdecls, header, rules, footer);")))
+			.addRule(prule("start", "@NonNull Grammar",
+				production("imports = imports(null)", "tdecls = tokens(null)",
+					"header = ACTION", "@@NonNull List<@NonNull GrammarRule> rules = Lists.empty();",
+					"footer = ACTION", "EOF",
+					"@Grammar.Builder builder = new Grammar.Builder(imports, header, footer);",
+					"@tdecls.forEach(tdecl -> builder.addToken(tdecl));",
+					"@rules.forEach(rule -> builder.addRule(rule));",
+					"@return builder.build();")))
 			/**
 			 * <pre>
 			 * imports ->
@@ -212,9 +221,10 @@ public abstract class JGParser {
 			 * typename0 -> IDENT typename
 			 * </pre>
 			 */
-			.addRule(rule("imports(@Nullable List<String> imp)", "List<String>",
+			.addRule(rule("imports(@Nullable List<@NonNull String> imp)",
+					"@NonNull List<@NonNull String>",
 				production("@return imp == null ? Lists.empty() : imp;"),
-				production("@List<String> acc = imp == null ? new ArrayList<String>() : imp;",
+				production("@@NonNull List<@NonNull String> acc = imp == null ? new ArrayList<>() : imp;",
 					"IMPORT", "elt = import_", "SEMICOL",
 					"@acc.add(\"import \" + elt + \";\");",
 					"imports(acc)",
@@ -239,7 +249,22 @@ public abstract class JGParser {
 			 * token -> ACTION IDENT
 			 * </pre>
 			 */
-			
+			.addRule(rule("tokens(@Nullable List<@NonNull TokenDecl> tokens)",
+					"@NonNull List<@NonNull TokenDecl>",
+				production("@return Lists.empty();"),
+				production(
+					"@@NonNull List<@NonNull TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;",
+					"TOKEN", "tok = token",
+					"@acc.add(tok);", "tokens(acc)", "@return acc;")))
+			.addRule(rule("token", "@NonNull TokenDecl",
+				production("id = IDENT", 
+					"@if (isLowerId(id))\n" +
+					"    throw new ParsingException(\"Token name should be all uppercase: \" + id);\n" +
+					"return new TokenDecl(id, null);"),
+				production("val = ACTION", "id = IDENT",
+					"@if (isLowerId(id))\n" +
+					"    throw new ParsingException(\"Token name should be all uppercase: \" + id);\n" +
+					"return new TokenDecl(id, val);")))
 			/**
 			 * <pre>
 			 * rules ->
