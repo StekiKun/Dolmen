@@ -28,7 +28,7 @@ token { JAVA }? ALL_UP_IDENT
 
 ## Grammar rules [RULE]
 
-VIS { JAVA } rule LIDENT ARGS? = PRODUCTION+
+VIS { JAVA } rule LIDENT ARGS? = PRODUCTION+ SEMICOL
 
 ## Visibility [VIS]
 

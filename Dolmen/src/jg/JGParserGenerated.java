@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import common.Lists;
 import syntax.Location;
+import syntax.Production;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
@@ -166,7 +167,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
                 // header = ACTION
                 @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                @NonNull List<@NonNull GrammarRule> rules = Lists.empty();
+                // rules = rules(null)
+                @NonNull List<@NonNull GrammarRule> rules = rules(null);
                 // footer = ACTION
                 @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                 // EOF
@@ -183,7 +185,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
                 // header = ACTION
                 @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                @NonNull List<@NonNull GrammarRule> rules = Lists.empty();
+                // rules = rules(null)
+                @NonNull List<@NonNull GrammarRule> rules = rules(null);
                 // footer = ACTION
                 @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                 // EOF
@@ -200,7 +203,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
                 // header = ACTION
                 @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                @NonNull List<@NonNull GrammarRule> rules = Lists.empty();
+                // rules = rules(null)
+                @NonNull List<@NonNull GrammarRule> rules = rules(null);
                 // footer = ACTION
                 @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                 // EOF
@@ -333,8 +337,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
-    throw new ParsingException("Token name should be all uppercase: " + id);
-return new TokenDecl(id, null);
+                   throw new ParsingException("Token name should be all uppercase: " + id);
+                return new TokenDecl(id, null);
             }
             case ACTION: {
                 // val = ACTION
@@ -342,11 +346,247 @@ return new TokenDecl(id, null);
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
-    throw new ParsingException("Token name should be all uppercase: " + id);
-return new TokenDecl(id, val);
+                    throw new ParsingException("Token name should be all uppercase: " + id);
+                return new TokenDecl(id, val);
             }
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.ACTION);
+            }
+        }
+    }
+    
+    private @NonNull List<@NonNull GrammarRule> rules(@Nullable List<@NonNull GrammarRule> rules) {
+        switch (peek().getKind()) {
+            case ACTION: {
+                return Lists.empty();
+            }
+            case PUBLIC: {
+                // rule = rule
+                @NonNull GrammarRule rule = rule();
+                @NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
+                acc.add(rule);
+                // rules(acc)
+                rules(acc);
+                return acc;
+            }
+            case PRIVATE: {
+                // rule = rule
+                @NonNull GrammarRule rule = rule();
+                @NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
+                acc.add(rule);
+                // rules(acc)
+                rules(acc);
+                return acc;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PUBLIC, Token.Kind.PRIVATE);
+            }
+        }
+    }
+    
+    private @NonNull GrammarRule rule() {
+        switch (peek().getKind()) {
+            case PUBLIC: {
+                // vis = visibility
+                boolean vis = visibility();
+                // rtype = ACTION
+                @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                // RULE
+                eat(Token.Kind.RULE);
+                // name = IDENT
+                @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                if (!Character.isLowerCase(name.charAt(0)))
+                    throw new ParsingException("Rule name must start with a lower case letter: " + name);
+                // args = args
+                @Nullable Location args = args();
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                GrammarRule.@NonNull Builder builder =
+                	new GrammarRule.Builder(vis, rtype, name, args);
+                // prod = production
+                @NonNull Production prod = production();
+                builder.addProduction(prod);
+                // productions(builder)
+                productions(builder);
+                return builder.build();
+            }
+            case PRIVATE: {
+                // vis = visibility
+                boolean vis = visibility();
+                // rtype = ACTION
+                @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                // RULE
+                eat(Token.Kind.RULE);
+                // name = IDENT
+                @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                if (!Character.isLowerCase(name.charAt(0)))
+                    throw new ParsingException("Rule name must start with a lower case letter: " + name);
+                // args = args
+                @Nullable Location args = args();
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                GrammarRule.@NonNull Builder builder =
+                	new GrammarRule.Builder(vis, rtype, name, args);
+                // prod = production
+                @NonNull Production prod = production();
+                builder.addProduction(prod);
+                // productions(builder)
+                productions(builder);
+                return builder.build();
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.PUBLIC, Token.Kind.PRIVATE);
+            }
+        }
+    }
+    
+    private boolean visibility() {
+        switch (peek().getKind()) {
+            case PUBLIC: {
+                // PUBLIC
+                eat(Token.Kind.PUBLIC);
+                return true;
+            }
+            case PRIVATE: {
+                // PRIVATE
+                eat(Token.Kind.PRIVATE);
+                return false;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.PUBLIC, Token.Kind.PRIVATE);
+            }
+        }
+    }
+    
+    private @Nullable Location args() {
+        switch (peek().getKind()) {
+            case SEMICOL: {
+                return null;
+            }
+            case ARGUMENTS: {
+                // loc = ARGUMENTS
+                @NonNull Location loc = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
+                return loc;
+            }
+            case BAR: {
+                return null;
+            }
+            case ACTION: {
+                return null;
+            }
+            case IDENT: {
+                return null;
+            }
+            case EQUAL: {
+                return null;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.EQUAL);
+            }
+        }
+    }
+    
+    private void productions(GrammarRule.@NonNull Builder builder) {
+        switch (peek().getKind()) {
+            case SEMICOL: {
+                // SEMICOL
+                eat(Token.Kind.SEMICOL);
+                return;
+            }
+            case BAR: {
+                // prod = production
+                @NonNull Production prod = production();
+                builder.addProduction(prod);
+                // productions(builder)
+                productions(builder);
+                return;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.BAR);
+            }
+        }
+    }
+    
+    private @NonNull Production production() {
+        
+        // BAR
+        eat(Token.Kind.BAR);
+        Production.Builder builder = new Production.Builder();
+        // items(builder)
+        items(builder);
+        return builder.build();
+    }
+    
+    private void items(Production.Builder builder) {
+        switch (peek().getKind()) {
+            case SEMICOL: {
+                return;
+            }
+            case BAR: {
+                return;
+            }
+            case ACTION: {
+                // loc = ACTION
+                @NonNull Location loc = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                builder.addAction(loc);
+                // items(builder)
+                items(builder);
+                return;
+            }
+            case IDENT: {
+                // id = IDENT
+                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                // actual = actual(id)
+                Production.@NonNull Actual actual = actual(id);
+                builder.addActual(actual);
+                // items(builder)
+                items(builder);
+                return;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT);
+            }
+        }
+    }
+    
+    private Production.@NonNull Actual actual(@NonNull String id) {
+        switch (peek().getKind()) {
+            case SEMICOL: {
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(null, id, args);
+            }
+            case ARGUMENTS: {
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(null, id, args);
+            }
+            case BAR: {
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(null, id, args);
+            }
+            case ACTION: {
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(null, id, args);
+            }
+            case IDENT: {
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(null, id, args);
+            }
+            case EQUAL: {
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                // name = IDENT
+                @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                // args = args
+                @Nullable Location args = args();
+                return new Production.Actual(id, name, args);
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.EQUAL);
             }
         }
     }

@@ -139,8 +139,8 @@ public abstract class JGParser {
 			"import org.eclipse.jdt.annotation.Nullable;",
 			"import org.eclipse.jdt.annotation.NonNull;",
 			"import java.util.List;", "import java.util.ArrayList;",
-			"import common.Lists;",
-			"import syntax.Location;", "import syntax.Grammar.TokenDecl;",
+			"import common.Lists;", "import syntax.Location;",
+			"import syntax.Production;", "import syntax.Grammar.TokenDecl;",
 			"import syntax.GrammarRule;", "import syntax.Grammar;"
 			);
 	private static final String header =
@@ -200,7 +200,7 @@ public abstract class JGParser {
 			 */
 			.addRule(prule("start", "@NonNull Grammar",
 				production("imports = imports(null)", "tdecls = tokens(null)",
-					"header = ACTION", "@@NonNull List<@NonNull GrammarRule> rules = Lists.empty();",
+					"header = ACTION", "rules = rules(null)",
 					"footer = ACTION", "EOF",
 					"@Grammar.Builder builder = new Grammar.Builder(imports, header, footer);",
 					"@tdecls.forEach(tdecl -> builder.addToken(tdecl));",
@@ -258,37 +258,84 @@ public abstract class JGParser {
 					"@acc.add(tok);", "tokens(acc)", "@return acc;")))
 			.addRule(rule("token", "@NonNull TokenDecl",
 				production("id = IDENT", 
-					"@if (isLowerId(id))\n" +
-					"    throw new ParsingException(\"Token name should be all uppercase: \" + id);\n" +
-					"return new TokenDecl(id, null);"),
+					"@if (isLowerId(id))",
+					"@   throw new ParsingException(\"Token name should be all uppercase: \" + id);",
+					"@return new TokenDecl(id, null);"),
 				production("val = ACTION", "id = IDENT",
-					"@if (isLowerId(id))\n" +
-					"    throw new ParsingException(\"Token name should be all uppercase: \" + id);\n" +
-					"return new TokenDecl(id, val);")))
+					"@if (isLowerId(id))",
+					"@    throw new ParsingException(\"Token name should be all uppercase: \" + id);",
+					"@return new TokenDecl(id, val);")))
 			/**
 			 * <pre>
 			 * rules ->
 			 * rules -> rule rules
 			 * 
-			 * rule -> vis ACTION RULE IDENT EQUAL 
+			 * rule -> vis ACTION RULE IDENT args EQUAL 
 			 * 			production productions	// not all upper case
 			 * 
 			 * vis -> PUBLIC
 			 * vis -> PRIVATE
 			 * 
-			 * productions ->
-			 * productions -> production productions
-			 * 
-			 * production -> BAR items ACTION
-			 * 
-			 * items -> 
-			 * items -> IDENT item items
-			 * 
-			 * item -> 
-			 * item -> EQUAL IDENT
+			 * args ->
+			 * args -> ARGUMENTS
 			 * </pre>
 			 */
-			
+			.addRule(rule("rules(@Nullable List<@NonNull GrammarRule> rules)",
+				"@NonNull List<@NonNull GrammarRule>", 
+				production("@return Lists.empty();"),
+				production("rule = rule",
+					"@@NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;",
+					"@acc.add(rule);",
+					"rules(acc)",
+					"@return acc;")))
+			.addRule(rule("rule", "@NonNull GrammarRule",
+				production("vis = visibility", "rtype = ACTION", "RULE",
+					"name = IDENT",
+					"@if (!Character.isLowerCase(name.charAt(0)))",
+					"@    throw new ParsingException(\"Rule name must start with a lower case letter: \" + name);",
+					"args = args", "EQUAL",
+					"@GrammarRule.@NonNull Builder builder =",
+					"@	new GrammarRule.Builder(vis, rtype, name, args);",
+					"prod = production", "@builder.addProduction(prod);",
+					"productions(builder)",
+					"@return builder.build();")))
+			.addRule(rule("visibility", "boolean",
+				production("PUBLIC", "@return true;"),
+				production("PRIVATE", "@return false;")))
+			.addRule(rule("args", "@Nullable Location",
+				production("@return null;"),
+				production("loc = ARGUMENTS", "@return loc;")))
+			/**
+			 * <pre>
+			 * productions -> SEMICOL		// necessary to separate from footer
+			 * productions -> production productions
+			 * 
+			 * production -> BAR items
+			 * 
+			 * items -> 
+			 * items -> ACTION items
+			 * items -> IDENT actual items
+			 * 
+			 * actual -> args
+			 * actual -> EQUAL IDENT args
+			 * </pre>
+			 */
+			.addRule(rule("productions(GrammarRule.@NonNull Builder builder)", "void",
+				production("SEMICOL", "@return;"),
+				production("prod = production", "@builder.addProduction(prod);",
+						"productions(builder)", "@return;")))
+			.addRule(rule("production", "@NonNull Production",
+				production("BAR", "@Production.Builder builder = new Production.Builder();",
+						"items(builder)", "@return builder.build();")))
+			.addRule(rule("items(Production.Builder builder)", "void",
+				production("@return;"),
+				production("loc = ACTION", "@builder.addAction(loc);", "items(builder)", "@return;"),
+				production("id = IDENT", "actual = actual(id)",
+					"@builder.addActual(actual);", "items(builder)", "@return;")))
+			.addRule(rule("actual(@NonNull String id)", "Production.@NonNull Actual",
+				production("args = args", "@return new Production.Actual(null, id, args);"),
+				production("EQUAL", "name = IDENT", "args = args",
+					"@return new Production.Actual(id, name, args);")))
 			.build();
 
 	static void generateParser(String className, Grammar grammar)
