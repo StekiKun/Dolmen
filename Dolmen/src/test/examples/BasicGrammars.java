@@ -43,24 +43,25 @@ public abstract class BasicGrammars {
 		return new Grammar.TokenDecl(name, Location.inlined(valType));
 	}
 	
-	static Production.Item item(String s) {
+	static Production.Actual actual(String s) {
 		int ndx = s.indexOf('=');
 		if (ndx < 0)
-			return new Production.Item(null, s);
+			return new Production.Actual(null, s);
 		String binding = s.substring(0, ndx).trim();
 		@SuppressWarnings("null")
 		@NonNull String item = s.substring(ndx + 1).trim();
-		return new Production.Item(binding, item);
+		return new Production.Actual(binding, item);
 	}
 	
 	static final Location VOID = Location.inlined("void");
 	static final Location RETURN = Location.inlined("return;");
 	
-	static Production production(@NonNull String... items) {
-		Location action = Location.inlined(items[items.length - 1]);
-		Production.Builder builder = new Production.Builder(action);
-		for (int i = 0; i < items.length - 1; ++i)
-			builder.addItem(item(items[i]));
+	static Production production(@NonNull String... actuals) {
+		Location action = Location.inlined(actuals[actuals.length - 1]);
+		Production.Builder builder = new Production.Builder();
+		for (int i = 0; i < actuals.length - 1; ++i)
+			builder.addItem(actual(actuals[i]));
+		builder.addAction(action);
 		return builder.build();
 	}
 	

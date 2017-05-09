@@ -9,6 +9,7 @@ import java.util.NoSuchElementException;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * This class contains various utility
@@ -147,6 +148,50 @@ public abstract class Iterables {
 			}
 		};
 	}
+
+	/**
+	 * @param iterable
+	 * @param clazz
+	 * @return the given {@code iterable} filtered to only contain elements
+	 * 	of the class whose descriptor is {@code clazz}
+	 */
+	public static <T, U extends T> Iterable<@NonNull U>
+		filterClass(Iterable<@NonNull T> iterable, Class<? extends U> clazz) {
+		return new Iterable<@NonNull U>() {
+			@Override
+			public Iterator<@NonNull U> iterator() {
+				final Iterator<@NonNull T> it = iterable.iterator();
+				
+				return new Iterator<@NonNull U>() {
+					// Next filtered available actual, if any
+					@Nullable U next;
+					
+					@SuppressWarnings("unchecked")
+					@Override
+					public boolean hasNext() {
+						if (next != null) return true;
+						while (it.hasNext()) {
+							T item = it.next();
+							if (item.getClass() == clazz) {
+								next = (U) item;
+								return true;
+							}
+						}
+						return false;
+					}
+
+					@Override
+					public @NonNull U next() {
+						hasNext();
+						@Nullable U res = next;
+						next = null;
+						if (res != null) return res;
+						else throw new NoSuchElementException();
+					}
+				};
+			}
+		};
+	}
 	
 //	/**
 //	 * @param args
@@ -175,6 +220,19 @@ public abstract class Iterables {
 //				Iterables.singleton(23),
 //				l))
 //			System.out.println("" + k);
+//		
+//		List<Object> objs = new java.util.ArrayList<Object>();
+//		objs.add(12); objs.add(5);
+//		objs.add(-.45f); objs.add("youpi");
+//		objs.add(12.3f); objs.add("hey ho");
+//		
+//		for (int i : filterClass(objs, Integer.class))
+//			System.out.println("Int: " + i);
+//		for (float f : filterClass(objs, Float.class))
+//			System.out.println("float: " + f);
+//		for (String s : filterClass(objs, String.class))
+//			System.out.println("Int: " + s);
+//
 //	}
 
 }

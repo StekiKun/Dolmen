@@ -68,6 +68,8 @@ public {jg.JGToken} rule main =
 			  return ACTION(loc);
 			}
 | ident		{ return identOrKeyword(getLexeme()); }
+| ';'		{ return SEMICOL; }
+| '.'		{ return DOT; }
 | '='		{ return EQUAL; }
 | '|'		{ return BAR; }
 | eof		{ return EOF; }

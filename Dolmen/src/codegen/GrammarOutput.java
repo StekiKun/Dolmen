@@ -12,6 +12,8 @@ import syntax.Grammar;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammars.PredictionTable;
+import syntax.Production.ActionItem;
+import syntax.Production.Actual;
 import syntax.Location;
 import syntax.Production;
 
@@ -87,11 +89,11 @@ public final class GrammarOutput {
 		buf.newline().emitln(grammar.footer.find());
 	}
 	
-	private void genItem(Production.Item item) {
-		final String name = item.item;
+	private void genActual(Production.Actual actual) {
+		final String name = actual.item;
 		buf.newline();
-		buf.emitln("// " + item.toString());
-		@Nullable String bound = item.binding;
+		buf.emitln("// " + actual.toString());
+		@Nullable String bound = actual.binding;
 		// If the item is bound, we need to assign the
 		// result of parsing the item to some local variable
 		// NB: it is up to the user to avoid capture in
@@ -99,16 +101,16 @@ public final class GrammarOutput {
 		// NNB: it is up to the user to not bind the results
 		//	of void non-terminals
 		if (bound != null) {
-			if (item.isTerminal()) {
+			if (actual.isTerminal()) {
 				Optional<TokenDecl> declo =
 					grammar.tokenDecls.stream()
-						   .filter(decl -> decl.name.equals(item.item))
+						   .filter(decl -> decl.name.equals(actual.item))
 						   .findFirst();
 				if (!declo.isPresent())
-					throw new IllegalStateException("Undeclared terminal " + item.item);
+					throw new IllegalStateException("Undeclared terminal " + actual.item);
 				@Nullable Location valueType = declo.get().valueType;
 				if (valueType == null) {
-					System.err.println("Bound terminal " + item + " has no value."
+					System.err.println("Bound terminal " + actual + " has no value."
 							+ " Ignoring binding in generated code.");
 					bound = null;
 				}
@@ -117,14 +119,14 @@ public final class GrammarOutput {
 					   .emit(" ").emit(bound).emit(" = ");
 			}
 			else {
-				buf.emit(grammar.rules.get(item.item).returnType.find())
+				buf.emit(grammar.rules.get(actual.item).returnType.find())
 				   .emit(" ").emit(bound).emit(" = ");
 			}
 		}
 		
 		// Bound terminals must be cast to the concrete
 		// token class, to retrieve their value field
-		if (item.isTerminal()) {
+		if (actual.isTerminal()) {
 			if (bound != null)
 				buf.emit("((Token.").emit(name).emit(") ");
 			buf.emit("eat(Token.Kind.").emit(name).emit(")");
@@ -138,14 +140,27 @@ public final class GrammarOutput {
 	
 	private void genProduction(Production prod) {
 		// For each item, either call the corresponding
-		// non-terminal method, or eat the terminal token
-		for (Production.Item item : prod.items)
-			genItem(item);
-		// Finally, generate the action
-		// NB: it is up to the semantic action to
-		//	either return; or return val; depending
-		//  on whether the return type is void.
-		buf.newline().emit(prod.action.find());
+		// non-terminal method, or eat the terminal token.
+		// Semantic actions are simply inlined in generated
+		// code.
+		// NB: it is up to the semantic action to either
+		//	return; or return val; depending on whether
+		//  the return type is void, and of course not
+		//	to return in the middle of a production rule.
+		for (Production.Item item : prod.items) {
+			switch (item.getKind()) {
+			case ACTUAL: {
+				final Actual actual = (Actual) item;				
+				genActual(actual);
+				break;
+			}
+			case ACTION: {
+				final ActionItem actionItem = (ActionItem) item;
+				buf.newline().emit(actionItem.location.find());
+				break;
+			}
+			}
+		}
 	}
 	
 	private void genRule(GrammarRule rule, Map<String, List<Production>> trans) {

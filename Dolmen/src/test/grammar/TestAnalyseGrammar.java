@@ -28,17 +28,18 @@ public final class TestAnalyseGrammar {
 		return new Grammar.TokenDecl(name, Location.inlined(valType));
 	}
 	
-	static Production.Item item(String s) {
-		return new Production.Item(null, s);
+	static Production.Actual actual(String s) {
+		return new Production.Actual(null, s);
 	}
 	
 	static final Location VOID = Location.inlined("void");
 	static final Location RETURN = Location.inlined("return;");
 	
 	static Production production(@NonNull String... items) {
-		Production.Builder builder = new Production.Builder(RETURN);
+		Production.Builder builder = new Production.Builder();
 		for (int i = 0; i < items.length; ++i)
-			builder.addItem(item(items[i]));
+			builder.addActual(actual(items[i]));
+		builder.addAction(RETURN);
 		return builder.build();
 	}
 	

@@ -94,10 +94,10 @@ public abstract class Grammars {
 			final Set<String> deps = fwd.get(name);
 			
 			for (Production prod : rule.productions) {
-				for (Production.Item item : prod.items) {
-					if (!item.isTerminal()) {
-						deps.add(item.item);
-						bwd.get(item.item).add(name);
+				for (Production.Actual actual : prod.actuals()) {
+					if (!actual.isTerminal()) {
+						deps.add(actual.item);
+						bwd.get(actual.item).add(name);
 					}
 				}
 			}
@@ -150,9 +150,9 @@ public abstract class Grammars {
 		 * @return whether the production {@code prod} is nullable
 		 */
 		public boolean nullable(Production prod) {
-			for (Production.Item item : prod.items) {
-				if (item.isTerminal()) return false;
-				if (!nullable(item.item)) return false;
+			for (Production.Actual actual : prod.actuals()) {
+				if (actual.isTerminal()) return false;
+				if (!nullable(actual.item)) return false;
 			}
 			return true;
 		}
@@ -173,13 +173,13 @@ public abstract class Grammars {
 		 */
 		public Set<String> first(Production prod) {
 			Set<String> res = Sets.empty();
-			for (Production.Item item : prod.items) {
-				if (item.isTerminal()) {
-					res = Sets.union(res, Sets.singleton(item.item));
+			for (Production.Actual actual : prod.actuals()) {
+				if (actual.isTerminal()) {
+					res = Sets.union(res, Sets.singleton(actual.item));
 					break;	// terminal is not nullable
 				}
-				res = Sets.union(res, first(item.item));
-				if (!nullable(item.item)) break;
+				res = Sets.union(res, first(actual.item));
+				if (!nullable(actual.item)) break;
 			}
 			return res;
 		}
@@ -205,9 +205,9 @@ public abstract class Grammars {
 	
 	private static @Nullable Boolean
 		nullableProd(Production prod, Map<String, Boolean> nullable) {
-		for (Production.Item item : prod.items) {
-			if (item.isTerminal()) return false;
-			String id = item.item;
+		for (Production.Actual actual : prod.actuals()) {
+			if (actual.isTerminal()) return false;
+			String id = actual.item;
 			@Nullable Boolean b = Maps.get(nullable, id);
 			if (b == null || !b) return b;
 		}
@@ -279,13 +279,13 @@ public abstract class Grammars {
 				// For each production, we go through the items in order
 				// until we encounter a non-nullable item. Each item
 				// visited is added to the rule's first set.
-				for (Production.Item item : prod.items) {
-					if (item.isTerminal()) {
-						changed |= first.add(item.item);
+				for (Production.Actual actual : prod.actuals()) {
+					if (actual.isTerminal()) {
+						changed |= first.add(actual.item);
 						continue prod;
 					}
-					changed |= first.addAll(res.get(item.item));
-					if (!nullable.contains(item.item)) break;
+					changed |= first.addAll(res.get(actual.item));
+					if (!nullable.contains(actual.item)) break;
 				}
 			}
 			// If we changed the FIRST set of the current rule,
@@ -313,24 +313,26 @@ public abstract class Grammars {
 			final GrammarRule rule = grammar.rules.get(name);
 			changed.clear();
 			for (Production prod : rule.productions) {
-				// For each production, we go through the items in reverse
+				// For each production, we go through the actuals in reverse
 				// order by remembering the set of possible following terminals
 				// the last non-terminal such that all items in-between 
 				// are nullable.
-				Set<String> follow = res.get(name);	// beware: for R only
+				Set<String> follow = res.get(name);	// beware: for R only 
 				for (int k = prod.items.size() - 1; k >= 0; --k) {
 					Production.Item item = prod.items.get(k);
-					if (item.isTerminal()) {
+					if (!(item instanceof Production.Actual)) continue;
+					final Production.Actual actual = (Production.Actual) item;
+					if (actual.isTerminal()) {
 						// When encountering a terminal item, we can
 						// flush the current follow set and use the
 						// current item instead
-						follow = Sets.singleton(item.item);
+						follow = Sets.singleton(actual.item);
 						continue;
 					}
 					// When encountering a non-terminal item, we
 					// extend its follow set with the current follow set
 					// and record whether it changed or not
-					String nterm = item.item;
+					String nterm = actual.item;
 					if (res.get(nterm).addAll(follow))
 						changed.add(nterm);
 					// If that non-terminal is nullable, proceed with

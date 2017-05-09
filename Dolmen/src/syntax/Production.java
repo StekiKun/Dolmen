@@ -6,20 +6,94 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import common.Hierarchy;
+import common.Iterables;
+
 /**
  * A grammar <i>production</i> consists of 
  * a sequence of {@link #items production items}
- * and an associated {@link #action semantic action}.
+ * some of them being <i>actual</i> grammar items
+ * (terminals or non-terminals) and others being
+ * simply <i>semantic actions</i>.
  * <p>
- * Items can be bound to some identifiers which can
- * be used in the semantic action.
+ * Actual items can be bound to some identifiers which
+ * can be used in the semantic actions.
  * 
  * @author Stéphane Lescuyer
  */
 public final class Production {
 
 	/**
-	 * Represents a <i>production item</i>, i.e.
+	 * Enumeration which describes the different kinds of
+	 * implementations of {@link Item}.
+	 * The field {@link #witness} describes the associated
+	 * concrete class.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	@SuppressWarnings("javadoc")
+	public static enum ItemKind {
+		ACTUAL(Actual.class), 
+		ACTION(ActionItem.class);
+		
+		public final Class<?> witness;
+		private ItemKind(Class<?> witness) {
+			this.witness = witness;
+		}
+	}
+	
+	/**
+	 * The base class for production items. Items can
+	 * either be {@link Actual actuals} when they 
+	 * reference a terminal or non-terminal of the
+	 * grammar, or {@link ActionItem semantic actions}
+	 * which are propagated in the generated parser code.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	@Hierarchy("getKind")
+	public static abstract class Item {
+		/** Describes the kind of item {@code this} is */
+		public abstract ItemKind getKind();
+	}
+	
+	/**
+	 * Represents a semantic action item, i.e. a semantic
+	 * action which is performed by the generated parser
+	 * when the enclosing production rule is executed.
+	 * <p>
+	 * Semantic action items are executed in the order
+	 * in which they appear in productions, relatively 
+	 * to actuals and other semantic actions. 
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class ActionItem extends Item {
+		
+		/** The in-source location for this semantic action */
+		public final Location location;
+		
+		/**
+		 * Builds a semantic action item from the given location
+		 * @param location
+		 */
+		public ActionItem(Location location) {
+			this.location = location;
+		}
+		
+		@Override
+		public final ItemKind getKind() {
+			return ItemKind.ACTION;
+		}
+		
+		@Override
+		public String toString() {
+			return "{" + location.toString() + "}";
+		}
+	}
+	
+	/**
+	 * Represents an <i>actual production item</i>, i.e.
 	 * a terminal or a non-terminal {@link #item}.
 	 * <p>
 	 * The production item can optionally be
@@ -32,7 +106,7 @@ public final class Production {
 	 * @see #isTerminal()
 	 * @see #isBound()
 	 */
-	public static final class Item {
+	public static final class Actual extends Item {
 		/**
 		 * The name to which this item is bound in
 		 * the associated semantic action, if non-{@code null}
@@ -51,9 +125,14 @@ public final class Production {
 		 * @param binding
 		 * @param item
 		 */
-		public Item(@Nullable String binding, String item) {
+		public Actual(@Nullable String binding, String item) {
 			this.binding = binding;
 			this.item = item;
+		}
+		
+		@Override
+		public final ItemKind getKind() {
+			return ItemKind.ACTUAL;
 		}
 		
 		/**
@@ -78,25 +157,29 @@ public final class Production {
 	
 	/** The list of production items in this production, in order */
 	public final List<@NonNull Item> items;
-	/** The semantic action associated to this production */
-	public final Location action;
 	
 	/**
 	 * Builds a grammar production based on the given parameters
 	 * @param items
-	 * @param action
 	 */
-	public Production(List<Item> items, Location action) {
+	public Production(List<Item> items) {
 		this.items = items;
-		this.action = action;
+	}
+	
+	/**
+	 * @return the list of actual production items
+	 * 	in this production rule, in the same order
+	 *  as they appear in {@link #items}
+	 */
+	public Iterable<@NonNull Actual> actuals() {
+		return Iterables.filterClass(items, Actual.class);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		for (Item item : items)
-			buf.append(item).append(" ");
-		buf.append("{").append(action.toString()).append("}");
+			buf.append(" ").append(item);
 		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
 		return res;
@@ -109,16 +192,12 @@ public final class Production {
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class Builder {
-		private final Location action;
 		private final List<Item> items;
 		
 		/**
-		 * Returns a new builder with the given
-		 * semantic action
-		 * @param action
+		 * Returns a new builder for a production rule
 		 */
-		public Builder(Location action) {
-			this.action = action;
+		public Builder() {
 			this.items = new ArrayList<>();
 		}
 		
@@ -132,11 +211,29 @@ public final class Production {
 		}
 		
 		/**
+		 * Adds an actual production item
+		 * @param actual
+		 */
+		public Builder addActual(Actual actual) {
+			items.add(actual);
+			return this;
+		}
+		
+		/**
+		 * Adds a semantic action item
+		 * @param location
+		 */
+		public Builder addAction(Location location) {
+			items.add(new ActionItem(location));
+			return this;
+		}
+		
+		/**
 		 * @return a production based on the registered
-		 * 	items and semantic action
+		 * 	items and semantic actions
 		 */
 		public Production build() {
-			return new Production(items, action);
+			return new Production(items);
 		}
 	}
 }

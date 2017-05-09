@@ -41,8 +41,9 @@ Exactly like in Java
 
 ## Grammar productions [PRODUCTION]
 
-  | ITEM* { JAVA }
+  | ITEM*
   
 ## Production items [ITEM]
 
-(IDENT =)? IDENT
+| (IDENT =)? IDENT	// Term or non-term, possibly bound
+| { JAVA }			// Action item
