@@ -1,14 +1,17 @@
 package test.grammar;
 
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 
+import codegen.GrammarOutput;
 import jg.JGLexer;
 import jg.JGParserGenerated;
 import syntax.Grammar;
+import syntax.Grammars;
 
 /**
  * This class tests the grammar description parser by
@@ -47,6 +50,13 @@ public abstract class TestJGParser {
 		Grammar grammar = parser.start();
 		reader.close();
 		System.out.println(grammar.toString());
+		Grammars.PredictionTable predictTable =
+			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null));
+		if (!predictTable.isLL1())
+			System.out.println(predictTable.toString());
+		FileWriter writer = new FileWriter("src-gen/JSonParser.java");
+		GrammarOutput.output(writer, "JSonParser", grammar, predictTable);
+		writer.close();
 	}
 	
 	/**

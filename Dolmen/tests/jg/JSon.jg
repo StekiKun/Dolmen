@@ -3,6 +3,7 @@ import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
 import common.Lists;
+import common.Maps;
 
 // The tokens of the JSON language
 token LBRACKET
@@ -28,7 +29,7 @@ token { double } NUMBER
 		public final T val;
 		private Value(T val) { this.val = val; }
 		
-		@Override public String toString();
+		@Override public abstract String toString();
 		public abstract ValueKind getKind();
 	}
 
@@ -38,7 +39,7 @@ token { double } NUMBER
 		}
 		
 		@Override public String toString() {
-			return s;
+			return val;
 		}
 		
 		@Override public ValueKind getKind() {
@@ -66,8 +67,8 @@ token { double } NUMBER
 		return new ValueNumber(val);
 	}
 	
-	public static final class ValueObject extends Value<Map<String, Value>> {
-		private ValueObject(Map<String, Value> val) {
+	public static final class ValueObject extends Value<Map<String, Value<?>>> {
+		private ValueObject(Map<String, Value<?>> val) {
 			super(val);
 		}
 		
@@ -79,12 +80,12 @@ token { double } NUMBER
 			return ValueKind.OBJECT;
 		}
 	}
-	public static ValueObject valObject(Map<String, Value> obj) {
+	public static ValueObject valObject(Map<String, Value<?>> obj) {
 		return new ValueObject(obj);
 	}
 	
-	public static final class ValueArray extends Value<List<Value>> {
-		private ValueArray(List<Value> val) {
+	public static final class ValueArray extends Value<List<Value<?>>> {
+		private ValueArray(List<Value<?>> val) {
 			super(val);
 		}
 		
@@ -96,7 +97,7 @@ token { double } NUMBER
 			return ValueKind.ARRAY;
 		}
 	}
-	public static ValueArray valArray(List<Value> arr) {
+	public static ValueArray valArray(List<Value<?>> arr) {
 		return new ValueArray(arr);
 	}
 	
@@ -148,7 +149,7 @@ token { double } NUMBER
 
 // Parsing rules
 
-public { Value } rule value =
+public { Value<?> } rule value =
 | s = STRING	{ return valString(s); }
 | n = NUMBER	{ return valNumber(n); }
 | o = object	{ return valObject(o); }
@@ -158,44 +159,48 @@ public { Value } rule value =
 | NULL			{ return valNull; }
 ;
 
-private { List<Value> } rule array =
+private { List<Value<?>> } rule array =
 | LSQUARE elts = elements(null)	
 				{ return elts; }
 ;
 
-private { List<Value> } rule elements(List<Value> elts) =
+private { List<Value<?>> } rule elements(List<Value<?>> elts) =
 | RSQUARE		{ return elts == null ? Lists.empty() : elts; }
 | val = value
-	{ List<Value> acc = elts == null ? new ArrayList<>() : elts; }
+	{ List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; }
 	{ acc.add(val); }
   more_elements(acc)
   	{ return acc; }
 ;
 
-private { void } rule more_elements(List<Value> elts) =
-| 						{ return; }
-| COMMA	elements(elts)	{ return; }
+private { void } rule more_elements(List<Value<?>> elts) =
+| RSQUARE				{ return; }
+| COMMA	 val = value 
+	{ elts.add(val); }
+  more_elements(elts)	
+  	{ return; }
 ;
 
-private { Map<String, Value> } rule object =
+private { Map<String, Value<?>> } rule object =
 | LBRACKET members = members(null)
 				{ return members; }
 ;
 
-private { Map<String, Value> } rule members(Map<String, Value> members) =
+private { Map<String, Value<?>> } rule members(Map<String, Value<?>> members) =
 | RBRACKET		{ return members == null ? Maps.empty() : members; }
-| 	{ Map<String, Value> acc = members == null ? new HashMap<>() : members; }
+| 	{ Map<String, Value<?>> acc = members == null ? new HashMap<>() : members; }
   pair(acc)
   more_members(acc)
   	{ return acc; }
 ;
 
-private { void } rule more_members(Map<String, Value> members) =
-|							{ return; }
-| COMMA members(members)	{ return; }
+private { void } rule more_members(Map<String, Value<?>> members) =
+| RBRACKET					{ return; }
+| COMMA pair(members) more_members(members)	
+							{ return; }
 ;
 
-private { void } rule pair(Map<String, Value> map) =
+private { void } rule pair(Map<String, Value<?>> map) =
 | s = STRING COLON val = value	{ map.put(s, val); return; }
 ;
 
