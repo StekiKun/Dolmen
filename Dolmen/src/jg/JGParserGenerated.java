@@ -159,69 +159,31 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     public @NonNull Grammar start() {
-        switch (peek().getKind()) {
-            case IMPORT: {
-                // imports = imports(null)
-                @NonNull List<@NonNull String> imports = imports(null);
-                // tdecls = tokens(null)
-                @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
-                // header = ACTION
-                @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // rules = rules(null)
-                @NonNull List<@NonNull GrammarRule> rules = rules(null);
-                // footer = ACTION
-                @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // EOF
-                eat(Token.Kind.EOF);
-                Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
-                tdecls.forEach(tdecl -> builder.addToken(tdecl));
-                rules.forEach(rule -> builder.addRule(rule));
-                return builder.build();
-            }
-            case ACTION: {
-                // imports = imports(null)
-                @NonNull List<@NonNull String> imports = imports(null);
-                // tdecls = tokens(null)
-                @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
-                // header = ACTION
-                @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // rules = rules(null)
-                @NonNull List<@NonNull GrammarRule> rules = rules(null);
-                // footer = ACTION
-                @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // EOF
-                eat(Token.Kind.EOF);
-                Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
-                tdecls.forEach(tdecl -> builder.addToken(tdecl));
-                rules.forEach(rule -> builder.addRule(rule));
-                return builder.build();
-            }
-            case TOKEN: {
-                // imports = imports(null)
-                @NonNull List<@NonNull String> imports = imports(null);
-                // tdecls = tokens(null)
-                @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
-                // header = ACTION
-                @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // rules = rules(null)
-                @NonNull List<@NonNull GrammarRule> rules = rules(null);
-                // footer = ACTION
-                @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // EOF
-                eat(Token.Kind.EOF);
-                Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
-                tdecls.forEach(tdecl -> builder.addToken(tdecl));
-                rules.forEach(rule -> builder.addRule(rule));
-                return builder.build();
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.IMPORT, Token.Kind.ACTION, Token.Kind.TOKEN);
-            }
-        }
+        
+        // imports = imports(null)
+        @NonNull List<@NonNull String> imports = imports(null);
+        // tdecls = tokens(null)
+        @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
+        // header = ACTION
+        @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        // rules = rules(null)
+        @NonNull List<@NonNull GrammarRule> rules = rules(null);
+        // footer = ACTION
+        @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        // EOF
+        eat(Token.Kind.EOF);
+        Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
+        tdecls.forEach(tdecl -> builder.addToken(tdecl));
+        rules.forEach(rule -> builder.addRule(rule));
+        return builder.build();
     }
     
     private @NonNull List<@NonNull String> imports(@Nullable List<@NonNull String> imp) {
         switch (peek().getKind()) {
+            case ACTION:
+            case TOKEN: {
+                return imp == null ? Lists.empty() : imp;
+            }
             case IMPORT: {
                 @NonNull List<@NonNull String> acc = imp == null ? new ArrayList<>() : imp;
                 // IMPORT
@@ -235,12 +197,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 imports(acc);
                 return acc;
             }
-            case ACTION: {
-                return imp == null ? Lists.empty() : imp;
-            }
-            case TOKEN: {
-                return imp == null ? Lists.empty() : imp;
-            }
             default: {
                 throw tokenError(peek(), Token.Kind.IMPORT, Token.Kind.ACTION, Token.Kind.TOKEN);
             }
@@ -249,13 +205,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private String import_() {
         switch (peek().getKind()) {
-            case IDENT: {
-                // id = IDENT
-                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // tn = typename
-                String tn = typename();
-                return id + tn;
-            }
             case STATIC: {
                 // STATIC
                 eat(Token.Kind.STATIC);
@@ -264,6 +213,13 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 // tn = typename
                 String tn = typename();
                 return "static " + id + tn;
+            }
+            case IDENT: {
+                // id = IDENT
+                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                // tn = typename
+                String tn = typename();
+                return id + tn;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
@@ -291,17 +247,17 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private String typename0() {
         switch (peek().getKind()) {
-            case STAR: {
-                // STAR
-                eat(Token.Kind.STAR);
-                return "*";
-            }
             case IDENT: {
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 // ty = typename
                 String ty = typename();
                 return id + ty;
+            }
+            case STAR: {
+                // STAR
+                eat(Token.Kind.STAR);
+                return "*";
             }
             default: {
                 throw tokenError(peek(), Token.Kind.STAR, Token.Kind.IDENT);
@@ -333,13 +289,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private @NonNull TokenDecl token() {
         switch (peek().getKind()) {
-            case IDENT: {
-                // id = IDENT
-                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                if (isLowerId(id))
-                   throw new ParsingException("Token name should be all uppercase: " + id);
-                return new TokenDecl(id, null);
-            }
             case ACTION: {
                 // val = ACTION
                 @NonNull Location val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
@@ -348,6 +297,13 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 if (isLowerId(id))
                     throw new ParsingException("Token name should be all uppercase: " + id);
                 return new TokenDecl(id, val);
+            }
+            case IDENT: {
+                // id = IDENT
+                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                if (isLowerId(id))
+                   throw new ParsingException("Token name should be all uppercase: " + id);
+                return new TokenDecl(id, null);
             }
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.ACTION);
@@ -360,15 +316,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case ACTION: {
                 return Lists.empty();
             }
-            case PUBLIC: {
-                // rule = rule
-                @NonNull GrammarRule rule = rule();
-                @NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
-                acc.add(rule);
-                // rules(acc)
-                rules(acc);
-                return acc;
-            }
+            case PUBLIC:
             case PRIVATE: {
                 // rule = rule
                 @NonNull GrammarRule rule = rule();
@@ -385,59 +333,29 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private @NonNull GrammarRule rule() {
-        switch (peek().getKind()) {
-            case PUBLIC: {
-                // vis = visibility
-                boolean vis = visibility();
-                // rtype = ACTION
-                @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // RULE
-                eat(Token.Kind.RULE);
-                // name = IDENT
-                @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                if (!Character.isLowerCase(name.charAt(0)))
-                    throw new ParsingException("Rule name must start with a lower case letter: " + name);
-                // args = args
-                @Nullable Location args = args();
-                // EQUAL
-                eat(Token.Kind.EQUAL);
-                GrammarRule.@NonNull Builder builder =
-                	new GrammarRule.Builder(vis, rtype, name, args);
-                // prod = production
-                @NonNull Production prod = production();
-                builder.addProduction(prod);
-                // productions(builder)
-                productions(builder);
-                return builder.build();
-            }
-            case PRIVATE: {
-                // vis = visibility
-                boolean vis = visibility();
-                // rtype = ACTION
-                @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // RULE
-                eat(Token.Kind.RULE);
-                // name = IDENT
-                @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                if (!Character.isLowerCase(name.charAt(0)))
-                    throw new ParsingException("Rule name must start with a lower case letter: " + name);
-                // args = args
-                @Nullable Location args = args();
-                // EQUAL
-                eat(Token.Kind.EQUAL);
-                GrammarRule.@NonNull Builder builder =
-                	new GrammarRule.Builder(vis, rtype, name, args);
-                // prod = production
-                @NonNull Production prod = production();
-                builder.addProduction(prod);
-                // productions(builder)
-                productions(builder);
-                return builder.build();
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.PUBLIC, Token.Kind.PRIVATE);
-            }
-        }
+        
+        // vis = visibility
+        boolean vis = visibility();
+        // rtype = ACTION
+        @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        // RULE
+        eat(Token.Kind.RULE);
+        // name = IDENT
+        @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+        if (!Character.isLowerCase(name.charAt(0)))
+            throw new ParsingException("Rule name must start with a lower case letter: " + name);
+        // args = args
+        @Nullable Location args = args();
+        // EQUAL
+        eat(Token.Kind.EQUAL);
+        GrammarRule.@NonNull Builder builder =
+        	new GrammarRule.Builder(vis, rtype, name, args);
+        // prod = production
+        @NonNull Production prod = production();
+        builder.addProduction(prod);
+        // productions(builder)
+        productions(builder);
+        return builder.build();
     }
     
     private boolean visibility() {
@@ -460,25 +378,17 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private @Nullable Location args() {
         switch (peek().getKind()) {
-            case SEMICOL: {
+            case SEMICOL:
+            case BAR:
+            case ACTION:
+            case IDENT:
+            case EQUAL: {
                 return null;
             }
             case ARGUMENTS: {
                 // loc = ARGUMENTS
                 @NonNull Location loc = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                 return loc;
-            }
-            case BAR: {
-                return null;
-            }
-            case ACTION: {
-                return null;
-            }
-            case IDENT: {
-                return null;
-            }
-            case EQUAL: {
-                return null;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.EQUAL);
@@ -488,17 +398,17 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private void productions(GrammarRule.@NonNull Builder builder) {
         switch (peek().getKind()) {
-            case SEMICOL: {
-                // SEMICOL
-                eat(Token.Kind.SEMICOL);
-                return;
-            }
             case BAR: {
                 // prod = production
                 @NonNull Production prod = production();
                 builder.addProduction(prod);
                 // productions(builder)
                 productions(builder);
+                return;
+            }
+            case SEMICOL: {
+                // SEMICOL
+                eat(Token.Kind.SEMICOL);
                 return;
             }
             default: {
@@ -519,12 +429,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private void items(Production.Builder builder) {
         switch (peek().getKind()) {
-            case SEMICOL: {
-                return;
-            }
-            case BAR: {
-                return;
-            }
             case ACTION: {
                 // loc = ACTION
                 @NonNull Location loc = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
@@ -543,6 +447,10 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 items(builder);
                 return;
             }
+            case SEMICOL:
+            case BAR: {
+                return;
+            }
             default: {
                 throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT);
             }
@@ -551,26 +459,10 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private Production.@NonNull Actual actual(@NonNull String id) {
         switch (peek().getKind()) {
-            case SEMICOL: {
-                // args = args
-                @Nullable Location args = args();
-                return new Production.Actual(null, id, args);
-            }
-            case ARGUMENTS: {
-                // args = args
-                @Nullable Location args = args();
-                return new Production.Actual(null, id, args);
-            }
-            case BAR: {
-                // args = args
-                @Nullable Location args = args();
-                return new Production.Actual(null, id, args);
-            }
-            case ACTION: {
-                // args = args
-                @Nullable Location args = args();
-                return new Production.Actual(null, id, args);
-            }
+            case SEMICOL:
+            case ARGUMENTS:
+            case BAR:
+            case ACTION:
             case IDENT: {
                 // args = args
                 @Nullable Location args = args();

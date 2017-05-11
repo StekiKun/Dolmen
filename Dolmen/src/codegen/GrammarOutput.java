@@ -2,20 +2,24 @@ package codegen;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import common.Maps;
 import syntax.Grammar;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammars.PredictionTable;
-import syntax.Production.ActionItem;
-import syntax.Production.Actual;
 import syntax.Location;
 import syntax.Production;
+import syntax.Production.ActionItem;
+import syntax.Production.Actual;
 
 /**
  * This class generates a Java class that implements
@@ -177,23 +181,46 @@ public final class GrammarOutput {
 		buf.emit(")").openBlock();
 		
 		// Now is the time to decide what production we are going to use
+		// We start by compacting the transition table for this rule so that
+		// tokens which lead to the same production are put together in the
+		// same case block.
+		final Map<@NonNull Production, @NonNull List<@NonNull String>> prodTable =
+			new IdentityHashMap<>();
+		trans.forEach((term, prods) -> {
+			final Production prod = prods.get(0);
+			@Nullable List<String> terms_ = Maps.get(prodTable, prod);
+			List<String> terms;
+			if (terms_ == null) {
+				terms = new ArrayList<>();
+				prodTable.put(prod, terms);
+			}
+			else
+				terms = terms_;
+			terms.add(term);
+		});
+		
 		// If no rules, well, is it supposed to happen?
-		if (trans.size() == 0) {
+		if (prodTable.size() == 0) {
 			String msg = "Unproducable rule " + rule.name;
 			buf.emit("throw new ParsingException(\"")
 			   .emit(msg).emit("\");");
 		}
-		// When only one production rule, no need to switch!
-		else if (trans.size() == 1) {
-			genProduction(trans.values().iterator().next().get(0));
+		// When only one production used, no need to switch!
+		else if (prodTable.size() == 1) {
+			genProduction(prodTable.keySet().iterator().next());
 		}
-		// When more than one production rules, we have to peek and switch
+		// When more than one production used, we have to peek and switch
 		else {
 			buf.emit("switch (peek().getKind())").openBlock();
-			for (Map.Entry<String, List<Production>> entry : trans.entrySet()) {
-				final String term = entry.getKey();
-				final Production prod = entry.getValue().get(0);
-				buf.emit("case ").emit(term).emit(": {").incrIndent();
+			for (Map.Entry<Production, List<String>> entry : prodTable.entrySet()) {
+				final Production prod = entry.getKey();
+				boolean first = true;
+				for (String term : entry.getValue()) {
+					if (first) first = false;
+					else buf.newline();
+					buf.emit("case ").emit(term).emit(":");
+				}
+				buf.emit(" {").incrIndent();
 				genProduction(prod);
 				buf.closeBlock();
 			}
