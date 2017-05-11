@@ -1,5 +1,6 @@
 package test.grammar;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -7,11 +8,17 @@ import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 
+import automaton.Automata;
+import automaton.Determinize;
+import codegen.AutomataOutput;
 import codegen.GrammarOutput;
 import jg.JGLexer;
 import jg.JGParserGenerated;
+import jl.JLLexerGenerated;
+import jl.JLParser;
 import syntax.Grammar;
 import syntax.Grammars;
+import syntax.Lexer;
 
 /**
  * This class tests the grammar description parser by
@@ -43,7 +50,25 @@ public abstract class TestJGParser {
 			});
 	}
 	
-	static void testParse(String filename) throws IOException {
+	static void generateLexer(String filename, String className) throws IOException {
+		System.out.println("Parsing lexer description " + filename + "...");
+		FileReader reader = new FileReader(filename);
+		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
+		@SuppressWarnings("null")
+		JLParser parser = new JLParser(lexer::main);
+		Lexer lexerDef = parser.parseLexer();
+		reader.close();
+		System.out.println("Computing automata...");
+		Automata aut = Determinize.lexer(lexerDef, true);
+		File file = new File("src/test/examples/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			writer.append("package test.examples;\n");
+			AutomataOutput.output(writer, className, aut);
+		}
+		System.out.println("Generated in " + file.getAbsolutePath());
+	}
+	
+	static void generateParser(String filename, String className) throws IOException {
 		FileReader reader = new FileReader(filename);
 		JGLexer lexer = new JGLexer(filename, reader);
 		JGParserGenerated parser = of(lexer);
@@ -54,9 +79,12 @@ public abstract class TestJGParser {
 			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null));
 		if (!predictTable.isLL1())
 			System.out.println(predictTable.toString());
-		FileWriter writer = new FileWriter("src-gen/JSonParser.java");
-		GrammarOutput.output(writer, "JSonParser", grammar, predictTable);
-		writer.close();
+		File file = new File("src/test/examples/" + className + ".java");
+		try (FileWriter writer = new FileWriter(file, false)) {
+			writer.append("package test.examples;\n");
+			GrammarOutput.output(writer, "JSonParser", grammar, predictTable);
+		}
+		System.out.println("Generated in " + file.getAbsolutePath());
 	}
 	
 	/**
@@ -64,6 +92,7 @@ public abstract class TestJGParser {
 	 * @throws IOException
 	 */
 	public static void main(String[] args) throws IOException {
-		testParse("tests/jg/JSon.jg");
+		generateLexer("tests/jl/JSon.jl", "JSonLexer");
+		generateParser("tests/jg/JSon.jg", "JSonParser");
 	}
 }

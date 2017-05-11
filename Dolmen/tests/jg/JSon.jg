@@ -17,6 +17,7 @@ token FALSE
 token NULL
 token { String } STRING
 token { double } NUMBER
+token EOF
 
 // Java class header, with the concrete JSON type
 {
@@ -149,7 +150,11 @@ token { double } NUMBER
 
 // Parsing rules
 
-public { Value<?> } rule value =
+public { Value<?> } rule json =
+| v = value EOF	{ return v; }
+;
+
+private { Value<?> } rule value =
 | s = STRING	{ return valString(s); }
 | n = NUMBER	{ return valNumber(n); }
 | o = object	{ return valObject(o); }

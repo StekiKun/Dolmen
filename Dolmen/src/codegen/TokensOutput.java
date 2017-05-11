@@ -141,7 +141,7 @@ public final class TokensOutput {
 	
 	private void genSingletonToken(TokenDecl decl) {
 		buf.newline();
-		buf.emit("public static ").emit(className).emit(" " + decl.name)
+		buf.emit("public static final ").emit(className).emit(" " + decl.name)
 		   .emit(" = new Singleton(Kind.").emit(decl.name).emit(") {};");
 	}
 	

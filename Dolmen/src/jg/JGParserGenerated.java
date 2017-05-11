@@ -123,18 +123,18 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             }
         }
         
-        public static Token EQUAL = new Singleton(Kind.EQUAL) {};
-        public static Token BAR = new Singleton(Kind.BAR) {};
-        public static Token DOT = new Singleton(Kind.DOT) {};
-        public static Token STAR = new Singleton(Kind.STAR) {};
-        public static Token SEMICOL = new Singleton(Kind.SEMICOL) {};
-        public static Token IMPORT = new Singleton(Kind.IMPORT) {};
-        public static Token STATIC = new Singleton(Kind.STATIC) {};
-        public static Token PUBLIC = new Singleton(Kind.PUBLIC) {};
-        public static Token PRIVATE = new Singleton(Kind.PRIVATE) {};
-        public static Token TOKEN = new Singleton(Kind.TOKEN) {};
-        public static Token RULE = new Singleton(Kind.RULE) {};
-        public static Token EOF = new Singleton(Kind.EOF) {};
+        public static final Token EQUAL = new Singleton(Kind.EQUAL) {};
+        public static final Token BAR = new Singleton(Kind.BAR) {};
+        public static final Token DOT = new Singleton(Kind.DOT) {};
+        public static final Token STAR = new Singleton(Kind.STAR) {};
+        public static final Token SEMICOL = new Singleton(Kind.SEMICOL) {};
+        public static final Token IMPORT = new Singleton(Kind.IMPORT) {};
+        public static final Token STATIC = new Singleton(Kind.STATIC) {};
+        public static final Token PUBLIC = new Singleton(Kind.PUBLIC) {};
+        public static final Token PRIVATE = new Singleton(Kind.PRIVATE) {};
+        public static final Token TOKEN = new Singleton(Kind.TOKEN) {};
+        public static final Token RULE = new Singleton(Kind.RULE) {};
+        public static final Token EOF = new Singleton(Kind.EOF) {};
     }
     
     
