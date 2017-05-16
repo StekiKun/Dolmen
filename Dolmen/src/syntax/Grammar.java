@@ -43,7 +43,7 @@ public final class Grammar {
 	public static final class TokenDecl {
 		/** The name of this token */
 		public final String name;
-		/** 
+		/**
 		 * If non-null, the location of the type of Java values
 		 * associated to this token at run-time
 		 */

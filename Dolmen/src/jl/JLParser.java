@@ -79,10 +79,7 @@ public final class JLParser extends BaseParser<JLToken> {
 	
 	/**
 	 * Lexer :=
-	 * 	Import* ACTION Definition* Entry+ ACTION
-	 * 
-	 * <i>NB: One can technically parse several lexers in
-	 * 	a row with one token stream.</i> 
+	 * 	Import* ACTION Definition* Entry+ ACTION END
 	 * 
 	 * @return a lexer definition parsed from the
 	 * 	token stream that was given to this parsing object
@@ -100,6 +97,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		parseDefinitions();
 		List<Lexer.Entry> entries = parseEntries();
 		Action footer= (Action) (eat(Kind.ACTION));
+		eat(Kind.END);
 		return new Lexer(imports, header.value, entries, footer.value);
 	}
 	
