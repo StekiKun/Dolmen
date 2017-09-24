@@ -90,17 +90,17 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
             }
         }
         
-        public static Token PLUS = new Singleton(Kind.PLUS) {};
-        public static Token MINUS = new Singleton(Kind.MINUS) {};
-        public static Token TIMES = new Singleton(Kind.TIMES) {};
-        public static Token DIV = new Singleton(Kind.DIV) {};
-        public static Token SEMICOLON = new Singleton(Kind.SEMICOLON) {};
-        public static Token ASSIGN = new Singleton(Kind.ASSIGN) {};
-        public static Token PRINT = new Singleton(Kind.PRINT) {};
-        public static Token LPAREN = new Singleton(Kind.LPAREN) {};
-        public static Token RPAREN = new Singleton(Kind.RPAREN) {};
-        public static Token COMMA = new Singleton(Kind.COMMA) {};
-        public static Token EOF = new Singleton(Kind.EOF) {};
+        public static final Token PLUS = new Singleton(Kind.PLUS) {};
+        public static final Token MINUS = new Singleton(Kind.MINUS) {};
+        public static final Token TIMES = new Singleton(Kind.TIMES) {};
+        public static final Token DIV = new Singleton(Kind.DIV) {};
+        public static final Token SEMICOLON = new Singleton(Kind.SEMICOLON) {};
+        public static final Token ASSIGN = new Singleton(Kind.ASSIGN) {};
+        public static final Token PRINT = new Singleton(Kind.PRINT) {};
+        public static final Token LPAREN = new Singleton(Kind.LPAREN) {};
+        public static final Token RPAREN = new Singleton(Kind.RPAREN) {};
+        public static final Token COMMA = new Singleton(Kind.COMMA) {};
+        public static final Token EOF = new Singleton(Kind.EOF) {};
     }
     
     
@@ -112,9 +112,10 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private int lookup(String id) {
-        if (!env.containsKey(id))
+        Integer val = env.get(id);
+        if (val == null)
             throw new ParsingException("Undefined identifier: " + id);
-        return env.get(id);
+        return val;
     }
 
 
@@ -132,47 +133,21 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     public void program() {
-        switch (peek().getKind()) {
-            case PRINT: {
-                // stmts
-                stmts();
-                // EOF
-                eat(Token.Kind.EOF);
-                return;
-            }
-            case ID: {
-                // stmts
-                stmts();
-                // EOF
-                eat(Token.Kind.EOF);
-                return;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.PRINT, Token.Kind.ID);
-            }
-        }
+        
+        // stmts
+        stmts();
+        // EOF
+        eat(Token.Kind.EOF);
+        return;
     }
     
     private void stmts() {
-        switch (peek().getKind()) {
-            case PRINT: {
-                // stmt
-                stmt();
-                // stmts_rhs
-                stmts_rhs();
-                return;
-            }
-            case ID: {
-                // stmt
-                stmt();
-                // stmts_rhs
-                stmts_rhs();
-                return;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.PRINT, Token.Kind.ID);
-            }
-        }
+        
+        // stmt
+        stmt();
+        // stmts_rhs
+        stmts_rhs();
+        return;
     }
     
     private void stmts_rhs() {
@@ -195,6 +170,15 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     
     private void stmt() {
         switch (peek().getKind()) {
+            case ID: {
+                // id = ID
+                String id = ((Token.ID) eat(Token.Kind.ID)).value;
+                // ASSIGN
+                eat(Token.Kind.ASSIGN);
+                // n = expr
+                int n = expr();
+                update(id, n); return;
+            }
             case PRINT: {
                 // PRINT
                 eat(Token.Kind.PRINT);
@@ -207,15 +191,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 // RPAREN
                 eat(Token.Kind.RPAREN);
                 return;
-            }
-            case ID: {
-                // id = ID
-                String id = ((Token.ID) eat(Token.Kind.ID)).value;
-                // ASSIGN
-                eat(Token.Kind.ASSIGN);
-                // n = expr
-                int n = expr();
-                update(id, n); return;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.PRINT, Token.Kind.ID);
@@ -244,100 +219,35 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private void pexpr() {
-        switch (peek().getKind()) {
-            case LPAREN: {
-                // e = expr
-                int e = expr();
-                System.out.println(e); return;
-            }
-            case ID: {
-                // e = expr
-                int e = expr();
-                System.out.println(e); return;
-            }
-            case INT: {
-                // e = expr
-                int e = expr();
-                System.out.println(e); return;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.LPAREN, Token.Kind.ID, Token.Kind.INT);
-            }
-        }
+        
+        // e = expr
+        int e = expr();
+        System.out.println(e); return;
     }
     
     private int expr() {
-        switch (peek().getKind()) {
-            case LPAREN: {
-                // n = term
-                int n = term();
-                return n;
-            }
-            case ID: {
-                // n = term
-                int n = term();
-                return n;
-            }
-            case INT: {
-                // n = term
-                int n = term();
-                return n;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.LPAREN, Token.Kind.ID, Token.Kind.INT);
-            }
-        }
+        
+        // n = term
+        int n = term();
+        return n;
     }
     
     private int term() {
-        switch (peek().getKind()) {
-            case LPAREN: {
-                // n1 = factor
-                int n1 = factor();
-                // res = term_rhs(n1)
-                int res = term_rhs(n1);
-                return res;
-            }
-            case ID: {
-                // n1 = factor
-                int n1 = factor();
-                // res = term_rhs(n1)
-                int res = term_rhs(n1);
-                return res;
-            }
-            case INT: {
-                // n1 = factor
-                int n1 = factor();
-                // res = term_rhs(n1)
-                int res = term_rhs(n1);
-                return res;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.LPAREN, Token.Kind.ID, Token.Kind.INT);
-            }
-        }
+        
+        // n1 = factor
+        int n1 = factor();
+        // res = term_rhs(n1)
+        int res = term_rhs(n1);
+        return res;
     }
     
     private int term_rhs(int lhs) {
         switch (peek().getKind()) {
-            case COMMA: {
-                return lhs;
-            }
-            case SEMICOLON: {
-                return lhs;
-            }
-            case RPAREN: {
-                return lhs;
-            }
+            case COMMA:
+            case SEMICOLON:
+            case RPAREN:
             case EOF: {
                 return lhs;
-            }
-            case PLUS: {
-                // PLUS
-                eat(Token.Kind.PLUS);
-                // n = term
-                int n = term();
-                return lhs + n;
             }
             case MINUS: {
                 // MINUS
@@ -346,6 +256,13 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 int n = term();
                 return lhs - n;
             }
+            case PLUS: {
+                // PLUS
+                eat(Token.Kind.PLUS);
+                // n = term
+                int n = term();
+                return lhs + n;
+            }
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.SEMICOLON, Token.Kind.RPAREN, Token.Kind.EOF, Token.Kind.PLUS, Token.Kind.MINUS);
             }
@@ -353,46 +270,16 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private int factor() {
-        switch (peek().getKind()) {
-            case LPAREN: {
-                // n1 = atomic
-                int n1 = atomic();
-                // res = factor_rhs(n1)
-                int res = factor_rhs(n1);
-                return res;
-            }
-            case ID: {
-                // n1 = atomic
-                int n1 = atomic();
-                // res = factor_rhs(n1)
-                int res = factor_rhs(n1);
-                return res;
-            }
-            case INT: {
-                // n1 = atomic
-                int n1 = atomic();
-                // res = factor_rhs(n1)
-                int res = factor_rhs(n1);
-                return res;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.LPAREN, Token.Kind.ID, Token.Kind.INT);
-            }
-        }
+        
+        // n1 = atomic
+        int n1 = atomic();
+        // res = factor_rhs(n1)
+        int res = factor_rhs(n1);
+        return res;
     }
     
     private int factor_rhs(int lhs) {
         switch (peek().getKind()) {
-            case DIV: {
-                // DIV
-                eat(Token.Kind.DIV);
-                // n = factor
-                int n = factor();
-                return lhs / n;
-            }
-            case COMMA: {
-                return lhs;
-            }
             case TIMES: {
                 // TIMES
                 eat(Token.Kind.TIMES);
@@ -400,18 +287,18 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 int n = factor();
                 return lhs * n;
             }
-            case SEMICOLON: {
-                return lhs;
+            case DIV: {
+                // DIV
+                eat(Token.Kind.DIV);
+                // n = factor
+                int n = factor();
+                return lhs / n;
             }
-            case RPAREN: {
-                return lhs;
-            }
-            case EOF: {
-                return lhs;
-            }
-            case PLUS: {
-                return lhs;
-            }
+            case COMMA:
+            case SEMICOLON:
+            case RPAREN:
+            case EOF:
+            case PLUS:
             case MINUS: {
                 return lhs;
             }
@@ -423,6 +310,11 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     
     private int atomic() {
         switch (peek().getKind()) {
+            case INT: {
+                // n = INT
+                int n = ((Token.INT) eat(Token.Kind.INT)).value;
+                return n;
+            }
             case LPAREN: {
                 // LPAREN
                 eat(Token.Kind.LPAREN);
@@ -436,11 +328,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 // id = ID
                 String id = ((Token.ID) eat(Token.Kind.ID)).value;
                 return lookup(id);
-            }
-            case INT: {
-                // n = INT
-                int n = ((Token.INT) eat(Token.Kind.INT)).value;
-                return n;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.LPAREN, Token.Kind.ID, Token.Kind.INT);

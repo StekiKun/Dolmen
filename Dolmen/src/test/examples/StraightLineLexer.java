@@ -77,25 +77,17 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     
     private int _jl_cell0() {
         switch (getNextChar()) {
-        // 0x0029
-        case 41: {
-            return _jl_cell4();
+        // \-
+        case 45: {
+            return _jl_cell8();
         }
-        // 0x003a
-        case 58: {
-            return _jl_cell3();
+        // 0x002b
+        case 43: {
+            return _jl_cell10();
         }
-        // 0x0028
-        case 40: {
-            return _jl_cell5();
-        }
-        // 0x002f
-        case 47: {
-            return _jl_cell7();
-        }
-        // 0xffff
-        case 65535: {
-            return _jl_cell1();
+        // 0x002a
+        case 42: {
+            return _jl_cell9();
         }
         // [0-9]
         case 48:
@@ -109,6 +101,14 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 56:
         case 57: {
             return _jl_cell13();
+        }
+        // 0xffff
+        case 65535: {
+            return _jl_cell1();
+        }
+        // 0x002f
+        case 47: {
+            return _jl_cell7();
         }
         // [A-Z\_a-oq-z]
         case 65:
@@ -169,18 +169,6 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 44: {
             return _jl_cell6();
         }
-        // 0x002a
-        case 42: {
-            return _jl_cell9();
-        }
-        // \-
-        case 45: {
-            return _jl_cell8();
-        }
-        // p
-        case 112: {
-            return _jl_cell12();
-        }
         // [0x0008-0x000a0x000d0x0020]
         case 8:
         case 9:
@@ -189,13 +177,25 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 32: {
             return _jl_cell14();
         }
+        // 0x0029
+        case 41: {
+            return _jl_cell4();
+        }
         // 0x003b
         case 59: {
             return _jl_cell2();
         }
-        // 0x002b
-        case 43: {
-            return _jl_cell10();
+        // 0x003a
+        case 58: {
+            return _jl_cell3();
+        }
+        // 0x0028
+        case 40: {
+            return _jl_cell5();
+        }
+        // p
+        case 112: {
+            return _jl_cell12();
         }
         default:  {
             return rewind();
@@ -618,6 +618,10 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     private int _jl_cell17() {
         mark(3);
         switch (getNextChar()) {
+        // t
+        case 116: {
+            return _jl_cell18();
+        }
         // [0-9A-Z\_a-su-z]
         case 48:
         case 49:
@@ -682,10 +686,6 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 121:
         case 122: {
             return _jl_cell11();
-        }
-        // t
-        case 116: {
-            return _jl_cell18();
         }
         default:  {
             return rewind();
