@@ -21,6 +21,7 @@ import automaton.DFA.TagAction;
 import automaton.DFA.TransActions;
 import common.CSet;
 import common.Maps;
+import common.Nulls;
 import common.Sets;
 import syntax.Lexer;
 import tagged.Encoder;
@@ -433,8 +434,10 @@ public class Determinize {
 			teq.equiv.forEach(s -> {
 				assert (!s.isEmpty());
 				NFA.Event t = s.iterator().next();
-				int asrc = src.getLocsFor(t).get(tag);
-				int atgt = tgt.getLocsFor(t).get(tag);
+				// Because [src] and [tgt] have the key [memKey],
+				// every tag in the key must be accounted for in their locations
+				int asrc = Nulls.ok(src.getLocsFor(t).get(tag));
+				int atgt = Nulls.ok(tgt.getLocsFor(t).get(tag));
 				if (asrc != atgt) {
 					if (isNew(asrc))
 						moves.add(MemAction.set(atgt));

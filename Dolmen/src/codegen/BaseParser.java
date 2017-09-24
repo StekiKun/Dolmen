@@ -19,7 +19,7 @@ public abstract class BaseParser<Token> {
 	/**
 	 * Exception raised by parsing errors in generated parsers
 	 * 
-	 * @author Stéphane Lescuyers
+	 * @author Stéphane Lescuyer
 	 */
 	public static class ParsingException extends RuntimeException {
 		private static final long serialVersionUID = 1L;

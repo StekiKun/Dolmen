@@ -2,6 +2,7 @@ package common;
 
 import java.util.Iterator;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Scanner;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -69,7 +70,7 @@ public interface Generator<T> extends Supplier<T> {
 			for (int j = 0; j < nsamples; ++j) {
 				try {
 					T t = generate();
-					System.out.println("[" + i++ + "] " + t.toString());
+					System.out.println("[" + i++ + "] " + Objects.toString(t));
 					consumer.accept(t);
 				} catch (NoSuchElementException e) {
 					System.out.println("<Generator exhausted>");

@@ -23,7 +23,6 @@ public abstract class Maps {
 	/**
 	 * @return the empty unmodifiable map
 	 */
-	@SuppressWarnings("null")
 	public static <K, V> Map<K, V> empty() {
 		return Collections.emptyMap();
 	}
@@ -46,6 +45,14 @@ public abstract class Maps {
 	 *  seemed to believe the result of {@link Map#get(Object)} was
 	 *  non-null and this was leading to some bogus dead-code warnings.</i>
 	 * 
+	 * <p>
+	 * <b>NB: as of Aug. 5th, 2017, I have added external annotations
+	 *  for some library classes such as {@link java.util.Map}, so that
+	 *  {@link Map#get(Object)} now correctly returns a nullable value. This
+	 *  wrapper remains of interest because of the stronger type constraint
+	 *  on the key though.
+	 * </b>
+	 * 
 	 * @param m
 	 * @param key
 	 * @return the element associated to {@code key} in {@code m},
@@ -54,6 +61,13 @@ public abstract class Maps {
 	public static <K, V> @Nullable V get(Map<? super K, V> m, K key) {
 		return m.get(key);
 	}
+	
+//	public static <K, V> V getSafe(Map<? super K, V> m, K key, 
+//			Function<K, RuntimeException> f) {
+//		@Nullable V r = m.get(key);
+//		if (r == null) throw f.apply(key);
+//		return r;
+//	}
 	
 	/**
 	 * @return a frehsly allocated hash-map

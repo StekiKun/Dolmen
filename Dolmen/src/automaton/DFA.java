@@ -21,7 +21,7 @@ import tagged.TRegular.TagInfo;
  * Describes a tagged Deterministic Finite Automaton 
  * recognizing the language of some given tagged regular
  * expression. This automaton's states represent sets
- * of states in the Non-determinitic Finite Automaton,
+ * of states in the Non-deterministic Finite Automaton,
  * along with memory maps describing where tags values
  * can be found in memory cells.
  * 

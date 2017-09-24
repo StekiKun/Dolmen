@@ -272,9 +272,10 @@ public abstract class BasicGrammars {
 			"    }\n" +
 			"    \n" +
 			"    private int lookup(String id) {\n" +
-			"        if (!env.containsKey(id))\n" +
+			"        Integer val = env.get(id);\n" +
+			"        if (val == null)\n" +
 			"            throw new ParsingException(\"Undefined identifier: \" + id);\n" +
-			"        return env.get(id);\n" +
+			"        return val;\n" +
 			"    }\n" +
 			"\n";
 		

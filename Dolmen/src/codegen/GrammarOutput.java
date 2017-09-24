@@ -123,7 +123,7 @@ public final class GrammarOutput {
 					   .emit(" ").emit(bound).emit(" = ");
 			}
 			else {
-				buf.emit(grammar.rules.get(actual.item).returnType.find())
+				buf.emit(grammar.rule(actual.item).returnType.find())
 				   .emit(" ").emit(bound).emit(" = ");
 			}
 		}

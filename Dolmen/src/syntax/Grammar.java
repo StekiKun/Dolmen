@@ -16,7 +16,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * along with arbitrary header and footer sections. The rules come
  * in no particular order, as every rule can theoretically be
  * used as an entry point to the generated parser. When only one
- * entry point really makes sense, it is conventionnally the first
+ * entry point really makes sense, it is conventionally the first
  * rule.
  * <p>
  * The rules use a set of {@link #tokenDecls terminals} which
@@ -107,6 +107,18 @@ public final class Grammar {
 		this.header = header;
 		this.rules = rules;
 		this.footer = footer;
+	}
+	
+	/**
+	 * @param name
+	 * @return the rule with the given {@code name} in this grammar
+	 * @throws IllegalArgumentException if no such rule exists
+	 */
+	public GrammarRule rule(String name) {
+		@Nullable GrammarRule res = rules.get(name);
+		if (res == null)
+			throw new IllegalArgumentException("Rule " + name + " does not exist in this grammar: " + this);
+		return res;
 	}
 
 	@Override

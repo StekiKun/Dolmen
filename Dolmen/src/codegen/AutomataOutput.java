@@ -18,6 +18,7 @@ import automaton.DFA.Shift;
 import automaton.DFA.TagAction;
 import automaton.DFA.TransActions;
 import common.CSet;
+import common.Nulls;
 import syntax.Location;
 import tagged.Optimiser.IdentInfo;
 import tagged.Optimiser.TagAddr;
@@ -172,7 +173,8 @@ public final class AutomataOutput {
 				freq = card; mostFreq = cset;
 			}
 		}
-		return table.get(mostFreq);
+		// mostFreq belongs to table.keySet()
+		return Nulls.ok(table.get(mostFreq));
 	}
 	
 	private void genTransTable(

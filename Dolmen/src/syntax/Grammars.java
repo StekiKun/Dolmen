@@ -12,6 +12,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Maps;
+import common.Nulls;
 import common.Sets;
 
 /**
@@ -91,13 +92,17 @@ public abstract class Grammars {
 		
 		for (GrammarRule rule : grammar.rules.values()) {
 			final String name = rule.name;
-			final Set<String> deps = fwd.get(name);
+			// fwd was initialized with all defined non-terminals
+			final Set<String> deps = Nulls.ok(fwd.get(name));
 			
 			for (Production prod : rule.productions) {
 				for (Production.Actual actual : prod.actuals()) {
 					if (!actual.isTerminal()) {
 						deps.add(actual.item);
-						bwd.get(actual.item).add(name);
+						// bwd was initialized with all defined non-terminals
+						// (and the Grammar.Builder ensures that a production
+						//  rule cannot reference undefined non-terminals)
+						Nulls.ok(bwd.get(actual.item)).add(name);
 					}
 				}
 			}
@@ -161,9 +166,13 @@ public abstract class Grammars {
 		 * @param nterm
 		 * @return the set of terminals that can begin strings
 		 * 	derived from the non-terminal {@code nterm}
+		 * @throws IllegalArgumentException if {@code nterm} is not a known non-terminal
 		 */
 		public Set<String> first(String nterm) {
-			return first.get(nterm);
+			Set<String> res = first.get(nterm);
+			if (res == null) 
+				throw new IllegalArgumentException("No such non-terminal: " + nterm);
+			return res;
 		}
 		
 		/**
@@ -188,9 +197,13 @@ public abstract class Grammars {
 		 * @param nterm
 		 * @return the set of terminals that can immediately
 		 * 	follow {@code nterm} in derived strings
+		 * @throws IllegalArgumentException if {@code nterm} is not a known non-terminal
 		 */
 		public Set<String> follow(String nterm) {
-			return follow.get(nterm);
+			Set<String> res = follow.get(nterm);
+			if (res == null) 
+				throw new IllegalArgumentException("No such non-terminal: " + nterm);
+			return res;
 		}
 		
 		@Override
@@ -233,7 +246,7 @@ public abstract class Grammars {
 			final String name = todo.pop();
 			if (nullable.containsKey(name)) continue;
 			
-			final GrammarRule rule = grammar.rules.get(name);
+			final GrammarRule rule = grammar.rule(name);
 			boolean allNonNull = true;
 			for (Production prod : rule.productions) {
 				@Nullable Boolean b = nullableProd(prod, nullable);
@@ -270,9 +283,10 @@ public abstract class Grammars {
 		grammar.rules.keySet().forEach(key -> todo.push(key));
 		while (!todo.isEmpty()) {
 			final String name = todo.pop();
-			Set<String> first = res.get(name);
+			// All rule names were added to res initially
+			Set<String> first = Nulls.ok(res.get(name));
 			
-			final GrammarRule rule = grammar.rules.get(name);
+			final GrammarRule rule = grammar.rule(name);
 			boolean changed = false;
 			prod:
 			for (Production prod : rule.productions) {
@@ -298,8 +312,8 @@ public abstract class Grammars {
 	}
 
 	protected static Map<String, Set<String>> follow(Dependencies deps, 
-			Grammar grammar, Set<String> nullable, Map<String, Set<String>> first) {
-		Map<String, Set<String>> res = new HashMap<>(grammar.rules.size());
+			Grammar grammar, Set<String> nullable, Map<String, @NonNull Set<String>> first) {
+		Map<String, @NonNull Set<String>> res = new HashMap<>(grammar.rules.size());
 		// Initialize all follow sets to empty
 		for (String nterm : grammar.rules.keySet())
 			res.put(nterm, new HashSet<>());
@@ -310,14 +324,15 @@ public abstract class Grammars {
 		while (!todo.isEmpty()) {
 			final String name = todo.pop();
 
-			final GrammarRule rule = grammar.rules.get(name);
+			final GrammarRule rule = grammar.rule(name);
 			changed.clear();
 			for (Production prod : rule.productions) {
 				// For each production, we go through the actuals in reverse
 				// order by remembering the set of possible following terminals
 				// the last non-terminal such that all items in-between 
 				// are nullable.
-				Set<String> follow = res.get(name);	// beware: for R only 
+				// (All non-terminals were added to res initially)
+				Set<String> follow = Nulls.ok(res.get(name));	// beware: for R only 
 				for (int k = prod.items.size() - 1; k >= 0; --k) {
 					Production.Item item = prod.items.get(k);
 					if (!(item instanceof Production.Actual)) continue;
@@ -333,15 +348,16 @@ public abstract class Grammars {
 					// extend its follow set with the current follow set
 					// and record whether it changed or not
 					String nterm = actual.item;
-					if (res.get(nterm).addAll(follow))
+					if (Nulls.ok(res.get(nterm)).addAll(follow))
 						changed.add(nterm);
 					// If that non-terminal is nullable, proceed with
 					// an extended follow set. Otherwise, reset the
-					// follow set to FIRST(nterm).
+					// follow set to FIRST(nterm), which must exist.
+					Set<String> firsts = Nulls.ok(first.get(nterm));
 					if (nullable.contains(nterm))
-						follow = Sets.union(follow, first.get(nterm));
+						follow = Sets.union(follow, firsts);
 					else
-						follow = first.get(nterm);
+						follow = firsts;
 				}
 			}
 			// For every non-terminal whose follow set changed,
@@ -476,13 +492,14 @@ public abstract class Grammars {
 				@Nullable Map<String, List<Production>> trans = Maps.get(this.table, nterm);
 				if (trans == null)
 					throw new IllegalArgumentException("Unknown non-terminal " + nterm);
-				List<Production> prods;
+				@NonNull List<Production> prods;
 				if (!trans.containsKey(term)) {
 					prods = new ArrayList<>(2);
 					trans.put(term, prods);
 				}
 				else
-					prods = trans.get(term);
+					// trans contains term already
+					prods = Nulls.ok(trans.get(term));
 				if (prods.contains(prod)) return this;
 				if (!prods.isEmpty())
 					System.err.println("(Adding conflicting production for " + 
