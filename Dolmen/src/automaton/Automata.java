@@ -16,7 +16,7 @@ import tagged.TLexerEntry.Finisher;
  * <p>
  * The automata are described by the reunion of 
  * their {@link #automataCells cells} and by a
- * {@link #automataEntries} description of each 
+ * {@link #automataEntries description} of each 
  * sub-automaton associated to a lexer entry, providing
  * its initial state, memory size for tag handling,
  * initializer and finisher actions, etc.

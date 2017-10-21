@@ -526,7 +526,7 @@ public class DFA {
 			new GotoAction(Integer.MIN_VALUE);
 		/**
 		 * @param n
-		 * @return the action to jum to state {@code n}
+		 * @return the action to jump to state {@code n}
 		 */
 		public static GotoAction Goto(int n) {
 			if (n < 0) throw new IllegalArgumentException();
