@@ -82,7 +82,7 @@ public abstract class TestJGParser {
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package test.examples;\n");
-			GrammarOutput.output(writer, "JSonParser", grammar, predictTable);
+			GrammarOutput.output(writer, className, grammar, predictTable);
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}
@@ -94,5 +94,8 @@ public abstract class TestJGParser {
 	public static void main(String[] args) throws IOException {
 		generateLexer("tests/jl/JSon.jl", "JSonLexer");
 		generateParser("tests/jg/JSon.jg", "JSonParser");
+
+		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
+		generateParser("tests/jg/JSonLW.jg", "JSonLWParser");
 	}
 }

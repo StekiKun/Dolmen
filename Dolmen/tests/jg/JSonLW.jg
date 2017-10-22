@@ -1,0 +1,68 @@
+// The tokens of the light-weight JSON language
+token LBRACKET
+token RBRACKET
+token COMMA
+token COLON
+token LSQUARE
+token RSQUARE
+token TRUE
+token FALSE
+token NULL
+token { String } STRING
+token { String } NUMBER
+token EOF
+
+// This parser is only a validator, so it does not create a JSon Value
+{
+}
+
+// Parsing rules
+
+public { void } rule json =
+| value EOF	{ return; }
+;
+
+private { void } rule value =
+| STRING	{ return; }
+| NUMBER	{ return; }
+| object	{ return; }
+| array		{ return; }
+| TRUE		{ return; }
+| FALSE		{ return; }
+| NULL		{ return; }
+;
+
+private { void } rule array =
+| LSQUARE elements	
+			{ return; }
+;
+
+private { void } rule elements =
+| RSQUARE	{ return; }
+| value more_elements { return; }
+;
+
+private { void } rule more_elements =
+| RSQUARE				{ return; }
+| COMMA	 value more_elements { return; }
+;
+
+private { void } rule object =
+| LBRACKET members { return; }
+;
+
+private { void } rule members =
+| RBRACKET		{ return; }
+| pair more_members { return; }
+;
+
+private { void } rule more_members =
+| RBRACKET					{ return; }
+| COMMA pair more_members 	{ return; }
+;
+
+private { void } rule pair =
+| STRING COLON value	{ return; }
+;
+
+{ }

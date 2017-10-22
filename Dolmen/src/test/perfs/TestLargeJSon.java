@@ -7,6 +7,8 @@ import java.io.Reader;
 import java.util.Scanner;
 
 import codegen.BaseParser.ParsingException;
+import test.examples.JSonLWLexer;
+import test.examples.JSonLWParser;
 import test.examples.JSonLexer;
 import test.examples.JSonParser;
 
@@ -30,8 +32,8 @@ public final class TestLargeJSon {
 		scanner.nextLine();
 
 		try (Reader file = new BufferedReader(new FileReader(filename))) {
-			JSonLexer lexer = new JSonLexer(filename, file);
-			JSonParser parser = new JSonParser(lexer::main);
+			JSonLWLexer lexer = new JSonLWLexer(filename, file);
+			JSonLWParser parser = new JSonLWParser(lexer::main);
 			long start = System.nanoTime();
 			parser.json();
 //			@SuppressWarnings("unused")
