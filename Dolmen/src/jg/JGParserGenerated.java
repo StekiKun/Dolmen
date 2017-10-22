@@ -198,13 +198,20 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return acc;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.IMPORT, Token.Kind.ACTION, Token.Kind.TOKEN);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.TOKEN);
             }
         }
     }
     
     private String import_() {
         switch (peek().getKind()) {
+            case IDENT: {
+                // id = IDENT
+                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                // tn = typename
+                String tn = typename();
+                return id + tn;
+            }
             case STATIC: {
                 // STATIC
                 eat(Token.Kind.STATIC);
@@ -214,13 +221,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 String tn = typename();
                 return "static " + id + tn;
             }
-            case IDENT: {
-                // id = IDENT
-                @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // tn = typename
-                String tn = typename();
-                return id + tn;
-            }
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
             }
@@ -229,9 +229,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private String typename() {
         switch (peek().getKind()) {
-            case SEMICOL: {
-                return "";
-            }
             case DOT: {
                 // DOT
                 eat(Token.Kind.DOT);
@@ -239,8 +236,11 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 String ty = typename0();
                 return "." + ty;
             }
+            case SEMICOL: {
+                return "";
+            }
             default: {
-                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.DOT);
+                throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
             }
         }
     }
@@ -260,7 +260,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return "*";
             }
             default: {
-                throw tokenError(peek(), Token.Kind.STAR, Token.Kind.IDENT);
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
             }
         }
     }
@@ -306,7 +306,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return new TokenDecl(id, null);
             }
             default: {
-                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.ACTION);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
             }
         }
     }
@@ -316,8 +316,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case ACTION: {
                 return Lists.empty();
             }
-            case PUBLIC:
-            case PRIVATE: {
+            case PRIVATE:
+            case PUBLIC: {
                 // rule = rule
                 @NonNull GrammarRule rule = rule();
                 @NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
@@ -327,7 +327,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return acc;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PUBLIC, Token.Kind.PRIVATE);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
@@ -360,29 +360,29 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     
     private boolean visibility() {
         switch (peek().getKind()) {
-            case PUBLIC: {
-                // PUBLIC
-                eat(Token.Kind.PUBLIC);
-                return true;
-            }
             case PRIVATE: {
                 // PRIVATE
                 eat(Token.Kind.PRIVATE);
                 return false;
             }
+            case PUBLIC: {
+                // PUBLIC
+                eat(Token.Kind.PUBLIC);
+                return true;
+            }
             default: {
-                throw tokenError(peek(), Token.Kind.PUBLIC, Token.Kind.PRIVATE);
+                throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
     
     private @Nullable Location args() {
         switch (peek().getKind()) {
-            case SEMICOL:
-            case BAR:
             case ACTION:
+            case BAR:
+            case EQUAL:
             case IDENT:
-            case EQUAL: {
+            case SEMICOL: {
                 return null;
             }
             case ARGUMENTS: {
@@ -391,7 +391,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return loc;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.EQUAL);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }
@@ -412,7 +412,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.BAR);
+                throw tokenError(peek(), Token.Kind.BAR, Token.Kind.SEMICOL);
             }
         }
     }
@@ -437,6 +437,10 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 items(builder);
                 return;
             }
+            case BAR:
+            case SEMICOL: {
+                return;
+            }
             case IDENT: {
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
@@ -447,23 +451,19 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 items(builder);
                 return;
             }
-            case SEMICOL:
-            case BAR: {
-                return;
-            }
             default: {
-                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }
     
     private Production.@NonNull Actual actual(@NonNull String id) {
         switch (peek().getKind()) {
-            case SEMICOL:
+            case ACTION:
             case ARGUMENTS:
             case BAR:
-            case ACTION:
-            case IDENT: {
+            case IDENT:
+            case SEMICOL: {
                 // args = args
                 @Nullable Location args = args();
                 return new Production.Actual(null, id, args);
@@ -478,7 +478,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return new Production.Actual(id, name, args);
             }
             default: {
-                throw tokenError(peek(), Token.Kind.SEMICOL, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.EQUAL);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }

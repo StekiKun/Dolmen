@@ -3,7 +3,7 @@ package codegen;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
-import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -184,8 +184,10 @@ public final class GrammarOutput {
 		// We start by compacting the transition table for this rule so that
 		// tokens which lead to the same production are put together in the
 		// same case block.
+		// We know the transition table is in stable order, and we must ensure
+		// our compacted table is as well.
 		final Map<@NonNull Production, @NonNull List<@NonNull String>> prodTable =
-			new IdentityHashMap<>();
+			new LinkedHashMap<>();
 		trans.forEach((term, prods) -> {
 			final Production prod = prods.get(0);
 			@Nullable List<String> terms_ = Maps.get(prodTable, prod);

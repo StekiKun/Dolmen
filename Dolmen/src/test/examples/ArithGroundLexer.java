@@ -53,18 +53,6 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
     
     private int _jl_cell0() {
         switch (getNextChar()) {
-        // 0x002b
-        case 43: {
-            return _jl_cell4();
-        }
-        // 0xffff
-        case 65535: {
-            return _jl_cell1();
-        }
-        // \-
-        case 45: {
-            return _jl_cell2();
-        }
         // [0x0008-0x000a0x000d0x0020]
         case 8:
         case 9:
@@ -72,6 +60,18 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
         case 13:
         case 32: {
             return _jl_cell6();
+        }
+        // 0x002a
+        case 42: {
+            return _jl_cell3();
+        }
+        // 0x002b
+        case 43: {
+            return _jl_cell4();
+        }
+        // \-
+        case 45: {
+            return _jl_cell2();
         }
         // [0-9]
         case 48:
@@ -86,9 +86,9 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell5();
         }
-        // 0x002a
-        case 42: {
-            return _jl_cell3();
+        // 0xffff
+        case 65535: {
+            return _jl_cell1();
         }
         default:  {
             return rewind();
@@ -115,46 +115,50 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell5() {
-        mark(1);
-        switch (getNextChar()) {
-        // [0-9]
-        case 48:
-        case 49:
-        case 50:
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 56:
-        case 57: {
-            return _jl_cell5();
-        }
-        default:  {
-            return rewind();
+        while (true) {
+            mark(1);
+            switch (getNextChar()) {
+            // [0-9]
+            case 48:
+            case 49:
+            case 50:
+            case 51:
+            case 52:
+            case 53:
+            case 54:
+            case 55:
+            case 56:
+            case 57: {
+                continue;
+            }
+            default:  {
+                return rewind();
+                
+            }
+            }
             
         }
-        }
-        
     }
     
     private int _jl_cell6() {
-        mark(0);
-        switch (getNextChar()) {
-        // [0x0008-0x000a0x000d0x0020]
-        case 8:
-        case 9:
-        case 10:
-        case 13:
-        case 32: {
-            return _jl_cell6();
-        }
-        default:  {
-            return rewind();
+        while (true) {
+            mark(0);
+            switch (getNextChar()) {
+            // [0x0008-0x000a0x000d0x0020]
+            case 8:
+            case 9:
+            case 10:
+            case 13:
+            case 32: {
+                continue;
+            }
+            default:  {
+                return rewind();
+                
+            }
+            }
             
         }
-        }
-        
     }
     
      

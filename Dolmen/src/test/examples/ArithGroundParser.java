@@ -103,13 +103,6 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
             case EOF: {
                 return 0;
             }
-            case PLUS: {
-                // PLUS
-                eat(Token.Kind.PLUS);
-                // n = exp
-                int n = exp();
-                return n;
-            }
             case MINUS: {
                 // MINUS
                 eat(Token.Kind.MINUS);
@@ -117,8 +110,15 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
                 int n = exp();
                 return -n;
             }
+            case PLUS: {
+                // PLUS
+                eat(Token.Kind.PLUS);
+                // n = exp
+                int n = exp();
+                return n;
+            }
             default: {
-                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.PLUS, Token.Kind.MINUS);
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS);
             }
         }
     }
@@ -135,8 +135,8 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     private int factor_rhs() {
         switch (peek().getKind()) {
             case EOF:
-            case PLUS:
-            case MINUS: {
+            case MINUS:
+            case PLUS: {
                 return 1;
             }
             case TIMES: {
@@ -147,24 +147,24 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
                 return n;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.TIMES, Token.Kind.EOF, Token.Kind.PLUS, Token.Kind.MINUS);
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.TIMES);
             }
         }
     }
     
     private int atomic() {
         switch (peek().getKind()) {
+            case INT: {
+                // n = INT
+                int n = ((Token.INT) eat(Token.Kind.INT)).value;
+                return n;
+            }
             case MINUS: {
                 // MINUS
                 eat(Token.Kind.MINUS);
                 // n = atomic
                 int n = atomic();
                 return -n;
-            }
-            case INT: {
-                // n = INT
-                int n = ((Token.INT) eat(Token.Kind.INT)).value;
-                return n;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.INT, Token.Kind.MINUS);

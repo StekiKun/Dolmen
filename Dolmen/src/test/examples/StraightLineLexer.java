@@ -77,17 +77,41 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     
     private int _jl_cell0() {
         switch (getNextChar()) {
-        // \-
-        case 45: {
-            return _jl_cell8();
+        // [0x0008-0x000a0x000d0x0020]
+        case 8:
+        case 9:
+        case 10:
+        case 13:
+        case 32: {
+            return _jl_cell14();
+        }
+        // 0x0028
+        case 40: {
+            return _jl_cell5();
+        }
+        // 0x0029
+        case 41: {
+            return _jl_cell4();
+        }
+        // 0x002a
+        case 42: {
+            return _jl_cell9();
         }
         // 0x002b
         case 43: {
             return _jl_cell10();
         }
-        // 0x002a
-        case 42: {
-            return _jl_cell9();
+        // 0x002c
+        case 44: {
+            return _jl_cell6();
+        }
+        // \-
+        case 45: {
+            return _jl_cell8();
+        }
+        // 0x002f
+        case 47: {
+            return _jl_cell7();
         }
         // [0-9]
         case 48:
@@ -102,13 +126,13 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell13();
         }
-        // 0xffff
-        case 65535: {
-            return _jl_cell1();
+        // 0x003a
+        case 58: {
+            return _jl_cell3();
         }
-        // 0x002f
-        case 47: {
-            return _jl_cell7();
+        // 0x003b
+        case 59: {
+            return _jl_cell2();
         }
         // [A-Z\_a-oq-z]
         case 65:
@@ -165,37 +189,13 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 122: {
             return _jl_cell11();
         }
-        // 0x002c
-        case 44: {
-            return _jl_cell6();
-        }
-        // [0x0008-0x000a0x000d0x0020]
-        case 8:
-        case 9:
-        case 10:
-        case 13:
-        case 32: {
-            return _jl_cell14();
-        }
-        // 0x0029
-        case 41: {
-            return _jl_cell4();
-        }
-        // 0x003b
-        case 59: {
-            return _jl_cell2();
-        }
-        // 0x003a
-        case 58: {
-            return _jl_cell3();
-        }
-        // 0x0028
-        case 40: {
-            return _jl_cell5();
-        }
         // p
         case 112: {
             return _jl_cell12();
+        }
+        // 0xffff
+        case 65535: {
+            return _jl_cell1();
         }
         default:  {
             return rewind();
@@ -256,80 +256,82 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell11() {
-        mark(3);
-        switch (getNextChar()) {
-        // [0-9A-Z\_a-z]
-        case 48:
-        case 49:
-        case 50:
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 56:
-        case 57:
-        case 65:
-        case 66:
-        case 67:
-        case 68:
-        case 69:
-        case 70:
-        case 71:
-        case 72:
-        case 73:
-        case 74:
-        case 75:
-        case 76:
-        case 77:
-        case 78:
-        case 79:
-        case 80:
-        case 81:
-        case 82:
-        case 83:
-        case 84:
-        case 85:
-        case 86:
-        case 87:
-        case 88:
-        case 89:
-        case 90:
-        case 95:
-        case 97:
-        case 98:
-        case 99:
-        case 100:
-        case 101:
-        case 102:
-        case 103:
-        case 104:
-        case 105:
-        case 106:
-        case 107:
-        case 108:
-        case 109:
-        case 110:
-        case 111:
-        case 112:
-        case 113:
-        case 114:
-        case 115:
-        case 116:
-        case 117:
-        case 118:
-        case 119:
-        case 120:
-        case 121:
-        case 122: {
-            return _jl_cell11();
-        }
-        default:  {
-            return rewind();
+        while (true) {
+            mark(3);
+            switch (getNextChar()) {
+            // [0-9A-Z\_a-z]
+            case 48:
+            case 49:
+            case 50:
+            case 51:
+            case 52:
+            case 53:
+            case 54:
+            case 55:
+            case 56:
+            case 57:
+            case 65:
+            case 66:
+            case 67:
+            case 68:
+            case 69:
+            case 70:
+            case 71:
+            case 72:
+            case 73:
+            case 74:
+            case 75:
+            case 76:
+            case 77:
+            case 78:
+            case 79:
+            case 80:
+            case 81:
+            case 82:
+            case 83:
+            case 84:
+            case 85:
+            case 86:
+            case 87:
+            case 88:
+            case 89:
+            case 90:
+            case 95:
+            case 97:
+            case 98:
+            case 99:
+            case 100:
+            case 101:
+            case 102:
+            case 103:
+            case 104:
+            case 105:
+            case 106:
+            case 107:
+            case 108:
+            case 109:
+            case 110:
+            case 111:
+            case 112:
+            case 113:
+            case 114:
+            case 115:
+            case 116:
+            case 117:
+            case 118:
+            case 119:
+            case 120:
+            case 121:
+            case 122: {
+                continue;
+            }
+            default:  {
+                return rewind();
+                
+            }
+            }
             
         }
-        }
-        
     }
     
     private int _jl_cell12() {
@@ -413,46 +415,50 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell13() {
-        mark(1);
-        switch (getNextChar()) {
-        // [0-9]
-        case 48:
-        case 49:
-        case 50:
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 56:
-        case 57: {
-            return _jl_cell13();
-        }
-        default:  {
-            return rewind();
+        while (true) {
+            mark(1);
+            switch (getNextChar()) {
+            // [0-9]
+            case 48:
+            case 49:
+            case 50:
+            case 51:
+            case 52:
+            case 53:
+            case 54:
+            case 55:
+            case 56:
+            case 57: {
+                continue;
+            }
+            default:  {
+                return rewind();
+                
+            }
+            }
             
         }
-        }
-        
     }
     
     private int _jl_cell14() {
-        mark(0);
-        switch (getNextChar()) {
-        // [0x0008-0x000a0x000d0x0020]
-        case 8:
-        case 9:
-        case 10:
-        case 13:
-        case 32: {
-            return _jl_cell14();
-        }
-        default:  {
-            return rewind();
+        while (true) {
+            mark(0);
+            switch (getNextChar()) {
+            // [0x0008-0x000a0x000d0x0020]
+            case 8:
+            case 9:
+            case 10:
+            case 13:
+            case 32: {
+                continue;
+            }
+            default:  {
+                return rewind();
+                
+            }
+            }
             
         }
-        }
-        
     }
     
     private int _jl_cell15() {
@@ -618,10 +624,6 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     private int _jl_cell17() {
         mark(3);
         switch (getNextChar()) {
-        // t
-        case 116: {
-            return _jl_cell18();
-        }
         // [0-9A-Z\_a-su-z]
         case 48:
         case 49:
@@ -686,6 +688,10 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         case 121:
         case 122: {
             return _jl_cell11();
+        }
+        // t
+        case 116: {
+            return _jl_cell18();
         }
         default:  {
             return rewind();

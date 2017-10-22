@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -406,15 +407,16 @@ public abstract class Grammars {
 	 * @see Grammars#predictionTable(Grammar, NTermsInfo)
 	 */
 	public static final class PredictionTable {
-		private final Map<String, Map<String, List<Production>>> table;
+		private final Map<String, TreeMap<String, List<Production>>> table;
 		
-		private PredictionTable(Map<String, Map<String, List<Production>>> table) {
+		private PredictionTable(Map<String, TreeMap<String, List<Production>>> table) {
 			this.table = table;
 		}
 		
 		/**
 		 * @param nterm
-		 * @return the prediction table for the non-terminal {@code nterm}
+		 * @return the prediction table for the non-terminal {@code nterm},
+		 * 	with the entries ordered with the natural ordering of terminals
 		 */
 		public Map<String, List<Production>> tableFor(String nterm) {
 			@Nullable Map<String, List<Production>> res = Maps.get(table, nterm);
@@ -462,7 +464,7 @@ public abstract class Grammars {
 		 * @author Stéphane Lescuyer
 		 */
 		public final static class Builder {
-			private final Map<String, Map<String, List<Production>>> table;
+			private final Map<String, TreeMap<String, List<Production>>> table;
 			
 			/**
 			 * Creates a fresh builder for a partition table based
@@ -472,7 +474,7 @@ public abstract class Grammars {
 			public Builder(Grammar grammar) {
 				this.table = new HashMap<>(grammar.rules.size());
 				for (String nterm : grammar.rules.keySet())
-					this.table.put(nterm, new HashMap<>());
+					this.table.put(nterm, new TreeMap<>());
 			}
 			
 			/**
