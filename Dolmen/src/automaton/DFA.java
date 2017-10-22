@@ -787,6 +787,17 @@ public class DFA {
 			return Kind.SHIFT; 
 		}
 		
+		/**
+		 * @param target	a target cell, or -1 to check for backtrack
+		 * 
+		 * @return {@code true} if and only if this cell
+		 * 	has a transition to the specified {@code target}
+		 */
+		public boolean canShiftTo(int target) {
+			return transTable.values().stream().anyMatch(ta ->
+				ta.gotoAction.target == target);
+		}
+		
 		@Override
 		public String toString() {
 			return "Shift(" + remember + ", " + transTable + ")";

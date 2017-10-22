@@ -149,7 +149,7 @@ public final class AutomataOutput {
 		}
 	}
 	
-	private void genTransActions(TransActions trans) {
+	private void genTransActions(int source, TransActions trans) {
 		genMemActions(trans.memActions);
 		
 		// Now generate the goto action
@@ -158,8 +158,12 @@ public final class AutomataOutput {
 			buf.emitln("return rewind();");
 		}
 		else {
-			buf.emit("return ").emit(cellName(gotoAction.target))
-							   .emit("();");
+			// Optimize away reflexive transitions
+			if (source == gotoAction.target)
+				buf.emit("continue;");
+			else
+				buf.emit("return ").emit(cellName(gotoAction.target))
+								   .emit("();");
 		}
 	}
 	
@@ -177,7 +181,7 @@ public final class AutomataOutput {
 		return Nulls.ok(table.get(mostFreq));
 	}
 	
-	private void genTransTable(
+	private void genTransTable(int source,
 			Map<@NonNull CSet, @NonNull TransActions> table) {
 		// Generates a large switch where each charset is
 		// written as some or-pattern, and the most frequent
@@ -191,13 +195,13 @@ public final class AutomataOutput {
 			if (trans != defTrans) {
 				genPattern(cset);
 				buf.openBlock();
-				genTransActions(trans);
+				genTransActions(source, trans);
 				buf.closeBlock();
 			}
 		});
 		
 		buf.emit("default: ").openBlock();
-		genTransActions(defTrans);
+		genTransActions(source, defTrans);
 		buf.closeBlock();
 		buf.emitln("}");
 	}
@@ -215,9 +219,15 @@ public final class AutomataOutput {
 		}
 		case SHIFT: {
 			final Shift shift = (Shift) cell;
+			// Reflexive edges are turned into a loop to optimize
+			// tail-recursive calls away
+			boolean reflexive = shift.canShiftTo(cellIdx);
+			if (reflexive)
+				buf.emit("while (true)").openBlock();
 			genRemember(shift.remember);
-			genTransTable(shift.transTable);
-			break;
+			genTransTable(cellIdx, shift.transTable);
+			if (reflexive)
+				buf.closeBlock0();
 		}
 		}
 		buf.closeBlock();
