@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeMap;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -741,7 +742,7 @@ public class Determinize {
 	 * @param st		the transition map of the source state
 	 * @return a mapping from character set to transition actions
 	 */
-	private Map<CSet, TransActions> reachable(
+	private TreeMap<CSet, TransActions> reachable(
 		List<CSet> charsets, @NonNull Set<NFA.Transition>[] follows, 
 		Map<Integer, MemMap> st) {
 		final AddressGen gen = new AddressGen();
@@ -751,7 +752,8 @@ public class Determinize {
 		// (in particular this replaces states by their numbers, so
 		//  it takes care of canonizing states, or creating new ones
 		//  on the todo stack)
-		Map<CSet, TransActions> res = new HashMap<>(charMap.size());
+		// A tree-map is used so that the key-set order is deterministic.
+		TreeMap<CSet, TransActions> res = new TreeMap<CSet, TransActions>();
 		charMap.forEach(css -> {
 			res.put(css.chars, gotoState(css.state));
 		});

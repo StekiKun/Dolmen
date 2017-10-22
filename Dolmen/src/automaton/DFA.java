@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -777,7 +778,7 @@ public class DFA {
 		 * @param remember
 		 * @param transTable
 		 */
-		public Shift(Remember remember, Map<CSet, TransActions> transTable) {
+		public Shift(Remember remember, TreeMap<CSet, TransActions> transTable) {
 			this.remember = remember;
 			this.transTable = transTable;
 		}

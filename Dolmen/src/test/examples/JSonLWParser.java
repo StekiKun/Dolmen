@@ -128,14 +128,19 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     
     private  void  value() {
         switch (peek().getKind()) {
-            case NUMBER: {
-                // NUMBER
-                eat(Token.Kind.NUMBER);
+            case LSQUARE: {
+                // array
+                array();
                  return; 
             }
-            case NULL: {
-                // NULL
-                eat(Token.Kind.NULL);
+            case LBRACKET: {
+                // object
+                object();
+                 return; 
+            }
+            case TRUE: {
+                // TRUE
+                eat(Token.Kind.TRUE);
                  return; 
             }
             case FALSE: {
@@ -148,19 +153,14 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 eat(Token.Kind.STRING);
                  return; 
             }
-            case LBRACKET: {
-                // object
-                object();
+            case NULL: {
+                // NULL
+                eat(Token.Kind.NULL);
                  return; 
             }
-            case LSQUARE: {
-                // array
-                array();
-                 return; 
-            }
-            case TRUE: {
-                // TRUE
-                eat(Token.Kind.TRUE);
+            case NUMBER: {
+                // NUMBER
+                eat(Token.Kind.NUMBER);
                  return; 
             }
             default: {
@@ -180,11 +180,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     
     private  void  elements() {
         switch (peek().getKind()) {
-            case RSQUARE: {
-                // RSQUARE
-                eat(Token.Kind.RSQUARE);
-                 return; 
-            }
             case LSQUARE:
             case NUMBER:
             case NULL:
@@ -196,6 +191,11 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 value();
                 // more_elements
                 more_elements();
+                 return; 
+            }
+            case RSQUARE: {
+                // RSQUARE
+                eat(Token.Kind.RSQUARE);
                  return; 
             }
             default: {
@@ -257,11 +257,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     
     private  void  more_members() {
         switch (peek().getKind()) {
-            case RBRACKET: {
-                // RBRACKET
-                eat(Token.Kind.RBRACKET);
-                 return; 
-            }
             case COMMA: {
                 // COMMA
                 eat(Token.Kind.COMMA);
@@ -269,6 +264,11 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 pair();
                 // more_members
                 more_members();
+                 return; 
+            }
+            case RBRACKET: {
+                // RBRACKET
+                eat(Token.Kind.RBRACKET);
                  return; 
             }
             default: {

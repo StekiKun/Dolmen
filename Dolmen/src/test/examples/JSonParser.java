@@ -259,15 +259,20 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     
     private  Value<?>  value() {
         switch (peek().getKind()) {
-            case STRING: {
-                // s = STRING
-                 String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
-                 return valString(s); 
+            case LBRACKET: {
+                // o = object
+                 Map<String, Value<?>>  o = object();
+                 return valObject(o); 
             }
             case NUMBER: {
                 // n = NUMBER
                  double  n = ((Token.NUMBER) eat(Token.Kind.NUMBER)).value;
                  return valNumber(n); 
+            }
+            case NULL: {
+                // NULL
+                eat(Token.Kind.NULL);
+                 return valNull; 
             }
             case TRUE: {
                 // TRUE
@@ -279,20 +284,15 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                 eat(Token.Kind.FALSE);
                  return valFalse; 
             }
+            case STRING: {
+                // s = STRING
+                 String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
+                 return valString(s); 
+            }
             case LSQUARE: {
                 // a = array
                  List<Value<?>>  a = array();
                  return valArray(a); 
-            }
-            case LBRACKET: {
-                // o = object
-                 Map<String, Value<?>>  o = object();
-                 return valObject(o); 
-            }
-            case NULL: {
-                // NULL
-                eat(Token.Kind.NULL);
-                 return valNull; 
             }
             default: {
                 throw tokenError(peek(), Token.Kind.LSQUARE, Token.Kind.NUMBER, Token.Kind.NULL, Token.Kind.STRING, Token.Kind.LBRACKET, Token.Kind.TRUE, Token.Kind.FALSE);
@@ -311,11 +311,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     
     private  List<Value<?>>  elements(List<Value<?>> elts) {
         switch (peek().getKind()) {
-            case RSQUARE: {
-                // RSQUARE
-                eat(Token.Kind.RSQUARE);
-                 return elts == null ? Lists.empty() : elts; 
-            }
             case LSQUARE:
             case NUMBER:
             case NULL:
@@ -331,6 +326,11 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                 more_elements(acc);
                  return acc; 
             }
+            case RSQUARE: {
+                // RSQUARE
+                eat(Token.Kind.RSQUARE);
+                 return elts == null ? Lists.empty() : elts; 
+            }
             default: {
                 throw tokenError(peek(), Token.Kind.RSQUARE, Token.Kind.LSQUARE, Token.Kind.NUMBER, Token.Kind.NULL, Token.Kind.STRING, Token.Kind.LBRACKET, Token.Kind.TRUE, Token.Kind.FALSE);
             }
@@ -339,11 +339,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     
     private  void  more_elements(List<Value<?>> elts) {
         switch (peek().getKind()) {
-            case RSQUARE: {
-                // RSQUARE
-                eat(Token.Kind.RSQUARE);
-                 return; 
-            }
             case COMMA: {
                 // COMMA
                 eat(Token.Kind.COMMA);
@@ -352,6 +347,11 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                  elts.add(val); 
                 // more_elements(elts)
                 more_elements(elts);
+                 return; 
+            }
+            case RSQUARE: {
+                // RSQUARE
+                eat(Token.Kind.RSQUARE);
                  return; 
             }
             default: {
@@ -371,11 +371,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     
     private  Map<String, Value<?>>  members(Map<String, Value<?>> members) {
         switch (peek().getKind()) {
-            case RBRACKET: {
-                // RBRACKET
-                eat(Token.Kind.RBRACKET);
-                 return members == null ? Maps.empty() : members; 
-            }
             case STRING: {
                  Map<String, Value<?>> acc = members == null ? new HashMap<>() : members; 
                 // pair(acc)
@@ -383,6 +378,11 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                 // more_members(acc)
                 more_members(acc);
                  return acc; 
+            }
+            case RBRACKET: {
+                // RBRACKET
+                eat(Token.Kind.RBRACKET);
+                 return members == null ? Maps.empty() : members; 
             }
             default: {
                 throw tokenError(peek(), Token.Kind.STRING, Token.Kind.RBRACKET);
@@ -392,6 +392,11 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     
     private  void  more_members(Map<String, Value<?>> members) {
         switch (peek().getKind()) {
+            case RBRACKET: {
+                // RBRACKET
+                eat(Token.Kind.RBRACKET);
+                 return; 
+            }
             case COMMA: {
                 // COMMA
                 eat(Token.Kind.COMMA);
@@ -399,11 +404,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                 pair(members);
                 // more_members(members)
                 more_members(members);
-                 return; 
-            }
-            case RBRACKET: {
-                // RBRACKET
-                eat(Token.Kind.RBRACKET);
                  return; 
             }
             default: {

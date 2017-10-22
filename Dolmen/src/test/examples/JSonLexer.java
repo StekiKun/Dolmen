@@ -165,67 +165,35 @@ public final class JSonLexer extends codegen.LexBuffer {
     
     private int _jl_cell0() {
         switch (getNextChar()) {
-        // 0x003a
-        case 58: {
-            return _jl_cell11();
-        }
-        // t
-        case 116: {
-            return _jl_cell8();
-        }
-        // 0xffff
-        case 65535: {
-            return _jl_cell7();
-        }
-        // 0x000d
-        case 13: {
-            return _jl_cell15();
-        }
         // [0x0008-0x00090x0020]
         case 8:
         case 9:
         case 32: {
             return _jl_cell17();
         }
-        // \-
-        case 45: {
-            return _jl_cell3();
+        // 0x000a
+        case 10: {
+            return _jl_cell16();
+        }
+        // 0x000d
+        case 13: {
+            return _jl_cell15();
         }
         // 0x0022
         case 34: {
             return _jl_cell4();
         }
-        // \[
-        case 91: {
-            return _jl_cell10();
-        }
-        // \]
-        case 93: {
-            return _jl_cell9();
-        }
-        // 0x007b
-        case 123: {
-            return _jl_cell14();
-        }
-        // 0
-        case 48: {
-            return _jl_cell1();
-        }
-        // n
-        case 110: {
-            return _jl_cell5();
-        }
         // 0x002c
         case 44: {
             return _jl_cell12();
         }
-        // f
-        case 102: {
-            return _jl_cell6();
+        // \-
+        case 45: {
+            return _jl_cell3();
         }
-        // 0x007d
-        case 125: {
-            return _jl_cell13();
+        // 0
+        case 48: {
+            return _jl_cell1();
         }
         // [1-9]
         case 49:
@@ -239,9 +207,41 @@ public final class JSonLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell2();
         }
-        // 0x000a
-        case 10: {
-            return _jl_cell16();
+        // 0x003a
+        case 58: {
+            return _jl_cell11();
+        }
+        // \[
+        case 91: {
+            return _jl_cell10();
+        }
+        // \]
+        case 93: {
+            return _jl_cell9();
+        }
+        // f
+        case 102: {
+            return _jl_cell6();
+        }
+        // n
+        case 110: {
+            return _jl_cell5();
+        }
+        // t
+        case 116: {
+            return _jl_cell8();
+        }
+        // 0x007b
+        case 123: {
+            return _jl_cell14();
+        }
+        // 0x007d
+        case 125: {
+            return _jl_cell13();
+        }
+        // 0xffff
+        case 65535: {
+            return _jl_cell7();
         }
         default:  {
             return rewind();
@@ -254,17 +254,17 @@ public final class JSonLexer extends codegen.LexBuffer {
     private int _jl_cell1() {
         mark(12);
         switch (getNextChar()) {
-        // e
-        case 101: {
-            return _jl_cell31();
+        // 0x002e
+        case 46: {
+            return _jl_cell28();
         }
         // E
         case 69: {
             return _jl_cell30();
         }
-        // 0x002e
-        case 46: {
-            return _jl_cell28();
+        // e
+        case 101: {
+            return _jl_cell31();
         }
         default:  {
             return rewind();
@@ -277,6 +277,10 @@ public final class JSonLexer extends codegen.LexBuffer {
     private int _jl_cell2() {
         mark(12);
         switch (getNextChar()) {
+        // 0x002e
+        case 46: {
+            return _jl_cell28();
+        }
         // [0-9]
         case 48:
         case 49:
@@ -290,17 +294,13 @@ public final class JSonLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell29();
         }
-        // e
-        case 101: {
-            return _jl_cell31();
-        }
         // E
         case 69: {
             return _jl_cell30();
         }
-        // 0x002e
-        case 46: {
-            return _jl_cell28();
+        // e
+        case 101: {
+            return _jl_cell31();
         }
         default:  {
             return rewind();
@@ -584,9 +584,9 @@ public final class JSonLexer extends codegen.LexBuffer {
         while (true) {
             mark(12);
             switch (getNextChar()) {
-            // e
-            case 101: {
-                return _jl_cell31();
+            // 0x002e
+            case 46: {
+                return _jl_cell28();
             }
             // [0-9]
             case 48:
@@ -605,9 +605,9 @@ public final class JSonLexer extends codegen.LexBuffer {
             case 69: {
                 return _jl_cell30();
             }
-            // 0x002e
-            case 46: {
-                return _jl_cell28();
+            // e
+            case 101: {
+                return _jl_cell31();
             }
             default:  {
                 return rewind();
@@ -620,6 +620,14 @@ public final class JSonLexer extends codegen.LexBuffer {
     
     private int _jl_cell30() {
         switch (getNextChar()) {
+        // 0x002b
+        case 43: {
+            return _jl_cell33();
+        }
+        // \-
+        case 45: {
+            return _jl_cell33();
+        }
         // [0-9]
         case 48:
         case 49:
@@ -632,14 +640,6 @@ public final class JSonLexer extends codegen.LexBuffer {
         case 56:
         case 57: {
             return _jl_cell32();
-        }
-        // 0x002b
-        case 43: {
-            return _jl_cell33();
-        }
-        // \-
-        case 45: {
-            return _jl_cell33();
         }
         default:  {
             return rewind();
@@ -651,6 +651,14 @@ public final class JSonLexer extends codegen.LexBuffer {
     
     private int _jl_cell31() {
         switch (getNextChar()) {
+        // 0x002b
+        case 43: {
+            return _jl_cell33();
+        }
+        // \-
+        case 45: {
+            return _jl_cell33();
+        }
         // [0-9]
         case 48:
         case 49:
@@ -663,14 +671,6 @@ public final class JSonLexer extends codegen.LexBuffer {
         case 56:
         case 57: {
             return _jl_cell32();
-        }
-        // 0x002b
-        case 43: {
-            return _jl_cell33();
-        }
-        // \-
-        case 45: {
-            return _jl_cell33();
         }
         default:  {
             return rewind();
@@ -733,14 +733,6 @@ public final class JSonLexer extends codegen.LexBuffer {
         while (true) {
             mark(12);
             switch (getNextChar()) {
-            // e
-            case 101: {
-                return _jl_cell31();
-            }
-            // E
-            case 69: {
-                return _jl_cell30();
-            }
             // [0-9]
             case 48:
             case 49:
@@ -754,6 +746,14 @@ public final class JSonLexer extends codegen.LexBuffer {
             case 57: {
                 continue;
             }
+            // E
+            case 69: {
+                return _jl_cell30();
+            }
+            // e
+            case 101: {
+                return _jl_cell31();
+            }
             default:  {
                 return rewind();
                 
@@ -765,17 +765,17 @@ public final class JSonLexer extends codegen.LexBuffer {
     
     private int _jl_cell35() {
         switch (getNextChar()) {
-        // 0xffff
-        case 65535: {
-            return _jl_cell38();
+        // 0x0022
+        case 34: {
+            return _jl_cell36();
         }
         // \\
         case 92: {
             return _jl_cell39();
         }
-        // 0x0022
-        case 34: {
-            return _jl_cell36();
+        // 0xffff
+        case 65535: {
+            return _jl_cell38();
         }
         default:  {
             return _jl_cell37();
@@ -813,15 +813,6 @@ public final class JSonLexer extends codegen.LexBuffer {
     
     private int _jl_cell39() {
         switch (getNextChar()) {
-        // 0xffff
-        case 65535: {
-            return rewind();
-            
-        }
-        // u
-        case 117: {
-            return _jl_cell41();
-        }
         // [0x00220x002f\\bfnrt]
         case 34:
         case 47:
@@ -832,6 +823,15 @@ public final class JSonLexer extends codegen.LexBuffer {
         case 114:
         case 116: {
             return _jl_cell42();
+        }
+        // u
+        case 117: {
+            return _jl_cell41();
+        }
+        // 0xffff
+        case 65535: {
+            return rewind();
+            
         }
         default:  {
             return _jl_cell40();
