@@ -5,6 +5,8 @@ import common.Generator;
 import syntax.Regular;
 import syntax.Regulars;
 import test.TestUnit.Mode;
+import test.cset.TestCSetCompare;
+import test.cset.TestCSetOperations;
 import test.regular.TestAnalyseVars;
 import test.regular.TestEncoder;
 import test.regular.TestGenerateMatchers;
@@ -28,6 +30,13 @@ public abstract class Test {
 	private static void testCSetGeneration() {
 		if (!test_cset_gen) return;
 		CSet.generator().present();
+	}
+	
+	private static TestRegistry testCSetOperations() {
+		return TestRegistry.create()
+				.addIf(new TestCSetCompare(30), 20000, true)
+				.addIf(new TestCSetOperations(50), 20000, true)
+				.done();
 	}
 	
 	private static boolean test_regular_gen = false;
@@ -63,11 +72,13 @@ public abstract class Test {
 	public static void main(String[] args) {
 		// 1. CSet generation
 		testCSetGeneration();
-		// 2. Regular expression generation
+		// 2. CSet operations tests
+		testCSetOperations().run(Mode.BATCH);
+		// 3. Regular expression generation
 		testRegularGeneration();
-		// 3. Regular expression matchers generation
+		// 4. Regular expression matchers generation
 		testRegularWitnessGeneration();
-		// 4. Regular expression operations tests
+		// 5. Regular expression operations tests
 		testRegularOperations().run(Mode.BATCH);
 	}
 }

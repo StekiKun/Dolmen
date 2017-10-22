@@ -8,20 +8,29 @@ import org.eclipse.jdt.annotation.Nullable;
 
 /**
  * A class to represent character sets.
- * 
+ * <p>
  * Characters are Java characters, i.e. 16-bit unsigned integers.
  * Character sets are mostly encoded as an ordered list of
  * character intervals, with some special values for degenerate
  * cases, and are thus optimized for space rather than for lookup speed.
- * 
+ * <p>
  * The special value 0xFFFF is reserved to denote end of file.
  * It is not a valid Unicode character anyway.
- * 
+ * <p>
  * Instances of this class are immutable.
+ * <p>
+ * They implement the {@link Comparable} interface via a total 
+ * ordering based on the lexicographic comparison of the character set,
+ * with the empty character set being a conventional minimum.
+ * It is not a particularly meaningful total order but it is
+ * used to guarantee a deterministic traversal order in 
+ * {@link CSet}-indexed maps. A more natural, yet partial, order
+ * based on character set inclusion can be retrieved via
+ * the method {@link #included(CSet, CSet)}.
  * 
  * @author Stéphane Lescuyer
  */
-public abstract class CSet {
+public abstract class CSet implements Comparable<CSet> {
 
 	/**
 	 * @return {@code true} if this character set is empty
@@ -41,6 +50,24 @@ public abstract class CSet {
 	
 	@Override
 	public abstract String toString();
+
+	@Override
+	public final boolean equals(@Nullable Object o) {
+		if (!(o instanceof CSet))
+			return false;
+		CSet cs = (CSet) o;
+		return equivalent(this, cs);
+	}
+	
+	@Override
+	public abstract int hashCode();
+	
+	@Override
+	public final int compareTo(@Nullable CSet cs) {
+		if (cs == null)
+			throw new NullPointerException();
+		return compare(this, cs);
+	}
 	
 	/**
 	 * @param ch
@@ -48,7 +75,7 @@ public abstract class CSet {
 	 * 	using the character itself if appropriate, or
 	 *  the '\\uxxxx' form
 	 */
-	private static String charToString(char ch) {
+	public static String charToString(char ch) {
 		// Check for characters which must be escaped
 		switch (ch) {
 		case '[':
@@ -91,6 +118,11 @@ public abstract class CSet {
 		public String toString() {
 			return "_";
 		}
+
+		@Override
+		public int hashCode() {
+			return 0xFFFFFFF0;
+		}
 	};
 	
 	/**
@@ -115,6 +147,11 @@ public abstract class CSet {
 		@Override
 		public String toString() {
 			return "∅";
+		}
+
+		@Override
+		public int hashCode() {
+			return 0xFFFFFFFF;
 		}
 	};
 	
@@ -148,6 +185,11 @@ public abstract class CSet {
 		@Override
 		public @NonNull String toString() {
 			return charToString(c);
+		}
+
+		@Override
+		public int hashCode() {
+			return c;
 		}
 	}
 	/**
@@ -204,6 +246,14 @@ public abstract class CSet {
 		public String toString() {
 			return append(new StringBuilder()).toString();
 		}
+		
+		@Override
+		public int hashCode() {
+			int n = 0;
+			if (next != null)
+				n = next.hashCode();
+			return ((first << 16) | last) ^ n;
+		}
 	}
 	
 	/**
@@ -257,6 +307,13 @@ public abstract class CSet {
 			@SuppressWarnings("null")
 			@NonNull String res = buf.toString();
 			return res;
+		}
+
+		@Override
+		public int hashCode() {
+			if (head != null)
+				return head.hashCode();
+			return 0;
 		}
 	}
 	
@@ -469,14 +526,17 @@ public abstract class CSet {
 			return idiff(i1, i2.next);
 		} else {
 			Interval r = i1.next;
-			if (i2.last < i1.last)
+			Interval r2 = i2;
+			if (i2.last < i1.last) {
 				r = new Interval((char) (i2.last + 1), 
 							i1.last, r);
+				r2 = i2.next;
+			}
 			if (i1.first < i2.first) {
 				return new Interval(i1.first, (char) (i2.first - 1),
-							idiff(r, i2.next));
+							idiff(r, r2));
 			} else {
-				return idiff(r, i2.next);
+				return idiff(r, r2);
 			}
 		}
 	}
@@ -488,7 +548,7 @@ public abstract class CSet {
 	 * 		in {@code cs1} except those that are in {@code cs2}
 	 */
 	public static CSet diff(CSet cs1, CSet cs2) {
-		if (cs1 == EMPTY) return EMPTY;
+		if (cs1 == EMPTY || cs2 == ALL) return EMPTY;
 		if (cs2 == EMPTY) return cs1;
 		if (cs1 instanceof Singleton) {
 			char c1 = ((Singleton) cs1).c;
@@ -510,6 +570,40 @@ public abstract class CSet {
 	 */
 	public static CSet complement(CSet cs) {
 		return diff(ALL_BUT_EOF, cs);
+	}
+	
+	private static int icompare(
+			@Nullable Interval i1, @Nullable Interval i2) {
+		if (i1 == i2) return 0;
+		if (i1 == null) return -1;
+		if (i2 == null) return 1;
+		
+		int r = i1.first - i2.first;
+		if (r != 0) return r;
+		r = i1.last - i2.last;
+		if (r != 0) return r;
+		return icompare(i1.next, i2.next);
+	}
+	
+	/**
+	 * Implements the total order between character sets based on
+	 * a lexicographic comparison of their intervals. In particular,
+	 * the smallest character set wrt this order is {@link #EMPTY},
+	 * and the largest is {@link #EOF}.
+	 * 
+	 * @param cs1
+	 * @param cs2
+	 * @return -1, 0, or 1 depending on whether {@code cs1} is smaller,
+	 * 	equivalent or larger than {@code cs2}
+	 */
+	private static int compare(CSet cs1, CSet cs2) {
+		// By canonicity, equivalent character sets are 
+		// represented in the same manner interval-wise so
+		// the order will be a morphism for equivalence
+		if (cs1 == cs2) return 0;
+		if (cs1 == EMPTY) return -1;
+		if (cs2 == EMPTY) return 1;
+		return Integer.signum(icompare(intervalsOf(cs1), intervalsOf(cs2)));
 	}
 	
 	private static boolean iequivalent(
@@ -539,6 +633,16 @@ public abstract class CSet {
 			return c1 == c2;
 		}
 		return iequivalent(intervalsOf(cs1), intervalsOf(cs2));
+	}
+	
+	/**
+	 * @param cs1
+	 * @param cs2
+	 * @return {@code true} if and only if the character set
+	 * {@code cs1} is included in {@code cs2}
+	 */
+	public static boolean included(CSet cs1, CSet cs2) {
+		return diff(cs2, cs1) == CSet.EMPTY;
 	}
 	
 	/*
