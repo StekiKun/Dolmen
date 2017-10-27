@@ -1,0 +1,248 @@
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import common.Lists;
+import common.Maps;
+import codegen.LexBuffer.Position;
+
+// The tokens of the JSON language
+token LBRACKET
+token RBRACKET
+token COMMA
+token COLON
+token LSQUARE
+token RSQUARE
+token TRUE
+token FALSE
+token NULL
+token OBJECT
+token ARRAY
+token { String } STRING
+token { double } NUMBER
+token EOF
+
+// Java class header, with the concrete non-standard JSON type
+// decorated with positions
+//
+// This grammar is augmented with optional header
+// keywords for object and array values, in order
+// to test positions computed by the lexer/parser.
+{
+	public enum ValueKind {
+		STRING, NUMBER, OBJECT, ARRAY,
+		TRUE, FALSE, NULL;
+	}
+	
+	public static class Located<T> {
+	   public final Position start;
+	   public final Position end;
+	   public final T val;
+	   
+	   Located(Position start, Position end, T val) {
+	       this.start = start;
+	       this.end = end;
+	       this.val = val;
+	   }
+	   
+	   private static StringBuilder appendPos(StringBuilder buf, Position pos) {
+	       int n = pos.filename.lastIndexOf('/');
+	       String file = n == -1 ? pos.filename : pos.filename.substring(n + 1); 
+           buf.append(file).append("[");
+           buf.append(pos.line).append(",")
+              .append(pos.bol).append("+").append(pos.offset - pos.bol);
+           buf.append("]");
+           return buf;
+	   }
+	   
+	   public static String locToString(Position start, Position end) {
+	       StringBuilder buf = new StringBuilder();
+	       buf.append("(");
+	       appendPos(buf, start).append("..");
+	       appendPos(buf, end).append(")");
+	       return buf.toString();
+	   }
+	   
+	   @Override
+	   public String toString() {
+	       return java.util.Objects.toString(val) + " " + locToString(start, end);
+	   }
+	}
+
+	public static abstract class Value<T> extends Located<T> {
+		private Value(Position start, Position end, T val) {
+		    super(start, end, val);
+		}
+		
+		public abstract ValueKind getKind();
+	}
+
+	public static final class ValueString extends Value<String> {
+		private ValueString(Position start, Position end, String val) {
+			super(start, end, val);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.STRING;
+		}
+	}
+	public static ValueString valString(Position start, Position end, String s) {
+		return new ValueString(start, end, s);
+	}
+
+	public static final class ValueNumber extends Value<Double> {
+		private ValueNumber(Position start, Position end, double val) {
+			super(start, end, val);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.NUMBER;
+		}
+	}
+	public static ValueNumber valNumber(Position start, Position end, double val) {
+		return new ValueNumber(start, end, val);
+	}
+	
+	public static final class ValueObject extends Value<Map<Located<String>, Value<?>>> {
+		private ValueObject(Position start, Position end, Map<Located<String>, Value<?>> val) {
+			super(start, end, val);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.OBJECT;
+		}
+	}
+	public static ValueObject valObject(Position start, Position end,
+	       Map<Located<String>, Value<?>> obj) {
+		return new ValueObject(start, end, obj);
+	}
+	
+	public static final class ValueArray extends Value<List<Value<?>>> {
+		private ValueArray(Position start, Position end, List<Value<?>> val) {
+			super(start, end, val);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.ARRAY;
+		}
+	}
+	public static ValueArray valArray(Position start, Position end, List<Value<?>> arr) {
+		return new ValueArray(start, end, arr);
+	}
+	
+	public static final class ValueTrue extends Value<Boolean> {
+		private ValueTrue(Position start, Position end) {
+			super(start, end, true);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.TRUE;
+		}	
+	}
+	public static ValueTrue valTrue(Position start, Position end) {
+	   return new ValueTrue(start, end);
+	}
+	
+	public static final class ValueFalse extends Value<Boolean> {
+		private ValueFalse(Position start, Position end) {
+			super(start, end, false);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.FALSE;
+		}	
+	}
+	public static ValueFalse valFalse(Position start, Position end) {
+	   return new ValueFalse(start, end);
+	}
+	
+	public static final class ValueNull extends Value<Object> {
+		private ValueNull(Position start, Position end) {
+			super(start, end, null);
+		}
+		
+		@Override public ValueKind getKind() {
+			return ValueKind.NULL;
+		}	
+	}
+	public static ValueNull valNull(Position start, Position end) {
+	   return new ValueNull(start, end);
+    }
+}
+
+// Parsing rules
+
+public { Value<?> } rule json =
+| v = value EOF	{ return v; }
+;
+
+private { Value<?> } rule value =
+| s = STRING	{ return valString(getStartPos(), getEndPos(), s); }
+| n = NUMBER	{ return valNumber(getStartPos(), getEndPos(), n); }
+| object_kwd
+  o = object	{ return valObject(getSymbolStartPos(), getEndPos(), o); }
+| array_kwd
+  a = array		{ return valArray(getSymbolStartPos(), getEndPos(), a); }
+| TRUE			{ return valTrue(getStartPos(), getEndPos()); }
+| FALSE			{ return valFalse(getStartPos(), getEndPos()); }
+| NULL			{ return valNull(getStartPos(), getEndPos()); }
+;
+
+private { void } rule array_kwd =
+| { return; }
+| ARRAY { return; }
+;
+
+private { List<Value<?>> } rule array =
+| LSQUARE elts = elements(null)	
+				{ return elts; }
+;
+
+private { List<Value<?>> } rule elements(List<Value<?>> elts) =
+| RSQUARE		{ return elts == null ? Lists.empty() : elts; }
+| val = value
+	{ List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; }
+	{ acc.add(val); }
+  more_elements(acc)
+  	{ return acc; }
+;
+
+private { void } rule more_elements(List<Value<?>> elts) =
+| RSQUARE				{ return; }
+| COMMA	 val = value 
+	{ elts.add(val); }
+  more_elements(elts)	
+  	{ return; }
+;
+
+private { void } rule object_kwd =
+| { return; }
+| OBJECT { return; }
+;
+
+private { Map<Located<String>, Value<?>> } rule object =
+| LBRACKET members = members(null)
+				{ return members; }
+;
+
+private { Map<Located<String>, Value<?>> } rule members(Map<Located<String>, Value<?>> members) =
+| RBRACKET		{ return members == null ? Maps.empty() : members; }
+| 	{ Map<Located<String>, Value<?>> acc = members == null ? new LinkedHashMap<>() : members; }
+  pair(acc)
+  more_members(acc)
+  	{ return acc; }
+;
+
+private { void } rule more_members(Map<Located<String>, Value<?>> members) =
+| RBRACKET					{ return; }
+| COMMA pair(members) more_members(members)	
+							{ return; }
+;
+
+private { void } rule pair(Map<Located<String>, Value<?>> map) =
+| s = STRING COLON val = value
+    { Located<String> key = new Located<String>(getStartPos(1), getEndPos("s"), s); }
+    { map.put(key, val); return; }
+;
+
+{ }

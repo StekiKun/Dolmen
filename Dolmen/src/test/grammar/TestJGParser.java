@@ -98,5 +98,8 @@ public abstract class TestJGParser {
 
 		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
 		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);
+		
+		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
+		generateParser("tests/jg/JSonPos.jg", "JSonPosParser", true);
 	}
 }
