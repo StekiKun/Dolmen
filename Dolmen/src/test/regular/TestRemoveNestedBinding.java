@@ -1,6 +1,5 @@
 package test.regular;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Generator;
@@ -88,9 +87,7 @@ public final class TestRemoveNestedBinding
 			buf.append(" input: " + input.toString());
 			buf.append(" folder: " + output.resFolder.toString());
 			buf.append(" switch: " + output.resSwitch.toString());
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}		
 	}
 
