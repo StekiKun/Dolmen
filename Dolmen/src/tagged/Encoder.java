@@ -59,7 +59,6 @@ public final class Encoder {
 	 * 	for interpreting character set indices in
 	 * 	tagged regular expressions encoded by {@code this}
 	 */
-	@SuppressWarnings("null")
 	public List<CSet> getCharacterSets() {
 		return Collections.unmodifiableList(charSets);
 	}

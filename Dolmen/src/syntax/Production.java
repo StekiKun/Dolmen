@@ -170,9 +170,7 @@ public final class Production {
 			if (args_ != null)
 				buf.append("(").append(args_.find()).append(")");
 			
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 	}
 	
@@ -201,9 +199,7 @@ public final class Production {
 		StringBuilder buf = new StringBuilder();
 		for (Item item : items)
 			buf.append(" ").append(item);
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 
 	/**

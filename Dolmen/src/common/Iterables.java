@@ -46,7 +46,6 @@ public abstract class Iterables {
 	private static <T> Iterator<T> concatIterator(
 		Iterator<? extends Iterator<? extends T>> iterators) {
 		return new Iterator<T>() {
-			@SuppressWarnings("null")
 			private Iterator<? extends T> current = Collections.emptyIterator();
 			
 			@Override
@@ -77,7 +76,6 @@ public abstract class Iterables {
 		Iterable<? extends Iterable<? extends T>> iterables) {
 		
 		return new Iterable<T>() {
-			@SuppressWarnings("null")
 			@Override
 			public Iterator<T> iterator() {
 				return concatIterator(
@@ -93,11 +91,9 @@ public abstract class Iterables {
 	 * 	of all iterables in {@code its}, in their relative order
 	 */
 	@SafeVarargs
-	public static <T> Iterable<T> concat(Iterable<? extends T>... its) {
-		@SuppressWarnings("null")
+	public static <T> Iterable<T> concat(@NonNull Iterable<? extends T>... its) {
 		final List<Iterable<? extends T>> iterables = Arrays.asList(its);
 		return new Iterable<T>() {
-			@SuppressWarnings("null")
 			@Override
 			public Iterator<T> iterator() {
 				List<Iterator<? extends T>> iterators =
@@ -142,7 +138,6 @@ public abstract class Iterables {
 		return new Iterable<U>() {
 			@Override
 			public Iterator<U> iterator() {
-				@SuppressWarnings("null")
 				@NonNull Iterator<? extends T> iterator = it.iterator();
 				return transformIterator(iterator, f);
 			}

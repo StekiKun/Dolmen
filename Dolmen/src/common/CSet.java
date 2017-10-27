@@ -241,7 +241,6 @@ public abstract class CSet implements Comparable<CSet> {
 			return buf;
 		}
 		
-		@SuppressWarnings("null")
 		@Override
 		public String toString() {
 			return append(new StringBuilder()).toString();
@@ -304,9 +303,7 @@ public abstract class CSet implements Comparable<CSet> {
 			if (head != null)
 				head.append(buf);
 			buf.append("]");
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 
 		@Override

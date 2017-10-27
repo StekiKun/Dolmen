@@ -74,7 +74,6 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
         case 4:  {
             stringBuffer.setLength(0);
 string();
-@SuppressWarnings("null")
 jl.JLToken res = LSTRING(stringBuffer.toString());
 return res;
         }

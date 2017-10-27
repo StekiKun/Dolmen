@@ -98,9 +98,7 @@ public final class Lexer {
 		public String toString() {
 			StringBuilder buf = new StringBuilder();
 			append(buf, "rule");
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 		
 		/**
@@ -216,9 +214,7 @@ public final class Lexer {
 			first = false;
 		}
 		buf.append("\n{\n").append(footer.find()).append("\n}");
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 
 }

@@ -131,9 +131,7 @@ public class DFA {
 					   .append(" -> ").append(mmap);
 				});
 			buf.append("\n]");
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 		
 		/** The empty state */
@@ -612,7 +610,6 @@ public class DFA {
 		/** The tag actions associated to {@link #action} */
 		public final List<@NonNull TagAction> tagActions;
 		
-		@SuppressWarnings("null")
 		private Remember() {
 			this.action = -1;
 			this.tagActions = Collections.emptyList();
@@ -747,7 +744,6 @@ public class DFA {
 		 * A special singleton to represent transitions
 		 * backtracking to a previously remembered final state
 		 */
-		@SuppressWarnings("null")
 		public final static TransActions BACKTRACK =
 			new TransActions(GotoAction.BACKTRACK, Collections.emptyList());
 		

@@ -145,7 +145,6 @@ public abstract class TRegulars {
 	}
 	
 	private static final Iterable<MatchResult> NO_MATCH = Iterables.empty();
-	@SuppressWarnings("null")
 	private static final EnumSet<TRegular.Kind> AFTER_EOF =
 		EnumSet.of(TRegular.Kind.TAG, TRegular.Kind.ACTION);
 	

@@ -293,7 +293,6 @@ public abstract class Regulars {
 	 * A special instance of {@link VarsInfo} for regular expressions
 	 * without any bindings
 	 */
-	@SuppressWarnings("null")
 	private static VarsInfo NO_VARS =
 		new VarsInfo(Collections.emptySet(), Collections.emptySet(),
 					 Collections.emptySet(), Collections.emptySet(),
@@ -519,7 +518,6 @@ public abstract class Regulars {
 			// the associated binding and return the updated match result
 			Iterable<MatchResult> res = match(binding.reg, input, from);
 			return Iterables.transform(res, mr -> {
-				@SuppressWarnings("null")
 				@NonNull String bound = input.substring(from, mr.matchedLength);
 				// Save this binding, potentially shadowing other nested bindings
 				if (mr.bindings.isEmpty()) {

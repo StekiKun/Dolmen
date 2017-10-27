@@ -70,9 +70,7 @@ public final class TLexer {
 			buf.append(entry);
 		}
 		buf.append("\n").append(footer);
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 
 }

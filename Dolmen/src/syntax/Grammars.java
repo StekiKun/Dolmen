@@ -68,9 +68,7 @@ public abstract class Grammars {
 			backward.forEach((nterm, s) ->
 				buf.append("\n  ").append(nterm).append(" -> ").append(s));
 			buf.append("\n}");
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 	}
 	
@@ -453,9 +451,7 @@ public abstract class Grammars {
 				});
 				buf.append("\n");
 			});
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;
+			return buf.toString();
 		}
 		
 		/**

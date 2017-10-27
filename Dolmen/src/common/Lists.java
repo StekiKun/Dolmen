@@ -3,8 +3,6 @@ package common;
 import java.util.Collections;
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNull;
-
 /**
  * This class contains various utility methods
  * about {@link List}s.
@@ -22,7 +20,6 @@ public abstract class Lists {
 	/**
 	 * @return the empty unmodifiable list
 	 */
-	@SuppressWarnings("null")
 	public static <T> List<T> empty() {
 		return Collections.emptyList();
 	}
@@ -31,8 +28,7 @@ public abstract class Lists {
 	 * @param elt
 	 * @return the singleton list containing {@code elt}
 	 */
-	@SuppressWarnings("null")
-	public static <T> @NonNull List<T> singleton(T elt) {
+	public static <T> List<T> singleton(T elt) {
 		return Collections.singletonList(elt);
 	}
 	

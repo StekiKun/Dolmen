@@ -34,7 +34,6 @@ public class TestCSetOperations
 			this.cs2 = cs2;
 		}
 		
-		@SuppressWarnings("null")
 		@Override public String toString() {
 			return String.format("[cs1=%s, cs2=%s]", cs1, cs2);
 		}

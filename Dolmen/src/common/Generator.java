@@ -39,9 +39,7 @@ public interface Generator<T> extends Supplier<T> {
 	 * @return a Java 8 {@link Stream} based on this generator
 	 */
 	default public Stream<T> toStream() {
-		@SuppressWarnings("null")
-		@NonNull Stream<T> res = Stream.generate(this);
-		return res;
+		return Stream.generate(this);
 	}
 	
 	/**

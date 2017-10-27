@@ -2,8 +2,6 @@ package codegen;
 
 import java.io.IOException;
 
-import common.Nulls;
-
 /**
  * An instance of this utility class manages a string
  * buffer with a current <i>indentation level</i>, which
@@ -188,7 +186,7 @@ public final class CodeBuilder {
 	 * Returns the current contents of this code builder buffer
 	 */
 	public String contents() {
-		return Nulls.ok(buf.toString());
+		return buf.toString();
 	}
 	
 	/**

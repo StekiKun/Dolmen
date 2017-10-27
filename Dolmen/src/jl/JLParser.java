@@ -127,9 +127,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			eat(); buf.append("static ");
 		}
 		parseImportString(buf);
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 	
 	private void parseImportString(StringBuilder buf) {

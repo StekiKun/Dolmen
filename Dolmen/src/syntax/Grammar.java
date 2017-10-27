@@ -131,9 +131,7 @@ public final class Grammar {
 		rules.forEach((entry, rule) -> 
 			{ buf.append("\n"); rule.append(buf); });
 		buf.append("\n{").append(footer.find()).append("}");
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 	
 	/**
@@ -267,7 +265,6 @@ public final class Grammar {
 			return null;
 		}
 		
-		@SuppressWarnings("null")
 		private static String scMessage(
 			GrammarRule rule, int i, Production.Actual actual, String msg) {
 			return String.format("In rule %s, production %d, item %s: %s",

@@ -205,7 +205,6 @@ public final class Optimiser {
 	 * 	mapping tags that were optimised away by this instance
 	 * 	to their relative addresses
 	 */
-	@SuppressWarnings("null")
 	public Map<TagKey, TagAddr> getTagEnvironment() {
 		return Collections.unmodifiableMap(env);
 	}

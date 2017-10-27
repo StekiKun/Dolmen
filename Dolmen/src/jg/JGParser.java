@@ -57,7 +57,6 @@ public abstract class JGParser {
 		if (act >= 0) {
 			bnd = act;
 			assert (s.charAt(s.length() - 1) == ')');
-			@SuppressWarnings("null")
 			@NonNull String args_ = s.substring(act + 1, s.length() - 1);
 			args = Location.inlined(args_);
 		}
@@ -65,7 +64,6 @@ public abstract class JGParser {
 			bnd = s.length();
 			args = null;
 		}
-		@SuppressWarnings("null")
 		@NonNull String item = s.substring(ndx + 1, bnd).trim();
 		return new Production.Actual(binding, item, args);
 	}
@@ -78,7 +76,6 @@ public abstract class JGParser {
 		for (int i = 0; i < items.length; ++i) {
 			String item = items[i];
 			if (item.startsWith("@")) {
-				@SuppressWarnings("null")
 				@NonNull String action = item.substring(1);
 				builder.addAction(Location.inlined(action));
 			}
@@ -99,10 +96,8 @@ public abstract class JGParser {
 			args = null;
 		} else {
 			assert (name_.charAt(name_.length() - 1) == ')');
-			@SuppressWarnings("null")
 			@NonNull String tmp =  name_.substring(0, par);
 			name = tmp;
-			@SuppressWarnings("null")
 			@NonNull String args_ = name_.substring(par + 1, name_.length() - 1);
 			args = Location.inlined(args_);
 		}
@@ -133,7 +128,6 @@ public abstract class JGParser {
 	 * Grammar rules (see PARSER.syntax)
 	 */
 	
-	@SuppressWarnings("null")
 	private static final List<String> imports =
 		Arrays.asList(
 			"import org.eclipse.jdt.annotation.Nullable;",

@@ -93,7 +93,6 @@ public abstract class TRegular {
 			return true;
 		}
 
-		@SuppressWarnings("null")
 		@Override
 		public @NonNull String toString() {
 			return String.format("{id=%s, start=%b, action=%d}", id, start, action);
@@ -233,7 +232,6 @@ public abstract class TRegular {
 			this.eof = eof;
 		}
 
-		@SuppressWarnings("null")
 		@Override
 		public @NonNull String toString() {
 			if (eof) 

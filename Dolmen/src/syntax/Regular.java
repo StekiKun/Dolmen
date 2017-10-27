@@ -226,11 +226,13 @@ public abstract class Regular {
 	 * 	the given string {@code s}
 	 */
 	public static Regular string(String s) {
-		@SuppressWarnings("null")
-		@NonNull Regular[] chars = new Regular[s.length()];
+		Regular[] chars = new Regular[s.length()];
 		for (int i = 0; i < s.length(); ++i)
 			chars[i] = chars(CSet.singleton(s.charAt(i)));
-		return seq(chars);
+		// All elements have been initialized to a non-null value
+		@SuppressWarnings("null")
+		@NonNull Regular[] allChars = (@NonNull Regular[]) chars;
+		return seq(allChars);
 	}
 	
 	

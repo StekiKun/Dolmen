@@ -151,7 +151,6 @@ public abstract class AdvancedLexers {
 			new Lexer.Entry(false, "comment", Location.inlined("void"), false, 
 					null, commentClauses);
 			
-		@SuppressWarnings("null")
 		final static Lexer LEXER =
 			new Lexer(
 				Lists.empty(),

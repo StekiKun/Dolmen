@@ -63,7 +63,6 @@ public final class TLexerEntry {
 			return buf;
 		}
 		
-		@SuppressWarnings("null")
 		@Override
 		public String toString() {
 			StringBuilder buf = new StringBuilder();
@@ -130,8 +129,6 @@ public final class TLexerEntry {
 			buf.append("\n - ");
 			fi.append(buf);
 		});
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString(); 
-		return res;
+		return buf.toString();
 	}
 }

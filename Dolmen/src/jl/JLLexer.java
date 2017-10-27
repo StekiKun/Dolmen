@@ -127,7 +127,6 @@ public abstract class JLLexer {
 			.add(seq(string("//"), star(notnl)), "return main();")
 		 	.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();\n" +
-							 "@SuppressWarnings(\"null\")\n" +
 							 "jl.JLToken res = LSTRING(stringBuffer.toString());\n" +
 							 "return res;")
 			.add(rchar('{'), 
@@ -327,7 +326,6 @@ public abstract class JLLexer {
 	/**
 	 * The lexer definition for .jl lexer descriptions
 	 */
-	@SuppressWarnings("null")
 	public final static Lexer INSTANCE =
 		new Lexer(
 			Arrays.asList("package jl;", "import static jl.JLToken.*;"),

@@ -88,11 +88,9 @@ public class LexBuffer {
 		
 		@Override
 		public @NonNull String toString() {
-			@SuppressWarnings("null")
-			@NonNull String res = String.format(
+			return String.format(
 				"[file=%s, char=%d, line=%d, col=%d]",
 				filename, offset, line, column());
-			return res;
 		}
 	}
 	
@@ -341,7 +339,6 @@ public class LexBuffer {
      * @return the (optional) substring between positions {@code pos} 
      *  and {@code end} (exclusive) in the token buffer
      */
-    @SuppressWarnings("null")
 	protected final Optional<String> getSubLexemeOpt(int start, int end) {
     	if (start < 0)
     		return Optional.empty();
@@ -362,7 +359,6 @@ public class LexBuffer {
      * @return the (optional) character at position {@code pos}
      * 	in the token buffer
      */
-    @SuppressWarnings("null")
     protected final Optional<Character> getSubLexemeOptChar(int pos) {
     	if (pos < 0)
     		return Optional.empty();

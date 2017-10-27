@@ -71,9 +71,7 @@ public final class GrammarRule {
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		append(buf);
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 	
 	/**

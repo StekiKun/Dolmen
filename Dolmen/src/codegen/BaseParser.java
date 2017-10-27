@@ -58,7 +58,6 @@ public abstract class BaseParser<Token> {
 			buf.append(expectedKinds[i]);
 		}
 		buf.append('}');
-		@SuppressWarnings("null")
 		@NonNull String res = buf.toString();
 		return new ParsingException(res);
 	}
@@ -136,7 +135,6 @@ public abstract class BaseParser<Token> {
 				this.end = end;
 			}
 			
-			@SuppressWarnings("null")
 			@Override
 			public String toString() {
 				StringBuilder buf = new StringBuilder();

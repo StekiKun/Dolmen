@@ -101,9 +101,7 @@ public final class Automata {
 		public String toString() {
 			StringBuilder buf = new StringBuilder();
 			append(buf);
-			@SuppressWarnings("null")
-			@NonNull String res = buf.toString();
-			return res;			
+			return buf.toString();			
 		}
 	}
 
@@ -159,9 +157,7 @@ public final class Automata {
 			buf.append("\n ").append(i).append(": ");
 			buf.append(automataCells[i]);
 		}
-		@SuppressWarnings("null")
-		@NonNull String res = buf.toString();
-		return res;
+		return buf.toString();
 	}
 	
 }
