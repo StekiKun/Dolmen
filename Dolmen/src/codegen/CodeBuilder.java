@@ -2,6 +2,8 @@ package codegen;
 
 import java.io.IOException;
 
+import common.Nulls;
+
 /**
  * An instance of this utility class manages a string
  * buffer with a current <i>indentation level</i>, which
@@ -101,6 +103,35 @@ public final class CodeBuilder {
 		newline();
 		return this;
 	}
+
+	/**
+	 * Appends the given code, which should not
+	 * contain newline characters, provided the condition
+	 * {@code cond} holds
+	 * 
+	 * @param cond
+	 * @param code
+	 */
+	public CodeBuilder emitIf(boolean cond, String code) {
+		if (!cond) return this;
+		buf.append(code);
+		return this;
+	}
+	
+	/**
+	 * Appends the given line of code and emits a terminal
+	 * {@link #newline()}, provided the condition
+	 * {@code cond} holds
+	 * 
+	 * @param cond
+	 * @param line	should not contain newline characters
+	 */
+	public CodeBuilder emitlnIf(boolean cond, String line) {
+		emit(line);
+		newline();
+		return this;
+	}
+
 	
 	/**
 	 * Opens a new curly-braced block with incremented
@@ -151,6 +182,13 @@ public final class CodeBuilder {
 		closeBlock0();
 		newline();
 		return this;
+	}
+	
+	/**
+	 * Returns the current contents of this code builder buffer
+	 */
+	public String contents() {
+		return Nulls.ok(buf.toString());
 	}
 	
 	/**

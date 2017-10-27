@@ -36,7 +36,7 @@ public class TestGrammarOutput {
 				printConflicts(predictTable);
 				return;
 			}
-			GrammarOutput.output(writer, className, grammar, predictTable);
+			GrammarOutput.outputDefault(writer, className, grammar, predictTable);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (IOException e) {

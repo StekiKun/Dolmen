@@ -353,7 +353,8 @@ public abstract class JGParser {
 				System.out.println(predictTable.toString());
 				return;
 			}
-			GrammarOutput.output(writer, className, grammar, predictTable);
+			GrammarOutput.output(writer, className,
+				GrammarOutput.DEFAULT_CONFIG, grammar, predictTable);
 
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());

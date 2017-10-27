@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import common.Iterables;
 import common.Maps;
 import syntax.Grammar;
 import syntax.Grammar.TokenDecl;
@@ -34,12 +35,38 @@ import syntax.Production.Actual;
  * grammar.
  * 
  * @see TokensOutput
- * @see #output(Writer, String, Grammar, PredictionTable)
+ * @see #output(Writer, String, Config, Grammar, PredictionTable)
  * 
  * @author Stéphane Lescuyer
  */
 public final class GrammarOutput {
 
+	/**
+	 * Configuration for {@link GrammarOutput}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Config {
+		/** 
+		 * Whether the parser should keep positions for
+		 * non-terminal symbols as well as terminal symbols	
+		 */
+		public final boolean positions;
+		
+		/**
+		 * Builds a configuration for {@link GrammarOutput}
+		 * 
+		 * @param positions
+		 */
+		public Config(boolean positions) {
+			this.positions = positions;
+		}
+	}
+	
+	/** The default configuration for grammar generation */
+	public static final Config DEFAULT_CONFIG = new Config(false);
+	
+	private final Config config;
 	private final Grammar grammar;
 	private final PredictionTable predict;
 	private final CodeBuilder buf;
@@ -48,10 +75,13 @@ public final class GrammarOutput {
 	 * Initialize an instance to emit parsing code
 	 * for the given grammar and prediction table
 	 * 
+	 * @param config
 	 * @param grammar
 	 * @param predict
 	 */
-	private GrammarOutput(Grammar grammar, PredictionTable predict) {
+	private GrammarOutput(Config config,
+			Grammar grammar, PredictionTable predict) {
+		this.config = config;
 		this.grammar = grammar;
 		this.predict = predict;
 		this.buf = new CodeBuilder(0);
@@ -69,10 +99,13 @@ public final class GrammarOutput {
 	
 	private void genConstructor(String name) {
 		buf.emitln("@SuppressWarnings(\"null\")");
-		buf.emit("public ").emit(name)
-		   .emit("(java.util.function.Supplier<Token> tokens)")
+		buf.emit("public ").emit(name).emit("(")
+		   .emitIf(config.positions, "codegen.LexBuffer lexbuf, ")
+		   .emit("java.util.function.Supplier<Token> tokens)")
 		   .openBlock();
-		buf.emit("super(tokens);").closeBlock();
+		buf.emitIf(!config.positions, "super(tokens);")
+		   .emitIf(config.positions, "super(lexbuf, tokens);")
+		   .closeBlock();
 		buf.newline();
 	}
 	
@@ -137,6 +170,11 @@ public final class GrammarOutput {
 			if (bound != null)
 				buf.emit(").value");
 			buf.emit(";");
+			if (config.positions) {
+				buf.newline();
+				String arg = bound == null ? "null" : "\"" + bound + "\"";
+				buf.emit("shift(" + arg + ");");
+			}
 		}
 		else {
 			buf.emit(ruleName(name)).emit("(");
@@ -144,6 +182,11 @@ public final class GrammarOutput {
 			if (args != null)
 				buf.emit(args.find());
 			buf.emit(");");
+			if (config.positions) {
+				buf.newline();
+				String arg = bound == null ? "null" : "\"" + bound + "\"";
+				buf.emit("leave(" + arg + ");");
+			}
 		}
 	}
 	
@@ -156,6 +199,9 @@ public final class GrammarOutput {
 		//	return; or return val; depending on whether
 		//  the return type is void, and of course not
 		//	to return in the middle of a production rule.
+		if (config.positions)
+			buf.newline()
+			   .emit("enter(" + Iterables.size(prod.actuals()) + ");");
 		for (Production.Item item : prod.items) {
 			switch (item.getKind()) {
 			case ACTUAL: {
@@ -255,7 +301,8 @@ public final class GrammarOutput {
 		buf.emitln("@SuppressWarnings(\"javadoc\")");
 		buf.emitln("@org.eclipse.jdt.annotation.NonNullByDefault({})");
 		buf.emit("public final class ").emit(name)
-		   .emit(" extends codegen.BaseParser<")
+		   .emitIf(!config.positions, " extends codegen.BaseParser<")
+		   .emitIf(config.positions, " extends codegen.BaseParser.WithPositions<")
 		   .emit(name).emit(".Token>").openBlock();
 		buf.newline();
 		
@@ -281,7 +328,29 @@ public final class GrammarOutput {
 	 * Outputs to {@code writer} the definition of a top-down
 	 * parser for the given {@code grammar}, provided the prediction table
 	 * {@code predict} has no conflicts. The name of the
-	 * generated Java class is {@code className}.
+	 * generated Java class is {@code className} and specific
+	 * configuration for the code generation is passed via {@code config}.
+	 * 
+	 * @param writer
+	 * @param className
+	 * @param config
+	 * @param grammar
+	 * @param predict
+	 * @throws IOException
+	 */
+	public static void output(Writer writer, String className, 
+			Config config, Grammar grammar, PredictionTable predict)
+			throws IOException {
+		if (!predict.isLL1())
+			throw new IllegalArgumentException("Cannot generate LL(1) parser for this grammar");
+		GrammarOutput out = new GrammarOutput(config, grammar, predict);
+		out.genParser(className);
+		out.buf.print(writer);
+	}
+	
+	/**
+	 * Same as {@link #output(Writer, String, Config, Grammar, PredictionTable)}
+	 * with the default configuration {@link #DEFAULT_CONFIG}.
 	 * 
 	 * @param writer
 	 * @param className
@@ -289,13 +358,9 @@ public final class GrammarOutput {
 	 * @param predict
 	 * @throws IOException
 	 */
-	public static void output(Writer writer, 
-			String className, Grammar grammar, PredictionTable predict)
-			throws IOException {
-		if (!predict.isLL1())
-			throw new IllegalArgumentException("Cannot generate LL(1) parser for this grammar");
-		GrammarOutput out = new GrammarOutput(grammar, predict);
-		out.genParser(className);
-		out.buf.print(writer);
+	public static void outputDefault(Writer writer,
+		String className, Grammar grammar, PredictionTable predict)
+		throws IOException {
+		output(writer, className, DEFAULT_CONFIG, grammar, predict);
 	}
 }

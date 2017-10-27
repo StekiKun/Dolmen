@@ -379,7 +379,7 @@ public abstract class BasicGrammars {
 				printConflicts(predictTable);
 				return;
 			}
-			GrammarOutput.output(writer, className, grammar, predictTable);
+			GrammarOutput.outputDefault(writer, className, grammar, predictTable);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (IOException e) {
@@ -419,7 +419,7 @@ public abstract class BasicGrammars {
 				printConflicts(predictTable);
 				return;
 			}
-			GrammarOutput.output(writer, className, grammar, predictTable);
+			GrammarOutput.outputDefault(writer, className, grammar, predictTable);
 
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());

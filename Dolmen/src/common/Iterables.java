@@ -193,6 +193,17 @@ public abstract class Iterables {
 		};
 	}
 	
+	/**
+	 * @param it
+	 * @return the number of elements in the iterable {@code it}
+	 */
+	public static <T> int size(Iterable<T> it) {
+		int count = 0;
+		for (@SuppressWarnings("unused") T t : it)
+			++count;
+		return count;
+	}
+	
 //	/**
 //	 * @param args
 //	 */

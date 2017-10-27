@@ -68,7 +68,7 @@ public abstract class TestJGParser {
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}
 	
-	static void generateParser(String filename, String className) throws IOException {
+	static void generateParser(String filename, String className, boolean withPos) throws IOException {
 		FileReader reader = new FileReader(filename);
 		JGLexer lexer = new JGLexer(filename, reader);
 		JGParserGenerated parser = of(lexer);
@@ -81,8 +81,9 @@ public abstract class TestJGParser {
 			System.out.println(predictTable.toString());
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
+			GrammarOutput.Config config = new GrammarOutput.Config(withPos);
 			writer.append("package test.examples;\n");
-			GrammarOutput.output(writer, className, grammar, predictTable);
+			GrammarOutput.output(writer, className, config, grammar, predictTable);
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}
@@ -93,9 +94,9 @@ public abstract class TestJGParser {
 	 */
 	public static void main(String[] args) throws IOException {
 		generateLexer("tests/jl/JSon.jl", "JSonLexer");
-		generateParser("tests/jg/JSon.jg", "JSonParser");
+		generateParser("tests/jg/JSon.jg", "JSonParser", false);
 
 		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
-		generateParser("tests/jg/JSonLW.jg", "JSonLWParser");
+		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);
 	}
 }
