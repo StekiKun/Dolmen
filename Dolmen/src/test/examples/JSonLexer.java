@@ -78,7 +78,9 @@ public final class JSonLexer extends codegen.LexBuffer {
         }
         case 11:  {
              
+              Position stringStart = getLexemeStart();
 			  buf.setLength(0); string();
+			  startLoc = stringStart;
 			  return STRING(buf.toString());
 			
         }

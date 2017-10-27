@@ -47,7 +47,9 @@ public { Token } rule main =
 | "false"	{ return FALSE; }
 | "null"	{ return NULL; }
 | '"'		{ 
+              Position stringStart = getLexemeStart();
 			  buf.setLength(0); string();
+			  startLoc = stringStart;
 			  return STRING(buf.toString());
 			}
 | number	{ return NUMBER(getLexeme()); }
