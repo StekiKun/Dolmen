@@ -2,6 +2,7 @@ package jl;
 
 import static syntax.Regular.binding;
 import static syntax.Regular.chars;
+import static syntax.Regular.star;
 import static syntax.Regular.plus;
 import static syntax.Regular.seq;
 import static syntax.Regular.string;
@@ -123,7 +124,7 @@ public abstract class JLLexer {
 			.add(plus(chars(ws)), "return main();")
 			.add(nl, "newline(); return main();")
 			.add(string("/*"), "comment(); return main();")
-			.add(seq(string("//"), plus(notnl)), "return main();")
+			.add(seq(string("//"), star(notnl)), "return main();")
 		 	.add(rchar('"'), "stringBuffer.setLength(0);\n" +
 							 "string();\n" +
 							 "@SuppressWarnings(\"null\")\n" +

@@ -160,7 +160,7 @@ return ACTION(loc);
     private void comment() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell34();
+        int result = _jl_cell33();
         endToken();
         switch (result) {
         case 0:  {
@@ -199,7 +199,7 @@ stringBuffer.setLength(0);comment(); return;
     private void string() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell43();
+        int result = _jl_cell42();
         endToken();
         switch (result) {
         case 0:  {
@@ -231,7 +231,7 @@ stringBuffer.setLength(0);comment(); return;
     private int action() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell50();
+        int result = _jl_cell49();
         endToken();
         switch (result) {
         case 0:  {
@@ -277,7 +277,7 @@ return action();
     private void skipChar() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell62();
+        int result = _jl_cell61();
         endToken();
         switch (result) {
         case 0:  {
@@ -522,7 +522,7 @@ return action();
         switch (getNextChar()) {
         // \\
         case 92: {
-            return _jl_cell29();
+            return _jl_cell28();
         }
         // 0xffff
         case 65535: {
@@ -530,7 +530,7 @@ return action();
             
         }
         default:  {
-            return _jl_cell30();
+            return _jl_cell29();
         }
         }
         
@@ -758,26 +758,6 @@ return action();
     }
     
     private int _jl_cell26() {
-        switch (getNextChar()) {
-        // [0x000a0x000d0xffff]
-        case 10:
-        case 13:
-        case 65535: {
-            return rewind();
-            
-        }
-        default:  {
-            return _jl_cell28();
-        }
-        }
-        
-    }
-    
-    private int _jl_cell27() {
-        return 2;
-    }
-    
-    private int _jl_cell28() {
         while (true) {
             mark(3);
             switch (getNextChar()) {
@@ -796,7 +776,11 @@ return action();
         }
     }
     
-    private int _jl_cell29() {
+    private int _jl_cell27() {
+        return 2;
+    }
+    
+    private int _jl_cell28() {
         switch (getNextChar()) {
         // [0x00200x00220x0027\\bnrt]
         case 32:
@@ -807,20 +791,6 @@ return action();
         case 110:
         case 114:
         case 116: {
-            return _jl_cell32();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int _jl_cell30() {
-        switch (getNextChar()) {
-        // 0x0027
-        case 39: {
             return _jl_cell31();
         }
         default:  {
@@ -831,15 +801,11 @@ return action();
         
     }
     
-    private int _jl_cell31() {
-        return 8;
-    }
-    
-    private int _jl_cell32() {
+    private int _jl_cell29() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
-            return _jl_cell33();
+            return _jl_cell30();
         }
         default:  {
             return rewind();
@@ -849,11 +815,29 @@ return action();
         
     }
     
-    private int _jl_cell33() {
+    private int _jl_cell30() {
+        return 8;
+    }
+    
+    private int _jl_cell31() {
+        switch (getNextChar()) {
+        // 0x0027
+        case 39: {
+            return _jl_cell32();
+        }
+        default:  {
+            return rewind();
+            
+        }
+        }
+        
+    }
+    
+    private int _jl_cell32() {
         return 9;
     }
     
-    private int _jl_cell34() {
+    private int _jl_cell33() {
         switch (getNextChar()) {
         // 0x000a
         case 10: {
@@ -880,10 +864,32 @@ return action();
             return _jl_cell37();
         }
         default:  {
-            return _jl_cell41();
+            return _jl_cell34();
         }
         }
         
+    }
+    
+    private int _jl_cell34() {
+        while (true) {
+            mark(6);
+            switch (getNextChar()) {
+            // [0x000a0x000d0x00220x00270x002a0xffff]
+            case 10:
+            case 13:
+            case 34:
+            case 39:
+            case 42:
+            case 65535: {
+                return rewind();
+                
+            }
+            default:  {
+                continue;
+            }
+            }
+            
+        }
     }
     
     private int _jl_cell35() {
@@ -922,7 +928,7 @@ return action();
         switch (getNextChar()) {
         // 0x002f
         case 47: {
-            return _jl_cell42();
+            return _jl_cell41();
         }
         default:  {
             return rewind();
@@ -933,53 +939,31 @@ return action();
     }
     
     private int _jl_cell41() {
-        while (true) {
-            mark(6);
-            switch (getNextChar()) {
-            // [0x000a0x000d0x00220x00270x002a0xffff]
-            case 10:
-            case 13:
-            case 34:
-            case 39:
-            case 42:
-            case 65535: {
-                return rewind();
-                
-            }
-            default:  {
-                continue;
-            }
-            }
-            
-        }
-    }
-    
-    private int _jl_cell42() {
         return 0;
     }
     
-    private int _jl_cell43() {
+    private int _jl_cell42() {
         switch (getNextChar()) {
         // 0x0022
         case 34: {
-            return _jl_cell47();
+            return _jl_cell46();
         }
         // \\
         case 92: {
-            return _jl_cell46();
+            return _jl_cell45();
         }
         // 0xffff
         case 65535: {
-            return _jl_cell45();
+            return _jl_cell44();
         }
         default:  {
-            return _jl_cell44();
+            return _jl_cell43();
         }
         }
         
     }
     
-    private int _jl_cell44() {
+    private int _jl_cell43() {
         while (true) {
             mark(4);
             switch (getNextChar()) {
@@ -998,11 +982,11 @@ return action();
         }
     }
     
-    private int _jl_cell45() {
+    private int _jl_cell44() {
         return 3;
     }
     
-    private int _jl_cell46() {
+    private int _jl_cell45() {
         switch (getNextChar()) {
         // [0x00200x00220x0027\\bnrt]
         case 32:
@@ -1013,7 +997,7 @@ return action();
         case 110:
         case 114:
         case 116: {
-            return _jl_cell49();
+            return _jl_cell48();
         }
         // 0xffff
         case 65535: {
@@ -1021,25 +1005,25 @@ return action();
             
         }
         default:  {
-            return _jl_cell48();
+            return _jl_cell47();
         }
         }
         
     }
     
-    private int _jl_cell47() {
+    private int _jl_cell46() {
         return 0;
     }
     
-    private int _jl_cell48() {
+    private int _jl_cell47() {
         return 2;
     }
     
-    private int _jl_cell49() {
+    private int _jl_cell48() {
         return 1;
     }
     
-    private int _jl_cell50() {
+    private int _jl_cell49() {
         switch (getNextChar()) {
         // 0x000a
         case 10: {
@@ -1059,7 +1043,7 @@ return action();
         }
         // 0x002f
         case 47: {
-            return _jl_cell59();
+            return _jl_cell50();
         }
         // 0x007b
         case 123: {
@@ -1075,6 +1059,24 @@ return action();
         }
         default:  {
             return _jl_cell55();
+        }
+        }
+        
+    }
+    
+    private int _jl_cell50() {
+        switch (getNextChar()) {
+        // 0x002a
+        case 42: {
+            return _jl_cell59();
+        }
+        // 0x002f
+        case 47: {
+            return _jl_cell60();
+        }
+        default:  {
+            return rewind();
+            
         }
         }
         
@@ -1144,28 +1146,10 @@ return action();
     }
     
     private int _jl_cell59() {
-        switch (getNextChar()) {
-        // 0x002a
-        case 42: {
-            return _jl_cell60();
-        }
-        // 0x002f
-        case 47: {
-            return _jl_cell61();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int _jl_cell60() {
         return 4;
     }
     
-    private int _jl_cell61() {
+    private int _jl_cell60() {
         while (true) {
             mark(5);
             switch (getNextChar()) {
@@ -1184,7 +1168,7 @@ return action();
         }
     }
     
-    private int _jl_cell62() {
+    private int _jl_cell61() {
         mark(2);
         switch (getNextChar()) {
         // [0x00270xffff]
@@ -1195,16 +1179,16 @@ return action();
         }
         // \\
         case 92: {
-            return _jl_cell63();
+            return _jl_cell62();
         }
         default:  {
-            return _jl_cell64();
+            return _jl_cell63();
         }
         }
         
     }
     
-    private int _jl_cell63() {
+    private int _jl_cell62() {
         switch (getNextChar()) {
         // 0xffff
         case 65535: {
@@ -1212,35 +1196,35 @@ return action();
             
         }
         default:  {
-            return _jl_cell66();
+            return _jl_cell65();
+        }
+        }
+        
+    }
+    
+    private int _jl_cell63() {
+        switch (getNextChar()) {
+        // 0x0027
+        case 39: {
+            return _jl_cell64();
+        }
+        default:  {
+            return rewind();
+            
         }
         }
         
     }
     
     private int _jl_cell64() {
-        switch (getNextChar()) {
-        // 0x0027
-        case 39: {
-            return _jl_cell65();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
-    }
-    
-    private int _jl_cell65() {
         return 0;
     }
     
-    private int _jl_cell66() {
+    private int _jl_cell65() {
         switch (getNextChar()) {
         // 0x0027
         case 39: {
-            return _jl_cell67();
+            return _jl_cell66();
         }
         default:  {
             return rewind();
@@ -1250,7 +1234,7 @@ return action();
         
     }
     
-    private int _jl_cell67() {
+    private int _jl_cell66() {
         return 1;
     }
     
