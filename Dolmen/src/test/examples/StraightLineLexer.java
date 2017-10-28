@@ -70,7 +70,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
              return EOF; 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }

@@ -70,14 +70,14 @@ public abstract class AdvancedLexers {
 	 * | '('        { return LPAREN; }
 	 * | ')'        { return RPAREN; }
 	 * | eof        { return EOF; }
-	 * | _          { throw new LexicalError("Unexpected char"); }
+	 * | _          { throw error("Unexpected char"); }
 	 * 
 	 * rule comment:
 	 * | '*' '/'	{ return; }
 	 * | '\n'       { newline(); comment(); return; }
 	 * | '*'        { comment(); return; }
 	 * | [^*\r\n]   { comment(); return; }
-	 * | eof		{ throw new LexicalError("EOF in comment"); }
+	 * | eof		{ throw error("EOF in comment"); }
 	 * </pre>
 	 * 
 	 * @author Stéphane Lescuyer
@@ -131,7 +131,7 @@ public abstract class AdvancedLexers {
 				Regular.string("("),	" return Token.LPAREN; ",
 				Regular.string(")"),	" return Token.RPAREN; ",
 				Regular.chars(CSet.EOF),	" return Token.EOF; ",
-				Regular.chars(CSet.ALL),	" throw new LexicalError(\"Unexpected char\"); "
+				Regular.chars(CSet.ALL),	" throw error(\"Unexpected char\"); "
 			);
 		
 		private static final CSet inComment =
@@ -143,7 +143,7 @@ public abstract class AdvancedLexers {
 				newline,		 			" newline(); comment(); return;",
 				Regular.string("*"), 		" comment(); return;",
 				Regular.chars(inComment),   " comment(); return;",
-				Regular.chars(CSet.EOF),    " throw new LexicalError(\"EOF in comment\"); "
+				Regular.chars(CSet.EOF),    " throw error(\"EOF in comment\"); "
 			);
 		private final static Lexer.Entry mainEntry =
 			new Lexer.Entry(true, "main", Extent.inlined("Token"), false, 

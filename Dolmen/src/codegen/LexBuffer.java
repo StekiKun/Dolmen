@@ -98,16 +98,24 @@ public class LexBuffer {
      * Exception which can be raised by generated lexers which
      * extend {@link LexBuffer}, and which is raised also by
      * {@link LexBuffer#getNextChar()} in place of potential
-     * {@link IOException}s. 
+     * {@link IOException}s.
+     * 
+     * @see LexBuffer#error
      */
     public static final class LexicalError extends RuntimeException {
         private static final long serialVersionUID = 1L;
         
+        /** The position in input at which the error occurred */
+        public final @Nullable Position pos;
+        
         /**
+         * @param pos	the position in input at which the error occurred
          * @param msg	error message
          */
-        public LexicalError(@Nullable String msg) {
-            super(msg);
+        public LexicalError(@Nullable Position pos, @Nullable String msg) {
+            super(msg + (pos == null ? "" : 
+            	String.format(" (at line %d, column %d)", pos.line, pos.column())));
+            this.pos = pos;
         }
     }
 
@@ -253,7 +261,9 @@ public class LexBuffer {
 				refill();
 			} catch (IOException e) {
 				// re-throw as unchecked lexical error exception
-				throw new LexicalError("IOException: " + e.getLocalizedMessage());
+				Position errPos = new Position(startLoc.filename,
+			    		absPos + curPos, startLoc.line, startLoc.bol);
+				throw new LexicalError(errPos, "IOException: " + e.getLocalizedMessage());
 			}
     		// NB: refill() can only make bufLen grow,
     		// or set eofReached, so it's one recursive call at most
@@ -373,5 +383,22 @@ public class LexBuffer {
     protected final void newline() {
     	Position pos = curLoc;
     	curLoc = new Position(pos.filename, pos.offset, pos.line + 1, pos.offset);
+    }
+    
+    /**
+     * Convenience helper which returns a {@link LexicalError}
+     * located at the current lexeme start.
+     * <p>
+     * It is also used by the lexer generator to report empty tokens, 
+     * i.e. input which does not match any of the lexer rules. It can
+     * be overriden in generated lexers to allow for customized message
+     * and position reports.
+     * 
+     * @param msg
+     * @return the exception with the given message and the current
+     * 	token start position
+     */
+    protected LexicalError error(String msg) {
+    	return new LexicalError(getLexemeStart(), msg);
     }
 }

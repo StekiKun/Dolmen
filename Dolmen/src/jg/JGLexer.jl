@@ -31,14 +31,7 @@ import jg.JGParserGenerated.Token;
 		else if (id.equals("token")) return TOKEN;
 		else if (id.equals("rule")) return RULE;
 		else return IDENT(id);
-	}
-	
-	private LexicalError error(String msg) {
-		Position p = getLexemeStart();
-		String res = String.format("%s (line %d, col %d)",
-			msg, p.line, p.column());
-		return new LexicalError(res);
-	}
+	}	
 }
 
 // Auxiliary definitions for lexer rules

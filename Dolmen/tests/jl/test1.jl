@@ -37,12 +37,12 @@ public { Object } rule arithExpr =
 | '/'   { return MULT; }
 | "/*"  { comment(); return arithExpr(); }
 | integer { return Integer.parseInt(getLexeme()); }
-| _ as c  { throw new LexicalError("Unexpected character " + c); }
+| _ as c  { throw new LexicalError(getLexemeStart(), "Unexpected character " + c); }
 
 private { void } rule comment =
 | "*/" { return; }
 | '*' [^'/'] [^'*']*  { comment(); return; }
 | orelse              { comment(); return; }
-| eof				  { throw new LexicalError("Unterminated comment"); }
+| eof				  { throw new LexicalError(getLexemeStart(), "Unterminated comment"); }
 
 { }

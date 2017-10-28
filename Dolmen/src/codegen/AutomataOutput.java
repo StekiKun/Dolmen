@@ -301,7 +301,7 @@ public final class AutomataOutput {
 		}
 		// Generate a default case for when input didn't match
 		buf.emit("default:").incrIndent().newline();
-		buf.emit("throw new LexicalError(\"Empty token\");");
+		buf.emit("throw error(\"Empty token\");");
 		buf.decrIndent().newline();
 	}
 	

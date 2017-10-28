@@ -32,13 +32,6 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
         else if (id.equals("private")) return PRIVATE;
         else return IDENT(id);
     }
-    
-    private LexicalError error(String msg) {
-		 Position p = getLexemeStart();
-        String res = String.format("%s (line %d, col %d)",
-            msg, p.line, p.column());
-        return new LexicalError(res);
-    }
 
     
     /**
@@ -150,7 +143,7 @@ return ACTION(ext);
             throw error("Unfinished token");
         }
         default:
-            throw new LexicalError("Empty token");
+            throw new LexicalError(getLexemeStart(), "Empty token");
         }
         
     }
@@ -189,7 +182,7 @@ stringBuffer.setLength(0);comment(); return;
             comment(); return;
         }
         default:
-            throw new LexicalError("Empty token");
+            throw new LexicalError(getLexemeStart(), "Empty token");
         }
         
     }
@@ -221,7 +214,7 @@ stringBuffer.setLength(0);comment(); return;
             stringBuffer.append(getLexeme()); string(); return;
         }
         default:
-            throw new LexicalError("Empty token");
+            throw new LexicalError(getLexemeStart(), "Empty token");
         }
         
     }
@@ -267,7 +260,7 @@ return action();
             return action();
         }
         default:
-            throw new LexicalError("Empty token");
+            throw new LexicalError(getLexemeStart(), "Empty token");
         }
         
     }
@@ -291,7 +284,7 @@ return action();
             return;
         }
         default:
-            throw new LexicalError("Empty token");
+            throw new LexicalError(getLexemeStart(), "Empty token");
         }
         
     }

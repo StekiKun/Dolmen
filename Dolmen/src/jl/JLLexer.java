@@ -317,13 +317,6 @@ public abstract class JLLexer {
 	"        else if (id.equals(\"public\")) return PUBLIC;\n" +
 	"        else if (id.equals(\"private\")) return PRIVATE;\n" +
 	"        else return IDENT(id);\n" +
-	"    }\n" +
-	"    \n" +
-	"    private LexicalError error(String msg) {\n" +
-	"		 Position p = getLexemeStart();\n" +
-	"        String res = String.format(\"%s (line %d, col %d)\",\n" +
-	"            msg, p.line, p.column());\n" +
-	"        return new LexicalError(res);\n" +
 	"    }\n"
 	;
 	private final static String footer = "";

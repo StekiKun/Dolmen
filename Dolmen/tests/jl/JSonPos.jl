@@ -78,8 +78,8 @@ private { void } rule string =
 			  return;
 			}
 | '\\' (_ as c)
-			{ throw new LexicalError("Unknown escape sequence: " + c); }
-| eof		{ throw new LexicalError("Unterminated string"); }
+			{ throw error("Unknown escape sequence: " + c); }
+| eof		{ throw error("Unterminated string"); }
 | orelse	{ 
 			  buf.append(getLexeme());
 			  string();
@@ -89,6 +89,6 @@ private { void } rule string =
 private { char} rule hexUnicode =
 | hex hex hex hex
 			{ return (char)(Integer.parseInt(getLexeme(), 16)); }
-| ""		{ throw new LexicalError("Illegal \\u Unicode sequence"); }
+| ""		{ throw error("Illegal \\u Unicode sequence"); }
 
 { }

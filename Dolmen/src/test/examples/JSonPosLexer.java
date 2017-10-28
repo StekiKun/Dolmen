@@ -97,7 +97,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
              return EOF; 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -132,10 +132,10 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         }
         case 3:  {
             final char c = getSubLexemeChar(startPos + 1);
-             throw new LexicalError("Unknown escape sequence: " + c); 
+             throw error("Unknown escape sequence: " + c); 
         }
         case 4:  {
-             throw new LexicalError("Unterminated string"); 
+             throw error("Unterminated string"); 
         }
         case 5:  {
              
@@ -145,7 +145,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
 			
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -163,10 +163,10 @@ public final class JSonPosLexer extends codegen.LexBuffer {
              return (char)(Integer.parseInt(getLexeme(), 16)); 
         }
         case 1:  {
-             throw new LexicalError("Illegal \\u Unicode sequence"); 
+             throw error("Illegal \\u Unicode sequence"); 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }

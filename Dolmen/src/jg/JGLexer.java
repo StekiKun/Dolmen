@@ -33,14 +33,7 @@ public final class JGLexer extends codegen.LexBuffer {
 		else if (id.equals("token")) return TOKEN;
 		else if (id.equals("rule")) return RULE;
 		else return IDENT(id);
-	}
-	
-	private LexicalError error(String msg) {
-		Position p = getLexemeStart();
-		String res = String.format("%s (line %d, col %d)",
-			msg, p.line, p.column());
-		return new LexicalError(res);
-	}
+	}	
 
     
     /**
@@ -113,7 +106,7 @@ public final class JGLexer extends codegen.LexBuffer {
              throw error("Unfinished token"); 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -143,7 +136,7 @@ public final class JGLexer extends codegen.LexBuffer {
              comment(); return; 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -181,7 +174,7 @@ public final class JGLexer extends codegen.LexBuffer {
 			
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -230,7 +223,7 @@ public final class JGLexer extends codegen.LexBuffer {
              return action(); 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -279,7 +272,7 @@ public final class JGLexer extends codegen.LexBuffer {
              return arguments(); 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -303,7 +296,7 @@ public final class JGLexer extends codegen.LexBuffer {
              return; 
         }
         default:
-            throw new LexicalError("Empty token");
+            throw error("Empty token");
         }
         
     }
