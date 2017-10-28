@@ -6,7 +6,7 @@ import common.Lists;
 import syntax.Grammar;
 import syntax.GrammarRule;
 import syntax.Grammars;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Production;
 import syntax.Grammars.Dependencies;
 import syntax.Grammars.NTermsInfo;
@@ -25,15 +25,15 @@ public final class TestAnalyseGrammar {
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Location.inlined(valType));
+		return new Grammar.TokenDecl(name, Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
 		return new Production.Actual(null, s, null);
 	}
 	
-	static final Location VOID = Location.inlined("void");
-	static final Location RETURN = Location.inlined("return;");
+	static final Extent VOID = Extent.inlined("void");
+	static final Extent RETURN = Extent.inlined("return;");
 	
 	static Production production(@NonNull String... items) {
 		Production.Builder builder = new Production.Builder();
@@ -99,7 +99,7 @@ public final class TestAnalyseGrammar {
 				.build();
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("A")).addToken(token("C")).addToken(token("D"))
 				.addRule(ruleZ).addRule(ruleY).addRule(ruleX).build();
 	}
@@ -168,7 +168,7 @@ public final class TestAnalyseGrammar {
 				.build();
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("PLUS")).addToken(token("MINUS"))
 				.addToken(token("MULT")).addToken(token("DIV"))
 				.addToken(token("EOF")).addToken(token("LPAREN")).addToken(token("RPAREN"))
@@ -205,7 +205,7 @@ public final class TestAnalyseGrammar {
 	final static class TestLatex {
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
 				.addToken(token("LBRACE")).addToken(token("RBRACE"))
 				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))
@@ -262,7 +262,7 @@ public final class TestAnalyseGrammar {
 	final static class TestLatexLL1 {
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Location.DUMMY, Location.DUMMY)
+			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
 				.addToken(token("LBRACE")).addToken(token("RBRACE"))
 				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))

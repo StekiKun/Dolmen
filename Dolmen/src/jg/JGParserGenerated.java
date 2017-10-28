@@ -4,7 +4,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import java.util.List;
 import java.util.ArrayList;
 import common.Lists;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Production;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
@@ -67,9 +67,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         }
         
         public final static class ACTION extends Token {
-            public final @NonNull Location value;
+            public final @NonNull Extent value;
             
-            private ACTION(@NonNull Location value) {
+            private ACTION(@NonNull Extent value) {
                 this.value = value;
             }
             
@@ -83,14 +83,14 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return Kind.ACTION;
             }
         }
-        public static ACTION ACTION(@NonNull Location value) {
+        public static ACTION ACTION(@NonNull Extent value) {
             return new ACTION(value);
         }
         
         public final static class ARGUMENTS extends Token {
-            public final @NonNull Location value;
+            public final @NonNull Extent value;
             
-            private ARGUMENTS(@NonNull Location value) {
+            private ARGUMENTS(@NonNull Extent value) {
                 this.value = value;
             }
             
@@ -104,7 +104,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return Kind.ARGUMENTS;
             }
         }
-        public static ARGUMENTS ARGUMENTS(@NonNull Location value) {
+        public static ARGUMENTS ARGUMENTS(@NonNull Extent value) {
             return new ARGUMENTS(value);
         }
         
@@ -165,11 +165,11 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         // tdecls = tokens(null)
         @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
         // header = ACTION
-        @NonNull Location header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        @NonNull Extent header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // rules = rules(null)
         @NonNull List<@NonNull GrammarRule> rules = rules(null);
         // footer = ACTION
-        @NonNull Location footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        @NonNull Extent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // EOF
         eat(Token.Kind.EOF);
         Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
@@ -291,7 +291,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         switch (peek().getKind()) {
             case ACTION: {
                 // val = ACTION
-                @NonNull Location val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                @NonNull Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
@@ -337,7 +337,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         // vis = visibility
         boolean vis = visibility();
         // rtype = ACTION
-        @NonNull Location rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        @NonNull Extent rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // RULE
         eat(Token.Kind.RULE);
         // name = IDENT
@@ -345,7 +345,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         if (!Character.isLowerCase(name.charAt(0)))
             throw new ParsingException("Rule name must start with a lower case letter: " + name);
         // args = args
-        @Nullable Location args = args();
+        @Nullable Extent args = args();
         // EQUAL
         eat(Token.Kind.EQUAL);
         GrammarRule.@NonNull Builder builder =
@@ -376,7 +376,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         }
     }
     
-    private @Nullable Location args() {
+    private @Nullable Extent args() {
         switch (peek().getKind()) {
             case ACTION:
             case BAR:
@@ -386,9 +386,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return null;
             }
             case ARGUMENTS: {
-                // loc = ARGUMENTS
-                @NonNull Location loc = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
-                return loc;
+                // ext = ARGUMENTS
+                @NonNull Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
+                return ext;
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
@@ -430,9 +430,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     private void items(Production.Builder builder) {
         switch (peek().getKind()) {
             case ACTION: {
-                // loc = ACTION
-                @NonNull Location loc = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                builder.addAction(loc);
+                // ext = ACTION
+                @NonNull Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                builder.addAction(ext);
                 // items(builder)
                 items(builder);
                 return;
@@ -465,7 +465,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case IDENT:
             case SEMICOL: {
                 // args = args
-                @Nullable Location args = args();
+                @Nullable Extent args = args();
                 return new Production.Actual(null, id, args);
             }
             case EQUAL: {
@@ -474,7 +474,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 // name = IDENT
                 @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 // args = args
-                @Nullable Location args = args();
+                @Nullable Extent args = args();
                 return new Production.Actual(id, name, args);
             }
             default: {

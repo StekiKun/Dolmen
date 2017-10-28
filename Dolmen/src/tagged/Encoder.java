@@ -8,7 +8,7 @@ import java.util.Set;
 
 import common.CSet;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Regular;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
@@ -118,11 +118,11 @@ public final class Encoder {
 		case BINDING: {
 			final Binding binding = (Binding) regular;
 			TRegular tr = encode_(binding.reg, charVars, action);
-			TRegular tstart = TRegular.tag(binding.name, true, action);
-			if (charVars.contains(binding.name))
+			TRegular tstart = TRegular.tag(binding.name.val, true, action);
+			if (charVars.contains(binding.name.val))
 				return TRegular.seq(tstart, tr);
 			else {
-				TRegular tend = TRegular.tag(binding.name, false, action);
+				TRegular tend = TRegular.tag(binding.name.val, false, action);
 				return TRegular.seq(tstart, TRegular.seq(tr, tend));
 			}
 		}
@@ -152,9 +152,9 @@ public final class Encoder {
 		int ntags = 0;
 		// Go through all clauses and encode them, building a giant
 		// disjunction in tr
-		for (Map.Entry<Regular, Location> clause : entry.clauses.entrySet()) {
+		for (Map.Entry<Regular, Extent> clause : entry.clauses.entrySet()) {
 			final Regular expr = Regulars.removeNestedBindings2(clause.getKey());
-			final Location act = clause.getValue();
+			final Extent act = clause.getValue();
 			final VarsInfo varsInfo = Regulars.analyseVars(expr);
 			final Set<String> charVars = varsInfo.getCharVars();
 			

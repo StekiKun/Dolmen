@@ -17,7 +17,7 @@ import syntax.Grammar;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammars.PredictionTable;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Production;
 import syntax.Production.ActionItem;
 import syntax.Production.Actual;
@@ -145,7 +145,7 @@ public final class GrammarOutput {
 						   .findFirst();
 				if (!declo.isPresent())
 					throw new IllegalStateException("Undeclared terminal " + actual.item);
-				@Nullable Location valueType = declo.get().valueType;
+				@Nullable Extent valueType = declo.get().valueType;
 				if (valueType == null) {
 					System.err.println("Bound terminal " + actual + " has no value."
 							+ " Ignoring binding in generated code.");
@@ -178,7 +178,7 @@ public final class GrammarOutput {
 		}
 		else {
 			buf.emit(ruleName(name)).emit("(");
-			@Nullable Location args = actual.args;
+			@Nullable Extent args = actual.args;
 			if (args != null)
 				buf.emit(args.find());
 			buf.emit(");");
@@ -211,7 +211,7 @@ public final class GrammarOutput {
 			}
 			case ACTION: {
 				final ActionItem actionItem = (ActionItem) item;
-				buf.newline().emit(actionItem.location.find());
+				buf.newline().emit(actionItem.extent.find());
 				break;
 			}
 			}

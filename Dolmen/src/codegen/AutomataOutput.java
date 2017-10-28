@@ -19,7 +19,7 @@ import automaton.DFA.TagAction;
 import automaton.DFA.TransActions;
 import common.CSet;
 import common.Nulls;
-import syntax.Location;
+import syntax.Extent;
 import tagged.Optimiser.IdentInfo;
 import tagged.Optimiser.TagAddr;
 import tagged.TLexerEntry.Finisher;
@@ -233,7 +233,7 @@ public final class AutomataOutput {
 		buf.closeBlock();
 	}
 	
-	private void genEntryArgs(@Nullable Location args) {
+	private void genEntryArgs(@Nullable Extent args) {
 		if (args == null) return;
 		buf.emit(args.find());
 	}
@@ -292,7 +292,7 @@ public final class AutomataOutput {
 			// semantic action
 			finisher.tags.forEach(this::genEnvBinding);
 			// Add the user-defined semantic action
-			if (finisher.loc == Location.DUMMY) {
+			if (finisher.loc == Extent.DUMMY) {
 				buf.emit("return; // TODO: missing semantic action");
 			}
 			else

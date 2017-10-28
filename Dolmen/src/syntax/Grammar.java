@@ -44,10 +44,10 @@ public final class Grammar {
 		/** The name of this token */
 		public final String name;
 		/**
-		 * If non-null, the location of the type of Java values
+		 * If non-null, the extent of the type of Java values
 		 * associated to this token at run-time
 		 */
-		public final @Nullable Location valueType;
+		public final @Nullable Extent valueType;
 		
 		/**
 		 * Builds the token declaration with the given
@@ -55,7 +55,7 @@ public final class Grammar {
 		 * @param name
 		 * @param valueType
 		 */
-		public TokenDecl(String name, @Nullable Location valueType) {
+		public TokenDecl(String name, @Nullable Extent valueType) {
 			if (name.chars().anyMatch(ch -> Character.isLowerCase(ch)))
 				throw new IllegalArgumentException("Token name should not contain lower case");
 
@@ -73,7 +73,7 @@ public final class Grammar {
 		
 		@Override
 		public String toString() {
-			@Nullable Location valueType_ = valueType;
+			@Nullable Extent valueType_ = valueType;
 			return "token " +
 					(valueType_ == null ? "" : "{" + valueType_.find() + "} ") +
 					name;
@@ -84,12 +84,12 @@ public final class Grammar {
 	public final List<@NonNull String> imports;
 	/** The declarations for all terminals of this grammar */
 	public final List<@NonNull TokenDecl> tokenDecls;
-	/** The location of this parser class' header */
-	public final Location header;
+	/** The extent of this parser class' header */
+	public final Extent header;
 	/** The map of all grammar rules in the parser, indexed by their name */
 	public final Map<@NonNull String, @NonNull GrammarRule> rules;
-	/** The location of this parser class' footer */
-	public final Location footer;
+	/** The extent of this parser class' footer */
+	public final Extent footer;
 	
 	/**
 	 * Builds a grammar description from the given parameters
@@ -101,7 +101,7 @@ public final class Grammar {
 	 * @param footer
 	 */
 	private Grammar(List<String> imports, List<TokenDecl> tokenDecls, 
-			Location header, Map<String, GrammarRule> rules, Location footer) {
+			Extent header, Map<String, GrammarRule> rules, Extent footer) {
 		this.imports = imports;
 		this.tokenDecls = tokenDecls;
 		this.header = header;
@@ -144,8 +144,8 @@ public final class Grammar {
 	public static final class Builder {
 		private final List<String> imports;
 		private final List<TokenDecl> tokenDecls;
-		private final Location header;
-		private final Location footer;
+		private final Extent header;
+		private final Extent footer;
 		private final Map<String, GrammarRule> rules;
 		
 		/**
@@ -154,7 +154,7 @@ public final class Grammar {
 		 * @param header
 		 * @param footer
 		 */
-		public Builder(List<String> imports, Location header, Location footer) {
+		public Builder(List<String> imports, Extent header, Extent footer) {
 			this.imports = imports;
 			this.tokenDecls = new ArrayList<>();
 			this.header = header;

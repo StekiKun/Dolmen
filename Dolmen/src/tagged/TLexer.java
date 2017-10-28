@@ -6,7 +6,7 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Extent;
 
 /**
  * A tagged lexer definition is the encoded
@@ -25,13 +25,13 @@ public final class TLexer {
 	/** The imports to be added to the generated lexer */
 	public List<@NonNull String> imports;
 	/** The location of this lexer's header */
-	public final Location header;
+	public final Extent header;
 	/** The list of encoded entries */
 	public final List<@NonNull TLexerEntry> entries;
 	/** The character set dictionary */
 	public final List<@NonNull CSet> charsets;
 	/** The location of this lexer's footer */
-	public final Location footer;
+	public final Extent footer;
 	
 	/**
 	 * Builds a tagged lexer definition from the
@@ -43,9 +43,9 @@ public final class TLexer {
 	 * @param charsets
 	 * @param footer
 	 */
-	public TLexer(List<String> imports, Location header,
+	public TLexer(List<String> imports, Extent header,
 			List<TLexerEntry> entries, List<CSet> charsets,
-			Location footer) {
+			Extent footer) {
 		this.imports = imports;
 		this.header = header;
 		this.entries = entries;

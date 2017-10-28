@@ -416,15 +416,12 @@ public abstract class Regular {
 		 * The name to which the string matched by
 		 * this regular expression should be bound
 		 */
-		public final String name;
-		/** The location of {@link #name} */
-		public final Location loc;
+		public final Located<String> name;
 		
-		private Binding(Regular reg, String name, Location loc) {
+		private Binding(Regular reg, Located<String> name) {
 			super(Kind.BINDING, reg.size, true, reg.nullable);
 			this.reg = reg;
 			this.name = name;
-			this.loc = loc;
 		}
 
 		@Override
@@ -434,17 +431,16 @@ public abstract class Regular {
 
 		@Override
 		public @NonNull String toString() {
-			return "(" + reg.toString() + " as " + name + ")";
+			return "(" + reg.toString() + " as " + name.val + ")";
 		}
 	}
 	/**
 	 * @param reg
 	 * @param name
-	 * @param loc
 	 * @return a regular expression with a binding to {@code name}
 	 */
-	public static Binding binding(Regular reg, String name, Location loc) {
-		return new Binding(reg, name, loc);
+	public static Binding binding(Regular reg, Located<String> name) {
+		return new Binding(reg, name);
 	}
 	
 	/*
@@ -544,7 +540,7 @@ public abstract class Regular {
 			// the probability of capture/shadowing
 //			if (random.nextBoolean())
 //				name += (char) ('a' + random.nextInt(4));
-			return binding(genAux(curDepth + 1), name, Location.DUMMY);
+			return binding(genAux(curDepth + 1), Located.dummy(name));
 		}
 		
 		@Override

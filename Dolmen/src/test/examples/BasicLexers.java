@@ -15,7 +15,8 @@ import common.CSet;
 import common.Lists;
 import common.Maps;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Located;
+import syntax.Extent;
 import syntax.Regular;
 import tagged.Encoder;
 import tagged.TLexer;
@@ -32,7 +33,7 @@ public abstract class BasicLexers {
 		// Static utility only
 	}
 
-	final static Location VOID = Location.inlined("void");
+	final static Extent VOID = Extent.inlined("void");
 	
 	// Common regular expressions
 	
@@ -42,10 +43,10 @@ public abstract class BasicLexers {
 	
 	// Ordered clauses
 	
-	static Map<Regular, Location> clauses(@NonNull Regular... regs) {
-		Map<Regular, Location> res = new LinkedHashMap<>(regs.length);
+	static Map<Regular, Extent> clauses(@NonNull Regular... regs) {
+		Map<Regular, Extent> res = new LinkedHashMap<>(regs.length);
 		for (int i = 0; i < regs.length; ++i)
-			res.put(regs[i], Location.DUMMY);
+			res.put(regs[i], Extent.DUMMY);
 		return res;
 	}
 	
@@ -76,11 +77,11 @@ public abstract class BasicLexers {
 				Regular.star(Regular.chars(idbody)));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, "ident", VOID, false, null,
-				Maps.singleton(ident, Location.DUMMY));
+				Maps.singleton(ident, Extent.DUMMY));
 		
 		final static Lexer LEXER = 
-			new Lexer(Lists.empty(), Location.DUMMY, 
-					Lists.singleton(entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY, 
+					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
 	/**
@@ -109,11 +110,11 @@ public abstract class BasicLexers {
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, "ident", VOID, false, null,
-				Maps.singleton(ident, Location.DUMMY));
+				Maps.singleton(ident, Extent.DUMMY));
 		
 		final static Lexer LEXER = 
-			new Lexer(Lists.empty(), Location.DUMMY,
-					Lists.singleton(entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY,
+					Lists.singleton(entry), Extent.DUMMY);
 	}
 
 	/**
@@ -143,15 +144,15 @@ public abstract class BasicLexers {
 	private static abstract class BoundIDs {
 		private final static Regular ident =
 			Regular.seq(
-				Regular.binding(SimpleIDs.ident, "id", Location.DUMMY), 
+				Regular.binding(SimpleIDs.ident, Located.dummy("id")), 
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, "ident", VOID, false, null,
-				Maps.singleton(ident, Location.inlined("System.out.println(id); return;")));
+				Maps.singleton(ident, Extent.inlined("System.out.println(id); return;")));
 		
 		final static Lexer LEXER = 
-			new Lexer(Lists.empty(), Location.DUMMY, 
-					Lists.singleton(entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY, 
+					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
 	/**
@@ -184,14 +185,14 @@ public abstract class BasicLexers {
 				Regular.star(Regular.chars(digit)));
 		private final static Regular ident = SimpleIDs.ident;
 		
-		private final static Map<Regular, Location> clauses =
+		private final static Map<Regular, Extent> clauses =
 			clauses(ident, integer);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, "ident_int", VOID, false, null, clauses);
 		
 		final static Lexer LEXER = 
-			new Lexer(Lists.empty(), Location.DUMMY, 
-					Lists.singleton(entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY, 
+					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
 	/**
@@ -249,7 +250,7 @@ public abstract class BasicLexers {
 		private final static Regular FOR = Regular.string("FOR");
 		private final static Regular ident = SimpleIDs.ident;
 		
-		private final static Map<Regular, Location> clauses =
+		private final static Map<Regular, Extent> clauses =
 			clauses(DO, FOR, ident);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, "identkw", VOID, false, null, clauses);
@@ -257,11 +258,11 @@ public abstract class BasicLexers {
 			new Lexer.Entry(true, "identkw", VOID, true, null, clauses);
 		
 		final static Lexer LEXER =
-			new Lexer(Lists.empty(), Location.DUMMY, 
-					Lists.singleton(entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY, 
+					Lists.singleton(entry), Extent.DUMMY);
 		final static Lexer SHORTEST = 
-			new Lexer(Lists.empty(), Location.DUMMY,
-					Lists.singleton(sh_entry), Location.DUMMY);
+			new Lexer(Lists.empty(), Extent.DUMMY,
+					Lists.singleton(sh_entry), Extent.DUMMY);
 	}
 	
 	static void test(Lexer lexer, boolean opt) {

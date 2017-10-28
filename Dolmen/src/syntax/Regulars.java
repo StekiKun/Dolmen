@@ -82,7 +82,6 @@ public abstract class Regulars {
 			final Binding binding1 = (Binding) r1;
 			final Binding binding2 = (Binding) r2;
 			return binding1.name.equals(binding2.name)
-					&& binding1.loc.equals(binding2.loc)
 					&& equal(binding1.reg, binding2.reg);
 		}
 		}
@@ -146,14 +145,14 @@ public abstract class Regulars {
 
 		@Override
 		public Regular binding(Binding binding) {
-			if (toRemove.contains(binding.name))
+			if (toRemove.contains(binding.name.val))
 				return binding.reg.fold(this);
 			else {
-				toRemove.add(binding.name);
+				toRemove.add(binding.name.val);
 				Regular newreg = binding.reg.fold(this);
-				toRemove.remove(binding.name);
+				toRemove.remove(binding.name.val);
 				if (newreg == binding.reg) return binding;
-				return Regular.binding(newreg, binding.name, binding.loc);
+				return Regular.binding(newreg, binding.name);
 			}
 		}
 	}
@@ -205,14 +204,14 @@ public abstract class Regulars {
 		}
 		case BINDING: {
 			final Binding binding = (Binding) r;
-			if (toRemove.contains(binding.name))
+			if (toRemove.contains(binding.name.val))
 				return rnbAux(binding.reg, toRemove);
 			else {
-				toRemove.add(binding.name);
+				toRemove.add(binding.name.val);
 				Regular newreg = rnbAux(binding.reg, toRemove);
-				toRemove.remove(binding.name);
+				toRemove.remove(binding.name.val);
 				if (newreg == binding.reg) return binding;
-				return Regular.binding(newreg, binding.name, binding.loc);
+				return Regular.binding(newreg, binding.name);
 			}
 		}
 		}
@@ -352,17 +351,17 @@ public abstract class Regulars {
 			final Binding binding = (Binding) regular;
 			VarsInfo info = analyseVars(binding.reg);
 			return new VarsInfo(
-				Sets.add(binding.name, info.allVars),
+				Sets.add(binding.name.val, info.allVars),
 				info.optVars,
-				info.allVars.contains(binding.name) ?
-					Sets.add(binding.name, info.dblVars) :
+				info.allVars.contains(binding.name.val) ?
+					Sets.add(binding.name.val, info.dblVars) :
 					info.dblVars,
 				binding.reg.size == 1 ?
-					Sets.add(binding.name, info.chrVars) :
+					Sets.add(binding.name.val, info.chrVars) :
 					info.chrVars,
 				binding.reg.size == 1 ?
 					info.strVars :
-					Sets.add(binding.name, info.strVars));
+					Sets.add(binding.name.val, info.strVars));
 		}
 		}
 		throw new IllegalStateException();
@@ -522,10 +521,10 @@ public abstract class Regulars {
 				// Save this binding, potentially shadowing other nested bindings
 				if (mr.bindings.isEmpty()) {
 					Map<String, String> bindings = new HashMap<>();
-					bindings.put(binding.name, bound);
+					bindings.put(binding.name.val, bound);
 					return new MatchResult(bindings, mr.matchedLength, mr.reachedEOF);
 				}
-				mr.bindings.put(binding.name, bound);
+				mr.bindings.put(binding.name.val, bound);
 				return mr;
 			});
 		}

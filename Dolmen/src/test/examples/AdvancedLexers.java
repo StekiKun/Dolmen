@@ -12,7 +12,8 @@ import org.eclipse.jdt.annotation.NonNull;
 import common.CSet;
 import common.Lists;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Located;
+import syntax.Extent;
 import syntax.Regular;
 
 /**
@@ -31,10 +32,10 @@ public abstract class AdvancedLexers {
 	 * @param objs	clauses and inlined contents, interleaved
 	 * @return a list of ordered clauses with inlined locations
 	 */
-	static Map<Regular, Location> inlinedClauses(@NonNull Object... objs) {
+	static Map<Regular, Extent> inlinedClauses(@NonNull Object... objs) {
 		if (objs.length % 2 != 0) throw new IllegalArgumentException();
 		int n = objs.length / 2;
-		Map<Regular, Location> res = new LinkedHashMap<>(n);
+		Map<Regular, Extent> res = new LinkedHashMap<>(n);
 		for (int i = 0; i < n; ++i) {
 			int k = 2 * i;
 			Object reg = objs[k];
@@ -42,7 +43,7 @@ public abstract class AdvancedLexers {
 			if (!(reg instanceof Regular)
 				|| !(msg instanceof String))
 				throw new IllegalArgumentException();
-			res.put((Regular) reg, Location.inlined((String) msg));
+			res.put((Regular) reg, Extent.inlined((String) msg));
 		}
 		return res;
 	}
@@ -113,9 +114,9 @@ public abstract class AdvancedLexers {
 			Regular.seq(Regular.string("0x"),
 				Regular.binding(
 					Regular.star(Regular.chars(hexdigit)),
-					"hex", Location.DUMMY));
+					Located.dummy("hex")));
 		
-		private static final Map<Regular, Location> mainClauses =
+		private static final Map<Regular, Extent> mainClauses =
 			inlinedClauses(
 				ws,						" return main(); ",
 				newline,				" newline(); return main(); ",
@@ -136,7 +137,7 @@ public abstract class AdvancedLexers {
 		private static final CSet inComment =
 			CSet.complement(
 				CSet.union(CSet.singleton('\r'), CSet.singleton('\n')));
-		private static final Map<Regular, Location> commentClauses =
+		private static final Map<Regular, Extent> commentClauses =
 			inlinedClauses(
 				Regular.string("*/"),		" return; ",
 				newline,		 			" newline(); comment(); return;",
@@ -145,16 +146,16 @@ public abstract class AdvancedLexers {
 				Regular.chars(CSet.EOF),    " throw new LexicalError(\"EOF in comment\"); "
 			);
 		private final static Lexer.Entry mainEntry =
-			new Lexer.Entry(true, "main", Location.inlined("Token"), false, 
+			new Lexer.Entry(true, "main", Extent.inlined("Token"), false, 
 					null, mainClauses);
 		private final static Lexer.Entry commentEntry =
-			new Lexer.Entry(false, "comment", Location.inlined("void"), false, 
+			new Lexer.Entry(false, "comment", Extent.inlined("void"), false, 
 					null, commentClauses);
 			
 		final static Lexer LEXER =
 			new Lexer(
 				Lists.empty(),
-				Location.inlined(
+				Extent.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static abstract class Token {\n" +
 		"	private String rep;\n" +
@@ -193,7 +194,7 @@ public abstract class AdvancedLexers {
 		"}\n" +
 		"\n"),
 				Arrays.asList(mainEntry, commentEntry), 
-				Location.inlined(
+				Extent.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static void main(String[] args) throws java.io.IOException {\n" +
     	"    ArithExprsComment lexer = new ArithExprsComment(\n" +

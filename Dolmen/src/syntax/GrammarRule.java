@@ -25,11 +25,11 @@ public final class GrammarRule {
 	/** Whether this grammar rule is public or not */
 	public final boolean visibility;
 	/** This rule's return type */
-	public final Location returnType;
+	public final Extent returnType;
 	/** The name of this rule */
 	public final String name;
 	/** The formal arguments for this rule, if any */
-	public final @Nullable Location args;
+	public final @Nullable Extent args;
 	/** The productions for this rule */
 	public final List<@NonNull Production> productions;
 	
@@ -41,8 +41,8 @@ public final class GrammarRule {
 	 * @param args
 	 * @param productions
 	 */
-	public GrammarRule(boolean visibility, Location returnType,
-			String name, @Nullable Location args, List<Production> productions) {
+	public GrammarRule(boolean visibility, Extent returnType,
+			String name, @Nullable Extent args, List<Production> productions) {
 		if (!Character.isLowerCase(name.charAt(0)))
 			throw new IllegalArgumentException("Rule name should start with a lower case");
 		this.visibility = visibility;
@@ -56,7 +56,7 @@ public final class GrammarRule {
 	StringBuilder append(StringBuilder buf) {
 		buf.append(visibility ? "public " : "private ");
 		buf.append(name);
-		Location args_ = args;
+		Extent args_ = args;
 		if (args_ == null) buf.append("()");
 		else buf.append("(").append(args_.find()).append(")");
 		buf.append(" : ").append(returnType.find());
@@ -82,9 +82,9 @@ public final class GrammarRule {
 	 */
 	public static final class Builder {
 		private final boolean visibility;
-		private final Location returnType;
+		private final Extent returnType;
 		private final String name;
-		private final @Nullable Location args;
+		private final @Nullable Extent args;
 		private final List<Production> productions;
 		
 		/**
@@ -94,8 +94,8 @@ public final class GrammarRule {
 		 * @param name
 		 * @param args
 		 */
-		public Builder(boolean visibility, Location returnType,
-			String name, @Nullable Location args) {
+		public Builder(boolean visibility, Extent returnType,
+			String name, @Nullable Extent args) {
 			this.visibility = visibility;
 			this.returnType = returnType;
 			this.name = name;

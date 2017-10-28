@@ -6,7 +6,7 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
-import syntax.Location;
+import syntax.Extent;
 import tagged.Optimiser.IdentInfo;
 
 /**
@@ -41,7 +41,7 @@ public final class TLexerEntry {
 		 */
 		public final Map<@NonNull String, @NonNull IdentInfo> tags;
 		/** The location of the semantic action <i>per se</i> */
-		public final Location loc;
+		public final Extent loc;
 		
 		/**
 		 * Builds a finisher based on all the arguments
@@ -50,7 +50,7 @@ public final class TLexerEntry {
 		 * @param tags
 		 * @param loc
 		 */
-		public Finisher(int action, Map<String, IdentInfo> tags, Location loc) {
+		public Finisher(int action, Map<String, IdentInfo> tags, Extent loc) {
 			this.action = action;
 			this.tags = tags;
 			this.loc = loc;
@@ -78,9 +78,9 @@ public final class TLexerEntry {
 	/** Whether the shortest match priority should be used */
 	public final boolean shortest;
 	/** The return type of the semantic actions for this lexer entry */
-	public final Location returnType;
+	public final Extent returnType;
 	/** The list of formal arguments available in semantic actions */
-	public final @Nullable Location args;
+	public final @Nullable Extent args;
 	/** The tagged regular expression encoding all clauses */
 	public final TRegular regexp;
 	/** The number of tags in the encoded entry */
@@ -100,8 +100,8 @@ public final class TLexerEntry {
 	 * @param memTags
 	 * @param actions
 	 */
-	public TLexerEntry(boolean visibility, String name, Location returnType,
-			boolean shortest, @Nullable Location args,
+	public TLexerEntry(boolean visibility, String name, Extent returnType,
+			boolean shortest, @Nullable Extent args,
 			TRegular regexp, int memTags, List<Finisher> actions) {
 		this.visibility = visibility;
 		this.name = name;
@@ -117,7 +117,7 @@ public final class TLexerEntry {
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append(name);
-		Location args_ = args;
+		Extent args_ = args;
 		if (args_ == null) buf.append("()");
 		else buf.append("(").append(args_.find()).append(")");
 		buf.append(": ").append(returnType);

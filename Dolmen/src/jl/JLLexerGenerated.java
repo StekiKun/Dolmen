@@ -72,8 +72,10 @@ public final class JLLexerGenerated extends codegen.LexBuffer {
             return main();
         }
         case 4:  {
-            stringBuffer.setLength(0);
+            Position stringStart = getLexemeStart();
+stringBuffer.setLength(0);
 string();
+startLoc = stringStart;
 jl.JLToken res = LSTRING(stringBuffer.toString());
 return res;
         }
@@ -81,9 +83,9 @@ return res;
             braceDepth = 1;
 Position p = getLexemeEnd();
 int endOffset = action();
-syntax.Location loc = new syntax.Location(
+syntax.Extent ext = new syntax.Extent(
     filename, p.offset, endOffset, p.line, p.column());
-return ACTION(loc);
+return ACTION(ext);
         }
         case 6:  {
             return UNDERSCORE;

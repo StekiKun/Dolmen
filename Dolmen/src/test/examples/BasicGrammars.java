@@ -21,7 +21,7 @@ import syntax.Grammars;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Production;
 
 /**
@@ -41,7 +41,7 @@ public abstract class BasicGrammars {
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Location.inlined(valType));
+		return new Grammar.TokenDecl(name, Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
@@ -50,14 +50,14 @@ public abstract class BasicGrammars {
 			return new Production.Actual(null, s, null);
 		String binding = s.substring(0, ndx).trim();
 		
-		@Nullable final Location args;
+		@Nullable final Extent args;
 		final int bnd;
 		int act = s.indexOf('(', ndx);
 		if (act >= 0) {
 			bnd = act;
 			assert (s.charAt(s.length() - 1) == ')');
 			@NonNull String args_ = s.substring(act + 1, s.length() - 1);
-			args = Location.inlined(args_);
+			args = Extent.inlined(args_);
 		}
 		else {
 			bnd = s.length();
@@ -67,11 +67,11 @@ public abstract class BasicGrammars {
 		return new Production.Actual(binding, item, args);
 	}
 	
-	static final Location VOID = Location.inlined("void");
-	static final Location RETURN = Location.inlined("return;");
+	static final Extent VOID = Extent.inlined("void");
+	static final Extent RETURN = Extent.inlined("return;");
 	
 	static Production production(@NonNull String... actuals) {
-		Location action = Location.inlined(actuals[actuals.length - 1]);
+		Extent action = Extent.inlined(actuals[actuals.length - 1]);
 		Production.Builder builder = new Production.Builder();
 		for (int i = 0; i < actuals.length - 1; ++i)
 			builder.addItem(actual(actuals[i]));
@@ -84,7 +84,7 @@ public abstract class BasicGrammars {
 		// Find name/args in name parameter
 		int par = name_.indexOf('(');
 		@NonNull String name;
-		@Nullable Location args;
+		@Nullable Extent args;
 		if (par < 0) {
 			name = name_;
 			args = null;
@@ -93,14 +93,14 @@ public abstract class BasicGrammars {
 			@NonNull String tmp =  name_.substring(0, par);
 			name = tmp;
 			@NonNull String args_ = name_.substring(par + 1, name_.length() - 1);
-			args = Location.inlined(args_);
+			args = Extent.inlined(args_);
 		}
 		
 		// Find return type, if any
-		Location retType = VOID;
+		Extent retType = VOID;
 		int first = 0;
 		if (productions[0] instanceof String) {
-			retType = Location.inlined((String) productions[0]);
+			retType = Extent.inlined((String) productions[0]);
 			++first;
 		}
 		
@@ -178,7 +178,7 @@ public abstract class BasicGrammars {
 		 */
 		public static final Grammar GRAMMAR =
 			new Grammar.Builder(
-				Lists.empty(), Location.DUMMY, Location.inlined(footer))
+				Lists.empty(), Extent.DUMMY, Extent.inlined(footer))
 				// INT of int | PLUS | MINUS | TIMES | EOF
 				.addToken(vtoken("INT", "int"))
 				.addToken(token("PLUS"))
@@ -300,7 +300,7 @@ public abstract class BasicGrammars {
 		 */
 		public static final Grammar GRAMMAR =
 			new Grammar.Builder(
-				Lists.empty(), Location.inlined(header), Location.inlined(footer))
+				Lists.empty(), Extent.inlined(header), Extent.inlined(footer))
 				// INT of int | ID of string | PLUS | MINUS | TIMES | DIV | 
 				// 	SEMICOLON | ASSIGN | PRINT | LPAREN | RPAREN | COMMA | EOF
 				.addToken(vtoken("INT", "int"))

@@ -7,7 +7,7 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 
 import syntax.Grammar.TokenDecl;
-import syntax.Location;
+import syntax.Extent;
 
 /**
  * This class generates a Java class to represent
@@ -78,7 +78,7 @@ public final class TokensOutput {
 	}
 	
 	private void genValuedToken(TokenDecl decl) {
-		Location loc = decl.valueType;
+		Extent loc = decl.valueType;
 		final @NonNull String name = decl.name;
 		if (loc == null) throw new IllegalArgumentException();
 		final String valType = loc.find();

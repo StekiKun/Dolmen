@@ -34,7 +34,8 @@ import jl.JLToken.Kind;
 import jl.JLToken.LChar;
 import jl.JLToken.LString;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Located;
+import syntax.Extent;
 import syntax.Regular;
 import syntax.Regular.Characters;
 import syntax.Regulars;
@@ -217,7 +218,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			shortest =true;
 		}
 		
-		Map<Regular, Location> clauses = parseClauses();
+		Map<Regular, Extent> clauses = parseClauses();
 		
 		return new Lexer.Entry(vis, name.value, returnType.value, shortest, 
 				args == null ? null : args.value, clauses);
@@ -242,15 +243,15 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 	OR Regular ACTION
 	 */
 	
-	private Map<Regular, Location> parseClauses() {
-		Map<Regular, Location> clauses = new LinkedHashMap<Regular, Location>();
+	private Map<Regular, Extent> parseClauses() {
+		Map<Regular, Extent> clauses = new LinkedHashMap<Regular, Extent>();
 		parseClause(clauses);
 		while (peek().getKind() == Kind.OR)
 			parseClause(clauses);
 		return clauses;
 	}
 	
-	private void parseClause(Map<Regular, Location> acc) {
+	private void parseClause(Map<Regular, Extent> acc) {
 		eat(Kind.OR);
 		Regular reg;
 		if (peek().getKind() == Kind.ORELSE) {
@@ -322,7 +323,8 @@ public final class JLParser extends BaseParser<JLToken> {
 		while (peek() == AS) {
 			eat();
 			Ident id = (Ident) eat(Kind.IDENT);
-			res = Regular.binding(res, id.value, Location.DUMMY);
+			// TODO: use access to the lexbuffer to store the actual location of id
+			res = Regular.binding(res, Located.dummy(id.value));
 		}
 		return res;
 	}

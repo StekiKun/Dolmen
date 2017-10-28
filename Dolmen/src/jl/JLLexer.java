@@ -17,7 +17,8 @@ import automaton.Determinize;
 import codegen.AutomataOutput;
 import common.CSet;
 import syntax.Lexer;
-import syntax.Location;
+import syntax.Located;
+import syntax.Extent;
 import syntax.Regular;
 import tagged.Encoder;
 import tagged.TLexer;
@@ -32,9 +33,9 @@ import tagged.TLexer;
  */
 public abstract class JLLexer {
 
-	// Common inlined locations
+	// Common inlined extends
 	
-	final static Location VOID = Location.inlined("void");
+	final static Extent VOID = Extent.inlined("void");
 	
 	// Common character sets
 	
@@ -76,8 +77,10 @@ public abstract class JLLexer {
 	 * | newline		{ newline(); return main(); }
 	 * | "/*"			{ comment(); return main(); }
 	 * | "//" [^\r\n]*	{ return main(); }
-	 * | '"'			{ stringBuffer.setLength(0);
+	 * | '"'			{ Position stringStart = getLexemeStart();
+	 * 					  stringBuffer.setLength(0);
 	 * 					  string();
+	 * 					  startLoc = stringStart;
 	 * 					  return LSTRING(stringBuffer.toString()); 
 	 * 				    }
 	 * | '{'			{ braceDepth = 1;
@@ -120,31 +123,33 @@ public abstract class JLLexer {
 	 * | _				{ throw error("..."); }
 	 */
 	private final static Lexer.Entry mainEntry =
-		new Lexer.Entry.Builder(true, "main", Location.inlined("jl.JLToken"), null)
+		new Lexer.Entry.Builder(true, "main", Extent.inlined("jl.JLToken"), null)
 			.add(plus(chars(ws)), "return main();")
 			.add(nl, "newline(); return main();")
 			.add(string("/*"), "comment(); return main();")
 			.add(seq(string("//"), star(notnl)), "return main();")
-		 	.add(rchar('"'), "stringBuffer.setLength(0);\n" +
+		 	.add(rchar('"'), "Position stringStart = getLexemeStart();\n" +
+		 					 "stringBuffer.setLength(0);\n" +
 							 "string();\n" +
+		 					 "startLoc = stringStart;\n" +
 							 "jl.JLToken res = LSTRING(stringBuffer.toString());\n" +
 							 "return res;")
 			.add(rchar('{'), 
 				"braceDepth = 1;\n" +
 				"Position p = getLexemeEnd();\n" +
 				"int endOffset = action();\n" +
-				"syntax.Location loc = new syntax.Location(\n" +
+				"syntax.Extent ext = new syntax.Extent(\n" +
 				"    filename, p.offset, endOffset, p.line, p.column());\n" +
-				"return ACTION(loc);")
+				"return ACTION(ext);")
 			.add(rchar('_'), "return UNDERSCORE;")
 			.add(ident, "return identOrKeyword(getLexeme());")
 			.add(seq(rchar('\''),
 					binding(chars(CSet.complement(CSet.singleton('\\'))), 
-							"c", Location.DUMMY),
+							Located.dummy("c")),
 					rchar('\'')),
 				"return LCHAR(c);")
 			.add(seq(rchar('\''), rchar('\\'), 
-					binding(escaped, "c", Location.DUMMY), rchar('\'')),
+					binding(escaped, Located.dummy("c")), rchar('\'')),
 				"return LCHAR(forBackslash(c));")
 			.add(rchar('='), "return EQUAL;")
 			.add(rchar('|'), "return OR;")
@@ -213,9 +218,9 @@ public abstract class JLLexer {
 	private final static Lexer.Entry stringEntry =
 		new Lexer.Entry.Builder(false, "string", VOID, null)
 			.add(rchar('"'), "return;")
-			.add(seq(rchar('\\'), binding(escaped, "c", Location.DUMMY)), 
+			.add(seq(rchar('\\'), binding(escaped, Located.dummy("c"))), 
 					"stringBuffer.append(forBackslash(c)); string(); return;")
-			.add(seq(rchar('\\'), binding(any, "c", Location.DUMMY)),
+			.add(seq(rchar('\\'), binding(any, Located.dummy("c"))),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
 			.add(chars(CSet.EOF), "throw error(\"Unterminated string\");")
 			.add(plus(inString), 
@@ -245,7 +250,7 @@ public abstract class JLLexer {
 	 * | [^{}"'/\r\n]+  { return action(); }
 	 */
 	private final static Lexer.Entry actionEntry =
-		new Lexer.Entry.Builder(false, "action", Location.inlined("int"), null)
+		new Lexer.Entry.Builder(false, "action", Extent.inlined("int"), null)
 			.add(rchar('{'), "++braceDepth; return action();")
 			.add(rchar('}'), "--braceDepth;\n" +
 							 "if (braceDepth == 0) return getLexemeStart().offset - 1;\n" +
@@ -329,10 +334,10 @@ public abstract class JLLexer {
 	public final static Lexer INSTANCE =
 		new Lexer(
 			Arrays.asList("package jl;", "import static jl.JLToken.*;"),
-			Location.inlined(header),
+			Extent.inlined(header),
 			Arrays.asList(mainEntry, commentEntry, 
 				stringEntry, actionEntry, skipCharEntry),
-			Location.inlined(footer));
+			Extent.inlined(footer));
 	
 	private static void testOutput(String className, Lexer lexer, boolean opt) {
 		System.out.println("=========LEXER========");

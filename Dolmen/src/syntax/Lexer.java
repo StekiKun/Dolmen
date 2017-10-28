@@ -12,7 +12,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * along with arbitrary header and footer sections. The rules
  * come in no particular order, as every rule can theoretically
  * be used as an entry point to the generated lexer. When only
- * one entry point really makes sense, it is conventionnally
+ * one entry point really makes sense, it is conventionally
  * the first rule.
  * 
  * @author Stéphane Lescuyer
@@ -45,18 +45,18 @@ public final class Lexer {
 		/** Whether shortest match should be used */
 		public final boolean shortest;
 		/** The formal arguments for this rule */
-		public final @Nullable Location args;
+		public final @Nullable Extent args;
 		/** The return type of semantic actions for this entry */
-		public final Location returnType;
+		public final Extent returnType;
 		
 		/** 
 		 * The various clauses for this entry, associated to
-		 * the locations for the corresponding semantic actions.
+		 * the extents for the corresponding semantic actions.
 		 * <b>Iteration order in {@link #clauses} is relevant
 		 * as priority between same-length matches goes to the
 		 * first matching rule in this map.</b>
 		 */
-		public final Map<@NonNull Regular, @NonNull Location> clauses;
+		public final Map<@NonNull Regular, @NonNull Extent> clauses;
 		
 		/**
 		 * @param visibility
@@ -70,8 +70,8 @@ public final class Lexer {
 		 * Beware that order in {@code clauses} is relevant.
 		 */
 		public Entry(boolean visibility, 
-				String name, Location returnType, boolean shortest,
-				@Nullable Location args, Map<Regular, Location> clauses) {
+				String name, Extent returnType, boolean shortest,
+				@Nullable Extent args, Map<Regular, Extent> clauses) {
 			this.visibility = visibility;
 			this.name = name;
 			this.returnType = returnType;
@@ -82,7 +82,7 @@ public final class Lexer {
 		
 		StringBuilder append(StringBuilder buf, String kword) {
 			buf.append(kword).append(" ").append(name);
-			Location args_ = args;
+			Extent args_ = args;
 			if (args_ == null) buf.append("()");
 			else buf.append("(").append(args_.find()).append(")");
 			buf.append(" : ").append(returnType.find());
@@ -111,9 +111,9 @@ public final class Lexer {
 			private final boolean visibility;
 			private final String name;
 			private boolean shortest;
-			private final @Nullable Location args;
-			private final Location returnType;
-			private final Map<@NonNull Regular, @NonNull Location> clauses;
+			private final @Nullable Extent args;
+			private final Extent returnType;
+			private final Map<@NonNull Regular, @NonNull Extent> clauses;
 
 			/**
 			 * Constructs a fresh builder with longest-match rule
@@ -125,7 +125,7 @@ public final class Lexer {
 			 * @param args
 			 */
 			public Builder(boolean visibility, 
-					String name, Location returnType, @Nullable Location args) {
+					String name, Extent returnType, @Nullable Extent args) {
 				this.visibility = visibility;
 				this.name = name;
 				this.shortest = false;
@@ -150,7 +150,7 @@ public final class Lexer {
 			 * @param loc
 			 * @return the receiver
 			 */
-			public Builder add(Regular regular, Location loc) {
+			public Builder add(Regular regular, Extent loc) {
 				clauses.put(regular, loc);
 				return this;
 			}
@@ -163,7 +163,7 @@ public final class Lexer {
 			 * @return the receiver
 			 */
 			public Builder add(Regular regular, String inlined) {
-				clauses.put(regular, Location.inlined(inlined));
+				clauses.put(regular, Extent.inlined(inlined));
 				return this;
 			}
 			
@@ -179,12 +179,12 @@ public final class Lexer {
 
 	/** The Java imports to be added to the generated lexer */
 	public final List<@NonNull String> imports;
-	/** The location of this lexer's class header */
-	public final Location header;
+	/** The extent of this lexer's class header */
+	public final Extent header;
 	/** The list of entrypoints */
 	public final List<@NonNull Entry> entryPoints;
-	/** The location of this lexer's footer */
-	public final Location footer;
+	/** The extent of this lexer's footer */
+	public final Extent footer;
 	
 	/**
 	 * @param imports
@@ -195,7 +195,7 @@ public final class Lexer {
 	 * Builds a lexer with the provided data
 	 */
 	public Lexer(List<String> imports, 
-			Location header, List<Entry> entryPoints, Location footer) {
+			Extent header, List<Entry> entryPoints, Extent footer) {
 		this.imports = imports;
 		this.header = header;
 		this.entryPoints = entryPoints;

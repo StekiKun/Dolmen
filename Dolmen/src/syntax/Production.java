@@ -70,15 +70,15 @@ public final class Production {
 	 */
 	public static final class ActionItem extends Item {
 		
-		/** The in-source location for this semantic action */
-		public final Location location;
+		/** The in-source extent for this semantic action */
+		public final Extent extent;
 		
 		/**
-		 * Builds a semantic action item from the given location
-		 * @param location
+		 * Builds a semantic action item from the given extent
+		 * @param extent
 		 */
-		public ActionItem(Location location) {
-			this.location = location;
+		public ActionItem(Extent extent) {
+			this.extent = extent;
 		}
 		
 		@Override
@@ -88,7 +88,7 @@ public final class Production {
 		
 		@Override
 		public String toString() {
-			return "{" + location.find() + "}";
+			return "{" + extent.find() + "}";
 		}
 	}
 	
@@ -124,7 +124,7 @@ public final class Production {
 		 * Arguments only make sense if {@link #item} is
 		 * a non-terminal.
 		 */
-		public final @Nullable Location args;
+		public final @Nullable Extent args;
 		
 		/**
 		 * Builds a production item based on the given parameters
@@ -133,7 +133,7 @@ public final class Production {
 		 * @param args
 		 */
 		public Actual(@Nullable String binding,
-				String item, @Nullable Location args) {
+				String item, @Nullable Extent args) {
 			this.binding = binding;
 			this.item = item;
 			this.args = args;
@@ -166,7 +166,7 @@ public final class Production {
 			if (binding != null)
 				buf.append(binding).append(" = ");
 			buf.append(item);
-			@Nullable Location args_ = args;
+			@Nullable Extent args_ = args;
 			if (args_ != null)
 				buf.append("(").append(args_.find()).append(")");
 			
@@ -238,10 +238,10 @@ public final class Production {
 		
 		/**
 		 * Adds a semantic action item
-		 * @param location
+		 * @param extent
 		 */
-		public Builder addAction(Location location) {
-			items.add(new ActionItem(location));
+		public Builder addAction(Extent extent) {
+			items.add(new ActionItem(extent));
 			return this;
 		}
 		

@@ -2,7 +2,7 @@ package jl;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-import syntax.Location;
+import syntax.Extent;
 
 @SuppressWarnings("javadoc")
 public abstract class JLToken {
@@ -112,9 +112,9 @@ public abstract class JLToken {
 	}
 	
 	public final static class Action extends JLToken {
-		public final Location value;
+		public final Extent value;
 		
-		private Action(Location value) {
+		private Action(Extent value) {
 			this.value = value;
 		}
 		
@@ -128,7 +128,7 @@ public abstract class JLToken {
 			return Kind.ACTION;
 		}
 	}
-	public static Action ACTION(Location value) {
+	public static Action ACTION(Extent value) {
 		return new Action(value);
 	}
 	

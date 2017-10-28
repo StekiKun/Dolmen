@@ -15,7 +15,7 @@ import syntax.GrammarRule;
 import syntax.Grammars;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
-import syntax.Location;
+import syntax.Extent;
 import syntax.Production;
 
 /**
@@ -40,7 +40,7 @@ public abstract class JGParser {
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Location.inlined(valType));
+		return new Grammar.TokenDecl(name, Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
@@ -51,14 +51,14 @@ public abstract class JGParser {
 		else
 			binding = s.substring(0, ndx).trim();
 		
-		@Nullable final Location args;
+		@Nullable final Extent args;
 		final int bnd;
 		int act = s.indexOf('(', ndx);
 		if (act >= 0) {
 			bnd = act;
 			assert (s.charAt(s.length() - 1) == ')');
 			@NonNull String args_ = s.substring(act + 1, s.length() - 1);
-			args = Location.inlined(args_);
+			args = Extent.inlined(args_);
 		}
 		else {
 			bnd = s.length();
@@ -68,8 +68,8 @@ public abstract class JGParser {
 		return new Production.Actual(binding, item, args);
 	}
 	
-	static final Location VOID = Location.inlined("void");
-	static final Location RETURN = Location.inlined("return;");
+	static final Extent VOID = Extent.inlined("void");
+	static final Extent RETURN = Extent.inlined("return;");
 	
 	static Production production(@NonNull String... items) {
 		Production.Builder builder = new Production.Builder();
@@ -77,7 +77,7 @@ public abstract class JGParser {
 			String item = items[i];
 			if (item.startsWith("@")) {
 				@NonNull String action = item.substring(1);
-				builder.addAction(Location.inlined(action));
+				builder.addAction(Extent.inlined(action));
 			}
 			else
 				builder.addActual(actual(item));
@@ -90,7 +90,7 @@ public abstract class JGParser {
 		// Find name/args in name parameter
 		int par = name_.indexOf('(');
 		@NonNull String name;
-		@Nullable Location args;
+		@Nullable Extent args;
 		if (par < 0) {
 			name = name_;
 			args = null;
@@ -99,14 +99,14 @@ public abstract class JGParser {
 			@NonNull String tmp =  name_.substring(0, par);
 			name = tmp;
 			@NonNull String args_ = name_.substring(par + 1, name_.length() - 1);
-			args = Location.inlined(args_);
+			args = Extent.inlined(args_);
 		}
 		
 		// Find return type, if any
-		Location retType = VOID;
+		Extent retType = VOID;
 		int first = 0;
 		if (productions[0] instanceof String) {
-			retType = Location.inlined((String) productions[0]);
+			retType = Extent.inlined((String) productions[0]);
 			++first;
 		}
 		
@@ -133,7 +133,7 @@ public abstract class JGParser {
 			"import org.eclipse.jdt.annotation.Nullable;",
 			"import org.eclipse.jdt.annotation.NonNull;",
 			"import java.util.List;", "import java.util.ArrayList;",
-			"import common.Lists;", "import syntax.Location;",
+			"import common.Lists;", "import syntax.Extent;",
 			"import syntax.Production;", "import syntax.Grammar.TokenDecl;",
 			"import syntax.GrammarRule;", "import syntax.Grammar;"
 			);
@@ -168,13 +168,13 @@ public abstract class JGParser {
 	 */
 	public static final Grammar GRAMMAR =
 		new Grammar.Builder(
-			imports, Location.inlined(header), Location.inlined(footer))
-			// IDENT of String | ACTION of Location | ARGUMENTS of Location 
+			imports, Extent.inlined(header), Extent.inlined(footer))
+			// IDENT of String | ACTION of Extent | ARGUMENTS of Extent
 			// | EQUAL | BAR | SEMICOL | IMPORT | STATIC | DOT | STAR 
 			// | PUBLIC | PRIVATE | TOKEN | RULE | EOF
 			.addToken(vtoken("IDENT", "@NonNull String"))
-			.addToken(vtoken("ACTION", "@NonNull Location"))
-			.addToken(vtoken("ARGUMENTS", "@NonNull Location"))
+			.addToken(vtoken("ACTION", "@NonNull Extent"))
+			.addToken(vtoken("ARGUMENTS", "@NonNull Extent"))
 			.addToken(token("EQUAL"))
 			.addToken(token("BAR"))
 			.addToken(token("DOT"))
@@ -296,9 +296,9 @@ public abstract class JGParser {
 			.addRule(rule("visibility", "boolean",
 				production("PUBLIC", "@return true;"),
 				production("PRIVATE", "@return false;")))
-			.addRule(rule("args", "@Nullable Location",
+			.addRule(rule("args", "@Nullable Extent",
 				production("@return null;"),
-				production("loc = ARGUMENTS", "@return loc;")))
+				production("ext = ARGUMENTS", "@return ext;")))
 			/**
 			 * <pre>
 			 * productions -> SEMICOL		// necessary to separate from footer
@@ -323,7 +323,7 @@ public abstract class JGParser {
 						"items(builder)", "@return builder.build();")))
 			.addRule(rule("items(Production.Builder builder)", "void",
 				production("@return;"),
-				production("loc = ACTION", "@builder.addAction(loc);", "items(builder)", "@return;"),
+				production("ext = ACTION", "@builder.addAction(ext);", "items(builder)", "@return;"),
 				production("id = IDENT", "actual = actual(id)",
 					"@builder.addActual(actual);", "items(builder)", "@return;")))
 			.addRule(rule("actual(@NonNull String id)", "Production.@NonNull Actual",
