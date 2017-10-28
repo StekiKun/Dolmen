@@ -146,8 +146,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
      }
 
     @SuppressWarnings("null")
-    public JGParserGenerated(java.util.function.Supplier<Token> tokens) {
-        super(tokens);
+    public <T extends codegen.LexBuffer>JGParserGenerated(T lexbuf, java.util.function.Function<T, Token> tokens) {
+        super(lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {
@@ -295,14 +295,14 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
-                    throw new ParsingException("Token name should be all uppercase: " + id);
+                    throw parsingError("Token name should be all uppercase: " + id);
                 return new TokenDecl(id, val);
             }
             case IDENT: {
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
-                   throw new ParsingException("Token name should be all uppercase: " + id);
+                   throw parsingError("Token name should be all uppercase: " + id);
                 return new TokenDecl(id, null);
             }
             default: {
@@ -343,7 +343,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         // name = IDENT
         @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
         if (!Character.isLowerCase(name.charAt(0)))
-            throw new ParsingException("Rule name must start with a lower case letter: " + name);
+            throw parsingError("Rule name must start with a lower case letter: " + name);
         // args = args
         @Nullable Extent args = args();
         // EQUAL
@@ -492,7 +492,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
 			try {
 				JGLexer lexer = new JGLexer("-",
 					new java.io.StringReader(prompt));
-				JGParserGenerated parser = new JGParserGenerated(lexer::main);
+				JGParserGenerated parser = new JGParserGenerated(lexer, JGLexer::main);
 				System.out.println(parser.start());
 			} catch (ParsingException e) {
 				e.printStackTrace();

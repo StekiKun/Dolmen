@@ -155,7 +155,7 @@ public abstract class JGParser {
 		"			try {\n" +
 		"				JGLexer lexer = new JGLexer(\"-\",\n" +
 		"					new java.io.StringReader(prompt));\n" +
-		"				JGParserGenerated parser = new JGParserGenerated(lexer::main);\n" +
+		"				JGParserGenerated parser = new JGParserGenerated(lexer, JGLexer::main);\n" +
 		"				System.out.println(parser.start());\n" +
 		"			} catch (ParsingException e) {\n" +
 		"				e.printStackTrace();\n" +
@@ -253,11 +253,11 @@ public abstract class JGParser {
 			.addRule(rule("token", "@NonNull TokenDecl",
 				production("id = IDENT", 
 					"@if (isLowerId(id))",
-					"@   throw new ParsingException(\"Token name should be all uppercase: \" + id);",
+					"@   throw parsingError(\"Token name should be all uppercase: \" + id);",
 					"@return new TokenDecl(id, null);"),
 				production("val = ACTION", "id = IDENT",
 					"@if (isLowerId(id))",
-					"@    throw new ParsingException(\"Token name should be all uppercase: \" + id);",
+					"@    throw parsingError(\"Token name should be all uppercase: \" + id);",
 					"@return new TokenDecl(id, val);")))
 			/**
 			 * <pre>
@@ -286,7 +286,7 @@ public abstract class JGParser {
 				production("vis = visibility", "rtype = ACTION", "RULE",
 					"name = IDENT",
 					"@if (!Character.isLowerCase(name.charAt(0)))",
-					"@    throw new ParsingException(\"Rule name must start with a lower case letter: \" + name);",
+					"@    throw parsingError(\"Rule name must start with a lower case letter: \" + name);",
 					"args = args", "EQUAL",
 					"@GrammarRule.@NonNull Builder builder =",
 					"@	new GrammarRule.Builder(vis, rtype, name, args);",

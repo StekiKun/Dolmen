@@ -34,7 +34,7 @@ public final class TestLargeJSon {
 
 		try (Reader file = new BufferedReader(new FileReader(filename))) {
 			JSonLWLexer lexer = new JSonLWLexer(filename, file);
-			JSonLWParser parser = new JSonLWParser(lexer::main);
+			JSonLWParser parser = new JSonLWParser(lexer, JSonLWLexer::main);
 			long start = System.nanoTime();
 			parser.json();
 //			@SuppressWarnings("unused")

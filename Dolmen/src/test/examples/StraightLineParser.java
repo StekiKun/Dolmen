@@ -114,14 +114,14 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     private int lookup(String id) {
         Integer val = env.get(id);
         if (val == null)
-            throw new ParsingException("Undefined identifier: " + id);
+            throw parsingError("Undefined identifier: " + id);
         return val;
     }
 
 
     @SuppressWarnings("null")
-    public StraightLineParser(java.util.function.Supplier<Token> tokens) {
-        super(tokens);
+    public <T extends codegen.LexBuffer>StraightLineParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
+        super(lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {
@@ -344,7 +344,7 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
 			try {
 				StraightLineLexer lexer = new StraightLineLexer("-",
 					new java.io.StringReader(prompt));
-				StraightLineParser parser = new StraightLineParser(lexer::main);
+				StraightLineParser parser = new StraightLineParser(lexer, StraightLineLexer::main);
 				parser.program();
 			} catch (ParsingException e) {
 				e.printStackTrace();

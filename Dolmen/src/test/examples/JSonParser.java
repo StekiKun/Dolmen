@@ -236,8 +236,8 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
 	public static final ValueNull valNull = new ValueNull();
 
     @SuppressWarnings("null")
-    public JSonParser(java.util.function.Supplier<Token> tokens) {
-        super(tokens);
+    public <T extends codegen.LexBuffer>JSonParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
+        super(lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

@@ -162,7 +162,7 @@ public abstract class BasicGrammars {
 			"			try {\n" +
 			"				ArithGroundLexer lexer = new ArithGroundLexer(\"-\",\n" +
 			"					new java.io.StringReader(prompt));\n" +
-			"				ArithGroundParser parser = new ArithGroundParser(lexer::main);\n" +
+			"				ArithGroundParser parser = new ArithGroundParser(lexer, ArithGroundLexer::main);\n" +
 			"				int e = parser.exp();\n" +
 			"				System.out.println(e);\n" +
 			"			} catch (ParsingException e) {\n" +
@@ -270,7 +270,7 @@ public abstract class BasicGrammars {
 			"    private int lookup(String id) {\n" +
 			"        Integer val = env.get(id);\n" +
 			"        if (val == null)\n" +
-			"            throw new ParsingException(\"Undefined identifier: \" + id);\n" +
+			"            throw parsingError(\"Undefined identifier: \" + id);\n" +
 			"        return val;\n" +
 			"    }\n" +
 			"\n";
@@ -285,7 +285,7 @@ public abstract class BasicGrammars {
 			"			try {\n" +
 			"				StraightLineLexer lexer = new StraightLineLexer(\"-\",\n" +
 			"					new java.io.StringReader(prompt));\n" +
-			"				StraightLineParser parser = new StraightLineParser(lexer::main);\n" +
+			"				StraightLineParser parser = new StraightLineParser(lexer, StraightLineLexer::main);\n" +
 			"				parser.program();\n" +
 			"			} catch (ParsingException e) {\n" +
 			"				e.printStackTrace();\n" +
@@ -388,7 +388,7 @@ public abstract class BasicGrammars {
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		@SuppressWarnings("null")
-		JLParser parser = new JLParser(lexer::main);
+		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
 		System.out.println("Computing automata...");

@@ -33,7 +33,7 @@ public abstract class JGLexerStub {
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		@SuppressWarnings("null")
-		JLParser parser = new JLParser(lexer::main);
+		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
 		System.out.println("Computing automata...");

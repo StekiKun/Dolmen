@@ -5,11 +5,13 @@ import java.util.EmptyStackException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Stack;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.LexBuffer.Position;
 import common.Prompt;
 
 /**
@@ -31,12 +33,20 @@ public abstract class BaseParser<Token> {
 	public static class ParsingException extends RuntimeException {
 		private static final long serialVersionUID = 1L;
 
+        /** The position in input at which the error occurred */
+        public final @Nullable Position pos;
+		
 		/**
-		 * A parsing error exception with the given error message
-		 * @param s
+		 * A parsing error exception with the given error message,
+		 * optionally specifying the position in the input stream
+		 * where the error occurred
+		 * @param pos
+		 * @param msg
 		 */
-		public ParsingException(String s) {
-			super(s);
+		public ParsingException(@Nullable Position pos, String msg) {
+            super(msg + (pos == null ? "" : 
+            	String.format(" (at line %d, column %d)", pos.line, pos.column())));
+			this.pos = pos;
 		}
 	}
 	
@@ -49,7 +59,7 @@ public abstract class BaseParser<Token> {
 	 * @param expectedKinds
 	 * @return an exception with a suitable error message, ready to be thrown
 	 */
-	protected static ParsingException tokenError(Object token, Object...expectedKinds) {
+	protected ParsingException tokenError(Object token, Object...expectedKinds) {
 		StringBuilder buf = new StringBuilder();
 		buf.append("Found token ").append(token);
 		buf.append(", expected any of {");
@@ -59,16 +69,39 @@ public abstract class BaseParser<Token> {
 		}
 		buf.append('}');
 		@NonNull String res = buf.toString();
-		return new ParsingException(res);
+		return new ParsingException(_jl_lastTokenEnd, res);
 	}
 	
-	/** The tokenizer */
+    /**
+     * Convenience helper which returns a {@link ParsingException}
+     * located at the end of the last token consumed by the parser.
+     * 
+     * @param msg
+     * @return the exception with the given message and the current
+     * 	parsing position
+     */
+    protected ParsingException parsingError(String msg) {
+    	return new ParsingException(_jl_lastTokenEnd, msg);
+    }
+	
+	/** The underlying lexing buffer */
+	protected final LexBuffer _jl_lexbuf;
+	
+	/** The actual tokenizer */
 	private final Supplier<@NonNull Token> _jl_tokens;
+	
 	/** 
 	 * The last token read and not yet consumed, or {@code null}
 	 * if the next token must be fetched from {@link #_jl_tokens}
 	 */
 	protected @Nullable Token _jl_nextToken;
+
+	/**
+	 * The end position of the last token that was consumed by
+	 * the parser, or the start-of-input position if no token
+	 * was consumed yet
+	 */
+	protected LexBuffer.Position _jl_lastTokenEnd;
 	
 	/**
 	 * Construct a new parser which will feed on the
@@ -86,9 +119,12 @@ public abstract class BaseParser<Token> {
 	 * 
 	 * @param tokens
 	 */
-	protected BaseParser(Supplier<@NonNull Token> tokens) {
-		this._jl_tokens = tokens;
+	protected <T extends LexBuffer> 
+		BaseParser(T lexbuf, Function<T, @NonNull Token> tokens) {
+		this._jl_lexbuf = lexbuf;
+		this._jl_tokens = () -> tokens.apply(lexbuf);
 		this._jl_nextToken = null;
+		this._jl_lastTokenEnd = new Position(lexbuf.filename);
 	}
 	
 	/**
@@ -105,6 +141,7 @@ public abstract class BaseParser<Token> {
 	 */
 	protected final void eat() {
 		peek(); _jl_nextToken = null;
+		_jl_lastTokenEnd = _jl_lexbuf.getLexemeEnd();
 	}
 	
 	/**
@@ -123,12 +160,12 @@ public abstract class BaseParser<Token> {
 		 * 
 		 * @author Stéphane Lescuyer
 		 */
-		private final static class Extent {
+		private final static class Range {
 			final @Nullable String name;
 			final LexBuffer.Position start;
 			final LexBuffer.Position end;
 			
-			Extent(@Nullable String name, 
+			Range(@Nullable String name, 
 					LexBuffer.Position start, LexBuffer.Position end) {
 				this.name = name;
 				this.start = start;
@@ -147,14 +184,11 @@ public abstract class BaseParser<Token> {
 			}
 		}
 		
-		private final LexBuffer lexbuf;
-		private LexBuffer.Position _jl_lastTokenEnd;
-		private Stack<@NonNull List<@NonNull Extent>> _jl_locationStack;
+		private Stack<@NonNull List<@NonNull Range>> _jl_locationStack;
 		
-		protected WithPositions(LexBuffer lexbuf, Supplier<@NonNull Token> tokens) {
-			super(tokens);
-			this.lexbuf = lexbuf;
-			this._jl_lastTokenEnd = new LexBuffer.Position(lexbuf.filename);
+		protected <T extends LexBuffer> 
+			WithPositions(T lexbuf, Function<T, @NonNull Token> tokens) {
+			super(lexbuf, tokens);
 			this._jl_locationStack = new Stack<>();
 		}
 
@@ -167,7 +201,7 @@ public abstract class BaseParser<Token> {
 		
 		private int maxStack = 0;
 		protected final void enter(int ruleSize) {	// ruleSize is not strictly necessary
-			_jl_locationStack.push(new ArrayList<Extent>(ruleSize));
+			_jl_locationStack.push(new ArrayList<Range>(ruleSize));
 			if (!withDebug) return;
 			int sz = _jl_locationStack.size();
 			if (sz > maxStack) {
@@ -179,11 +213,9 @@ public abstract class BaseParser<Token> {
 		}
 		
 		protected final void shift(@Nullable String name) {
-			LexBuffer.Position start = lexbuf.getLexemeStart();
-			LexBuffer.Position end = lexbuf.getLexemeEnd();
-			_jl_lastTokenEnd = end;
-			_jl_locationStack.peek().add(
-				new Extent(name, start, end));
+			LexBuffer.Position start = _jl_lexbuf.getLexemeStart();
+			LexBuffer.Position end = _jl_lexbuf.getLexemeEnd();
+			_jl_locationStack.peek().add(new Range(name, start, end));
 			if (!withDebug) return;
 			System.out.println(String.format("Shift (%s)",  Objects.toString(name)));
 			print();
@@ -193,19 +225,20 @@ public abstract class BaseParser<Token> {
 			LexBuffer.Position start = getStartPos();
 			LexBuffer.Position end = getEndPos();
 			_jl_locationStack.pop();
-			_jl_locationStack.peek().add(new Extent(name, start, end));
+			_jl_locationStack.peek().add(new Range(name, start, end));
 			if (!withDebug) return;
 			System.out.println(String.format("Leave (%s)",  Objects.toString(name)));
 			print();
 		}
 		
-		private static ParsingException noRule(String method) {
-			return new ParsingException("No current rule production. Are you using " 
+		private ParsingException noRule(String method) {
+			return new ParsingException(getEndPos(), 
+					"No current rule production. Are you using " 
 					+ method + " outside of a semantic action?");
 		}
 		
 		protected final LexBuffer.Position getStartPos() {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getStartPos");
@@ -216,7 +249,7 @@ public abstract class BaseParser<Token> {
 		}
 		
 		protected final LexBuffer.Position getEndPos() {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getEndPos");
@@ -227,13 +260,13 @@ public abstract class BaseParser<Token> {
 		}
 		
 		protected final LexBuffer.Position getSymbolStartPos() {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getSymbolStartPos");
 			}
-			@Nullable Extent found = null;
-			for (@NonNull Extent e : locs) {
+			@Nullable Range found = null;
+			for (@NonNull Range e : locs) {
 				if (e.start.offset != e.end.offset) {
 					found = e; break;
 				}
@@ -243,12 +276,13 @@ public abstract class BaseParser<Token> {
 			return found.start;
 		}
 
-		private static ParsingException noActual(int i, int size) {
-			return new ParsingException("Cannot find actual " + i + " in the current production, which has " + size);
+		private ParsingException noActual(int i, int size) {
+			return new ParsingException(getEndPos(),
+				"Cannot find actual " + i + " in the current production, which has " + size);
 		}
 		
 		protected final LexBuffer.Position getStartPos(int i) {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getStartPos(int)");
@@ -259,7 +293,7 @@ public abstract class BaseParser<Token> {
 		}
 		
 		protected final LexBuffer.Position getEndPos(int i) {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getEndPos(int)");
@@ -269,18 +303,19 @@ public abstract class BaseParser<Token> {
 			return locs.get(i - 1).end;
 		}
 		
-		private static ParsingException noBinding(String id) {
-			return new ParsingException("Cannot find actual with name " + id + " in the current production");
+		private ParsingException noBinding(String id) {
+			return new ParsingException(getEndPos(), 
+				"Cannot find actual with name " + id + " in the current production");
 		}
 		
 		protected final LexBuffer.Position getStartPos(String id) {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getStartPos(String)");
 			}
-			@Nullable Extent found = null;
-			for (Extent e : locs) {
+			@Nullable Range found = null;
+			for (Range e : locs) {
 				if (id.equals(e.name)) {
 					found = e; break;
 				}
@@ -291,13 +326,13 @@ public abstract class BaseParser<Token> {
 		}
 		
 		protected final LexBuffer.Position getEndPos(String id) {
-			List<@NonNull Extent> locs;
+			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
 			catch (EmptyStackException e) {
 				throw noRule("getEndPos(String)");
 			}
-			@Nullable Extent found = null;
-			for (Extent e : locs) {
+			@Nullable Range found = null;
+			for (Range e : locs) {
 				if (id.equals(e.name)) {
 					found = e; break;
 				}

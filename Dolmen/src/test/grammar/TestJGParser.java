@@ -4,9 +4,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.function.Supplier;
-
-import org.eclipse.jdt.annotation.NonNull;
 
 import automaton.Automata;
 import automaton.Determinize;
@@ -35,19 +32,15 @@ public abstract class TestJGParser {
 	/** Whether tokens should be printed along the way, for debug */
 	private static boolean tokenize = true;
 
-	@SuppressWarnings("null")
 	private static JGParserGenerated of(JGLexer lexer) {
 		if (!tokenize)
-			return new JGParserGenerated(lexer::main);
+			return new JGParserGenerated(lexer, JGLexer::main);
 		else
-			return new JGParserGenerated(new Supplier<JGParserGenerated.Token>() {
-				@Override
-				public JGParserGenerated.@NonNull Token get() {
-					JGParserGenerated.Token res = lexer.main();
+			return new JGParserGenerated(lexer, lexbuf -> {
+					JGParserGenerated.Token res = lexbuf.main();
 					System.out.println(res);
 					return res;
-				}
-			});
+				});
 	}
 	
 	static void generateLexer(String filename, String className) throws IOException {
@@ -55,7 +48,7 @@ public abstract class TestJGParser {
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		@SuppressWarnings("null")
-		JLParser parser = new JLParser(lexer::main);
+		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
 		System.out.println("Computing automata...");

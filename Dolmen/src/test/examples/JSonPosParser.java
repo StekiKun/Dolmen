@@ -255,7 +255,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
 
     @SuppressWarnings("null")
-    public JSonPosParser(codegen.LexBuffer lexbuf, java.util.function.Supplier<Token> tokens) {
+    public <T extends codegen.LexBuffer>JSonPosParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
         super(lexbuf, tokens);
     }
     

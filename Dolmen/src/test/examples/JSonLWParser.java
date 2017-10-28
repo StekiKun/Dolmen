@@ -105,8 +105,8 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     
 
     @SuppressWarnings("null")
-    public JSonLWParser(java.util.function.Supplier<Token> tokens) {
-        super(tokens);
+    public <T extends codegen.LexBuffer>JSonLWParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
+        super(lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

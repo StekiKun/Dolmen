@@ -112,7 +112,7 @@ public final class TestPositions {
 	private static void testWithPos(String filename) throws IOException {
 		try (Reader file = new BufferedReader(new FileReader(filename))) {
 			JSonPosLexer lexer = new JSonPosLexer(filename, file);
-			JSonPosParser parser = new JSonPosParser(lexer, lexer::main);
+			JSonPosParser parser = new JSonPosParser(lexer, JSonPosLexer::main);
 			long start = System.nanoTime();
 			JSonPosParser.Value<?> val = parser.json();
 			long end = System.nanoTime();

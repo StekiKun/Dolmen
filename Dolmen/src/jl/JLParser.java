@@ -17,7 +17,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Supplier;
+import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -33,9 +33,9 @@ import jl.JLToken.Ident;
 import jl.JLToken.Kind;
 import jl.JLToken.LChar;
 import jl.JLToken.LString;
+import syntax.Extent;
 import syntax.Lexer;
 import syntax.Located;
-import syntax.Extent;
 import syntax.Regular;
 import syntax.Regular.Characters;
 import syntax.Regulars;
@@ -65,8 +65,8 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 
 	 * @param tokens
 	 */
-	public JLParser(Supplier<JLToken> tokens) {
-		super(tokens);
+	public JLParser(JLLexerGenerated lexbuf, Function<JLLexerGenerated, @NonNull JLToken> tokens) {
+		super(lexbuf, tokens);
 		this.definitions = Maps.empty();
 	}
 	
@@ -383,8 +383,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		case SEQUENCE:
 		case REPETITION:
 		case BINDING:
-			throw new ParsingException
-				("Regular expression " + reg + " is not a character set.");
+			throw parsingError("Regular expression " + reg + " is not a character set.");
 		case CHARACTERS: {
 			final Characters characters = (Characters) reg;
 			return characters.chars;
@@ -413,7 +412,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			Ident tok = (Ident) eat(Kind.IDENT);
 			@Nullable Regular reg = Maps.get(definitions, tok.value);
 			if (reg == null)
-				throw new ParsingException("Undefined regular expression " + tok.value);
+				throw parsingError("Undefined regular expression " + tok.value);
 			return reg;
 		}
 		case LBRACKET:
@@ -466,16 +465,13 @@ public final class JLParser extends BaseParser<JLToken> {
 	@SuppressWarnings("null")
 	private static JLParser of(JLLexerGenerated lexer) {
 		if (!tokenize)
-			return new JLParser(lexer::main);
+			return new JLParser(lexer, JLLexerGenerated::main);
 		else
-			return new JLParser(new Supplier<JLToken>() {
-				@Override
-				public @NonNull JLToken get() {
-					JLToken res = lexer.main();
+			return new JLParser(lexer, lexbuf -> {
+					JLToken res = lexbuf.main();
 					System.out.println(res);
 					return res;
-				}
-			});
+				});
 	}
 	
 	static void testParse(String filename) throws IOException {

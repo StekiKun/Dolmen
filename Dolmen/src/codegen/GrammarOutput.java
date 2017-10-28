@@ -99,12 +99,11 @@ public final class GrammarOutput {
 	
 	private void genConstructor(String name) {
 		buf.emitln("@SuppressWarnings(\"null\")");
-		buf.emit("public ").emit(name).emit("(")
-		   .emitIf(config.positions, "codegen.LexBuffer lexbuf, ")
-		   .emit("java.util.function.Supplier<Token> tokens)")
+		buf.emit("public <T extends codegen.LexBuffer>").emit(name).emit("(")
+		   .emit("T lexbuf, ")
+		   .emit("java.util.function.Function<T, Token> tokens)")
 		   .openBlock();
-		buf.emitIf(!config.positions, "super(tokens);")
-		   .emitIf(config.positions, "super(lexbuf, tokens);")
+		buf.emit("super(lexbuf, tokens);")
 		   .closeBlock();
 		buf.newline();
 	}

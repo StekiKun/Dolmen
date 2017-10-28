@@ -68,8 +68,8 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     }
     
     @SuppressWarnings("null")
-    public ArithGroundParser(java.util.function.Supplier<Token> tokens) {
-        super(tokens);
+    public <T extends codegen.LexBuffer>ArithGroundParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
+        super(lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {
@@ -181,7 +181,7 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
 			try {
 				ArithGroundLexer lexer = new ArithGroundLexer("-",
 					new java.io.StringReader(prompt));
-				ArithGroundParser parser = new ArithGroundParser(lexer::main);
+				ArithGroundParser parser = new ArithGroundParser(lexer, ArithGroundLexer::main);
 				int e = parser.exp();
 				System.out.println(e);
 			} catch (ParsingException e) {
