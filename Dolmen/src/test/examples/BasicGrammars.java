@@ -21,6 +21,7 @@ import syntax.Grammars;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
 import syntax.Lexer;
+import syntax.Located;
 import syntax.Extent;
 import syntax.Production;
 
@@ -37,18 +38,18 @@ public abstract class BasicGrammars {
 	}
 
 	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(name, null);
+		return new Grammar.TokenDecl(Located.dummy(name), null);
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Extent.inlined(valType));
+		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
 		int ndx = s.indexOf('=');
 		if (ndx < 0)
-			return new Production.Actual(null, s, null);
-		String binding = s.substring(0, ndx).trim();
+			return new Production.Actual(null, Located.dummy(s), null);
+		Located<String> binding = Located.dummy(s.substring(0, ndx).trim());
 		
 		@Nullable final Extent args;
 		final int bnd;
@@ -64,7 +65,7 @@ public abstract class BasicGrammars {
 			args = null;
 		}
 		@NonNull String item = s.substring(ndx + 1, bnd).trim();
-		return new Production.Actual(binding, item, args);
+		return new Production.Actual(binding, Located.dummy(item), args);
 	}
 	
 	static final Extent VOID = Extent.inlined("void");
@@ -104,7 +105,8 @@ public abstract class BasicGrammars {
 			++first;
 		}
 		
-		GrammarRule.Builder builder = new GrammarRule.Builder(vis, retType, name, args);
+		GrammarRule.Builder builder =
+			new GrammarRule.Builder(vis, retType, Located.dummy(name), args);
 		for (int i = first; i < productions.length; ++i)
 			builder.addProduction((Production) productions[i]);
 		return builder.build();		

@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.ArrayList;
 import common.Lists;
 import syntax.Extent;
+import syntax.Located;
 import syntax.Production;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
@@ -141,9 +142,18 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     /**
      * Returns {@code true} if the given string contains a lower-case letter
      */
-     private static boolean isLowerId(String name) {
-         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
-     }
+    private static boolean isLowerId(String name) {
+        return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
+    }
+
+    /**
+     * @param t
+     * @return the given value wrapped with the location of the last
+     * 	consumed token
+     */
+    private <@NonNull T> @NonNull Located<T> withLoc(T t) {
+	     return Located.of(t, _jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
+    }
 
     @SuppressWarnings("null")
     public <T extends codegen.LexBuffer>JGParserGenerated(T lexbuf, java.util.function.Function<T, Token> tokens) {
@@ -296,14 +306,14 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
                     throw parsingError("Token name should be all uppercase: " + id);
-                return new TokenDecl(id, val);
+                return new TokenDecl(withLoc(id), val);
             }
             case IDENT: {
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                 if (isLowerId(id))
                    throw parsingError("Token name should be all uppercase: " + id);
-                return new TokenDecl(id, null);
+                return new TokenDecl(withLoc(id), null);
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
@@ -344,12 +354,13 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
         if (!Character.isLowerCase(name.charAt(0)))
             throw parsingError("Rule name must start with a lower case letter: " + name);
+        @NonNull Located<@NonNull String> lname = withLoc(name);
         // args = args
         @Nullable Extent args = args();
         // EQUAL
         eat(Token.Kind.EQUAL);
         GrammarRule.@NonNull Builder builder =
-        	new GrammarRule.Builder(vis, rtype, name, args);
+        	new GrammarRule.Builder(vis, rtype, lname, args);
         // prod = production
         @NonNull Production prod = production();
         builder.addProduction(prod);
@@ -444,8 +455,8 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case IDENT: {
                 // id = IDENT
                 @NonNull String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // actual = actual(id)
-                Production.@NonNull Actual actual = actual(id);
+                // actual = actual(withLoc(id))
+                Production.@NonNull Actual actual = actual(withLoc(id));
                 builder.addActual(actual);
                 // items(builder)
                 items(builder);
@@ -457,7 +468,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         }
     }
     
-    private Production.@NonNull Actual actual(@NonNull String id) {
+    private Production.@NonNull Actual actual(@NonNull Located<@NonNull String> id) {
         switch (peek().getKind()) {
             case ACTION:
             case ARGUMENTS:
@@ -473,9 +484,10 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 eat(Token.Kind.EQUAL);
                 // name = IDENT
                 @NonNull String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                Located<@NonNull String> lname = withLoc(name);
                 // args = args
                 @Nullable Extent args = args();
-                return new Production.Actual(id, name, args);
+                return new Production.Actual(id, lname, args);
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);

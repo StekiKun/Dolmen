@@ -17,6 +17,7 @@ import syntax.Grammar;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammars.PredictionTable;
+import syntax.Located;
 import syntax.Extent;
 import syntax.Production;
 import syntax.Production.ActionItem;
@@ -126,10 +127,11 @@ public final class GrammarOutput {
 	}
 	
 	private void genActual(Production.Actual actual) {
-		final String name = actual.item;
+		final String name = actual.item.val;
 		buf.newline();
 		buf.emitln("// " + actual.toString());
-		@Nullable String bound = actual.binding;
+		@Nullable Located<String> boundLoc = actual.binding;
+		@Nullable String bound = boundLoc == null ? null : boundLoc.val;
 		// If the item is bound, we need to assign the
 		// result of parsing the item to some local variable
 		// NB: it is up to the user to avoid capture in
@@ -140,10 +142,10 @@ public final class GrammarOutput {
 			if (actual.isTerminal()) {
 				Optional<TokenDecl> declo =
 					grammar.tokenDecls.stream()
-						   .filter(decl -> decl.name.equals(actual.item))
+						   .filter(decl -> decl.name.val.equals(actual.item.val))
 						   .findFirst();
 				if (!declo.isPresent())
-					throw new IllegalStateException("Undeclared terminal " + actual.item);
+					throw new IllegalStateException("Undeclared terminal " + actual.item.val);
 				@Nullable Extent valueType = declo.get().valueType;
 				if (valueType == null) {
 					System.err.println("Bound terminal " + actual + " has no value."
@@ -155,7 +157,7 @@ public final class GrammarOutput {
 					   .emit(" ").emit(bound).emit(" = ");
 			}
 			else {
-				buf.emit(grammar.rule(actual.item).returnType.find())
+				buf.emit(grammar.rule(actual.item.val).returnType.find())
 				   .emit(" ").emit(bound).emit(" = ");
 			}
 		}
@@ -221,7 +223,7 @@ public final class GrammarOutput {
 		buf.newline();
 		buf.emit(rule.visibility ? "public " : "private ")
 		   .emit(rule.returnType.find()).emit(" ");
-		buf.emit(ruleName(rule.name)).emit("(");
+		buf.emit(ruleName(rule.name.val)).emit("(");
 		if (rule.args != null) buf.emit(rule.args.find());
 		buf.emit(")").openBlock();
 		
@@ -289,7 +291,7 @@ public final class GrammarOutput {
 	
 	private void genRules() {
 		for (GrammarRule rule : grammar.rules.values())
-			genRule(rule, predict.tableFor(rule.name));
+			genRule(rule, predict.tableFor(rule.name.val));
 	}
 
 	protected void genParser(String name) {

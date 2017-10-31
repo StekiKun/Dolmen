@@ -123,7 +123,8 @@ public abstract class JLLexer {
 	 * | _				{ throw error("..."); }
 	 */
 	private final static Lexer.Entry mainEntry =
-		new Lexer.Entry.Builder(true, "main", Extent.inlined("jl.JLToken"), null)
+		new Lexer.Entry.Builder(
+				true, Located.dummy("main"), Extent.inlined("jl.JLToken"), null)
 			.add(plus(chars(ws)), "return main();")
 			.add(nl, "newline(); return main();")
 			.add(string("/*"), "comment(); return main();")
@@ -188,7 +189,7 @@ public abstract class JLLexer {
 	 * | [^*"'\r\n]+	{ comment(); return; }
 	 */
 	private final static Lexer.Entry commentEntry =
-		new Lexer.Entry.Builder(false, "comment", VOID, null)
+		new Lexer.Entry.Builder(false, Located.dummy("comment"), VOID, null)
 			.add(string("*/"), "return;")
 			.add(rchar('*'), "comment(); return;")
 			.add(rchar('"'), "stringBuffer.setLength(0);\n" +
@@ -216,7 +217,7 @@ public abstract class JLLexer {
 	 * 							  string(); return; }
 	 */
 	private final static Lexer.Entry stringEntry =
-		new Lexer.Entry.Builder(false, "string", VOID, null)
+		new Lexer.Entry.Builder(false, Located.dummy("string"), VOID, null)
 			.add(rchar('"'), "return;")
 			.add(seq(rchar('\\'), binding(escaped, Located.dummy("c"))), 
 					"stringBuffer.append(forBackslash(c)); string(); return;")
@@ -250,7 +251,7 @@ public abstract class JLLexer {
 	 * | [^{}"'/\r\n]+  { return action(); }
 	 */
 	private final static Lexer.Entry actionEntry =
-		new Lexer.Entry.Builder(false, "action", Extent.inlined("int"), null)
+		new Lexer.Entry.Builder(false, Located.dummy("action"), Extent.inlined("int"), null)
 			.add(rchar('{'), "++braceDepth; return action();")
 			.add(rchar('}'), "--braceDepth;\n" +
 							 "if (braceDepth == 0) return getLexemeStart().offset - 1;\n" +
@@ -278,7 +279,7 @@ public abstract class JLLexer {
 	 * | ""					{ return; }
 	 */
 	private final static Lexer.Entry skipCharEntry =
-		new Lexer.Entry.Builder(false, "skipChar", VOID, null)
+		new Lexer.Entry.Builder(false, Located.dummy("skipChar"), VOID, null)
 			.add(seq(inChar,  rchar('\'')), "return;")
 			.add(seq(rchar('\\'), any, rchar('\'')), "return;")
 			.add(Regular.EPSILON, "return;")

@@ -90,18 +90,18 @@ public abstract class Grammars {
 		}
 		
 		for (GrammarRule rule : grammar.rules.values()) {
-			final String name = rule.name;
+			final String name = rule.name.val;
 			// fwd was initialized with all defined non-terminals
 			final Set<String> deps = Nulls.ok(fwd.get(name));
 			
 			for (Production prod : rule.productions) {
 				for (Production.Actual actual : prod.actuals()) {
 					if (!actual.isTerminal()) {
-						deps.add(actual.item);
+						deps.add(actual.item.val);
 						// bwd was initialized with all defined non-terminals
 						// (and the Grammar.Builder ensures that a production
 						//  rule cannot reference undefined non-terminals)
-						Nulls.ok(bwd.get(actual.item)).add(name);
+						Nulls.ok(bwd.get(actual.item.val)).add(name);
 					}
 				}
 			}
@@ -156,7 +156,7 @@ public abstract class Grammars {
 		public boolean nullable(Production prod) {
 			for (Production.Actual actual : prod.actuals()) {
 				if (actual.isTerminal()) return false;
-				if (!nullable(actual.item)) return false;
+				if (!nullable(actual.item.val)) return false;
 			}
 			return true;
 		}
@@ -182,12 +182,13 @@ public abstract class Grammars {
 		public Set<String> first(Production prod) {
 			Set<String> res = Sets.empty();
 			for (Production.Actual actual : prod.actuals()) {
+				final String itemName = actual.item.val;
 				if (actual.isTerminal()) {
-					res = Sets.union(res, Sets.singleton(actual.item));
+					res = Sets.union(res, Sets.singleton(itemName));
 					break;	// terminal is not nullable
 				}
-				res = Sets.union(res, first(actual.item));
-				if (!nullable(actual.item)) break;
+				res = Sets.union(res, first(itemName));
+				if (!nullable(itemName)) break;
 			}
 			return res;
 		}
@@ -219,7 +220,7 @@ public abstract class Grammars {
 		nullableProd(Production prod, Map<String, Boolean> nullable) {
 		for (Production.Actual actual : prod.actuals()) {
 			if (actual.isTerminal()) return false;
-			String id = actual.item;
+			String id = actual.item.val;
 			@Nullable Boolean b = Maps.get(nullable, id);
 			if (b == null || !b) return b;
 		}
@@ -293,12 +294,13 @@ public abstract class Grammars {
 				// until we encounter a non-nullable item. Each item
 				// visited is added to the rule's first set.
 				for (Production.Actual actual : prod.actuals()) {
+					final String itemName = actual.item.val;
 					if (actual.isTerminal()) {
-						changed |= first.add(actual.item);
+						changed |= first.add(itemName);
 						continue prod;
 					}
-					changed |= first.addAll(res.get(actual.item));
-					if (!nullable.contains(actual.item)) break;
+					changed |= first.addAll(res.get(itemName));
+					if (!nullable.contains(itemName)) break;
 				}
 			}
 			// If we changed the FIRST set of the current rule,
@@ -340,13 +342,13 @@ public abstract class Grammars {
 						// When encountering a terminal item, we can
 						// flush the current follow set and use the
 						// current item instead
-						follow = Sets.singleton(actual.item);
+						follow = Sets.singleton(actual.item.val);
 						continue;
 					}
 					// When encountering a non-terminal item, we
 					// extend its follow set with the current follow set
 					// and record whether it changed or not
-					String nterm = actual.item;
+					String nterm = actual.item.val;
 					if (Nulls.ok(res.get(nterm)).addAll(follow))
 						changed.add(nterm);
 					// If that non-terminal is nullable, proceed with
@@ -527,7 +529,7 @@ public abstract class Grammars {
 	public static PredictionTable predictionTable(Grammar grammar, NTermsInfo infos) {
 		PredictionTable.Builder builder = new PredictionTable.Builder(grammar);
 		for (GrammarRule rule : grammar.rules.values()) {
-			String nterm = rule.name;
+			String nterm = rule.name.val;
 			for (Production prod : rule.productions) {
 				for (String term : infos.first(prod))
 					builder.add(nterm, term, prod);

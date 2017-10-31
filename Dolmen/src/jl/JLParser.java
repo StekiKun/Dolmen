@@ -78,6 +78,10 @@ public final class JLParser extends BaseParser<JLToken> {
 		return ctoken;
 	}
 	
+	private <@NonNull T> Located<T> withLoc(T value) {
+		return Located.of(value, _jl_lexbuf.getLexemeStart(), _jl_lastTokenEnd);
+	}
+	
 	/**
 	 * Lexer :=
 	 * 	Import* ACTION Definition* Entry+ ACTION END
@@ -205,6 +209,8 @@ public final class JLParser extends BaseParser<JLToken> {
 		eat(Kind.RULE);
 		
 		Ident name = (Ident) eat(Kind.IDENT);
+		Located<String> lname = Located.of(name.value,
+			_jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
 		
 		@Nullable Action args = null;
 		if (peek().getKind() == Kind.ACTION) {
@@ -220,7 +226,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		
 		Map<Regular, Extent> clauses = parseClauses();
 		
-		return new Lexer.Entry(vis, name.value, returnType.value, shortest, 
+		return new Lexer.Entry(vis, lname, returnType.value, shortest, 
 				args == null ? null : args.value, clauses);
 	}
 
@@ -323,8 +329,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		while (peek() == AS) {
 			eat();
 			Ident id = (Ident) eat(Kind.IDENT);
-			// TODO: use access to the lexbuffer to store the actual location of id
-			res = Regular.binding(res, Located.dummy(id.value));
+			res = Regular.binding(res, withLoc(id.value));
 		}
 		return res;
 	}

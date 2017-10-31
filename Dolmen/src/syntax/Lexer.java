@@ -41,7 +41,7 @@ public final class Lexer {
 		/** The visibility of this entry point */
 		public final boolean visibility;
 		/** The name of this entry */
-		public final String name;
+		public final Located<String> name;
 		/** Whether shortest match should be used */
 		public final boolean shortest;
 		/** The formal arguments for this rule */
@@ -70,7 +70,7 @@ public final class Lexer {
 		 * Beware that order in {@code clauses} is relevant.
 		 */
 		public Entry(boolean visibility, 
-				String name, Extent returnType, boolean shortest,
+				Located<String> name, Extent returnType, boolean shortest,
 				@Nullable Extent args, Map<Regular, Extent> clauses) {
 			this.visibility = visibility;
 			this.name = name;
@@ -81,7 +81,7 @@ public final class Lexer {
 		}
 		
 		StringBuilder append(StringBuilder buf, String kword) {
-			buf.append(kword).append(" ").append(name);
+			buf.append(kword).append(" ").append(name.val);
 			Extent args_ = args;
 			if (args_ == null) buf.append("()");
 			else buf.append("(").append(args_.find()).append(")");
@@ -109,7 +109,7 @@ public final class Lexer {
 		 */
 		public static final class Builder {
 			private final boolean visibility;
-			private final String name;
+			private final Located<String> name;
 			private boolean shortest;
 			private final @Nullable Extent args;
 			private final Extent returnType;
@@ -125,7 +125,7 @@ public final class Lexer {
 			 * @param args
 			 */
 			public Builder(boolean visibility, 
-					String name, Extent returnType, @Nullable Extent args) {
+					Located<String> name, Extent returnType, @Nullable Extent args) {
 				this.visibility = visibility;
 				this.name = name;
 				this.shortest = false;

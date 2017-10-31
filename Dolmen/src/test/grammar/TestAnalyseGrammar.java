@@ -6,6 +6,7 @@ import common.Lists;
 import syntax.Grammar;
 import syntax.GrammarRule;
 import syntax.Grammars;
+import syntax.Located;
 import syntax.Extent;
 import syntax.Production;
 import syntax.Grammars.Dependencies;
@@ -21,15 +22,15 @@ import syntax.Grammars.PredictionTable;
 public final class TestAnalyseGrammar {
 
 	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(name, null);
+		return new Grammar.TokenDecl(Located.dummy(name), null);
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Extent.inlined(valType));
+		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
-		return new Production.Actual(null, s, null);
+		return new Production.Actual(null, Located.dummy(s), null);
 	}
 	
 	static final Extent VOID = Extent.inlined("void");
@@ -45,7 +46,8 @@ public final class TestAnalyseGrammar {
 	
 	static GrammarRule rule(String name,
 		@NonNull Production... productions) {
-		GrammarRule.Builder builder = new GrammarRule.Builder(false, VOID, name, null);
+		GrammarRule.Builder builder =
+			new GrammarRule.Builder(false, VOID, Located.dummy(name), null);
 		for (int i = 0; i < productions.length; ++i)
 			builder.addProduction(productions[i]);
 		return builder.build();
@@ -53,7 +55,8 @@ public final class TestAnalyseGrammar {
 
 	static GrammarRule prule(String name,
 		@NonNull Production... productions) {
-		GrammarRule.Builder builder = new GrammarRule.Builder(true, VOID, name, null);
+		GrammarRule.Builder builder =
+			new GrammarRule.Builder(true, VOID, Located.dummy(name), null);
 		for (int i = 0; i < productions.length; ++i)
 			builder.addProduction(productions[i]);
 		return builder.build();
@@ -81,19 +84,19 @@ public final class TestAnalyseGrammar {
 	final static class Test1 {
 		
 		private final static GrammarRule ruleZ =
-			new GrammarRule.Builder(true, VOID, "z", null)
+			new GrammarRule.Builder(true, VOID, Located.dummy("z"), null)
 				.addProduction(production("D"))
 				.addProduction(production("x", "y", "z"))
 				.build();
 		
 		private final static GrammarRule ruleY =
-			new GrammarRule.Builder(false, VOID, "y", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("y"), null)
 				.addProduction(production())
 				.addProduction(production("C"))
 				.build();
 		
 		private final static GrammarRule ruleX =
-			new GrammarRule.Builder(false, VOID, "x", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("x"), null)
 				.addProduction(production("y"))
 				.addProduction(production("A"))
 				.build();
@@ -132,36 +135,36 @@ public final class TestAnalyseGrammar {
 	final static class Test2 {
 
 		private final static GrammarRule ruleS =
-				new GrammarRule.Builder(true, VOID, "s", null)
+				new GrammarRule.Builder(true, VOID, Located.dummy("s"), null)
 					.addProduction(production("e", "EOF"))
 					.build();
 
 		private final static GrammarRule ruleE =
-			new GrammarRule.Builder(false, VOID, "e", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("e"), null)
 				.addProduction(production("t", "e_"))
 				.build();
 			
 		private final static GrammarRule ruleE_ =
-			new GrammarRule.Builder(false, VOID, "e_", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("e_"), null)
 				.addProduction(production("PLUS", "t", "e_"))
 				.addProduction(production("MINUS", "t", "e_"))
 				.addProduction(production())
 				.build();
 		
 		private final static GrammarRule ruleT =
-			new GrammarRule.Builder(false, VOID, "t", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("t"), null)
 				.addProduction(production("f", "t_"))
 				.build();
 		
 		private final static GrammarRule ruleT_ =
-			new GrammarRule.Builder(false, VOID, "t_", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("t_"), null)
 				.addProduction(production("MULT", "f", "t_"))
 				.addProduction(production("DIV", "f", "t_"))
 				.addProduction(production())
 				.build();
 		
 		private final static GrammarRule ruleF =
-			new GrammarRule.Builder(false, VOID, "f", null)
+			new GrammarRule.Builder(false, VOID, Located.dummy("f"), null)
 				.addProduction(production("ID"))
 				.addProduction(production("NUM"))
 				.addProduction(production("LPAREN", "e", "RPAREN"))

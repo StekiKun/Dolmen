@@ -27,7 +27,7 @@ public final class GrammarRule {
 	/** This rule's return type */
 	public final Extent returnType;
 	/** The name of this rule */
-	public final String name;
+	public final Located<String> name;
 	/** The formal arguments for this rule, if any */
 	public final @Nullable Extent args;
 	/** The productions for this rule */
@@ -42,8 +42,8 @@ public final class GrammarRule {
 	 * @param productions
 	 */
 	public GrammarRule(boolean visibility, Extent returnType,
-			String name, @Nullable Extent args, List<Production> productions) {
-		if (!Character.isLowerCase(name.charAt(0)))
+			Located<String> name, @Nullable Extent args, List<Production> productions) {
+		if (!Character.isLowerCase(name.val.charAt(0)))
 			throw new IllegalArgumentException("Rule name should start with a lower case");
 		this.visibility = visibility;
 		this.returnType = returnType;
@@ -55,7 +55,7 @@ public final class GrammarRule {
 	
 	StringBuilder append(StringBuilder buf) {
 		buf.append(visibility ? "public " : "private ");
-		buf.append(name);
+		buf.append(name.val);
 		Extent args_ = args;
 		if (args_ == null) buf.append("()");
 		else buf.append("(").append(args_.find()).append(")");
@@ -83,7 +83,7 @@ public final class GrammarRule {
 	public static final class Builder {
 		private final boolean visibility;
 		private final Extent returnType;
-		private final String name;
+		private final Located<String> name;
 		private final @Nullable Extent args;
 		private final List<Production> productions;
 		
@@ -95,7 +95,7 @@ public final class GrammarRule {
 		 * @param args
 		 */
 		public Builder(boolean visibility, Extent returnType,
-			String name, @Nullable Extent args) {
+			Located<String> name, @Nullable Extent args) {
 			this.visibility = visibility;
 			this.returnType = returnType;
 			this.name = name;

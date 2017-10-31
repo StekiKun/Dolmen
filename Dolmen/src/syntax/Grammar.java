@@ -42,7 +42,7 @@ public final class Grammar {
 	 */
 	public static final class TokenDecl {
 		/** The name of this token */
-		public final String name;
+		public final Located<String> name;
 		/**
 		 * If non-null, the extent of the type of Java values
 		 * associated to this token at run-time
@@ -55,8 +55,8 @@ public final class Grammar {
 		 * @param name
 		 * @param valueType
 		 */
-		public TokenDecl(String name, @Nullable Extent valueType) {
-			if (name.chars().anyMatch(ch -> Character.isLowerCase(ch)))
+		public TokenDecl(Located<String> name, @Nullable Extent valueType) {
+			if (name.val.chars().anyMatch(ch -> Character.isLowerCase(ch)))
 				throw new IllegalArgumentException("Token name should not contain lower case");
 
 			this.name = name;
@@ -76,7 +76,7 @@ public final class Grammar {
 			@Nullable Extent valueType_ = valueType;
 			return "token " +
 					(valueType_ == null ? "" : "{" + valueType_.find() + "} ") +
-					name;
+					name.val;
 		}
 	}
 	
@@ -168,9 +168,9 @@ public final class Grammar {
 		 *  given token declaration added to the grammar
 		 */
 		public Builder addToken(TokenDecl decl) {
-			String key = decl.name;
+			String key = decl.name.val;
 			for (TokenDecl tdecl : tokenDecls) {
-				if (key.equals(tdecl.name))
+				if (key.equals(tdecl.name.val))
 					throw new IllegalArgumentException("Cannot have two tokens with the same name");
 			}
 			this.tokenDecls.add(decl);
@@ -183,7 +183,7 @@ public final class Grammar {
 		 * 	given {@code rule} added to the set of rules
 		 */
 		public Builder addRule(GrammarRule rule) {
-			String key = rule.name;
+			String key = rule.name.val;
 			if (rules.containsKey(key))
 				throw new IllegalArgumentException("Cannot have two rules with the same name");
 			this.rules.put(key, rule);
@@ -215,16 +215,20 @@ public final class Grammar {
 		private @Nullable String sanityCheck(
 			List<TokenDecl> tokenDecls, Map<String, GrammarRule> rules) {
 			// Prepare sets of declared tokens and non-terminals
-			Set<String> tokens = new HashSet<String>();
-			Set<String> valuedTokens = new HashSet<String>();
+			Set<Located<String>> tokens = new HashSet<>();
+			Set<Located<String>> valuedTokens = new HashSet<>();
 			for (TokenDecl token : tokenDecls) {
 				tokens.add(token.name);
 				if (token.isValued())
 					valuedTokens.add(token.name);
 			}
-			Set<String> nonterms = rules.keySet();
-			Set<String> argnterms = new HashSet<String>();
-			Set<String> voidnterms = new HashSet<String>();
+			Set<Located<String>> nonterms =
+				rules.values().stream().collect(
+					() -> new HashSet<Located<String>>(), 
+					(acc, rule) -> acc.add(rule.name),
+					(r1, r2) -> { });
+			Set<Located<String>> argnterms = new HashSet<>();
+			Set<Located<String>> voidnterms = new HashSet<>();
 			for (GrammarRule rule : rules.values()) {
 				if (rule.args != null)
 					argnterms.add(rule.name);
@@ -241,7 +245,7 @@ public final class Grammar {
 						final int j = i;
 						Function<String, String> report =
 							msg -> scMessage(rule, j, actual, msg);
-						final String name = actual.item;
+						final Located<String> name = actual.item;
 						if (actual.isTerminal()) {
 							if (!tokens.contains(name))
 								return report.apply(name + " is not a defined token");
@@ -268,7 +272,7 @@ public final class Grammar {
 		private static String scMessage(
 			GrammarRule rule, int i, Production.Actual actual, String msg) {
 			return String.format("In rule %s, production %d, item %s: %s",
-				rule.name, i, actual, msg);
+				rule.name.val, i, actual, msg);
 		}
 	}
 }

@@ -111,14 +111,14 @@ public final class Production {
 		 * The name to which this item is bound in
 		 * the associated semantic action, if non-{@code null}
 		 */
-		public final @Nullable String binding;
+		public final @Nullable Located<String> binding;
 		/**
 		 * The name of the production item, i.e. either
 		 * the name of a non-terminal or a terminal of the
 		 * grammar, depending on whether the identifier starts
 		 * with a lowercase or uppercase character.
 		 */
-		public final String item;
+		public final Located<String> item;
 		/**
 		 * The Java arguments to the production item, if any.
 		 * Arguments only make sense if {@link #item} is
@@ -132,8 +132,8 @@ public final class Production {
 		 * @param item
 		 * @param args
 		 */
-		public Actual(@Nullable String binding,
-				String item, @Nullable Extent args) {
+		public Actual(@Nullable Located<String> binding,
+				Located<String> item, @Nullable Extent args) {
 			this.binding = binding;
 			this.item = item;
 			this.args = args;
@@ -157,15 +157,16 @@ public final class Production {
 		 * @return {@code true} is this item is a terminal
 		 */
 		public boolean isTerminal() {
-			return Character.isUpperCase(item.charAt(0));
+			return Character.isUpperCase(item.val.charAt(0));
 		}
 		
 		@Override
 		public String toString() {
 			StringBuilder buf = new StringBuilder();
-			if (binding != null)
-				buf.append(binding).append(" = ");
-			buf.append(item);
+			Located<String> bind = binding;
+			if (bind != null)
+				buf.append(bind.val).append(" = ");
+			buf.append(item.val);
 			@Nullable Extent args_ = args;
 			if (args_ != null)
 				buf.append("(").append(args_.find()).append(")");

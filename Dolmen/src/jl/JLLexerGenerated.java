@@ -143,7 +143,7 @@ return ACTION(ext);
             throw error("Unfinished token");
         }
         default:
-            throw new LexicalError(getLexemeStart(), "Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -182,7 +182,7 @@ stringBuffer.setLength(0);comment(); return;
             comment(); return;
         }
         default:
-            throw new LexicalError(getLexemeStart(), "Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -214,7 +214,7 @@ stringBuffer.setLength(0);comment(); return;
             stringBuffer.append(getLexeme()); string(); return;
         }
         default:
-            throw new LexicalError(getLexemeStart(), "Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -260,7 +260,7 @@ return action();
             return action();
         }
         default:
-            throw new LexicalError(getLexemeStart(), "Empty token");
+            throw error("Empty token");
         }
         
     }
@@ -284,7 +284,7 @@ return action();
             return;
         }
         default:
-            throw new LexicalError(getLexemeStart(), "Empty token");
+            throw error("Empty token");
         }
         
     }

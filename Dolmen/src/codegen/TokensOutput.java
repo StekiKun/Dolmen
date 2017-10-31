@@ -58,7 +58,7 @@ public final class TokensOutput {
 		for (TokenDecl decl : tokenDecls) {
 			if (first) first = false;
 			else buf.emitln(",");
-			buf.emit(decl.name);
+			buf.emit(decl.name.val);
 		}
 		buf.emit(";");
 		buf.closeBlock();
@@ -79,7 +79,7 @@ public final class TokensOutput {
 	
 	private void genValuedToken(TokenDecl decl) {
 		Extent loc = decl.valueType;
-		final @NonNull String name = decl.name;
+		final @NonNull String name = decl.name.val;
 		if (loc == null) throw new IllegalArgumentException();
 		final String valType = loc.find();
 		
@@ -141,8 +141,8 @@ public final class TokensOutput {
 	
 	private void genSingletonToken(TokenDecl decl) {
 		buf.newline();
-		buf.emit("public static final ").emit(className).emit(" " + decl.name)
-		   .emit(" = new Singleton(Kind.").emit(decl.name).emit(") {};");
+		buf.emit("public static final ").emit(className).emit(" " + decl.name.val)
+		   .emit(" = new Singleton(Kind.").emit(decl.name.val).emit(") {};");
 	}
 	
 	private void genSingletonTokens() {

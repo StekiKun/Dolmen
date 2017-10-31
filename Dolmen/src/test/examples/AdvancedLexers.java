@@ -146,11 +146,11 @@ public abstract class AdvancedLexers {
 				Regular.chars(CSet.EOF),    " throw error(\"EOF in comment\"); "
 			);
 		private final static Lexer.Entry mainEntry =
-			new Lexer.Entry(true, "main", Extent.inlined("Token"), false, 
-					null, mainClauses);
+			new Lexer.Entry(true, Located.dummy("main"),
+					Extent.inlined("Token"), false, null, mainClauses);
 		private final static Lexer.Entry commentEntry =
-			new Lexer.Entry(false, "comment", Extent.inlined("void"), false, 
-					null, commentClauses);
+			new Lexer.Entry(false, Located.dummy("comment"), 
+					Extent.inlined("void"), false, null, commentClauses);
 			
 		final static Lexer LEXER =
 			new Lexer(

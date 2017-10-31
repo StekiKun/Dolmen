@@ -13,6 +13,7 @@ import codegen.GrammarOutput;
 import syntax.Grammar;
 import syntax.GrammarRule;
 import syntax.Grammars;
+import syntax.Located;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
 import syntax.Extent;
@@ -36,20 +37,20 @@ public abstract class JGParser {
 	}
 
 	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(name, null);
+		return new Grammar.TokenDecl(Located.dummy(name), null);
 	}
 	
 	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(name, Extent.inlined(valType));
+		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
 		int ndx = s.indexOf('=');
-		final @Nullable String binding;
+		final @Nullable Located<String> binding;
 		if (ndx < 0)
 			binding = null;
 		else
-			binding = s.substring(0, ndx).trim();
+			binding = Located.dummy(s.substring(0, ndx).trim());
 		
 		@Nullable final Extent args;
 		final int bnd;
@@ -65,7 +66,7 @@ public abstract class JGParser {
 			args = null;
 		}
 		@NonNull String item = s.substring(ndx + 1, bnd).trim();
-		return new Production.Actual(binding, item, args);
+		return new Production.Actual(binding, Located.dummy(item), args);
 	}
 	
 	static final Extent VOID = Extent.inlined("void");
@@ -110,7 +111,8 @@ public abstract class JGParser {
 			++first;
 		}
 		
-		GrammarRule.Builder builder = new GrammarRule.Builder(vis, retType, name, args);
+		GrammarRule.Builder builder =
+			new GrammarRule.Builder(vis, retType, Located.dummy(name), args);
 		for (int i = first; i < productions.length; ++i)
 			builder.addProduction((Production) productions[i]);
 		return builder.build();		
@@ -133,7 +135,7 @@ public abstract class JGParser {
 			"import org.eclipse.jdt.annotation.Nullable;",
 			"import org.eclipse.jdt.annotation.NonNull;",
 			"import java.util.List;", "import java.util.ArrayList;",
-			"import common.Lists;", "import syntax.Extent;",
+			"import common.Lists;", "import syntax.Extent;", "import syntax.Located;",
 			"import syntax.Production;", "import syntax.Grammar.TokenDecl;",
 			"import syntax.GrammarRule;", "import syntax.Grammar;"
 			);
@@ -141,9 +143,18 @@ public abstract class JGParser {
 			"/**\n" +
 		"     * Returns {@code true} if the given string contains a lower-case letter\n" +
 		"     */\n" +
-		"     private static boolean isLowerId(String name) {\n" +
-		"         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));\n" +
-		"     }\n";
+		"    private static boolean isLowerId(String name) {\n" +
+		"        return name.chars().anyMatch(ch -> Character.isLowerCase(ch));\n" +
+		"    }\n" +
+	    "\n" +
+		"    /**\n" +
+	    "     * @param t\n" +
+	    "     * @return the given value wrapped with the location of the last\n" +
+	    "     * 	consumed token\n" +
+	    "     */\n" +
+	    "    private <@NonNull T> @NonNull Located<T> withLoc(T t) {\n" +
+	    "	     return Located.of(t, _jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());\n" +
+	    "    }\n";
 	
 	private static final String footer =
 			"/**\n" +
@@ -254,11 +265,11 @@ public abstract class JGParser {
 				production("id = IDENT", 
 					"@if (isLowerId(id))",
 					"@   throw parsingError(\"Token name should be all uppercase: \" + id);",
-					"@return new TokenDecl(id, null);"),
+					"@return new TokenDecl(withLoc(id), null);"),
 				production("val = ACTION", "id = IDENT",
 					"@if (isLowerId(id))",
 					"@    throw parsingError(\"Token name should be all uppercase: \" + id);",
-					"@return new TokenDecl(id, val);")))
+					"@return new TokenDecl(withLoc(id), val);")))
 			/**
 			 * <pre>
 			 * rules ->
@@ -287,9 +298,10 @@ public abstract class JGParser {
 					"name = IDENT",
 					"@if (!Character.isLowerCase(name.charAt(0)))",
 					"@    throw parsingError(\"Rule name must start with a lower case letter: \" + name);",
+					"@@NonNull Located<@NonNull String> lname = withLoc(name);",
 					"args = args", "EQUAL",
 					"@GrammarRule.@NonNull Builder builder =",
-					"@	new GrammarRule.Builder(vis, rtype, name, args);",
+					"@	new GrammarRule.Builder(vis, rtype, lname, args);",
 					"prod = production", "@builder.addProduction(prod);",
 					"productions(builder)",
 					"@return builder.build();")))
@@ -324,12 +336,13 @@ public abstract class JGParser {
 			.addRule(rule("items(Production.Builder builder)", "void",
 				production("@return;"),
 				production("ext = ACTION", "@builder.addAction(ext);", "items(builder)", "@return;"),
-				production("id = IDENT", "actual = actual(id)",
+				production("id = IDENT", "actual = actual(withLoc(id))",
 					"@builder.addActual(actual);", "items(builder)", "@return;")))
-			.addRule(rule("actual(@NonNull String id)", "Production.@NonNull Actual",
+			.addRule(rule("actual(@NonNull Located<@NonNull String> id)", "Production.@NonNull Actual",
 				production("args = args", "@return new Production.Actual(null, id, args);"),
-				production("EQUAL", "name = IDENT", "args = args",
-					"@return new Production.Actual(id, name, args);")))
+				production("EQUAL", "name = IDENT", 
+				    "@Located<@NonNull String> lname = withLoc(name);", "args = args",
+					"@return new Production.Actual(id, lname, args);")))
 			.build();
 
 	static void generateParser(String className, Grammar grammar)
