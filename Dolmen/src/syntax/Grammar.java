@@ -6,10 +6,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
+import common.Nulls;
+import syntax.IReport.Severity;
 
 /**
  * A lexer description is a set of {@link GrammarRule grammar rules}
@@ -135,8 +137,37 @@ public final class Grammar {
 	}
 	
 	/**
+	 * Exception raised by the grammar {@link Grammar.Builder builder} class
+	 * when trying to construct an ill-formed grammar description.
+	 * <p>
+	 * The exception contains the {@link #reports problems reported} during
+	 * the grammar construction.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static class IllFormedException extends RuntimeException {
+		private static final long serialVersionUID = -5811064298772984965L;
+		
+		/**
+		 * The problems reported during the grammar construction,
+		 * and which led to this exception
+		 */
+		public final List<@NonNull IReport> reports;
+		
+		/**
+		 * @param message
+		 * @param reports
+		 */
+		public IllFormedException(String message, List<@NonNull IReport> reports) {
+			super(message);
+			this.reports = reports;
+		}
+	}
+	
+	/**
 	 * A builder class for {@link Grammar}, where rules can be
-	 * added incrementally
+	 * added incrementally, and which takes care of collecting
+	 * problem reports along the way
 	 * 
 	 * @author Stéphane Lescuyer
 	 * @see #addRule(GrammarRule)
@@ -148,8 +179,8 @@ public final class Grammar {
 		private final Extent footer;
 		private final Map<String, GrammarRule> rules;
 		
-		@SuppressWarnings("unused")
-		private final Reporter reporter;
+		/** Problems reported when building this grammar */
+		public final Reporter reporter;
 		
 		/**
 		 * Returns a new builder with the given imports, header and footer
@@ -174,8 +205,10 @@ public final class Grammar {
 		public Builder addToken(TokenDecl decl) {
 			String key = decl.name.val;
 			for (TokenDecl tdecl : tokenDecls) {
-				if (key.equals(tdecl.name.val))
-					throw new IllegalArgumentException("Cannot have two tokens with the same name");
+				if (key.equals(tdecl.name.val)) {
+					reporter.add(Reports.duplicateTokenDeclaration(decl.name));
+					return this;
+				}
 			}
 			this.tokenDecls.add(decl);
 			return this;
@@ -188,35 +221,37 @@ public final class Grammar {
 		 */
 		public Builder addRule(GrammarRule rule) {
 			String key = rule.name.val;
-			if (rules.containsKey(key))
-				throw new IllegalArgumentException("Cannot have two rules with the same name");
+			if (rules.containsKey(key)) {
+				reporter.add(Reports.duplicateRuleDeclaration(rule.name));
+				return this;
+			}
 			this.rules.put(key, rule);
 			return this;
 		}
 		
 		/**
 		 * @return a grammar description from this builder
-		 * @throws IllegalArgumentException if the described grammar
+		 * @throws IllFormedException if the described grammar
 		 * 	is not well-formed
 		 */
 		public Grammar build() {
-			@Nullable String report = sanityCheck(tokenDecls, rules);
-			if (report != null)
-				throw new IllegalArgumentException(
-					"Ill-formed grammar description: " + report);
+			sanityCheck(tokenDecls, rules);
+			if (reporter.hasErrors())
+				throw new IllFormedException(
+					"Errors were found when trying to build this grammar (aborting):\n" + reporter,
+					reporter.getReports());
 				
 			return new Grammar(imports, tokenDecls, header, rules, footer);
 		}
 		
 		/**
-		 * Performs well-formedness checks on the given grammar description
+		 * Performs well-formedness checks on the given grammar description,
+		 * passing discovered problems to the {@link reporter}
 		 * 
 		 * @param tokenDecls
 		 * @param rules
-		 * @return {@code null} if all checks passed, or a description
-		 * 	of a well-formedness issue otherwise
 		 */
-		private @Nullable String sanityCheck(
+		private void sanityCheck(
 			List<TokenDecl> tokenDecls, Map<String, GrammarRule> rules) {
 			// Prepare sets of declared tokens and non-terminals
 			Set<Located<String>> tokens = new HashSet<>();
@@ -247,36 +282,94 @@ public final class Grammar {
 					++i;
 					for (Production.Actual actual : prod.actuals()) {
 						final int j = i;
-						Function<String, String> report =
-							msg -> scMessage(rule, j, actual, msg);
 						final Located<String> name = actual.item;
 						if (actual.isTerminal()) {
 							if (!tokens.contains(name))
-								return report.apply(name + " is not a defined token");
-							if (actual.isBound() &&
+								reporter.add(Reports.undeclaredToken(rule, j, name));
+							// Only due the value check if the token is declared
+							else if (actual.isBound() && 
 								!valuedTokens.contains(name))
-								return report.apply(name + " is not bound to any value");
+								reporter.add(Reports.unvaluedTokenBound(
+									rule, j, Nulls.ok(actual.binding), name));
 						} else {
 							if (!nonterms.contains(name))
-								return report.apply(name + " is not a defined non-terminal");
-							if (actual.args != null &&
-								!argnterms.contains(name))
-								return report.apply(name + " does not expect parameters");
-							// Not complete of course but better than nothing
-							if (actual.isBound() &&
-								voidnterms.contains(name))
-								return report.apply(name + " is bound to a void-rule");
+								reporter.add(Reports.undeclaredNonTerminal(rule, j, name));
+							// Only due the value and args checks if the non-term is declared
+							else {
+								if (actual.args != null &&
+										!argnterms.contains(name))
+									reporter.add(Reports.unexpectedArguments(
+											rule, j, Nulls.ok(actual.args), name));
+								// Not complete of course but better than nothing
+								if (actual.isBound() &&
+										voidnterms.contains(name))
+									reporter.add(Reports.voidNonTerminalBound(
+											rule, j, Nulls.ok(actual.binding), name));
+							}
 						}
 					}
 				}
 			}
-			return null;
 		}
 		
-		private static String scMessage(
-			GrammarRule rule, int i, Production.Actual actual, String msg) {
-			return String.format("In rule %s, production %d, item %s: %s",
-				rule.name.val, i, actual, msg);
+	}
+	
+	/**
+	 * Static utility class to build the various problem reports
+	 * that can arise in building an instance of {@link Grammar}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static abstract class Reports {
+		
+		static IReport duplicateTokenDeclaration(Located<String> token) {
+			String msg = String.format("Token \"%s\" is already declared", token.val);
+			return IReport.of(msg, Severity.ERROR, token);
 		}
+		
+		static IReport duplicateRuleDeclaration(Located<String> rule) {
+			String msg = String.format("Rule \"%s\" is already declared", rule.val);
+			return IReport.of(msg, Severity.ERROR, rule);
+		}
+		
+		private static String inRule(GrammarRule rule, int j) {
+			return String.format("In rule \"%s\", production %d: ", rule.name.val, j);
+		}
+		
+		static IReport undeclaredToken(GrammarRule rule, int j, Located<String> token) {
+			String msg = String.format("%s undeclared token \"%s\"",
+				inRule(rule, j), token.val);
+			// TODO: add proposals based on hamming/levenshtein?
+			return IReport.of(msg, Severity.ERROR, token);
+		}
+		
+		static IReport unvaluedTokenBound(GrammarRule rule, int j,
+			Located<String> binding, Located<String> token) {
+			String msg = String.format("%s bound token \"%s\" has no declared value",
+				inRule(rule, j), token.val);
+			return IReport.of(msg, Severity.ERROR, binding);
+		}
+
+		static IReport undeclaredNonTerminal(GrammarRule rule, int j, Located<String> nterm) {
+			String msg = String.format("%s undeclared non-terminal \"%s\"",
+				inRule(rule, j), nterm.val);
+			// TODO: add proposals based on hamming/levenshtein?
+			return IReport.of(msg, Severity.ERROR, nterm);
+		}
+
+		static IReport unexpectedArguments(GrammarRule rule, int j,
+			Extent args, Located<String> nterm) {
+			String msg = String.format("%s non-terminal \"%s\" does not expect arguments",
+				inRule(rule, j), nterm.val);
+			return IReport.of(msg, Severity.ERROR, args);
+		}
+
+		static IReport voidNonTerminalBound(GrammarRule rule, int j,
+			Located<String> binding, Located<String> nterm) {
+			String msg = String.format("%s bound non-terminal \"%s\" returns void",
+				inRule(rule, j), nterm.val);
+			return IReport.of(msg, Severity.ERROR, binding);
+		}
+
 	}
 }

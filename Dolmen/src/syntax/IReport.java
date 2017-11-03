@@ -108,7 +108,7 @@ public interface IReport {
 			this.startPos = loc.start.offset;
 			this.endPos = loc.end.offset;
 			this.line = loc.start.line;
-			this.column = loc.start.column();
+			this.column = loc.start.column() - 1;
 		}
 		
 		@Override
@@ -176,7 +176,7 @@ public interface IReport {
 				buf.append("lines ").append(getLine()).append("-")
 					.append(loc.end.line).append(", ");
 				buf.append("characters ").append(getColumn()).append("-")
-					.append(loc.end.column()).append(":\n");
+					.append(loc.end.column() - 1).append(":\n");
 				buf.append(getSeverity()).append(": ").append(getMessage());
 				return buf.toString();
 			}

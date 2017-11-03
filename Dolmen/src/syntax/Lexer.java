@@ -1,11 +1,14 @@
 package syntax;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
+import syntax.IReport.Severity;
 
 /**
  * A lexer definition is a set of {@link Entry lexer rules}
@@ -197,7 +200,7 @@ public final class Lexer {
 	 * 
 	 * Builds a lexer with the provided data
 	 */
-	public Lexer(List<String> imports, 
+	 private Lexer(List<String> imports, 
 			Extent header, List<Entry> entryPoints, Extent footer) {
 		this.imports = imports;
 		this.header = header;
@@ -223,4 +226,138 @@ public final class Lexer {
 		return buf.toString();
 	}
 
+	/**
+	 * Exception raised by the lexer {@link Lexer.Builder builder} class
+	 * when trying to construct an ill-formed lexer description.
+	 * <p>
+	 * The exception contains the {@link #reports problems reported} during
+	 * the lexer construction.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static class IllFormedException extends RuntimeException {
+		private static final long serialVersionUID = -5811064298772984965L;
+		
+		/**
+		 * The problems reported during the lexer construction,
+		 * and which led to this exception
+		 */
+		public final List<@NonNull IReport> reports;
+		
+		/**
+		 * @param message
+		 * @param reports
+		 */
+		public IllFormedException(String message, List<@NonNull IReport> reports) {
+			super(message);
+			this.reports = reports;
+		}
+	}
+
+	/**
+	 * A builder class for {@link Lexer}, where entries can be
+	 * added incrementally, and which takes care of collecting
+	 * problem reports along the way
+	 * 
+	 * @author Stéphane Lescuyer
+	 * @see #addEntry(Entry)
+	 */
+	public static final class Builder {
+		private final List<String> imports;
+		private final Extent header;
+		private final List<Entry> entryPoints;
+		private final Extent footer;
+		
+		/** Problems reported when building this lexer */
+		public final Reporter reporter;
+		
+		/**
+		 * Returns a new builder with the given imports, header and footer
+		 * @param imports
+		 * @param header
+		 * @param footer
+		 */
+		public Builder(List<String> imports, Extent header, Extent footer) {
+			this.imports = imports;
+			this.header = header;
+			this.entryPoints = new ArrayList<>();
+			this.footer = footer;
+			this.reporter = new Reporter();
+		}
+		
+		/**
+		 * @param entry
+		 * @return the new state of this builder, with the
+		 *  given entry rule added to the lexer
+		 */
+		public Builder addEntry(Entry entry) {
+			String key = entry.name.val;
+			for (Entry entryPoint : entryPoints) {
+				if (key.equals(entryPoint.name.val)) {
+					reporter.add(Reports.duplicateEntryDeclaration(entry.name));
+					return this;
+				}
+			}
+			this.entryPoints.add(entry);
+			return this;
+		}
+		
+		/**
+		 * @param entries
+		 * @return the new state of this builder, with all entries
+		 * 	added to the lexer
+		 */
+		public Builder addEntries(@NonNull Entry... entries) {
+			for (Entry entry : entries)
+				addEntry(entry);
+			return this;
+		}
+		
+		/**
+		 * @return a lexer description from this builder
+		 * @throws IllFormedException if the described lexer
+		 * 	is not well-formed
+		 */
+		public Lexer build() {
+			if (reporter.hasErrors())
+				throw new IllFormedException(
+					"Errors were found when trying to build this lexer (aborting):\n" + reporter,
+					reporter.getReports());
+				
+			return new Lexer(imports, header, entryPoints, footer);
+		}
+		
+	}
+
+	/**
+	 * @param imports
+	 * @param header
+	 * @param entryPoints
+	 * @param footer
+	 * @return a lexer description built out of the given data, using
+	 * 	the {@link Lexer.Builder builder} class to detect potential problems
+	 * @throws IllFormedException if the description is ill-formed
+	 */
+	public static Lexer of(List<String> imports, 
+			Extent header, Iterable<Entry> entryPoints, Extent footer) {
+		 Lexer.Builder builder = new Lexer.Builder(imports, header, footer);
+		 for (Entry entry : entryPoints)
+			 builder.addEntry(entry);
+		 return builder.build();
+	}
+	
+	/**
+	 * Static utility class to build the various problem reports
+	 * that can arise in building an instance of {@link Lexer}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static abstract class Reports {
+		
+		static IReport duplicateEntryDeclaration(Located<String> entry) {
+			String msg = String.format("Entry rule \"%s\" is already declared", entry.val);
+			return IReport.of(msg, Severity.ERROR, entry);
+		}
+
+	}
 }

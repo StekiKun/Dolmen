@@ -2,6 +2,9 @@ package syntax;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+
+import syntax.IReport.Severity;
 
 /**
  * An instance of {@link Reporter} can be used to
@@ -33,15 +36,29 @@ public final class Reporter {
 	 * @return a read-only view of the reports
 	 * 	collected in this reporter so far
 	 */
-	public Iterable<IReport> getReports() {
+	public List<IReport> getReports() {
 		return Collections.unmodifiableList(reports);
+	}
+	
+	/**
+	 * @return whether at least one of the collected reports 
+	 * 	has the severity {@link Severity#ERROR}
+	 */
+	public boolean hasErrors() {
+		return reports.stream().anyMatch(r -> r.getSeverity() == Severity.ERROR);
 	}
 	
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
 		buf.append("================================\n");
-		buf.append(reports.size()).append(" problems reported");
+		int sz = reports.size();
+		if (sz == 0)
+			buf.append("No problems reported");
+		else if (sz == 1)
+			buf.append(sz).append(" problem reported");
+		else
+			buf.append(sz).append(" problems reported");
 		int i = 1;
 		for (IReport r : reports) {
 			buf.append("\n");

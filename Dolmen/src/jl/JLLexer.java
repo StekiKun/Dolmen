@@ -326,12 +326,13 @@ public abstract class JLLexer {
 	 * The lexer definition for .jl lexer descriptions
 	 */
 	public final static Lexer INSTANCE =
-		new Lexer(
+		new Lexer.Builder(
 			Arrays.asList("package jl;", "import static jl.JLToken.*;"),
 			Extent.inlined(header),
-			Arrays.asList(mainEntry, commentEntry, 
-				stringEntry, actionEntry, skipCharEntry),
-			Extent.inlined(footer));
+			Extent.inlined(footer))
+			.addEntries(mainEntry, commentEntry, 
+				stringEntry, actionEntry, skipCharEntry)
+			.build();
 	
 	private static void testOutput(String className, Lexer lexer, boolean opt) {
 		System.out.println("=========LEXER========");

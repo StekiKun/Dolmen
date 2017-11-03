@@ -153,7 +153,7 @@ public abstract class AdvancedLexers {
 					Extent.inlined("void"), false, null, commentClauses);
 			
 		final static Lexer LEXER =
-			new Lexer(
+			Lexer.of(
 				Lists.empty(),
 				Extent.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +
