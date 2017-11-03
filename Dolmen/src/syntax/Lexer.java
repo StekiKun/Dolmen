@@ -171,6 +171,9 @@ public final class Lexer {
 			 * @return a new lexer entry based on this builder
 			 */
 			public Entry build() {
+				if (clauses.isEmpty())
+					throw new IllegalArgumentException(
+						"There must be at least one clause in every lexer entry");
 				return new Entry(visibility, name, returnType, shortest,
 						args, new LinkedHashMap<>(clauses));
 			}
@@ -200,6 +203,9 @@ public final class Lexer {
 		this.header = header;
 		this.entryPoints = entryPoints;
 		this.footer = footer;
+		if (this.entryPoints.isEmpty())
+			throw new IllegalArgumentException(
+				"There must be at least one entry in a lexer description");
 	}
 	
 	@Override

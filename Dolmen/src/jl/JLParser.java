@@ -221,7 +221,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		boolean shortest = false;
 		if (peek().getKind() == Kind.SHORTEST) {
 			eat();
-			shortest =true;
+			shortest = true;
 		}
 		
 		Map<Regular, Extent> clauses = parseClauses();

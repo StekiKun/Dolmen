@@ -148,6 +148,9 @@ public final class Grammar {
 		private final Extent footer;
 		private final Map<String, GrammarRule> rules;
 		
+		@SuppressWarnings("unused")
+		private final Reporter reporter;
+		
 		/**
 		 * Returns a new builder with the given imports, header and footer
 		 * @param imports
@@ -160,6 +163,7 @@ public final class Grammar {
 			this.header = header;
 			this.footer = footer;
 			this.rules = new LinkedHashMap<>();
+			this.reporter = new Reporter();
 		}
 		
 		/**

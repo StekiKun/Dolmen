@@ -400,7 +400,7 @@ public abstract class Grammars {
 	 * Prediction tables are not guaranteed to be unambiguous because
 	 * there can be more than one production associated to some 
 	 * non-terminal/terminal combination (in which case the associated
-	 * grammar is not LL(1).
+	 * grammar is not LL(1)).
 	 * 
 	 * @author Stéphane Lescuyer
 	 * @see Builder
