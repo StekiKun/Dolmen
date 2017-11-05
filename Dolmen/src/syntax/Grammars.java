@@ -15,6 +15,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import common.Maps;
 import common.Nulls;
 import common.Sets;
+import syntax.IReport.Severity;
 
 /**
  * Static utilities about {@link Grammar}s
@@ -168,8 +169,8 @@ public abstract class Grammars {
 		 * @throws IllegalArgumentException if {@code nterm} is not a known non-terminal
 		 */
 		public Set<String> first(String nterm) {
-			Set<String> res = first.get(nterm);
-			if (res == null) 
+			Set<String> res = Maps.get(first, nterm);
+			if (res == null)
 				throw new IllegalArgumentException("No such non-terminal: " + nterm);
 			return res;
 		}
@@ -200,7 +201,7 @@ public abstract class Grammars {
 		 * @throws IllegalArgumentException if {@code nterm} is not a known non-terminal
 		 */
 		public Set<String> follow(String nterm) {
-			Set<String> res = follow.get(nterm);
+			Set<String> res = Maps.get(follow, nterm);
 			if (res == null) 
 				throw new IllegalArgumentException("No such non-terminal: " + nterm);
 			return res;
@@ -407,9 +408,13 @@ public abstract class Grammars {
 	 * @see Grammars#predictionTable(Grammar, NTermsInfo)
 	 */
 	public static final class PredictionTable {
+		private final Grammar grammar;
 		private final Map<String, TreeMap<String, List<Production>>> table;
 		
-		private PredictionTable(Map<String, TreeMap<String, List<Production>>> table) {
+		private PredictionTable(
+			Grammar grammar,
+			Map<String, TreeMap<String, List<Production>>> table) {
+			this.grammar = grammar;
 			this.table = table;
 		}
 		
@@ -427,6 +432,7 @@ public abstract class Grammars {
 		/**
 		 * @return {@code true} if and only if the prediction table
 		 * 	is suitable for LL(1) top-down parsing
+		 * @see #findConflicts()
 		 */
 		public boolean isLL1() {
 			for (Map<String, List<Production>> trans : table.values()) {
@@ -435,6 +441,33 @@ public abstract class Grammars {
 				}
 			}
 			return true;
+		}
+		
+		/**
+		 * @return a list of potential LL(1) conflicts in this
+		 *  	predication table in the form of problem {@link IReport reports}
+		 * @see #isLL1()
+		 */
+		public List<IReport> findConflicts() {
+			final Reporter reporter = new Reporter();
+			table.forEach((nterm, trans) -> {
+				trans.forEach((term, prods) -> {
+					if (prods.size() <= 1) return;
+					GrammarRule rule = grammar.rule(nterm);
+					final StringBuilder message = new StringBuilder();
+					message.append("The productions for rule \"")
+						   .append(nterm).append("\" are ambiguous when looking ahead")
+						   .append(" at terminal ").append(term).append(". ");
+					message.append("The possible productions are ");
+					prods.forEach(prod -> {
+						message.append("[");
+						prod.actuals().forEach(a -> message.append(" ").append(a.toString()));
+						message.append(" ]");
+					});
+					reporter.add(IReport.of(message.toString(), Severity.ERROR, rule.name));
+				});
+			});
+			return reporter.getReports();
 		}
 		
 		@Override
@@ -462,6 +495,7 @@ public abstract class Grammars {
 		 * @author Stéphane Lescuyer
 		 */
 		public final static class Builder {
+			private final Grammar grammar;
 			private final Map<String, TreeMap<String, List<Production>>> table;
 			
 			/**
@@ -470,6 +504,7 @@ public abstract class Grammars {
 			 * @param grammar
 			 */
 			public Builder(Grammar grammar) {
+				this.grammar = grammar;
 				this.table = new HashMap<>(grammar.rules.size());
 				for (String nterm : grammar.rules.keySet())
 					this.table.put(nterm, new TreeMap<>());
@@ -512,7 +547,7 @@ public abstract class Grammars {
 			 * @return the prediction table prepared in this builder
 			 */
 			public PredictionTable build() {
-				return new PredictionTable(table);
+				return new PredictionTable(grammar, table);
 			}
 		}
 	}
