@@ -66,9 +66,14 @@ public abstract class JLLexer {
 		Regular.seq(Regular.chars(identStart),
 			Regular.star(Regular.chars(identBody)));
 	final static Regular escaped =
-		Regular.chars(CSet.chars('\\', '\'', '"', 'n', 't', 'b', 'r', ' '));
+		Regular.chars(CSet.chars('\\', '\'', '"', 'n', 't', 'b', 'f', 'r', ' '));
 	final static Regular slcomment =
 		Regular.seq(string("//"), Regular.star(notnl));
+	final static Regular octdigit = Regular.chars(CSet.interval('0', '7'));
+	final static Regular octal =
+		Regular.or(octdigit,
+			Regular.seq(octdigit, octdigit),
+			Regular.seq(Regular.chars(CSet.interval('0', '3')), octdigit, octdigit));
 	
 	/**
 	 * public { jl.JLToken } 
@@ -104,7 +109,9 @@ public abstract class JLLexer {
 	 * 					{ return LCHAR(c); }
 	 * | "'" '\\' (escaped as c) "'"
 	 * 					{ return LCHAR(forBackslash(c)); }
-	 * // other character syntaxes? like \\uxxxx and \377 
+	 * | "'" '\\' (octal as code) "'"
+	 * 					{ return LCHAR(fromOctalCode(c)); }
+	 * // other character syntaxes? like \\uxxxx 
 	 * | '='			{ return EQUAL; }
 	 * | '|'			{ return OR; }
 	 * | '['			{ return LBRACKET; }
@@ -152,6 +159,9 @@ public abstract class JLLexer {
 			.add(seq(rchar('\''), rchar('\\'), 
 					binding(escaped, Located.dummy("c")), rchar('\'')),
 				"return LCHAR(forBackslash(c));")
+			.add(seq(rchar('\''), rchar('\\'), 
+					binding(octal, Located.dummy("code")), rchar('\'')),
+				"return LCHAR(fromOctalCode(code));")
 			.add(rchar('='), "return EQUAL;")
 			.add(rchar('|'), "return OR;")
 			.add(rchar('['), "return LBRACKET;")
@@ -210,6 +220,8 @@ public abstract class JLLexer {
 	 * | '"'					{ return; }
 	 * | '\\' (escaped as c)	{ stringBuffer.appends(forBackslash(c));
 	 * 							  string(); return; }
+	 * | '\\' (octal as code)	{ stringBuffer.appends(fromOctalCode(code));
+	 *                            string(); return; }
 	 * | '\\' (_ as c)			{ stringBuffer.appends('\\').appends(c);
 	 * 							  string(); return; }
 	 * | eof					{ throw error("Unterminated string"); }
@@ -221,6 +233,8 @@ public abstract class JLLexer {
 			.add(rchar('"'), "return;")
 			.add(seq(rchar('\\'), binding(escaped, Located.dummy("c"))), 
 					"stringBuffer.append(forBackslash(c)); string(); return;")
+			.add(seq(rchar('\\'), binding(octal, Located.dummy("code"))), 
+					"stringBuffer.append(fromOctalCode(code)); string(); return;")
 			.add(seq(rchar('\\'), binding(any, Located.dummy("c"))),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
 			.add(chars(CSet.EOF), "throw error(\"Unterminated string\");")
@@ -272,8 +286,9 @@ public abstract class JLLexer {
 		chars(CSet.complement(CSet.chars('\\', '\'')));
 	/**
 	 * private rule skipChar =
-	 * // other character syntaxes? like \\uxxxx and \377
+	 * // other character syntaxes? like \\uxxxx
 	 * | [^ '\\' '\''] "'"	{ return; }
+	 * | '\\' octal "'"	    { return; }
 	 * | '\\' _ "'"			{ return; }
 	 * // don't jeopardize everything for a syntax error in a Java action
 	 * | ""					{ return; }
@@ -281,6 +296,7 @@ public abstract class JLLexer {
 	private final static Lexer.Entry skipCharEntry =
 		new Lexer.Entry.Builder(false, Located.dummy("skipChar"), VOID, null)
 			.add(seq(inChar,  rchar('\'')), "return;")
+			.add(seq(rchar('\\'), octal, rchar('\'')), "return;")
 			.add(seq(rchar('\\'), any, rchar('\'')), "return;")
 			.add(Regular.EPSILON, "return;")
 			.build();
@@ -303,8 +319,13 @@ public abstract class JLLexer {
 	"        case 'r': return '\\015';\n" +	// 13
 	"        case 'b': return '\\010';\n" +	// 8
 	"        case 't': return '\\011';\n" +	// 9
+	"        case 'f': return '\\014';\n" + // 12
 	"        default: return c;\n" +
 	"        }\n" +
+	"    }\n" +
+	"    \n" +
+	"    private char fromOctalCode(String code) {\n" +
+	"        return (char)(Integer.parseInt(code, 8));" +
 	"    }\n" +
 	"    \n" +
 	"    private jl.JLToken identOrKeyword(String id) {\n" +

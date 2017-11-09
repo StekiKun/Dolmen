@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<jardesc>
+    <jar path="C:/Users/steki/Downloads/Dolmen_1.0.0.jar"/>
+    <options buildIfNeeded="true" compress="true" descriptionLocation="/Dolmen/Dolmen-export.jardesc" exportErrors="true" exportWarnings="true" includeDirectoryEntries="false" overwrite="true" saveDescription="true" storeRefactorings="false" useSourceFolders="false"/>
+    <storedRefactorings deprecationInfo="true" structuralOnly="false"/>
+    <selectedProjects/>
+    <manifest generateManifest="false" manifestLocation="/Dolmen/Manifest.txt" manifestVersion="1.0" reuseManifest="true" saveManifest="true" usesManifest="true">
+        <sealing sealJar="true">
+            <packagesToSeal/>
+            <packagesToUnSeal/>
+        </sealing>
+    </manifest>
+    <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
+        <javaElement handleIdentifier="=Dolmen/src&lt;codegen"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;syntax"/>
+        <file path="/Dolmen/.project"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;jg"/>
+        <file path="/Dolmen/Manifest.txt"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;jl"/>
+        <file path="/Dolmen/.classpath"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>
+    </selectedElements>
+</jardesc>

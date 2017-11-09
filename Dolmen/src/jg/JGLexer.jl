@@ -19,6 +19,7 @@ import jg.JGParserGenerated.Token;
 		case 'r': return '\015';	// 13
 		case 'b': return '\010';	// 8
 		case 't': return '\011';    // 9
+		case 'f': return '\014';    // 12
 		default: return c;
 		}
 	}
@@ -44,7 +45,7 @@ ualpha = ['A'-'Z'];
 idstart = '_' | lalpha | ualpha;
 idbody = idstart | digit;
 
-nl = "\r" | "\n" | "\r\n";
+nl = "\r" | '\012' | "\015\n";
 notnl = [^ '\r' '\n'];
 ident = idstart idbody*;
 escaped = ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '];
