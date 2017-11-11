@@ -25,7 +25,7 @@ import test.examples.JSonPosParser.Token;
 }
 
 ws = [' ' '\t' '\b']+;
-nl = '\n' | "\r\n";
+nl = '\u000A' | "\u000D\uuuu000A";
 escaped = '"' | '\\' | '/' | 'b' | 'f' | 'n' | 'r' | 't';
 
 // Reg-exp fragments for number literals

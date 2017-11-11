@@ -78,6 +78,11 @@ public abstract class JLLexer {
 		Regular.or(octdigit,
 			Regular.seq(octdigit, octdigit),
 			Regular.seq(Regular.chars(CSet.interval('0', '3')), octdigit, octdigit));
+	final static Regular hexdigit =
+		Regular.or(Regular.chars(digit), 
+			Regular.chars(CSet.interval('a', 'f')),
+			Regular.chars(CSet.interval('A', 'F')));
+	
 	
 	/**
 	 * public { jl.JLToken } 
@@ -116,6 +121,9 @@ public abstract class JLLexer {
 	 * 					{ return LCHAR(forBackslash(c)); }
 	 * | "'" '\\' (octal as code) "'"
 	 * 					{ return LCHAR(fromOctalCode(c)); }
+	 * | "'" '\\' 'u'+ (hexdigit&lt;4&gt; as code) "'"
+	 * 					{ return LCHAR(fromHexCode(c)); }
+	 * | "'" '\\' 'u'+  { throw error("Invalid Unicode escape sequence"); }
 	 * // other character syntaxes? like \\uxxxx 
 	 * | '='			{ return EQUAL; }
 	 * | '|'			{ return OR; }
@@ -171,6 +179,13 @@ public abstract class JLLexer {
 			.add(seq(rchar('\''), rchar('\\'), 
 					binding(octal, Located.dummy("code")), rchar('\'')),
 				"return LCHAR(fromOctalCode(code));")
+			.add(seq(rchar('\''), rchar('\\'), plus(rchar('u')),
+					binding(Regular.repeat(hexdigit, 4), Located.dummy("code")), 
+					rchar('\'')),
+				"return LCHAR(fromHexCode(code));")
+			.add(seq(rchar('\''), rchar('\\'), plus(rchar('u'))),
+					"throw error(\"Invalid Unicode escacpe sequence\");")
+			
 			.add(rchar('='), "return EQUAL;")
 			.add(rchar('|'), "return OR;")
 			.add(rchar('['), "return LBRACKET;")
@@ -234,6 +249,10 @@ public abstract class JLLexer {
 	 * 							  string(); return; }
 	 * | '\\' (octal as code)	{ stringBuffer.appends(fromOctalCode(code));
 	 *                            string(); return; }
+	 * | '\\' 'u'+ (hexdigit<4> as code)	
+	 * 							{ stringBuffer.appends(fromHexCode(code));
+	 *                            string(); return; }
+	 * | '\\' 'u'+				{ throw error("Invalid Unicode escape sequence"); }
 	 * | '\\' (_ as c)			{ stringBuffer.appends('\\').appends(c);
 	 * 							  string(); return; }
 	 * | eof					{ throw error("Unterminated string"); }
@@ -247,6 +266,11 @@ public abstract class JLLexer {
 					"stringBuffer.append(forBackslash(c)); string(); return;")
 			.add(seq(rchar('\\'), binding(octal, Located.dummy("code"))), 
 					"stringBuffer.append(fromOctalCode(code)); string(); return;")
+			.add(seq(rchar('\\'), plus(rchar('u')), 
+					binding(Regular.repeat(hexdigit, 4), Located.dummy("code"))), 
+					"stringBuffer.append(fromHexCode(code)); string(); return;")
+			.add(seq(rchar('\\'), plus(rchar('u'))),
+					"throw error(\"Invalid Unicode escacpe sequence\");")
 			.add(seq(rchar('\\'), binding(any, Located.dummy("c"))),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
 			.add(chars(CSet.EOF), "throw error(\"Unterminated string\");")
@@ -338,6 +362,10 @@ public abstract class JLLexer {
 	"    \n" +
 	"    private char fromOctalCode(String code) {\n" +
 	"        return (char)(Integer.parseInt(code, 8));" +
+	"    }\n" +
+	"    \n" +
+	"    private char fromHexCode(String code) {\n" +
+	"        return (char)(Integer.parseInt(code, 16));" +
 	"    }\n" +
 	"    \n" +
 	"    private jl.JLToken identOrKeyword(String id) {\n" +

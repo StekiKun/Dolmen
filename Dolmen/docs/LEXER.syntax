@@ -70,8 +70,8 @@ Exactly like in Java
 
 | _			// any character
 | eof		// end-of-input
-| 'c'		// character literal
-| "..."		// string literal
+| 'c'		// character literal (can contain \0..\377 and \uxxxx codes)
+| "..."		// string literal    (can contain \0..\377 and \uxxxx codes)
 | IDENT		// reference to defined regexp
 | [CSET]	// character set
 | (REGEXP)	// parenthesized regexp
