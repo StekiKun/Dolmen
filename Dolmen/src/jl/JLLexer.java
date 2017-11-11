@@ -65,6 +65,10 @@ public abstract class JLLexer {
 	final static Regular ident =
 		Regular.seq(Regular.chars(identStart),
 			Regular.star(Regular.chars(identBody)));
+	final static Regular integer =
+		Regular.or(Regular.string("0"),
+				Regular.seq(Regular.chars(nzdigit), 
+					Regular.star(Regular.chars(digit))));
 	final static Regular escaped =
 		Regular.chars(CSet.chars('\\', '\'', '"', 'n', 't', 'b', 'f', 'r', ' '));
 	final static Regular slcomment =
@@ -105,6 +109,7 @@ public abstract class JLLexer {
 	 * 					  ... "private" -> PRIVATE
 	 * 					  ... _ -> IDENT(getLexeme())
 	 * 					}
+	 * | integer		{ return INTEGER(Integer.parseInt(getLexeme())); }
 	 * | "'" ([^\\] as c) "'"
 	 * 					{ return LCHAR(c); }
 	 * | "'" '\\' (escaped as c) "'"
@@ -125,6 +130,9 @@ public abstract class JLLexer {
 	 * | '-'			{ return DASH;	}
 	 * | '#'			{ return HASH; }
 	 * | '.'			{ return DOT; }
+	 * | '<'			{ return LANGLE; }
+	 * | '>'			{ return RANGLE; }
+	 * | '.'			{ return COMMA; }
 	 * | ';'			{ return SEMICOL; }
 	 * | eof			{ return END; }
 	 * | _				{ throw error("..."); }
@@ -151,6 +159,7 @@ public abstract class JLLexer {
 				"return ACTION(ext);")
 			.add(rchar('_'), "return UNDERSCORE;")
 			.add(ident, "return identOrKeyword(getLexeme());")
+			.add(integer, "return INTEGER(Integer.parseInt(getLexeme()));")
 			.add(seq(rchar('\''),
 					binding(chars(CSet.complement(CSet.singleton('\\'))), 
 							Located.dummy("c")),
@@ -175,6 +184,9 @@ public abstract class JLLexer {
 			.add(rchar('-'), "return DASH;")
 			.add(rchar('#'), "return HASH;")
 			.add(rchar('.'), "return DOT;")
+			.add(rchar('<'), "return LANGLE;")
+			.add(rchar('>'), "return RANGLE;")
+			.add(rchar(','), "return COMMA;")
 			.add(rchar(';'), "return SEMICOL;")
 			.add(chars(CSet.EOF), "return END;")
 			.add(any, "throw error(\"Unfinished token\");")

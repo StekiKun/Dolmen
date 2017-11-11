@@ -61,6 +61,8 @@ Exactly like in Java
 | REGEXP0 *			// zero, one or more of
 | REGEXP0 +			// one or more of
 | REGEXP0 ?			// zero or one
+| REGEXP0 <n>       // exactly n repetitions
+| REGEXP0 <n, m>    // from n to m repetitions (inclusive)
 | REGEXP0 # REGEXP0 // char sets difference
 | REGEXP0			// atomic regexp
 

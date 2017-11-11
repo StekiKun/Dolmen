@@ -2,7 +2,7 @@
     "type": "FeatureCollection",
     "features": [
 	{ "type": "Feature", 
-	  "properties": { "MAPBLKLOT": "0001001",
+	  "properties": { "MAPBLKLOT": "000100\u0035",
 			  "BLKLOT": "0001001",
 			  "BLOCK_NUM": "0001",
 			  "LOT_NUM": "001",

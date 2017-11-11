@@ -34,7 +34,7 @@ int = '-'? (digit | (['1'-'9'] digit+));
 e = "e" | "e+" | "e-" | "E" | "E+" | "E-";
 exp = e digit+;
 frac = '.' digit+;
-number = int frac? exp?;
+number = int<1,1> frac<0,1> exp<0,1>;
 
 // Hex-digit are used in \uxxxx sequences
 hex = ['0'-'9''a'-'f''A'-'F'];
@@ -48,7 +48,7 @@ public { Token } rule main =
 | ':'		{ return COLON; }
 | '['		{ return LSQUARE; }
 | ']'		{ return RSQUARE; }
-| "true"	{ return TRUE; }
+| "true"<1>	{ return TRUE; }
 | "false"	{ return FALSE; }
 | "null"	{ return NULL; }
 | "object"  { return OBJECT; }
@@ -87,7 +87,7 @@ private { void } rule string =
 			}
 
 private { char} rule hexUnicode =
-| hex hex hex hex
+| hex<4>
 			{ return (char)(Integer.parseInt(getLexeme(), 16)); }
 | ""		{ throw error("Illegal \\u Unicode sequence"); }
 

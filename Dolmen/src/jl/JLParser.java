@@ -29,6 +29,7 @@ import common.Lists;
 import common.Maps;
 import common.Prompt;
 import jl.JLToken.Action;
+import jl.JLToken.INTEGER;
 import jl.JLToken.Ident;
 import jl.JLToken.Kind;
 import jl.JLToken.LChar;
@@ -307,7 +308,12 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * | DiffRegular STAR
 	 * | DiffRegular PLUS
 	 * | DiffRegular MAYBE
+	 * | DiffRegular LANGLE INTEGER Repetitions
 	 * | DiffRegular
+	 * 
+	 * Repetitions :=
+	 * | RANGLE
+	 * | COMMA INTEGER RANGLE
 	 * 
 	 * DiffRegular :=
 	 * | AtomicRegular HASH AtomicRegular	(only if char sets)
@@ -368,8 +374,33 @@ public final class JLParser extends BaseParser<JLToken> {
 			eat(); return Regular.plus(r);
 		case MAYBE:
 			eat(); return Regular.or(Regular.EPSILON, r);
+		case LANGLE:
+			eat();
+			INTEGER tok = (INTEGER) eat(Kind.INTEGER);
+			if (tok.value < 0)
+				throw parsingError("Invalid repetition count " + tok.value);
+			return parseRepetitions(r, tok.value);
 		default:
 			return r;
+		}
+	}
+	
+	private Regular parseRepetitions(Regular r, int min) {
+		switch (peek().getKind()) {
+		case RANGLE:
+			eat(); return Regular.repeat(r, min);
+		case COMMA:
+			eat();
+			INTEGER tok = (INTEGER) eat(Kind.INTEGER);
+			if (tok.value < 0)
+				throw parsingError("Invalid repetition count " + tok.value);
+			if (tok.value < min)
+				throw parsingError("Maximum repetition " 
+						+ tok.value + " is strictly smaller than minimum " + min);
+			eat(Kind.RANGLE);
+			return Regular.repeat(r, min, tok.value);
+		default:
+			throw tokenError(peek(), Kind.RANGLE, Kind.COMMA);
 		}
 	}
 	

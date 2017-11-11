@@ -395,11 +395,42 @@ public abstract class Regular {
 	
 	/**
 	 * @param reg
-	 * @return the regular expression one or more
+	 * @return the regular expression representing one or more
 	 * 	repetitions of {@code reg}
 	 */
 	public static Regular plus(Regular reg) {
 		return seq(reg, star(reg));
+	}
+	
+	/**
+	 * @param reg
+	 * @param occ
+	 * @return the regular expression representing exactly
+	 * 	{@code occ} occurrences of {@code reg}
+	 */
+	public static Regular repeat(Regular reg, int occ) {
+		Regular res = EPSILON;
+		for (int i = 0; i < occ; ++i)
+			res = seq(reg, res);
+		return res;
+	}
+	
+	/**
+	 * @param reg
+	 * @param min
+	 * @param max
+	 * @return the regular expression representing any number
+	 * 	of occurrences of {@code reg} between {@code min} and
+	 * 	{@code max}, inclusive
+	 */
+	public static Regular repeat(Regular reg, int min, int max) {
+		if (max < min || min < 0)
+			throw new IllegalArgumentException();
+		Regular maybeReg = Regular.or(EPSILON, reg);
+		Regular res = repeat(reg, min);
+		for (int i = min; i < max; ++i)
+			res = seq(maybeReg, res);
+		return res;
 	}
 	
 	/**

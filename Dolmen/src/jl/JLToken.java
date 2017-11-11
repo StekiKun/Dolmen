@@ -11,6 +11,7 @@ public abstract class JLToken {
 		IDENT,
 		LCHAR,
 		LSTRING,
+		INTEGER,
 		ACTION,
 		RULE,
 		SHORTEST,
@@ -35,6 +36,9 @@ public abstract class JLToken {
 		DASH,
 		HASH,
 		DOT,
+		LANGLE,
+		RANGLE,
+		COMMA,
 		SEMICOL,
 		END
 	}
@@ -110,6 +114,27 @@ public abstract class JLToken {
 	public static Ident IDENT(String value) {
 		return new Ident(value);
 	}
+
+	public final static class INTEGER extends JLToken {
+		public final int value;
+		
+		private INTEGER(int value) {
+			this.value = value;
+		}
+
+		@Override
+		public @NonNull String toString() {
+			return "INTEGER(" + value + ")";
+		}
+
+		@Override
+		public Kind getKind() {
+			return Kind.INTEGER;
+		}		
+	}
+	public static INTEGER INTEGER(int value) {
+		return new INTEGER(value);
+	}
 	
 	public final static class Action extends JLToken {
 		public final Extent value;
@@ -171,6 +196,9 @@ public abstract class JLToken {
 	public static JLToken DASH = new Singleton(Kind.DASH) {};
 	public static JLToken HASH = new Singleton(Kind.HASH) {};
 	public static JLToken DOT = new Singleton(Kind.DOT) {};
+	public static JLToken LANGLE = new Singleton(Kind.LANGLE) {};
+	public static JLToken RANGLE = new Singleton(Kind.RANGLE) {};
+	public static JLToken COMMA = new Singleton(Kind.COMMA) {};
 	public static JLToken SEMICOL = new Singleton(Kind.SEMICOL) {};
 	public static JLToken END = new Singleton(Kind.END) {};
 	
