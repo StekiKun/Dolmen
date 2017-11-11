@@ -310,7 +310,51 @@ public class LexBuffer {
     	curLoc = new Position(startLoc.filename,
     		absPos + curPos, startLoc.line, startLoc.bol);
     }
+    
+    /**
+     * This function is useful in cases when a lexer's semantic
+     * action must act depending on what kind of input follows the
+     * current token in the stream (although arguably at that point it's
+     * not lexing anymore but parsing!).
+     * 
+     * @return the next character in the stream (-1 for end-of-input)
+     * 	but does not advance the lexer engine
+     */
+    protected final char peekNextChar() {
+    	char c = getNextChar();
+    	if (c == 0xFFFF) return c;
+    	--curPos;
+    	return c;
+    }
 
+    /**
+     * This function fetches the next characters in the stream
+     * and returns them into the given character buffer {@code chars}.
+     * It does so without advancing the state of the lexing engine so
+     * that on return the lexer can resume from the original position.
+     * <p>
+     * This function is useful in cases when a lexer's semantic
+     * action must act depending on what kind of input follows the
+     * current token in the stream (although arguably at that point it's
+     * not lexing anymore but parsing!).
+     * 
+     * @see #peekNextChar()
+     * 
+     * @return the number of look-ahead characters from the stream
+     * 	actually inserted into {@code chars}
+     */
+    protected final int peekNextChars(char[] chars) {
+    	int max = chars.length;
+    	int i = 0;
+    	for (; i < max; ++i) {
+    		char c = getNextChar();
+    		if (c == 0xFFFF) break;
+    		chars[i] = c;
+    	}
+    	curPos -= i;
+    	return i;
+    }
+    
     /**
      * @return the substring between the last started token
      * 	and the current position (exclusive)
