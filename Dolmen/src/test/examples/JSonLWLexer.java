@@ -166,7 +166,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell0() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0x0008-0x00090x0020]
         case 8:
         case 9:
@@ -247,15 +248,14 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell1() {
         mark(12);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x002e
         case 46: {
             return _jl_cell28();
@@ -270,15 +270,14 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell2() {
         mark(12);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x002e
         case 46: {
             return _jl_cell28();
@@ -306,14 +305,13 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell3() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0
         case 48: {
             return _jl_cell1();
@@ -332,10 +330,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell4() {
@@ -343,31 +339,29 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell5() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // u
         case 117: {
             return _jl_cell25();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell6() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // a
         case 97: {
             return _jl_cell21();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell7() {
@@ -375,17 +369,16 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell8() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // r
         case 114: {
             return _jl_cell18();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell9() {
@@ -413,17 +406,16 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell15() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x000a
         case 10: {
             return _jl_cell16();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell16() {
@@ -433,7 +425,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     private int _jl_cell17() {
         while (true) {
             mark(0);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0x0008-0x00090x0020]
             case 8:
             case 9:
@@ -442,39 +435,35 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell18() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // u
         case 117: {
             return _jl_cell19();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell19() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // e
         case 101: {
             return _jl_cell20();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell20() {
@@ -482,45 +471,42 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell21() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // l
         case 108: {
             return _jl_cell22();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell22() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // s
         case 115: {
             return _jl_cell23();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell23() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // e
         case 101: {
             return _jl_cell24();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell24() {
@@ -528,31 +514,29 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell25() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // l
         case 108: {
             return _jl_cell26();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell26() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // l
         case 108: {
             return _jl_cell27();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell27() {
@@ -560,7 +544,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell28() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9]
         case 48:
         case 49:
@@ -576,16 +561,15 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell29() {
         while (true) {
             mark(12);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // 0x002e
             case 46: {
                 return _jl_cell28();
@@ -613,15 +597,14 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell30() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x002b
         case 43: {
             return _jl_cell33();
@@ -645,14 +628,13 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell31() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x002b
         case 43: {
             return _jl_cell33();
@@ -676,16 +658,15 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell32() {
         while (true) {
             mark(12);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0-9]
             case 48:
             case 49:
@@ -701,15 +682,14 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell33() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9]
         case 48:
         case 49:
@@ -725,16 +705,15 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell34() {
         while (true) {
             mark(12);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0-9]
             case 48:
             case 49:
@@ -758,15 +737,14 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell35() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x0022
         case 34: {
             return _jl_cell36();
@@ -783,7 +761,6 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             return _jl_cell37();
         }
         }
-        
     }
     
     private int _jl_cell36() {
@@ -793,19 +770,18 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     private int _jl_cell37() {
         while (true) {
             mark(5);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0x0022\\0xffff]
             case 34:
             case 92:
             case 65535: {
                 return rewind();
-                
             }
             default:  {
                 continue;
             }
             }
-            
         }
     }
     
@@ -814,7 +790,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell39() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0x00220x002f\\bfnrt]
         case 34:
         case 47:
@@ -833,13 +810,11 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         // 0xffff
         case 65535: {
             return rewind();
-            
         }
         default:  {
             return _jl_cell40();
         }
         }
-        
     }
     
     private int _jl_cell40() {
@@ -856,7 +831,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
     
     private int _jl_cell43() {
         mark(1);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Fa-f]
         case 48:
         case 49:
@@ -884,14 +860,13 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell44() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Fa-f]
         case 48:
         case 49:
@@ -919,14 +894,13 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell45() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Fa-f]
         case 48:
         case 49:
@@ -954,14 +928,13 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell46() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Fa-f]
         case 48:
         case 49:
@@ -989,10 +962,8 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell47() {

@@ -1,6 +1,7 @@
 package common;
 
 import java.util.Random;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -358,6 +359,28 @@ public abstract class CSet implements Comparable<CSet> {
 		while (cur != null) {
 			for (int c = cur.first; c <= cur.last; ++c)
 				f.accept((char) c);
+			cur = cur.next;
+		}
+		return;
+	}
+	
+	/**
+	 * Applies the function {@code f} to all intervals in
+	 * the character set. The intervals are guaranteed to
+	 * be normalized in the following fashion:
+	 * <ul>
+	 * <li> there will be no empty intervals
+	 * <li> intervals are visited in a strict increasing order
+	 * <li> in particular, two successive intervals are necessarily
+	 *      separated by at least one character or they would have been merged
+	 * </ul>
+	 * 
+	 * @param f
+	 */
+	public void forEachInterval(BiConsumer<? super Character, ? super Character> f) {
+		@Nullable Interval cur = intervalsOf(this);
+		while (cur != null) {
+			f.accept(cur.first, cur.last);
 			cur = cur.next;
 		}
 		return;

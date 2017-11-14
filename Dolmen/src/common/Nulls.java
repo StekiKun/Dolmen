@@ -38,4 +38,26 @@ public abstract class Nulls {
 		if (v == null) throw new NullPointerException();
 		return v;
 	}
+	
+	/**
+	 * <i> This is designed to "cast" an array of {@link Nullable} 
+	 *  values to an array of {@link NonNull} values. It is necessary
+	 *  because except in the case of array initializers, it is often
+	 *  not possible to initialize all the cells in an array at once, 
+	 *  and thus impossible to declare them as containing non-null values
+	 *  from the start. This method can be used once all cells are known
+	 *  to have been initialized to non-null values. <b>It does not perform
+	 *  any dynamic checks and therefore is potentially type unsafe.</b>
+	 *  
+	 *  It is advised that every call to this method be <b>justified
+	 *  with some suitable comment</b>.
+	 * </i>
+	 * 
+	 * @param a
+	 * @return {@code a} with a stronger type <i>without run-time checks</i> 
+	 */
+	@SuppressWarnings("null")
+	public static <T> @NonNull T[] arrayOk(T @NonNull[] a) {
+		return a;
+	}
 }

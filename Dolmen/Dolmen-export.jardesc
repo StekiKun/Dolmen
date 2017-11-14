@@ -16,8 +16,8 @@
         <file path="/Dolmen/.project"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jg"/>
         <file path="/Dolmen/Manifest.txt"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jl"/>
         <file path="/Dolmen/.classpath"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>

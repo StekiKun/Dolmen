@@ -17,6 +17,9 @@ import automaton.DFA.Remember;
 import automaton.DFA.Shift;
 import automaton.DFA.TagAction;
 import automaton.DFA.TransActions;
+import codegen.DecisionTree.Return;
+import codegen.DecisionTree.Split;
+import codegen.DecisionTree.Switch;
 import common.CSet;
 import common.Nulls;
 import syntax.Extent;
@@ -155,7 +158,7 @@ public final class AutomataOutput {
 		// Now generate the goto action
 		GotoAction gotoAction = trans.gotoAction;
 		if (gotoAction == GotoAction.BACKTRACK) {
-			buf.emitln("return rewind();");
+			buf.emit("return rewind();");
 		}
 		else {
 			// Optimize away reflexive transitions
@@ -167,7 +170,7 @@ public final class AutomataOutput {
 		}
 	}
 	
-	private static TransActions mostFrequent(
+	private static CSet mostFrequent(
 		Map<@NonNull CSet, @NonNull TransActions> table) {
 		int freq = -1;
 		CSet mostFreq = CSet.EMPTY;	// irrelevant
@@ -177,22 +180,20 @@ public final class AutomataOutput {
 				freq = card; mostFreq = cset;
 			}
 		}
-		// mostFreq belongs to table.keySet()
-		return Nulls.ok(table.get(mostFreq));
+		return mostFreq;
 	}
 	
-	private void genTransTable(int source,
+	private void genSwitchTable(int source,
 			Map<@NonNull CSet, @NonNull TransActions> table) {
 		// Generates a large switch where each charset is
 		// written as some or-pattern, and the most frequent
 		// one uses "default"
-		/// TODO: make a balanced binary decision tree to
-		///		  minimize the amount of comparisons?
-		///		  shouldn't the compiler do it?
-		buf.emit("switch (getNextChar()) {").newline();
-		TransActions defTrans = mostFrequent(table);
+		buf.emit("switch (_jl_char) {").newline();
+		CSet defCSet = mostFrequent(table);
+		// defCSet belongs to table.keySet()
+		TransActions defTrans = Nulls.ok(table.get(defCSet)); 		
 		table.forEach((cset, trans) -> {
-			if (trans != defTrans) {
+			if (cset != defCSet) {
 				genPattern(cset);
 				buf.openBlock();
 				genTransActions(source, trans);
@@ -203,7 +204,43 @@ public final class AutomataOutput {
 		buf.emit("default: ").openBlock();
 		genTransActions(source, defTrans);
 		buf.closeBlock();
-		buf.emitln("}");
+		buf.emit("}");
+	}
+	
+	private void genDecisionTree(int source, DecisionTree tree) {
+		switch (tree.getKind()) {
+		case IMPOSSIBLE:
+			buf.emitln("throw new IllegalStateException(\"Should not happen\");");
+			return;
+		case RETURN:
+			Return ret = (Return) tree;
+			genTransActions(source, ret.transActions);
+			return;
+		case SPLIT:
+			Split split = (Split) tree;
+			buf.emit("if (_jl_char <= ").emit("" + (int)split.pivot).emit(")").openBlock();
+			genDecisionTree(source, split.left);
+			buf.closeBlock0().emit(" else ").openBlock();
+			genDecisionTree(source, split.right);
+			buf.closeBlock0();
+			return;
+		case SWITCH:
+			Switch switch_ = (Switch) tree;
+			genSwitchTable(source, switch_.table);
+			return;
+		case TABLE:
+			throw new IllegalStateException("DecisionTree.Table is not supported yet");
+		}
+		throw new IllegalStateException("Unexpected tree kind: " + tree.getKind());
+	}
+
+	private void genTransTable(int source,
+			Map<@NonNull CSet, @NonNull TransActions> table) {
+		// Compile the transition table into a hopefully efficient decision tree
+		DecisionTree tree = DecisionTree.compile(table);
+		// Output code that implements the tree, if the code is simply a switch
+		buf.emitln("final char _jl_char = getNextChar();");
+		genDecisionTree(source, tree);
 	}
 	
 	private void genCell(int cellIdx, DFA.Cell cell) {
