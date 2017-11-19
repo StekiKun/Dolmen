@@ -86,10 +86,12 @@ public abstract class CSet implements Comparable<CSet> {
 		case '-':
 		case '_':
 			return "\\" + ch; // printable but escaped
+		case 0xFFFF:
+			return "EOF";
 		}
 		if (Character.isAlphabetic(ch) || Character.isDigit(ch))
 			return "" + ch; // printable
-		return "0x" + String.format("%04x", (short)ch);
+		return "\\u" + String.format("%04x", (short)ch);
 	}
 	
 	/**

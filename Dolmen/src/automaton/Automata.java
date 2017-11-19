@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
+import java.util.TreeSet;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -299,7 +300,7 @@ public final class Automata {
 		Map<Integer, String> emptyTokenStates = new HashMap<>();
 		Stack<Map.Entry<Integer, String>> todo = new Stack<>(); 
 		todo.push(new AbstractMap.SimpleEntry<>(initialState, ""));
-		Set<String> emptyTokenWitnesses = new HashSet<>();
+		TreeSet<String> emptyTokenWitnesses = new TreeSet<>();
 		
 		while (!todo.isEmpty()) {
 			final Map.Entry<Integer, String> e = todo.pop();
@@ -327,16 +328,14 @@ public final class Automata {
 				shift.transTable.forEach((cset, trans) -> {
 					if (trans.gotoAction == GotoAction.BACKTRACK) {
 						char c = CSet.witnesses(cset).iterator().next();
-						String witc =
-							(witness.isEmpty() ? "" : (witness + "-")) + CSet.charToString(c);
+						String witc = witness + " '" + CSet.charToString(c) + "'";
 						emptyTokenWitnesses.add(witc);
 					}
 					else {
 						int target = trans.gotoAction.target;
 						if (!emptyTokenStates.containsKey(target)) {
 							char c = CSet.witnesses(cset).iterator().next();
-							String witc = 
-								(witness.isEmpty() ? "" : (witness + "-")) + CSet.charToString(c);
+							String witc = witness + " '" + CSet.charToString(c) + "'";
 							todo.push(new AbstractMap.SimpleEntry<>(target, witc));
 						}
 					}
@@ -355,8 +354,8 @@ public final class Automata {
 			.append(" cannot recognize all possible input sequences.\n");
 		buf.append("Here are examples of input sequences which will result in an empty token error:\n");
 		int i = 0;
-		for (String wit : emptyTokenWitnesses) {
-			buf.append(" ").append(wit).append("\n");
+		for (String wit : emptyTokenWitnesses.descendingSet()) {
+			buf.append(" -").append(wit).append("\n");
 			++i;
 			if (i == 10) {
 				buf.append(" ...\n");
