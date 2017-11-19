@@ -1,6 +1,8 @@
 package automaton;
 
+import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +19,8 @@ import automaton.DFA.MemAction;
 import automaton.DFA.Perform;
 import automaton.DFA.Remember;
 import automaton.DFA.Shift;
+import automaton.DFA.TransActions;
+import common.CSet;
 import syntax.Extent;
 import syntax.IReport;
 import syntax.IReport.Severity;
@@ -182,7 +186,8 @@ public final class Automata {
 	 * The following issues can be reported:
 	 * <ul>
 	 * <li> clauses which are never used, i.e. those for which the semantic action
-	 *      is never performed
+	 *      is never performed;
+	 * <li> entries which can produce empty token exceptions.
 	 * </ul>
 	 * 
 	 * @param lexer
@@ -211,7 +216,8 @@ public final class Automata {
 	 * The following issues can be reported:
 	 * <ul>
 	 * <li> clauses which are never used, i.e. those for which the semantic action
-	 *      is never performed
+	 *      is never performed;
+	 * <li> entries which can produce empty token exceptions.
 	 * </ul>
 	 * 
 	 * @param reporter
@@ -220,14 +226,19 @@ public final class Automata {
 	 */
 	private void findProblemsInEntry(Reporter reporter, 
 			Lexer.Entry entry, int initialState) {
+		// First look for potential token errors
+		findEmptyTokenStates(reporter, entry, initialState);
+		
 		Set<Integer> visited = new HashSet<>();
 		Stack<Integer> todo = new Stack<>();
 		todo.push(initialState);
+		// We also track which semantic actions were found in final states
 		boolean reachable[] = new boolean[entry.clauses.size()];
 		Arrays.fill(reachable, false);
 		// Visit all states reachable from [initialState]
 		while (!todo.isEmpty()) {
 			int s = todo.pop();
+			
 			if (!visited.add(s)) continue;
 			
 			// Handle the corresponding cell: if final, record
@@ -245,10 +256,11 @@ public final class Automata {
 				if (shift.remember != Remember.NOTHING)
 					reachable[shift.remember.action] = true;
 				
-				for (DFA.TransActions trans : shift.transTable.values()) {
+				for (TransActions trans : shift.transTable.values()) {
 					if (trans.gotoAction == GotoAction.BACKTRACK) continue;
 					int target = trans.gotoAction.target;
-					if (!visited.contains(target)) todo.push(target);
+					if (!visited.contains(target))
+						todo.push(target);
 				}
 				break;
 			}
@@ -260,13 +272,100 @@ public final class Automata {
 		for (Map.Entry<syntax.@NonNull Regular, @NonNull Extent> clause : 
 			entry.clauses.entrySet()) {
 			if (!reachable[i]) {
+				String msg = String.format(
+					"This clause is never used (entry %s, clause #%d)", entry.name.val, i);
 				reporter.add(
-					IReport.of("This clause is never used", 
-						Severity.WARNING, clause.getValue()));
+					IReport.of(msg, Severity.WARNING, clause.getValue()));
 			}
 			++i;
 		}
 		
 	}
-	
+
+	/**
+	 * Finds the set of states which can be reached from {@code initialState}
+	 * without encountering any final state, along with "witness" strings, i.e.
+	 * sequence of characters which show how these states can be reached from
+	 * the initial state. If any of these states has a {@link GotoAction#BACKTRACK}
+	 * transition, a report is filed into {@code reporter} which gives examples
+	 * of unmatched input sequences.
+	 * 
+	 * @param reporter
+	 * @param entry
+	 * @param initialState
+	 */
+	private void findEmptyTokenStates(Reporter reporter,
+			Lexer.Entry entry, int initialState) {
+		Map<Integer, String> emptyTokenStates = new HashMap<>();
+		Stack<Map.Entry<Integer, String>> todo = new Stack<>(); 
+		todo.push(new AbstractMap.SimpleEntry<>(initialState, ""));
+		Set<String> emptyTokenWitnesses = new HashSet<>();
+		
+		while (!todo.isEmpty()) {
+			final Map.Entry<Integer, String> e = todo.pop();
+			final int s = e.getKey();
+			if (emptyTokenStates.containsKey(s)) continue;
+			final String witness = e.getValue();
+			final Cell cell = automataCells[s];
+			
+			switch (cell.getKind()) {
+			case PERFORM: {
+				@SuppressWarnings("unused")
+				final Perform perform = (Perform) cell;
+				// This cell is a sink, nothing to do
+				break;
+			}
+			case SHIFT: {
+				final Shift shift = (Shift) cell;
+				if (shift.remember != Remember.NOTHING) continue;
+				// This state is not final, if it isn't known already
+				// we need to visit its successors.
+				// If the transition table can backtrack from there, this
+				// state can lead to an empty token error, and we must
+				// report it.
+				emptyTokenStates.put(s, witness);
+				shift.transTable.forEach((cset, trans) -> {
+					if (trans.gotoAction == GotoAction.BACKTRACK) {
+						char c = CSet.witnesses(cset).iterator().next();
+						String witc =
+							(witness.isEmpty() ? "" : (witness + "-")) + CSet.charToString(c);
+						emptyTokenWitnesses.add(witc);
+					}
+					else {
+						int target = trans.gotoAction.target;
+						if (!emptyTokenStates.containsKey(target)) {
+							char c = CSet.witnesses(cset).iterator().next();
+							String witc = 
+								(witness.isEmpty() ? "" : (witness + "-")) + CSet.charToString(c);
+							todo.push(new AbstractMap.SimpleEntry<>(target, witc));
+						}
+					}
+				});
+				break;
+			}
+			}
+		}
+		
+		// If there are some inputs leading to empty tokens, 
+		// report them (or at least the first 10)
+		if (emptyTokenWitnesses.isEmpty()) return;
+		
+		StringBuilder buf = new StringBuilder();
+		buf.append("The lexer entry ").append(entry.name.val)
+			.append(" cannot recognize all possible input sequences.\n");
+		buf.append("Here are examples of input sequences which will result in an empty token error:\n");
+		int i = 0;
+		for (String wit : emptyTokenWitnesses) {
+			buf.append(" ").append(wit).append("\n");
+			++i;
+			if (i == 10) {
+				buf.append(" ...\n");
+				break;
+			}
+		}
+		buf.append("You may want to add '_' or 'orelse' catch-all clauses and provide a better error report.");
+		
+		reporter.add(IReport.of(buf.toString(), Severity.WARNING, entry.name));
+	}
+
 }

@@ -167,9 +167,12 @@ public final class JGLexer extends codegen.LexBuffer {
 			
         }
         case 3:  {
-             throw error("Unterminated string literal"); 
+             throw error("Unterminated escape sequence in string literal"); 
         }
         case 4:  {
+             throw error("Unterminated string literal"); 
+        }
+        case 5:  {
              stringBuffer.append(getLexeme()); 
 			  string(); return; 
 			
@@ -186,7 +189,7 @@ public final class JGLexer extends codegen.LexBuffer {
     private int action() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell30();
+        int result = _jl_cell31();
         endToken();
         switch (result) {
         case 0:  {
@@ -223,6 +226,9 @@ public final class JGLexer extends codegen.LexBuffer {
         case 8:  {
              return action(); 
         }
+        case 9:  {
+             return action(); 
+        }
         default:
             throw error("Empty token");
         }
@@ -235,7 +241,7 @@ public final class JGLexer extends codegen.LexBuffer {
     private int arguments() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell42();
+        int result = _jl_cell43();
         endToken();
         switch (result) {
         case 0:  {
@@ -272,6 +278,9 @@ public final class JGLexer extends codegen.LexBuffer {
         case 8:  {
              return arguments(); 
         }
+        case 9:  {
+             return arguments(); 
+        }
         default:
             throw error("Empty token");
         }
@@ -284,7 +293,7 @@ public final class JGLexer extends codegen.LexBuffer {
     private void skipChar() {
         // Initialize lexer for this automaton
         startToken();
-        int result = _jl_cell54();
+        int result = _jl_cell55();
         endToken();
         switch (result) {
         case 0:  {
@@ -693,7 +702,7 @@ public final class JGLexer extends codegen.LexBuffer {
     
     private int _jl_cell25() {
         while (true) {
-            mark(4);
+            mark(5);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
             // [0x0022\\0xffff]
@@ -710,7 +719,7 @@ public final class JGLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell26() {
-        return 3;
+        return 4;
     }
     
     private int _jl_cell27() {
@@ -725,68 +734,73 @@ public final class JGLexer extends codegen.LexBuffer {
         case 110:
         case 114:
         case 116: {
-            return _jl_cell29();
+            return _jl_cell30();
         }
         // 0xffff
         case 65535: {
-            return rewind();
+            return _jl_cell28();
         }
         default:  {
-            return _jl_cell28();
+            return _jl_cell29();
         }
         }
     }
     
     private int _jl_cell28() {
-        return 2;
+        return 3;
     }
     
     private int _jl_cell29() {
-        return 1;
+        return 2;
     }
     
     private int _jl_cell30() {
+        return 1;
+    }
+    
+    private int _jl_cell31() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell37();
+            return _jl_cell38();
         }
         // 0x000d
         case 13: {
-            return _jl_cell38();
+            return _jl_cell39();
         }
         // 0x0022
         case 34: {
-            return _jl_cell33();
+            return _jl_cell34();
         }
         // 0x0027
         case 39: {
-            return _jl_cell32();
+            return _jl_cell33();
         }
         // 0x002f
         case 47: {
-            return _jl_cell31();
+            return _jl_cell32();
         }
         // 0x007b
         case 123: {
-            return _jl_cell35();
+            return _jl_cell36();
         }
         // 0x007d
         case 125: {
-            return _jl_cell34();
+            return _jl_cell35();
         }
         // 0xffff
         case 65535: {
-            return _jl_cell39();
+            return _jl_cell40();
         }
         default:  {
-            return _jl_cell36();
+            return _jl_cell37();
         }
         }
     }
     
-    private int _jl_cell31() {
+    private int _jl_cell32() {
+        mark(9);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x002a
@@ -795,7 +809,7 @@ public final class JGLexer extends codegen.LexBuffer {
         }
         // 0x002f
         case 47: {
-            return _jl_cell40();
+            return _jl_cell42();
         }
         default:  {
             return rewind();
@@ -803,23 +817,23 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell32() {
+    private int _jl_cell33() {
         return 3;
     }
     
-    private int _jl_cell33() {
+    private int _jl_cell34() {
         return 2;
     }
     
-    private int _jl_cell34() {
+    private int _jl_cell35() {
         return 1;
     }
     
-    private int _jl_cell35() {
+    private int _jl_cell36() {
         return 0;
     }
     
-    private int _jl_cell36() {
+    private int _jl_cell37() {
         while (true) {
             mark(8);
             final char _jl_char = getNextChar();
@@ -842,17 +856,17 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell37() {
+    private int _jl_cell38() {
         return 7;
     }
     
-    private int _jl_cell38() {
+    private int _jl_cell39() {
         mark(7);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell37();
+            return _jl_cell38();
         }
         default:  {
             return rewind();
@@ -860,11 +874,15 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell39() {
+    private int _jl_cell40() {
         return 6;
     }
     
-    private int _jl_cell40() {
+    private int _jl_cell41() {
+        return 4;
+    }
+    
+    private int _jl_cell42() {
         while (true) {
             mark(5);
             final char _jl_char = getNextChar();
@@ -882,11 +900,7 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell41() {
-        return 4;
-    }
-    
-    private int _jl_cell42() {
+    private int _jl_cell43() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
@@ -915,7 +929,7 @@ public final class JGLexer extends codegen.LexBuffer {
         }
         // 0x002f
         case 47: {
-            return _jl_cell43();
+            return _jl_cell52();
         }
         // 0xffff
         case 65535: {
@@ -923,23 +937,6 @@ public final class JGLexer extends codegen.LexBuffer {
         }
         default:  {
             return _jl_cell48();
-        }
-        }
-    }
-    
-    private int _jl_cell43() {
-        final char _jl_char = getNextChar();
-        switch (_jl_char) {
-        // 0x002a
-        case 42: {
-            return _jl_cell53();
-        }
-        // 0x002f
-        case 47: {
-            return _jl_cell52();
-        }
-        default:  {
-            return rewind();
         }
         }
     }
@@ -1006,6 +1003,28 @@ public final class JGLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell52() {
+        mark(9);
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
+        // 0x002a
+        case 42: {
+            return _jl_cell53();
+        }
+        // 0x002f
+        case 47: {
+            return _jl_cell54();
+        }
+        default:  {
+            return rewind();
+        }
+        }
+    }
+    
+    private int _jl_cell53() {
+        return 4;
+    }
+    
+    private int _jl_cell54() {
         while (true) {
             mark(5);
             final char _jl_char = getNextChar();
@@ -1023,11 +1042,7 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell53() {
-        return 4;
-    }
-    
-    private int _jl_cell54() {
+    private int _jl_cell55() {
         mark(2);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -1038,23 +1053,10 @@ public final class JGLexer extends codegen.LexBuffer {
         }
         // \\
         case 92: {
-            return _jl_cell55();
-        }
-        default:  {
             return _jl_cell56();
         }
-        }
-    }
-    
-    private int _jl_cell55() {
-        final char _jl_char = getNextChar();
-        switch (_jl_char) {
-        // 0xffff
-        case 65535: {
-            return rewind();
-        }
         default:  {
-            return _jl_cell58();
+            return _jl_cell57();
         }
         }
     }
@@ -1062,26 +1064,22 @@ public final class JGLexer extends codegen.LexBuffer {
     private int _jl_cell56() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
-        case 39: {
-            return _jl_cell57();
+        // 0xffff
+        case 65535: {
+            return rewind();
         }
         default:  {
-            return rewind();
+            return _jl_cell59();
         }
         }
     }
     
     private int _jl_cell57() {
-        return 0;
-    }
-    
-    private int _jl_cell58() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x0027
         case 39: {
-            return _jl_cell59();
+            return _jl_cell58();
         }
         default:  {
             return rewind();
@@ -1089,7 +1087,24 @@ public final class JGLexer extends codegen.LexBuffer {
         }
     }
     
+    private int _jl_cell58() {
+        return 0;
+    }
+    
     private int _jl_cell59() {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
+        // 0x0027
+        case 39: {
+            return _jl_cell60();
+        }
+        default:  {
+            return rewind();
+        }
+        }
+    }
+    
+    private int _jl_cell60() {
         return 1;
     }
     

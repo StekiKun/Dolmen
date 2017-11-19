@@ -255,7 +255,8 @@ public abstract class JLLexer {
 	 * | '\\' 'u'+				{ throw error("Invalid Unicode escape sequence"); }
 	 * | '\\' (_ as c)			{ stringBuffer.appends('\\').appends(c);
 	 * 							  string(); return; }
-	 * | eof					{ throw error("Unterminated string"); }
+	 * | '\\'					{ throw error("Unterminated escape sequence in string literal"); }
+	 * | eof					{ throw error("Unterminated string literal"); }
 	 * | [^"\\]+				{ stringBuffer.appends(getLexeme());
 	 * 							  string(); return; }
 	 */
@@ -273,7 +274,8 @@ public abstract class JLLexer {
 					"throw error(\"Invalid Unicode escacpe sequence\");")
 			.add(seq(rchar('\\'), binding(any, Located.dummy("c"))),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
-			.add(chars(CSet.EOF), "throw error(\"Unterminated string\");")
+			.add(rchar('\\'), "throw error(\"Unterminated escape sequence in string literal\");")
+			.add(chars(CSet.EOF), "throw error(\"Unterminated string literal\");")
 			.add(plus(inString), 
 					"stringBuffer.append(getLexeme()); string(); return;")
 			.build();
@@ -298,6 +300,7 @@ public abstract class JLLexer {
 	 * | eof			{ throw error("Unterminated action"); }
 	 * | newline		{ newline(); return action(); }
 	 * // cannot do char-by-char without tail-call elimination
+	 * | '/'			{ return action(); }
 	 * | [^{}"'/\r\n]+  { return action(); }
 	 */
 	private final static Lexer.Entry actionEntry =
@@ -315,6 +318,7 @@ public abstract class JLLexer {
 			.add(slcomment, "return action();")
 			.add(chars(CSet.EOF), "throw error(\"Unterminated action\");")
 			.add(nl, "newline(); return action();")
+			.add(rchar('/'), "return action();")
 			.add(plus(inAction), "return action();")
 			.build();
 	

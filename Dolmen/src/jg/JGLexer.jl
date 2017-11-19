@@ -102,6 +102,7 @@ private {void} rule string =
 			{ stringBuffer.append('\\').append(c);
 			  string(); return; 
 			}
+| '\\' eof  { throw error("Unterminated escape sequence in string literal"); }
 | eof 		{ throw error("Unterminated string literal"); }
 | orelse	{ stringBuffer.append(getLexeme()); 
 			  string(); return; 
@@ -123,7 +124,8 @@ private {int} rule action =
 | slcomment { return action(); }
 | eof		{ throw error("Unterminated action"); }
 | nl		{ newline(); return action(); }
-| orelse	{ return action(); }
+| orelse    { return action(); }
+| _         { return action(); }
 
 private {int} rule arguments =
 | '('		{ ++parenDepth; return arguments(); }
@@ -142,6 +144,7 @@ private {int} rule arguments =
 | eof		{ throw error("Unterminated arguments"); }
 | nl		{ newline(); return arguments(); }
 | orelse	{ return arguments(); }
+| _         { return arguments(); }
 
 private {void} rule skipChar =
 | [^ '\\' '\''] "'"
