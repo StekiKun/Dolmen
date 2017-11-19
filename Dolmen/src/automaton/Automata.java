@@ -1,12 +1,27 @@
 package automaton;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import automaton.DFA.Cell;
+import automaton.DFA.GotoAction;
 import automaton.DFA.MemAction;
+import automaton.DFA.Perform;
+import automaton.DFA.Remember;
+import automaton.DFA.Shift;
 import syntax.Extent;
+import syntax.IReport;
+import syntax.IReport.Severity;
+import syntax.Lexer;
+import syntax.Reporter;
 import tagged.TLexerEntry.Finisher;
 
 /**
@@ -158,6 +173,100 @@ public final class Automata {
 			buf.append(automataCells[i]);
 		}
 		return buf.toString();
+	}
+	
+	/**
+	 * Checks the automata which must correspond to the lexer description {@code lexer}
+	 * for any problems and reports all of them in {@code reporter}.
+	 * <p>
+	 * The following issues can be reported:
+	 * <ul>
+	 * <li> clauses which are never used, i.e. those for which the semantic action
+	 *      is never performed
+	 * </ul>
+	 * 
+	 * @param lexer
+	 * @return the (potentially empty) list of reports for the problems found
+	 * 	in this {@link Automata} instance
+	 */
+	public List<@NonNull IReport> findProblems(Lexer lexer) {
+		Reporter reporter = new Reporter();
+		for (Lexer.Entry entry : lexer.entryPoints) {
+			Optional<Entry> aentry = automataEntries.stream()
+				.filter(e -> e.name.equals(entry.name.val))
+				.findAny();
+			if (!aentry.isPresent())
+				throw new IllegalStateException("Lexer entry " + entry.name.val
+					+ " has no corresponding entry in automaton: " + this.toString());
+			findProblemsInEntry(reporter, entry, aentry.get().initialState);
+		}
+		return reporter.getReports();
+	}
+	
+	/**
+	 * Checks the automaton entry whose initial state is {@code initialState}
+	 * and must correspond to the syntactic lexer entry {@code entry} for issues,
+	 * and report all of them in {@code reporter}.
+	 * <p>
+	 * The following issues can be reported:
+	 * <ul>
+	 * <li> clauses which are never used, i.e. those for which the semantic action
+	 *      is never performed
+	 * </ul>
+	 * 
+	 * @param reporter
+	 * @param entry
+	 * @param initialState
+	 */
+	private void findProblemsInEntry(Reporter reporter, 
+			Lexer.Entry entry, int initialState) {
+		Set<Integer> visited = new HashSet<>();
+		Stack<Integer> todo = new Stack<>();
+		todo.push(initialState);
+		boolean reachable[] = new boolean[entry.clauses.size()];
+		Arrays.fill(reachable, false);
+		// Visit all states reachable from [initialState]
+		while (!todo.isEmpty()) {
+			int s = todo.pop();
+			if (!visited.add(s)) continue;
+			
+			// Handle the corresponding cell: if final, record
+			// the corresponding action as reachable ; if not a
+			// sink state record all possible successors
+			Cell cell = automataCells[s];
+			switch (cell.getKind()) {
+			case PERFORM: {
+				final Perform perform = (Perform) cell;
+				reachable[perform.action] = true;
+				break;
+			}
+			case SHIFT: {
+				final Shift shift = (Shift) cell;
+				if (shift.remember != Remember.NOTHING)
+					reachable[shift.remember.action] = true;
+				
+				for (DFA.TransActions trans : shift.transTable.values()) {
+					if (trans.gotoAction == GotoAction.BACKTRACK) continue;
+					int target = trans.gotoAction.target;
+					if (!visited.contains(target)) todo.push(target);
+				}
+				break;
+			}
+			}
+		}
+		
+		// Now report all unreachable actions in this lexer entry
+		int i = 0;
+		for (Map.Entry<syntax.@NonNull Regular, @NonNull Extent> clause : 
+			entry.clauses.entrySet()) {
+			if (!reachable[i]) {
+				reporter.add(
+					IReport.of("This clause is never used", 
+						Severity.WARNING, clause.getValue()));
+			}
+			++i;
+		}
+		
 	}
 	
 }

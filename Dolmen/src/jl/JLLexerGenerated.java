@@ -363,13 +363,13 @@ return action();
             case 41: {
                 return _jl_cell10();
             }
-            // 0x000a
-            case 10: {
-                return _jl_cell27();
-            }
             // 0x002a
             case 42: {
                 return _jl_cell14();
+            }
+            // 0x000a
+            case 10: {
+                return _jl_cell27();
             }
             // 0x002b
             case 43: {

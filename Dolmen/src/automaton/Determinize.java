@@ -904,7 +904,7 @@ public class Determinize {
 	/**
 	 * @param lexer
 	 * @param optimisation
-	 * @return a deterministic automata that recognize
+	 * @return a deterministic automata that recognizes
 	 * 	the rules in the provided lexer definition
 	 */
 	public static Automata lexer(Lexer lexer, boolean optimisation) {
@@ -967,8 +967,11 @@ public class Determinize {
 		DFA.@NonNull Cell[] checkedCells = cells;
 		
 		// Job done! We can return the full deterministic automata
-		return new Automata(tlexer.imports, tlexer.header, tlexer.footer, 
-				automataEntries, checkedCells);
+		Automata aut = new Automata(tlexer.imports, tlexer.header, tlexer.footer, 
+			automataEntries, checkedCells);
+		aut.findProblems(lexer).forEach(r -> System.out.println(r.display()));
+		
+		return aut;
 	}
-	
+
 }

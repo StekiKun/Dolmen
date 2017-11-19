@@ -339,10 +339,6 @@ public final class JGLexer extends codegen.LexBuffer {
         } else  {
             if (_jl_char <= 94) {
                 switch (_jl_char) {
-                // 0x003b
-                case 59: {
-                    return _jl_cell6();
-                }
                 // [0x003c0x003e-0x0040\[-\^]
                 case 60:
                 case 62:
@@ -353,6 +349,10 @@ public final class JGLexer extends codegen.LexBuffer {
                 case 93:
                 case 94: {
                     return _jl_cell1();
+                }
+                // 0x003b
+                case 59: {
+                    return _jl_cell6();
                 }
                 // 0x003d
                 case 61: {
