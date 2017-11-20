@@ -92,7 +92,7 @@ public class TestCSetOperations
 		buf.append("[cs1=").append(input.cs1).append(",");
 		buf.append("cs2=").append(input.cs2).append(",");
 		buf.append("res=").append(result).append(",");
-		buf.append("sample=").append(CSet.charToString(sample)).append(",");
+		buf.append("sample=").append(CSet.charToString(sample, false)).append(",");
 		buf.append(b1).append(",").append(b2).append(",").append(b);
 		buf.append("]");
 	}

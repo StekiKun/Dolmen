@@ -76,133 +76,123 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell0() {
-        switch (getNextChar()) {
-        // [0x0008-0x000a0x000d0x0020]
-        case 8:
-        case 9:
-        case 10:
-        case 13:
-        case 32: {
-            return _jl_cell14();
+        final char _jl_char = getNextChar();
+        if (_jl_char <= 46) {
+            switch (_jl_char) {
+            // [0x0008-0x000a0x000d0x0020]
+            case 8:
+            case 9:
+            case 10:
+            case 13:
+            case 32: {
+                return _jl_cell14();
+            }
+            // 0x0028
+            case 40: {
+                return _jl_cell5();
+            }
+            // 0x0029
+            case 41: {
+                return _jl_cell4();
+            }
+            // 0x002a
+            case 42: {
+                return _jl_cell9();
+            }
+            // 0x002b
+            case 43: {
+                return _jl_cell10();
+            }
+            // 0x002c
+            case 44: {
+                return _jl_cell6();
+            }
+            // \-
+            case 45: {
+                return _jl_cell8();
+            }
+            default:  {
+                return rewind();
+            }
+            }
+        } else  {
+            if (_jl_char <= 94) {
+                if (_jl_char <= 58) {
+                    switch (_jl_char) {
+                    // 0x003a
+                    case 58: {
+                        return _jl_cell3();
+                    }
+                    // 0x002f
+                    case 47: {
+                        return _jl_cell7();
+                    }
+                    default:  {
+                        return _jl_cell13();
+                    }
+                    }
+                } else  {
+                    if (_jl_char <= 64) {
+                        switch (_jl_char) {
+                        // 0x003b
+                        case 59: {
+                            return _jl_cell2();
+                        }
+                        default:  {
+                            return rewind();
+                        }
+                        }
+                    } else  {
+                        switch (_jl_char) {
+                        // [\[-\^]
+                        case 91:
+                        case 92:
+                        case 93:
+                        case 94: {
+                            return rewind();
+                        }
+                        default:  {
+                            return _jl_cell11();
+                        }
+                        }
+                    }
+                }
+            } else  {
+                if (_jl_char <= 111) {
+                    switch (_jl_char) {
+                    // 0x0060
+                    case 96: {
+                        return rewind();
+                    }
+                    default:  {
+                        return _jl_cell11();
+                    }
+                    }
+                } else  {
+                    if (_jl_char <= 122) {
+                        switch (_jl_char) {
+                        // p
+                        case 112: {
+                            return _jl_cell12();
+                        }
+                        default:  {
+                            return _jl_cell11();
+                        }
+                        }
+                    } else  {
+                        switch (_jl_char) {
+                        // EOF
+                        case 65535: {
+                            return _jl_cell1();
+                        }
+                        default:  {
+                            return rewind();
+                        }
+                        }
+                    }
+                }
+            }
         }
-        // 0x0028
-        case 40: {
-            return _jl_cell5();
-        }
-        // 0x0029
-        case 41: {
-            return _jl_cell4();
-        }
-        // 0x002a
-        case 42: {
-            return _jl_cell9();
-        }
-        // 0x002b
-        case 43: {
-            return _jl_cell10();
-        }
-        // 0x002c
-        case 44: {
-            return _jl_cell6();
-        }
-        // \-
-        case 45: {
-            return _jl_cell8();
-        }
-        // 0x002f
-        case 47: {
-            return _jl_cell7();
-        }
-        // [0-9]
-        case 48:
-        case 49:
-        case 50:
-        case 51:
-        case 52:
-        case 53:
-        case 54:
-        case 55:
-        case 56:
-        case 57: {
-            return _jl_cell13();
-        }
-        // 0x003a
-        case 58: {
-            return _jl_cell3();
-        }
-        // 0x003b
-        case 59: {
-            return _jl_cell2();
-        }
-        // [A-Z\_a-oq-z]
-        case 65:
-        case 66:
-        case 67:
-        case 68:
-        case 69:
-        case 70:
-        case 71:
-        case 72:
-        case 73:
-        case 74:
-        case 75:
-        case 76:
-        case 77:
-        case 78:
-        case 79:
-        case 80:
-        case 81:
-        case 82:
-        case 83:
-        case 84:
-        case 85:
-        case 86:
-        case 87:
-        case 88:
-        case 89:
-        case 90:
-        case 95:
-        case 97:
-        case 98:
-        case 99:
-        case 100:
-        case 101:
-        case 102:
-        case 103:
-        case 104:
-        case 105:
-        case 106:
-        case 107:
-        case 108:
-        case 109:
-        case 110:
-        case 111:
-        case 113:
-        case 114:
-        case 115:
-        case 116:
-        case 117:
-        case 118:
-        case 119:
-        case 120:
-        case 121:
-        case 122: {
-            return _jl_cell11();
-        }
-        // p
-        case 112: {
-            return _jl_cell12();
-        }
-        // 0xffff
-        case 65535: {
-            return _jl_cell1();
-        }
-        default:  {
-            return rewind();
-            
-        }
-        }
-        
     }
     
     private int _jl_cell1() {
@@ -214,17 +204,16 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell3() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // 0x003d
         case 61: {
             return _jl_cell19();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell4() {
@@ -258,7 +247,8 @@ public final class StraightLineLexer extends codegen.LexBuffer {
     private int _jl_cell11() {
         while (true) {
             mark(3);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0-9A-Z\_a-z]
             case 48:
             case 49:
@@ -327,16 +317,15 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell12() {
         mark(3);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Z\_a-qs-z]
         case 48:
         case 49:
@@ -408,16 +397,15 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell13() {
         while (true) {
             mark(1);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0-9]
             case 48:
             case 49:
@@ -433,17 +421,16 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell14() {
         while (true) {
             mark(0);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0x0008-0x000a0x000d0x0020]
             case 8:
             case 9:
@@ -454,16 +441,15 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell15() {
         mark(3);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Z\_a-hj-z]
         case 48:
         case 49:
@@ -535,15 +521,14 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell16() {
         mark(3);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Z\_a-mo-z]
         case 48:
         case 49:
@@ -615,15 +600,14 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell17() {
         mark(3);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Z\_a-su-z]
         case 48:
         case 49:
@@ -695,15 +679,14 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell18() {
         mark(2);
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0-9A-Z\_a-z]
         case 48:
         case 49:
@@ -772,10 +755,8 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell19() {

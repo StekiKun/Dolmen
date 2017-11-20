@@ -52,7 +52,8 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell0() {
-        switch (getNextChar()) {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
         // [0x0008-0x000a0x000d0x0020]
         case 8:
         case 9:
@@ -86,16 +87,14 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell5();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell1();
         }
         default:  {
             return rewind();
-            
         }
         }
-        
     }
     
     private int _jl_cell1() {
@@ -117,7 +116,8 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
     private int _jl_cell5() {
         while (true) {
             mark(1);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0-9]
             case 48:
             case 49:
@@ -133,17 +133,16 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     
     private int _jl_cell6() {
         while (true) {
             mark(0);
-            switch (getNextChar()) {
+            final char _jl_char = getNextChar();
+            switch (_jl_char) {
             // [0x0008-0x000a0x000d0x0020]
             case 8:
             case 9:
@@ -154,10 +153,8 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
             }
             default:  {
                 return rewind();
-                
             }
             }
-            
         }
     }
     

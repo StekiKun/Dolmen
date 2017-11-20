@@ -72,11 +72,15 @@ public abstract class CSet implements Comparable<CSet> {
 	
 	/**
 	 * @param ch
+	 * @param javaSafe	should be {@code true} if the result
+	 * 		string may end up in Java sources
 	 * @return a string to display {@code ch}, either
 	 * 	using the character itself if appropriate, or
-	 *  the '\\uxxxx' form
+	 *  the '\\uxxxx' form. If {@code javaSafe} is {@code true}
+	 *  the '\\uxxxx' is not used because it would be unescaped
+	 *  by a Java compiler, and the prefix '0x' is used instead
 	 */
-	public static String charToString(char ch) {
+	public static String charToString(char ch, boolean javaSafe) {
 		// Check for characters which must be escaped
 		switch (ch) {
 		case '[':
@@ -91,7 +95,7 @@ public abstract class CSet implements Comparable<CSet> {
 		}
 		if (Character.isAlphabetic(ch) || Character.isDigit(ch))
 			return "" + ch; // printable
-		return "\\u" + String.format("%04x", (short)ch);
+		return (javaSafe ? "0x" : "\\u") + String.format("%04x", (short)ch);
 	}
 	
 	/**
@@ -187,7 +191,7 @@ public abstract class CSet implements Comparable<CSet> {
 
 		@Override
 		public @NonNull String toString() {
-			return charToString(c);
+			return charToString(c, true);
 		}
 
 		@Override
@@ -233,11 +237,11 @@ public abstract class CSet implements Comparable<CSet> {
 		
 		private StringBuilder append(StringBuilder buf) {
 			if (first == last) 
-				buf.append(charToString(first));
+				buf.append(charToString(first, true));
 			else
-				buf.append(charToString(first))
+				buf.append(charToString(first, true))
 				   .append("-")
-				   .append(charToString(last));
+				   .append(charToString(last, true));
 			if (next != null) {
 				next.append(buf);
 			}

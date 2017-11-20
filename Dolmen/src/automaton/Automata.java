@@ -328,14 +328,14 @@ public final class Automata {
 				shift.transTable.forEach((cset, trans) -> {
 					if (trans.gotoAction == GotoAction.BACKTRACK) {
 						char c = CSet.witnesses(cset).iterator().next();
-						String witc = witness + " '" + CSet.charToString(c) + "'";
+						String witc = witness + " '" + CSet.charToString(c, false) + "'";
 						emptyTokenWitnesses.add(witc);
 					}
 					else {
 						int target = trans.gotoAction.target;
 						if (!emptyTokenStates.containsKey(target)) {
 							char c = CSet.witnesses(cset).iterator().next();
-							String witc = witness + " '" + CSet.charToString(c) + "'";
+							String witc = witness + " '" + CSet.charToString(c, false) + "'";
 							todo.push(new AbstractMap.SimpleEntry<>(target, witc));
 						}
 					}

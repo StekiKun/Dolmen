@@ -242,7 +242,7 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         case 125: {
             return _jl_cell13();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell7();
         }
@@ -753,7 +753,7 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         case 92: {
             return _jl_cell39();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell38();
         }
@@ -772,7 +772,7 @@ public final class JSonLWLexer extends codegen.LexBuffer {
             mark(5);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x0022\\0xffff]
+            // [0x0022\\EOF]
             case 34:
             case 92:
             case 65535: {
@@ -807,7 +807,7 @@ public final class JSonLWLexer extends codegen.LexBuffer {
         case 117: {
             return _jl_cell41();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return rewind();
         }

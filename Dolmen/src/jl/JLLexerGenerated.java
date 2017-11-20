@@ -369,13 +369,13 @@ return action();
             case 41: {
                 return _jl_cell10();
             }
-            // 0x002a
-            case 42: {
-                return _jl_cell14();
-            }
             // 0x000a
             case 10: {
                 return _jl_cell27();
+            }
+            // 0x002a
+            case 42: {
+                return _jl_cell14();
             }
             // 0x002b
             case 43: {
@@ -385,13 +385,13 @@ return action();
             case 44: {
                 return _jl_cell3();
             }
-            // \-
-            case 45: {
-                return _jl_cell8();
-            }
             // 0x000d
             case 13: {
                 return _jl_cell28();
+            }
+            // \-
+            case 45: {
+                return _jl_cell8();
             }
             // 0x002e
             case 46: {
@@ -496,7 +496,7 @@ return action();
                         case 124: {
                             return _jl_cell17();
                         }
-                        // 0xffff
+                        // EOF
                         case 65535: {
                             return _jl_cell29();
                         }
@@ -590,7 +590,7 @@ return action();
         case 92: {
             return _jl_cell33();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return rewind();
         }
@@ -854,7 +854,7 @@ return action();
             mark(3);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0xffff]
+            // [0x000a0x000dEOF]
             case 10:
             case 13:
             case 65535: {
@@ -1216,7 +1216,7 @@ return action();
         case 42: {
             return _jl_cell56();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell53();
         }
@@ -1231,7 +1231,7 @@ return action();
             mark(6);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0x00220x00270x002a0xffff]
+            // [0x000a0x000d0x00220x00270x002aEOF]
             case 10:
             case 13:
             case 34:
@@ -1306,7 +1306,7 @@ return action();
         case 92: {
             return _jl_cell62();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell61();
         }
@@ -1325,7 +1325,7 @@ return action();
             mark(8);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x0022\\0xffff]
+            // [0x0022\\EOF]
             case 34:
             case 92:
             case 65535: {
@@ -1376,7 +1376,7 @@ return action();
         case 117: {
             return _jl_cell65();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return rewind();
         }
@@ -1639,7 +1639,7 @@ return action();
         case 125: {
             return _jl_cell77();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return _jl_cell83();
         }
@@ -1670,7 +1670,7 @@ return action();
             mark(9);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0x00220x00270x002f0x007b0x007d0xffff]
+            // [0x000a0x000d0x00220x00270x002f0x007b0x007dEOF]
             case 10:
             case 13:
             case 34:
@@ -1733,7 +1733,7 @@ return action();
             mark(5);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0xffff]
+            // [0x000a0x000dEOF]
             case 10:
             case 13:
             case 65535: {
@@ -1754,7 +1754,7 @@ return action();
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0x00270xffff]
+        // [0x0027EOF]
         case 39:
         case 65535: {
             return rewind();
@@ -1799,7 +1799,7 @@ return action();
         case 55: {
             return _jl_cell90();
         }
-        // 0xffff
+        // EOF
         case 65535: {
             return rewind();
         }
