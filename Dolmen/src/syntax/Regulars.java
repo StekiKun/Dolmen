@@ -388,7 +388,8 @@ public abstract class Regulars {
 		 * Whether the end-of-input has been matched,
 		 * in which case {@link #matchedLength} should be
 		 * the length of the whole input, and no more 
-		 * can be matched (even {@link Regular#EPSILON}).
+		 * can be matched (even {@link Regular#EPSILON}, 
+		 * except if non-strict matching is used).
 		 */
 		public final boolean reachedEOF;
 		
@@ -418,11 +419,11 @@ public abstract class Regulars {
 	 * @param input
 	 * @param from
 	 * @return an iterable of all potential matchings
-	 * 		of (a prefix of) the {@code input} string
+	 * 		of (a suffix of) the {@code input} string
 	 * 		starting at offset {@code from}
 	 */
 	private static Iterable<MatchResult>
-		match(Regular regular, String input, int from) {
+		match(Regular regular, String input, int from, boolean strict) {
 		int rem = input.length() - from;
 		// There's no hope there if not enough remaining characters
 		if (regular.size > rem) return NO_MATCH;
@@ -451,18 +452,24 @@ public abstract class Regulars {
 		}
 		case ALTERNATE: {
 			final Alternate alternate = (Alternate) regular;
-			Iterable<MatchResult> res1 = match(alternate.lhs, input, from);
-			Iterable<MatchResult> res2 = match(alternate.rhs, input, from);
+			Iterable<MatchResult> res1 = match(alternate.lhs, input, from, strict);
+			Iterable<MatchResult> res2 = match(alternate.rhs, input, from, strict);
 			return Iterables.concat(res1, res2);
 		}
 		case SEQUENCE: {
 			final Sequence sequence = (Sequence) regular;
-			Iterable<MatchResult> res1 = match(sequence.first, input, from);
+			Iterable<MatchResult> res1 = match(sequence.first, input, from, strict);
 			// For each match of the first part, try to match the second part
 			Function<MatchResult, Iterable<MatchResult>> f = mr1 -> {
 				// If already reached end-of-input, nothing more can be matched
-				if (mr1.reachedEOF) return Iterables.empty();
-				Iterable<MatchResult> res2 = match(sequence.second, input, mr1.matchedLength);
+				// unless we use non-strict matching in which case a nullable regexp
+				// could match
+				if (mr1.reachedEOF) {
+					if (!strict && sequence.second.nullable)
+						return Iterables.singleton(mr1);
+					return Iterables.empty();
+				}
+				Iterable<MatchResult> res2 = match(sequence.second, input, mr1.matchedLength, strict);
 				// If no bindings to reconcile
 				if (mr1.bindings.isEmpty()) return res2;
 				// Otherwise, we need to extend res1 bindings with res2
@@ -502,7 +509,7 @@ public abstract class Regulars {
 						@Override
 						public @NonNull Iterable<@NonNull MatchResult> next() {
 							if (!hasNext()) throw new NoSuchElementException();
-							Iterable<MatchResult> res = match(unfolded, input, from);
+							Iterable<MatchResult> res = match(unfolded, input, from, strict);
 							unfolded = Regular.seq(repetition.reg, unfolded);
 							++level;
 							return res;
@@ -515,7 +522,7 @@ public abstract class Regulars {
 			final Binding binding = (Binding) regular;
 			// For each match of the regular expression, compute
 			// the associated binding and return the updated match result
-			Iterable<MatchResult> res = match(binding.reg, input, from);
+			Iterable<MatchResult> res = match(binding.reg, input, from, strict);
 			return Iterables.transform(res, mr -> {
 				@NonNull String bound = input.substring(from, mr.matchedLength);
 				// Save this binding, potentially shadowing other nested bindings
@@ -535,29 +542,52 @@ public abstract class Regulars {
 	/**
 	 * @param regular
 	 * @param input
+	 * @param strict	if set, nothing can be matched after EOF;
+	 * 					if not set, empty strings can still match after EOF
 	 * @return an iterable of all potential match results of the
 	 * 		regular expression {@code regular} and a prefix of {@code input}
 	 */
+	public static Iterable<MatchResult> allMatches(Regular regular, String input, boolean strict) {
+		return match(regular, input, 0, strict);
+	}
+
+	/**
+	 * 
+	 * @param regular
+	 * @param input
+	 * @return {@link #allMatches(Regular, String, boolean) allMatches(regular, input, true)}
+	 */
 	public static Iterable<MatchResult> allMatches(Regular regular, String input) {
-		return match(regular, input, 0);
+		return allMatches(regular, input, true);
 	}
 	
 	/**
 	 * @param regular
 	 * @param input
+	 * @param strict	if set, nothing can be matched after EOF;
+	 * 					if not set, empty strings can still match after EOF
 	 * @return {@code null} if {@code regular} does not match the full
 	 * 		{@code input} string, or the map of bound substrings if a match
 	 * 		was found
 	 */
-	public static @Nullable Map<String, String> matches(Regular regular, String input) {
+	public static @Nullable Map<String, String> matches(Regular regular, String input, boolean strict) {
 		final int size = input.length();
 		// Find a match which covered the whole input string
-		for (MatchResult mr : allMatches(regular, input)) {
+		for (MatchResult mr : allMatches(regular, input, strict)) {
 			if (mr.matchedLength == size) return mr.bindings;
 		}
 		return null;
 	}
-	
+
+	/**
+	 * @param regular
+	 * @param input
+	 * @return {@link #matches(Regular, String, boolean) matches(regular, input, true)}
+	 */
+	public static @Nullable Map<String, String> matches(Regular regular, String input) {
+		return matches(regular, input, true);
+	}
+
 	/**
 	 * A witness string, i.e. a potential matcher
 	 * along with the info of whether this string
@@ -651,8 +681,9 @@ public abstract class Regulars {
 	public static CSet first(Regular regular) {
 		switch (regular.getKind()) {
 		case EPSILON:
-		case EOF:
 			return CSet.EMPTY;
+		case EOF:
+			return CSet.EOF;
 		case CHARACTERS: {
 			final Characters characters = (Characters) regular;
 			return characters.chars;
@@ -675,6 +706,142 @@ public abstract class Regulars {
 		case BINDING: {
 			final Binding binding = (Binding) regular;
 			return first(binding.reg);
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	/**
+	 * The two maps {@code m1} and {@code m2} must be injective, i.e. they must
+	 * have keys which are pairwise disjoint character sets. The returned map
+	 * has the same property.
+	 * 
+	 * @param m1
+	 * @param m2
+	 * @return result of merging the two character maps {@code m1} and {@code m2}
+	 * 	such that if a <i>character</i> was mapped to some regular expressions {@code r1}
+	 *  and {@code r2} respectively, it is mapped to {@code Regular.or(r1, r2)} in the
+	 *  result
+	 */
+	private static Map<CSet, Regular> merge(Map<CSet, Regular> m1, Map<CSet, Regular> m2) {
+		if (m1.isEmpty()) return m2;
+		if (m2.isEmpty()) return m1;
+		// Merge the smaller map into the other
+		if (m2.size() > m1.size()) return merge(m2, m1);
+		// Merge m2 into m1. At any time in the partitioning process
+		// [res]'s keys are all pairwise disjoint character sets
+		Map<CSet, Regular> res = new HashMap<>(m1);
+		m2.forEach((cs, r) -> {
+			// Merging a binding cs -> r in the map res:
+			//  - for every part of cs that intersects with some existing
+			//    binding k -> rk, rebind k - cs -> rk, k inter cs to rk | r
+			//    and do cs <- cs - k
+			//  - if anything remains of cs, bind it to r
+			CSet rem = cs;
+			Map<CSet, Regular> refined = new HashMap<>(); 
+			Iterator<Map.@NonNull Entry<@NonNull CSet, @NonNull Regular>> it = res.entrySet().iterator();
+			while (it.hasNext()) {
+				Map.Entry<@NonNull CSet, @NonNull Regular> e = it.next();
+				CSet k = e.getKey(); Regular rk = e.getValue();
+				CSet inter = CSet.inter(k, rem);
+				if (inter.isEmpty()) continue;
+				// Remove k -> rk from the current map
+				// Schedule refined bindings for later (avoiding concurrent
+				// modifications with the iteration)
+				it.remove();
+				refined.put(inter, Regular.or(r, rk));
+				CSet diff = CSet.diff(k, rem);
+				if (!diff.isEmpty())
+					refined.put(diff, rk);
+				rem = CSet.diff(rem, inter);
+				// Break early if possible
+				if (rem.isEmpty()) break;
+			}
+			res.putAll(refined);
+			if (!rem.isEmpty())
+				res.put(rem, r);
+		});
+		// Sanity checks
+		CSet dom1 = m1.keySet().stream().reduce(CSet.EMPTY, CSet::union);
+		CSet dom2 = m2.keySet().stream().reduce(CSet.EMPTY, CSet::union);
+		CSet dom12 = res.keySet().stream().reduce(CSet.EMPTY, CSet::union);
+		assert (CSet.equivalent(CSet.union(dom1, dom2), dom12)) :
+			"Sanity check failed: " + m1 + m2 + " and " + res;
+		return res;
+	}
+	
+	/**
+	 * The <i>projection</i> of a regular expression on a character set provides
+	 * regular expressions for all character in the set, with the following 
+	 * meaning: a string {@code s} with first character {@code c} matches the
+	 * regular expression {@code r} if and only if {@code s.substring(1)} matches
+	 * the projection of {@code r} on the character {@code c}.
+	 * <p>
+	 * This method returns a map which groups together all characters for which
+	 * the projection is the same: it associates various character sets to their
+	 * common corresponding projection of the given regular expression. The map
+	 * has the following properties:
+	 * <ul>
+	 * <li> it does not contain empty character sets
+	 * <li> characters which cannot start a match of {@code regular}, or which
+	 * 		do not belong to {@code first}, are not mapped at all
+	 * <li> all the keys are pairwise disjoint character sets
+	 * </ul>
+	 * <p><i>Important: The description of a projection only holds when
+	 * considering <b>non-strict</b> matching 
+	 * (cf {@link Regulars#matches(Regular, String, boolean)}). Indeed projecting
+	 * the Kleene star of a regexp that ends with EOF does not preserve the
+	 * semantics unless it is allowed to match the empty string after EOF. 
+	 * </i>
+	 * 
+	 * @param regular
+	 * @param first
+	 * @return the projection map of {@code regular} on the given character set
+	 */
+	public static Map<CSet, Regular> project(Regular regular, CSet first) {
+		switch (regular.getKind()) {
+		case EPSILON: {
+			return Maps.empty();
+		}
+		case EOF: {
+			final CSet inter = CSet.inter(first, CSet.EOF);
+			if (inter.isEmpty()) return Maps.empty();
+			return Maps.singleton(inter, Regular.EPSILON);
+		}
+		case CHARACTERS: {
+			final Characters characters = (Characters) regular;
+			final CSet inter = CSet.inter(first, characters.chars);
+			if (inter.isEmpty()) return Maps.empty();
+			return Maps.singleton(inter, Regular.EPSILON);
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) regular;
+			Map<CSet, Regular> alt1 = project(alternate.lhs, first);
+			Map<CSet, Regular> alt2 = project(alternate.rhs, first);
+			return merge(alt1, alt2);
+		}
+		case SEQUENCE: {
+			final Sequence sequence = (Sequence) regular;
+			Map<CSet, Regular> seq1 = project(sequence.first, first);
+			Map<CSet, Regular> seq12 = new HashMap<>();
+			for (Map.Entry<CSet, Regular> e : seq1.entrySet())
+				seq12.put(e.getKey(), Regular.seq(e.getValue(), sequence.second));
+			if (!sequence.first.nullable) return seq12;
+			Map<CSet, Regular> seq2 = project(sequence.second, first);
+			return merge(seq12, seq2);
+		}
+		case REPETITION: {
+			final Repetition repetition = (Repetition) regular;
+			Map<CSet, Regular> rep1 = project(repetition.reg, first);
+			if (rep1.isEmpty()) return Maps.empty();
+			Map<CSet, Regular> repn = new HashMap<>();
+			for (Map.Entry<CSet, Regular> e : rep1.entrySet())
+				repn.put(e.getKey(), Regular.seq(e.getValue(), repetition));
+			return repn;
+		}
+		case BINDING: {
+			final Binding binding = (Binding) regular;
+			return project(binding.reg, first);
 		}
 		}
 		throw new IllegalStateException();

@@ -80,9 +80,11 @@ public final class TestAnalyseVars
 		// Analyse variables in input regexp
 		VarsInfo varsInfo = Regulars.analyseVars(input);
 		// Find at most maxSamples unique witnesses
+		int maxTries = 2 * maxSamples;
 		int found = 0;
 		Set<String> matchers = new HashSet<String>();
 		for (String matcher : Regulars.witnesses(input)) {
+			if (--maxTries < 0) break;
 			if (matchers.add(matcher)) {
 				if (++found == maxSamples) break;
 			}
@@ -130,7 +132,6 @@ public final class TestAnalyseVars
 			}
 			// Check that all bindings that were not present
 			// were indeed in optVars
-			@SuppressWarnings("null")
 			Set<String> missing = Sets.diff(info.allVars, bindings.keySet());
 			if (!info.optVars.containsAll(missing)) {
 				missing.removeAll(info.optVars);

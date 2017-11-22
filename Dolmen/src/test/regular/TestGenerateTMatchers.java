@@ -88,9 +88,11 @@ public final class TestGenerateTMatchers
 		
 		TRegular treg = encoder.encode(input, charVars, 0);
 		List<CSet> charSets = encoder.getCharacterSets();
+		int maxTries = 10 * maxSamples;
 		int found = 0;
 		Set<String> res = new HashSet<String>();
 		for (String matcher : TRegulars.witnesses(charSets, treg)) {
+			if (--maxTries < 0) break;
 			if (res.add(matcher))
 				if (++found == maxSamples) break;
 		}

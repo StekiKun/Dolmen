@@ -152,7 +152,6 @@ public final class TestOptimiser
 				}
 				
 				// Conversely, all markers must be accounted by bindings
-				@SuppressWarnings("null")
 				Set<TagInfo> unaccounted = Sets.diff(markers.keySet(), visited);
 				if (!unaccounted.isEmpty())
 					return "Some tags were unaccounted for: " + unaccounted;

@@ -12,6 +12,7 @@ import test.regular.TestEncoder;
 import test.regular.TestGenerateMatchers;
 import test.regular.TestGenerateTMatchers;
 import test.regular.TestOptimiser;
+import test.regular.TestRegularProjection;
 import test.regular.TestRemoveNestedBinding;
 
 /**
@@ -61,6 +62,7 @@ public abstract class Test {
 					.addIf(new TestGenerateTMatchers(20), 20000, true)
 					.addIf(new TestEncoder(20), 20000, true)
 					.addIf(new TestOptimiser(20), 20000, true)
+					.addIf(new TestRegularProjection(30), 20000, true)
 					.done();
 	}
 	
