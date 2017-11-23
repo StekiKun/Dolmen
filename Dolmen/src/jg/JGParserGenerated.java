@@ -146,14 +146,20 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
     }
 
+    private Production.@NonNull Actual actual(@Nullable Located<@NonNull String> binding,
+            @NonNull Located<@NonNull String> ident, @Nullable Extent args) {
+        if (args != null && Character.isUpperCase(ident.val.charAt(0)))
+            throw new ParsingException(ident.start, ident.length(),
+                "Terminal " + ident.val + " does not expect arguments.");
+        return new Production.Actual(binding, ident, args);
+    }
+
     /**
      * @param t
      * @return the given value wrapped with the location of the last
      * 	consumed token
      */
     private <@NonNull T> @NonNull Located<T> withLoc(T t) {
-		 if (_jl_lastTokenStart != _jl_lexbuf.getLexemeStart())
-        	throw new IllegalStateException("");
 	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
     }
 
@@ -478,7 +484,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case SEMICOL: {
                 // args = args
                 @Nullable Extent args = args();
-                return new Production.Actual(null, id, args);
+                return actual(null, id, args);
             }
             case EQUAL: {
                 // EQUAL
@@ -488,7 +494,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 Located<@NonNull String> lname = withLoc(name);
                 // args = args
                 @Nullable Extent args = args();
-                return new Production.Actual(id, lname, args);
+                return actual(id, lname, args);
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);

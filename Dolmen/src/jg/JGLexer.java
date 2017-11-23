@@ -69,19 +69,23 @@ public final class JGLexer extends codegen.LexBuffer {
         }
         case 4:  {
              braceDepth = 1;
+              Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = action();
 			  syntax.Extent ext = new syntax.Extent(
 			  	filename, p.offset, endOffset, p.line, p.column());
+              startLoc = start;
 			  return ACTION(ext);
 			
         }
         case 5:  {
              parenDepth = 1;
+              Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = arguments();
 			  syntax.Extent ext = new syntax.Extent(
 			    filename, p.offset, endOffset, p.line, p.column());
+			  startLoc = start;
 			  return ARGUMENTS(ext);
 			
         }

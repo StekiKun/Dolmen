@@ -161,10 +161,12 @@ public abstract class JLLexer {
 							 "return res;")
 			.add(rchar('{'), 
 				"braceDepth = 1;\n" +
+			    "Position start = getLexemeStart();\n" +
 				"Position p = getLexemeEnd();\n" +
 				"int endOffset = action();\n" +
 				"syntax.Extent ext = new syntax.Extent(\n" +
 				"    filename, p.offset, endOffset, p.line, p.column());\n" +
+				"startLoc = start;\n" +
 				"return ACTION(ext);")
 			.add(rchar('_'), "return UNDERSCORE;")
 			.add(ident, "return identOrKeyword(getLexeme());")

@@ -81,10 +81,12 @@ return res;
         }
         case 5:  {
             braceDepth = 1;
+Position start = getLexemeStart();
 Position p = getLexemeEnd();
 int endOffset = action();
 syntax.Extent ext = new syntax.Extent(
     filename, p.offset, endOffset, p.line, p.column());
+startLoc = start;
 return ACTION(ext);
         }
         case 6:  {

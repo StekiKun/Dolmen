@@ -125,10 +125,9 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private Token eat(Token.Kind kind) {
-        Token ctoken = peek();
+        Token ctoken = eat();
         if (kind != ctoken.getKind())
-        throw tokenError(ctoken, kind);
-        _jl_nextToken = null;
+            throw tokenError(ctoken, kind);
         return ctoken;
     }
     

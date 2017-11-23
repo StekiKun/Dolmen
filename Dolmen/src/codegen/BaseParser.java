@@ -35,6 +35,9 @@ public abstract class BaseParser<Token> {
 
         /** The position in input at which the error occurred */
         public final @Nullable Position pos;
+        
+        /** The length of the part of input at which the error occurred */
+        public final int length;
 		
 		/**
 		 * A parsing error exception with the given error message,
@@ -47,6 +50,22 @@ public abstract class BaseParser<Token> {
             super(msg + (pos == null ? "" : 
             	String.format(" (at line %d, column %d)", pos.line, pos.column())));
 			this.pos = pos;
+			this.length = 0;
+		}
+		
+		/**
+		 * A parsing error exception with the given error message,
+		 * specifying the position and length of the part in the input
+		 * stream where the error occurred
+		 * @param pos
+		 * @param length
+		 * @param msg
+		 */
+		public ParsingException(Position pos, int length, String msg) {
+            super(msg + (pos == null ? "" : 
+            	String.format(" (at line %d, column %d)", pos.line, pos.column())));
+			this.pos = pos;
+			this.length = length;
 		}
 	}
 	
@@ -69,19 +88,23 @@ public abstract class BaseParser<Token> {
 		}
 		buf.append('}');
 		@NonNull String res = buf.toString();
-		return new ParsingException(_jl_lastTokenEnd, res);
+		// The position is that of the peeked token
+		Position start = _jl_lexbuf.getLexemeStart();
+		int length = _jl_lexbuf.getLexemeEnd().offset - start.offset;
+		return new ParsingException(start, length, res);
 	}
 	
     /**
      * Convenience helper which returns a {@link ParsingException}
-     * located at the end of the last token consumed by the parser.
+     * located at the last token consumed by the parser.
      * 
      * @param msg
      * @return the exception with the given message and the current
      * 	parsing position
      */
     protected ParsingException parsingError(String msg) {
-    	return new ParsingException(_jl_lastTokenEnd, msg);
+    	return new ParsingException(_jl_lastTokenStart,
+    		_jl_lastTokenEnd.offset - _jl_lastTokenStart.offset, msg);
     }
 	
 	/** The underlying lexing buffer */

@@ -58,17 +58,21 @@ public {Token} rule main =
 | "/*"		{ comment(); return main(); }
 | slcomment	{ return main(); }
 | '{'		{ braceDepth = 1;
+              Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = action();
 			  syntax.Extent ext = new syntax.Extent(
 			  	filename, p.offset, endOffset, p.line, p.column());
+              startLoc = start;
 			  return ACTION(ext);
 			}
 | '('		{ parenDepth = 1;
+              Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = arguments();
 			  syntax.Extent ext = new syntax.Extent(
 			    filename, p.offset, endOffset, p.line, p.column());
+			  startLoc = start;
 			  return ARGUMENTS(ext);
 			}			
 | ident		{ return identOrKeyword(getLexeme()); }

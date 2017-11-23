@@ -147,14 +147,20 @@ public abstract class JGParser {
 		"        return name.chars().anyMatch(ch -> Character.isLowerCase(ch));\n" +
 		"    }\n" +
 	    "\n" +
+		"    private Production.@NonNull Actual actual(@Nullable Located<@NonNull String> binding,\n" +
+	    "            @NonNull Located<@NonNull String> ident, @Nullable Extent args) {\n" +
+		"        if (args != null && Character.isUpperCase(ident.val.charAt(0)))\n" +
+	    "            throw new ParsingException(ident.start, ident.length(),\n" +
+		"                \"Terminal \" + ident.val + \" does not expect arguments.\");\n" +
+		"        return new Production.Actual(binding, ident, args);\n" +
+	    "    }\n" +
+	    "\n" +
 		"    /**\n" +
 	    "     * @param t\n" +
 	    "     * @return the given value wrapped with the location of the last\n" +
 	    "     * 	consumed token\n" +
 	    "     */\n" +
 	    "    private <@NonNull T> @NonNull Located<T> withLoc(T t) {\n" +
-	    "		 if (_jl_lastTokenStart != _jl_lexbuf.getLexemeStart())\n" +
-	    "        	throw new IllegalStateException(\"\");\n" +
 	    "	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);\n" +
 	    "    }\n";
 	
@@ -341,10 +347,10 @@ public abstract class JGParser {
 				production("id = IDENT", "actual = actual(withLoc(id))",
 					"@builder.addActual(actual);", "items(builder)", "@return;")))
 			.addRule(rule("actual(@NonNull Located<@NonNull String> id)", "Production.@NonNull Actual",
-				production("args = args", "@return new Production.Actual(null, id, args);"),
+				production("args = args", "@return actual(null, id, args);"),
 				production("EQUAL", "name = IDENT", 
 				    "@Located<@NonNull String> lname = withLoc(name);", "args = args",
-					"@return new Production.Actual(id, lname, args);")))
+					"@return actual(id, lname, args);")))
 			.build();
 
 	static void generateParser(String className, Grammar grammar)
