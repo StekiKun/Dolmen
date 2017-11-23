@@ -11,6 +11,7 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
 import common.Lists;
+import common.Maps;
 import syntax.Lexer;
 import syntax.Located;
 import syntax.Extent;
@@ -32,10 +33,10 @@ public abstract class AdvancedLexers {
 	 * @param objs	clauses and inlined contents, interleaved
 	 * @return a list of ordered clauses with inlined locations
 	 */
-	static Map<Regular, Extent> inlinedClauses(@NonNull Object... objs) {
+	static Map<Located<Regular>, Extent> inlinedClauses(@NonNull Object... objs) {
 		if (objs.length % 2 != 0) throw new IllegalArgumentException();
 		int n = objs.length / 2;
-		Map<Regular, Extent> res = new LinkedHashMap<>(n);
+		Map<Located<Regular>, Extent> res = new LinkedHashMap<>(n);
 		for (int i = 0; i < n; ++i) {
 			int k = 2 * i;
 			Object reg = objs[k];
@@ -43,7 +44,8 @@ public abstract class AdvancedLexers {
 			if (!(reg instanceof Regular)
 				|| !(msg instanceof String))
 				throw new IllegalArgumentException();
-			res.put((Regular) reg, Extent.inlined((String) msg));
+			res.put(Located.dummy((Regular) reg), 
+					Extent.inlined((String) msg));
 		}
 		return res;
 	}
@@ -116,7 +118,7 @@ public abstract class AdvancedLexers {
 					Regular.star(Regular.chars(hexdigit)),
 					Located.dummy("hex")));
 		
-		private static final Map<Regular, Extent> mainClauses =
+		private static final Map<Located<Regular>, Extent> mainClauses =
 			inlinedClauses(
 				ws,						" return main(); ",
 				newline,				" newline(); return main(); ",
@@ -137,7 +139,7 @@ public abstract class AdvancedLexers {
 		private static final CSet inComment =
 			CSet.complement(
 				CSet.union(CSet.singleton('\r'), CSet.singleton('\n')));
-		private static final Map<Regular, Extent> commentClauses =
+		private static final Map<Located<Regular>, Extent> commentClauses =
 			inlinedClauses(
 				Regular.string("*/"),		" return; ",
 				newline,		 			" newline(); comment(); return;",
@@ -193,6 +195,7 @@ public abstract class AdvancedLexers {
 		"	public final static Token EOF = new Token(\"EOF\") {};\n" +
 		"}\n" +
 		"\n"),
+				Maps.empty(),
 				Arrays.asList(mainEntry, commentEntry), 
 				Extent.inlined(
 		"@SuppressWarnings(\"javadoc\")\n" +

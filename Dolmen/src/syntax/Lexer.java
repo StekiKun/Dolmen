@@ -28,7 +28,7 @@ public final class Lexer {
 	 * {@link #name name}, a {@link #returnType return type} and may 
 	 * have some {@link #args arguments}. The regular expressions
 	 * that form the rule are called the {@link #clauses clauses}
-	 * are normally interpreted with the <i>longest match 
+	 * and are normally interpreted with the <i>longest match 
 	 * priority</i>, unless {@link #shortest specified otherwise}.
 	 * 
 	 * <p>
@@ -59,7 +59,7 @@ public final class Lexer {
 		 * as priority between same-length matches goes to the
 		 * first matching rule in this map.</b>
 		 */
-		public final Map<@NonNull Regular, @NonNull Extent> clauses;
+		public final Map<@NonNull Located<Regular>, @NonNull Extent> clauses;
 		
 		/**
 		 * @param visibility
@@ -74,7 +74,7 @@ public final class Lexer {
 		 */
 		public Entry(boolean visibility, 
 				Located<String> name, Extent returnType, boolean shortest,
-				@Nullable Extent args, Map<Regular, Extent> clauses) {
+				@Nullable Extent args, Map<Located<Regular>, Extent> clauses) {
 			this.visibility = visibility;
 			this.name = name;
 			this.returnType = returnType;
@@ -91,7 +91,7 @@ public final class Lexer {
 			buf.append(" : ").append(returnType.find());
 			buf.append(" = ").append(shortest ? "shortest" : "parse");
 			clauses.forEach((reg, act) -> {
-				buf.append("\n| ").append(reg);
+				buf.append("\n| ").append(reg.val);
 				buf.append(" {").append(act.find()).append("}");
 			});
 			return buf;
@@ -116,7 +116,7 @@ public final class Lexer {
 			private boolean shortest;
 			private final @Nullable Extent args;
 			private final Extent returnType;
-			private final Map<@NonNull Regular, @NonNull Extent> clauses;
+			private final Map<@NonNull Located<Regular>, @NonNull Extent> clauses;
 
 			/**
 			 * Constructs a fresh builder with longest-match rule
@@ -153,7 +153,7 @@ public final class Lexer {
 			 * @param loc
 			 * @return the receiver
 			 */
-			public Builder add(Regular regular, Extent loc) {
+			public Builder add(Located<Regular> regular, Extent loc) {
 				clauses.put(regular, loc);
 				return this;
 			}
@@ -166,7 +166,7 @@ public final class Lexer {
 			 * @return the receiver
 			 */
 			public Builder add(Regular regular, String inlined) {
-				clauses.put(regular, Extent.inlined(inlined));
+				clauses.put(Located.dummy(regular), Extent.inlined(inlined));
 				return this;
 			}
 			
@@ -187,6 +187,13 @@ public final class Lexer {
 	public final List<@NonNull String> imports;
 	/** The extent of this lexer's class header */
 	public final Extent header;
+	/** 
+	 * The named auxiliary regular expressions defined in this lexer
+	 * NB: These expressions are already inlined in {@code entryPoints}
+	 * 	during the parsing so they are only stored in the lexer
+	 *  description for UI feedback purposes. 
+	 */
+	public final Map<Located<String>, Regular> regulars;
 	/** The list of entrypoints */
 	public final List<@NonNull Entry> entryPoints;
 	/** The extent of this lexer's footer */
@@ -195,15 +202,18 @@ public final class Lexer {
 	/**
 	 * @param imports
 	 * @param header
+	 * @param regulars
 	 * @param entryPoints
 	 * @param footer
 	 * 
 	 * Builds a lexer with the provided data
 	 */
 	 private Lexer(List<String> imports, 
-			Extent header, List<Entry> entryPoints, Extent footer) {
+			Extent header, Map<Located<String>, Regular> regulars, 
+			List<Entry> entryPoints, Extent footer) {
 		this.imports = imports;
 		this.header = header;
+		this.regulars = regulars;
 		this.entryPoints = entryPoints;
 		this.footer = footer;
 		if (this.entryPoints.isEmpty())
@@ -265,6 +275,7 @@ public final class Lexer {
 	public static final class Builder {
 		private final List<String> imports;
 		private final Extent header;
+		private final Map<Located<String>, Regular> regulars;
 		private final List<Entry> entryPoints;
 		private final Extent footer;
 		
@@ -272,14 +283,18 @@ public final class Lexer {
 		public final Reporter reporter;
 		
 		/**
-		 * Returns a new builder with the given imports, header and footer
+		 * Returns a new builder with the given imports, header, auxiliary
+		 * regular expressions and footer
 		 * @param imports
 		 * @param header
+		 * @param regulars
 		 * @param footer
 		 */
-		public Builder(List<String> imports, Extent header, Extent footer) {
+		public Builder(List<String> imports, Extent header,
+				Map<Located<String>, Regular> regulars, Extent footer) {
 			this.imports = imports;
 			this.header = header;
+			this.regulars = regulars;
 			this.entryPoints = new ArrayList<>();
 			this.footer = footer;
 			this.reporter = new Reporter();
@@ -324,7 +339,7 @@ public final class Lexer {
 					"Errors were found when trying to build this lexer (aborting):\n" + reporter,
 					reporter.getReports());
 				
-			return new Lexer(imports, header, entryPoints, footer);
+			return new Lexer(imports, header, regulars, entryPoints, footer);
 		}
 		
 	}
@@ -332,6 +347,7 @@ public final class Lexer {
 	/**
 	 * @param imports
 	 * @param header
+	 * @param regulars
 	 * @param entryPoints
 	 * @param footer
 	 * @return a lexer description built out of the given data, using
@@ -339,8 +355,9 @@ public final class Lexer {
 	 * @throws IllFormedException if the description is ill-formed
 	 */
 	public static Lexer of(List<String> imports, 
-			Extent header, Iterable<Entry> entryPoints, Extent footer) {
-		 Lexer.Builder builder = new Lexer.Builder(imports, header, footer);
+			Extent header, Map<Located<String>, Regular> regulars,
+			Iterable<Entry> entryPoints, Extent footer) {
+		 Lexer.Builder builder = new Lexer.Builder(imports, header, regulars, footer);
 		 for (Entry entry : entryPoints)
 			 builder.addEntry(entry);
 		 return builder.build();

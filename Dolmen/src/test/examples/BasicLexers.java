@@ -43,10 +43,10 @@ public abstract class BasicLexers {
 	
 	// Ordered clauses
 	
-	static Map<Regular, Extent> clauses(@NonNull Regular... regs) {
-		Map<Regular, Extent> res = new LinkedHashMap<>(regs.length);
+	static Map<Located<Regular>, Extent> clauses(@NonNull Regular... regs) {
+		Map<Located<Regular>, Extent> res = new LinkedHashMap<>(regs.length);
 		for (int i = 0; i < regs.length; ++i)
-			res.put(regs[i], Extent.DUMMY);
+			res.put(Located.dummy(regs[i]), Extent.DUMMY);
 		return res;
 	}
 	
@@ -77,10 +77,10 @@ public abstract class BasicLexers {
 				Regular.star(Regular.chars(idbody)));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, Located.dummy("ident"), VOID, false, null,
-				Maps.singleton(ident, Extent.DUMMY));
+				Maps.singleton(Located.dummy(ident), Extent.DUMMY));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, 
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -110,10 +110,10 @@ public abstract class BasicLexers {
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, Located.dummy("ident"), VOID, false, null,
-				Maps.singleton(ident, Extent.DUMMY));
+				Maps.singleton(Located.dummy(ident), Extent.DUMMY));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY,
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 
@@ -148,10 +148,11 @@ public abstract class BasicLexers {
 				Regular.chars(CSet.singleton('$')));
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, Located.dummy("ident"), VOID, false, null,
-				Maps.singleton(ident, Extent.inlined("System.out.println(id); return;")));
+				Maps.singleton(Located.dummy(ident), 
+					Extent.inlined("System.out.println(id); return;")));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, 
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -185,14 +186,14 @@ public abstract class BasicLexers {
 				Regular.star(Regular.chars(digit)));
 		private final static Regular ident = SimpleIDs.ident;
 		
-		private final static Map<Regular, Extent> clauses =
+		private final static Map<Located<Regular>, Extent> clauses =
 			clauses(ident, integer);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, 
 					Located.dummy("ident_int"), VOID, false, null, clauses);
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, 
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -251,7 +252,7 @@ public abstract class BasicLexers {
 		private final static Regular FOR = Regular.string("FOR");
 		private final static Regular ident = SimpleIDs.ident;
 		
-		private final static Map<Regular, Extent> clauses =
+		private final static Map<Located<Regular>, Extent> clauses =
 			clauses(DO, FOR, ident);
 		private final static Lexer.Entry entry =
 			new Lexer.Entry(true, Located.dummy("identkw"), VOID, false, null, clauses);
@@ -259,10 +260,10 @@ public abstract class BasicLexers {
 			new Lexer.Entry(true, Located.dummy("identkw"), VOID, true, null, clauses);
 		
 		final static Lexer LEXER =
-			Lexer.of(Lists.empty(), Extent.DUMMY, 
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 		final static Lexer SHORTEST = 
-			Lexer.of(Lists.empty(), Extent.DUMMY,
+			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(sh_entry), Extent.DUMMY);
 	}
 	

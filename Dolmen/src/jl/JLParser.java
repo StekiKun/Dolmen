@@ -13,7 +13,6 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +23,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.BaseParser;
 import codegen.LexBuffer.LexicalError;
+import codegen.LexBuffer.Position;
 import common.CSet;
 import common.Lists;
 import common.Maps;
@@ -96,14 +96,15 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 	is encountered
 	 */
 	public Lexer parseLexer() {
-		definitions = new HashMap<>();
+		definitions = new LinkedHashMap<>();
 		List<String> imports = parseImports();
 		Action header = (Action) (eat(Kind.ACTION));
 		parseDefinitions();
 		List<Lexer.Entry> entries = parseEntries();
 		Action footer= (Action) (eat(Kind.ACTION));
 		eat(Kind.END);
-		Lexer.Builder builder = new Lexer.Builder(imports, header.value, footer.value);
+		Lexer.Builder builder =
+			new Lexer.Builder(imports, header.value, definitions, footer.value);
 		for (Lexer.Entry entry : entries)
 			builder.addEntry(entry);
 		return builder.build();
@@ -159,7 +160,7 @@ public final class JLParser extends BaseParser<JLToken> {
 	}
 	
 	/** Environment for regular expression definitions */
-	private Map<String, Regular> definitions;
+	private Map<Located<String>, Regular> definitions;
 
 	/**
 	 * <i>NB: Ending semi-colon is necessary to avoid lookahead of
@@ -175,10 +176,11 @@ public final class JLParser extends BaseParser<JLToken> {
 	private void parseDefinitions() {
 		while (peek().getKind() == Kind.IDENT) {
 			Ident id = (Ident) eat(Kind.IDENT);
+			Located<String> lid = withLoc(id.value);
 			eat(Kind.EQUAL);
 			Regular reg = parseRegular();
 			eat(Kind.SEMICOL);
-			definitions.put(id.value, reg);
+			definitions.put(lid, reg);
 		}
 	}
 	
@@ -227,7 +229,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			shortest = true;
 		}
 		
-		Map<Regular, Extent> clauses = parseClauses();
+		Map<Located<Regular>, Extent> clauses = parseClauses();
 		
 		return new Lexer.Entry(vis, lname, returnType.value, shortest, 
 				args == null ? null : args.value, clauses);
@@ -252,42 +254,46 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 	OR Regular ACTION
 	 */
 	
-	private Map<Regular, Extent> parseClauses() {
-		Map<Regular, Extent> clauses = new LinkedHashMap<Regular, Extent>();
+	private Map<Located<Regular>, Extent> parseClauses() {
+		Map<Located<Regular>, Extent> clauses = new LinkedHashMap<>();
 		parseClause(clauses);
 		while (peek().getKind() == Kind.OR)
 			parseClause(clauses);
 		return clauses;
 	}
 	
-	private void parseClause(Map<Regular, Extent> acc) {
+	private void parseClause(Map<Located<Regular>, Extent> acc) {
 		eat(Kind.OR);
-		Regular reg;
+		Located<Regular> lreg;
 		if (peek().getKind() == Kind.ORELSE) {
 			eat(Kind.ORELSE);
 			// Deal with the special default clause by finding
 			// all possible first characters matched by other
 			// clauses
 			CSet possible = CSet.EMPTY;
-			for (Regular r : acc.keySet())
-				possible = CSet.union(possible, Regulars.first(r));
+			for (Located<Regular> r : acc.keySet())
+				possible = CSet.union(possible, Regulars.first(r.val));
 			CSet others = CSet.complement(possible);
 			if (others.isEmpty()) {
 				// Ignore, but warn
 				System.out.println("Ignoring empty orelse clause");
 				return;
 			}
-			reg = Regular.plus(Regular.chars(others));
+			Regular reg = Regular.plus(Regular.chars(others));
+			lreg = withLoc(reg);	// location of 'orelse'
 		}
-		else
-			reg = parseRegular();
+		else {
+			Position start = _jl_lastTokenEnd;
+			Regular reg = parseRegular();
+			lreg = Located.of(reg, start, _jl_lastTokenEnd);
+		}
 		Action action = (Action) eat(Kind.ACTION);
-		if (acc.containsKey(reg)) {
+		if (acc.containsKey(lreg)) {
 			// Ignore, but warn
-			System.out.println("Ignoring useless clause " + reg);
+			System.out.println("Ignoring useless clause " + lreg);
 			return;
 		}
-		acc.put(reg, action.value);
+		acc.put(lreg, action.value);
 	}
 	
 	/**
@@ -448,7 +454,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		}
 		case IDENT: {
 			Ident tok = (Ident) eat(Kind.IDENT);
-			@Nullable Regular reg = Maps.get(definitions, tok.value);
+			@Nullable Regular reg = Maps.get(definitions, Located.dummy(tok.value));
 			if (reg == null)
 				throw parsingError("Undefined regular expression " + tok.value);
 			return reg;

@@ -8,6 +8,7 @@ import java.util.Set;
 
 import common.CSet;
 import syntax.Lexer;
+import syntax.Located;
 import syntax.Extent;
 import syntax.Regular;
 import syntax.Regular.Alternate;
@@ -152,8 +153,8 @@ public final class Encoder {
 		int ntags = 0;
 		// Go through all clauses and encode them, building a giant
 		// disjunction in tr
-		for (Map.Entry<Regular, Extent> clause : entry.clauses.entrySet()) {
-			final Regular expr = Regulars.removeNestedBindings2(clause.getKey());
+		for (Map.Entry<Located<Regular>, Extent> clause : entry.clauses.entrySet()) {
+			final Regular expr = Regulars.removeNestedBindings2(clause.getKey().val);
 			final Extent act = clause.getValue();
 			final VarsInfo varsInfo = Regulars.analyseVars(expr);
 			final Set<String> charVars = varsInfo.getCharVars();
