@@ -325,10 +325,6 @@ public final class JGLexer extends codegen.LexBuffer {
             case 32: {
                 return _jl_cell13();
             }
-            // 0x0028
-            case 40: {
-                return _jl_cell8();
-            }
             // 0x000a
             case 10: {
                 return _jl_cell11();
@@ -336,6 +332,10 @@ public final class JGLexer extends codegen.LexBuffer {
             // 0x000d
             case 13: {
                 return _jl_cell12();
+            }
+            // 0x0028
+            case 40: {
+                return _jl_cell8();
             }
             // 0x002e
             case 46: {

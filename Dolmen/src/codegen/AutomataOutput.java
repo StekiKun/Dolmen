@@ -238,7 +238,9 @@ public final class AutomataOutput {
 			Map<@NonNull CSet, @NonNull TransActions> table) {
 		// Compile the transition table into a hopefully efficient decision tree
 		DecisionTree tree = DecisionTree.compile(table);
-		// Output code that implements the tree, if the code is simply a switch
+		// Output code that implements the tree. If it's not a simple switch
+		// it will need to access the next character more than once so we read
+		// it once first in _jl_char
 		buf.emitln("final char _jl_char = getNextChar();");
 		genDecisionTree(source, tree);
 	}

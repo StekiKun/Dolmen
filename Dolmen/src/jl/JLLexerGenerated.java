@@ -351,6 +351,14 @@ return action();
             case 32: {
                 return _jl_cell30();
             }
+            // 0x000a
+            case 10: {
+                return _jl_cell27();
+            }
+            // 0x000d
+            case 13: {
+                return _jl_cell28();
+            }
             // 0x0022
             case 34: {
                 return _jl_cell25();
@@ -371,10 +379,6 @@ return action();
             case 41: {
                 return _jl_cell10();
             }
-            // 0x000a
-            case 10: {
-                return _jl_cell27();
-            }
             // 0x002a
             case 42: {
                 return _jl_cell14();
@@ -386,10 +390,6 @@ return action();
             // 0x002c
             case 44: {
                 return _jl_cell3();
-            }
-            // 0x000d
-            case 13: {
-                return _jl_cell28();
             }
             // \-
             case 45: {
@@ -433,10 +433,6 @@ return action();
                     }
                 } else  {
                     switch (_jl_char) {
-                    // 0x0040
-                    case 64: {
-                        return _jl_cell1();
-                    }
                     // 0x003d
                     case 61: {
                         return _jl_cell18();
@@ -448,6 +444,10 @@ return action();
                     // 0x003f
                     case 63: {
                         return _jl_cell13();
+                    }
+                    // 0x0040
+                    case 64: {
+                        return _jl_cell1();
                     }
                     default:  {
                         return _jl_cell22();

@@ -1,0 +1,65 @@
+<?xml version="1.0"?>
+<project name="Dolmen Project" default="dolmen">
+	<!-- The 'dolmen' target compiles the lexers
+	   and parsers for .jl and .jg files -->
+	<target name="dolmen" depends="jllexer,jglexer,jgparser"
+		description="Builds the Dolmen lexers and parsers">
+		<echo>Dolmen: finished build.</echo>
+	</target>
+	
+	<target name="jllexer">
+	    <echo>Dolmen: compiling Lexer lexical analyzer...</echo>
+		<java classpath="bin/" failonerror="yes" classname="jl.JLLexer">
+		</java>
+	</target>
+	
+	<target name="jglexer" depends="jllexer">
+		<echo>Dolmen: compiling Grammar lexical analyzer...</echo>
+	    <java classpath="bin/" failonerror="yes" classname="jg.JGLexerStub">
+	    </java>
+	</target>
+	
+	<target name="jgparser" depends="jllexer,jglexer">
+		<echo>Dolmen: compiling Grammar syntax analyzer...</echo>
+        <java classpath="bin/" failonerror="yes" classname="jg.JGParser">
+        </java>
+	</target>
+	
+	<!-- Cleaning generated files (not the test ones) -->
+	<target name="clean"
+		 description="Cleans the generated lexers and parsers">
+		<delete file="src/jl/JLLexerGenerated.java"/>
+		<delete file="src/jg/JGLexer.java"/>
+		<delete file="src/jg/JGParserGenerated.java"/>
+	</target>
+	
+	<!-- Various test targets -->
+	
+	<target name="test_lexers" depends="jllexer"
+	   description="Runs the tests about lexical analyzer generation">
+		<echo>Dolmen tests: running lexical analyzers tests...</echo>
+		<java classpath="bin/" failonerror="yes" classname="test.examples.BasicLexers"/>
+		<java classpath="bin/" failonerror="yes" classname="test.examples.AdvancedLexers"/>
+	</target>
+	
+    <target name="test_grammars" depends="dolmen"
+       description="Runs the tests about syntactic analyzers generation">
+        <echo>Dolmen tests: running syntactic analyzers tests...</echo>
+        <java classpath="bin/" failonerror="yes" classname="test.examples.BasicGrammars"/>
+        <java classpath="bin/" failonerror="yes" classname="test.grammar.TestAnalyseGrammar"/>
+        <java classpath="bin/" failonerror="yes" classname="test.grammar.TestTokensOutput"/>
+        <java classpath="bin/" failonerror="yes" classname="test.grammar.TestGrammarOutput"/>
+        <java classpath="bin/" failonerror="yes" classname="test.grammar.TestJGParser"/>
+        <java classpath="bin/" failonerror="yes" classname="test.grammar.TestPositions"/>
+    </target>
+	
+	<target name="test_dolmen" depends="test_lexers,test_grammars"
+	   description="Runs tests on lexical and syntactic analyzers">
+	   <echo>Dolmen tests: ran all lexer and grammar tests!</echo>
+	</target>
+		
+	<target name="test_unit"
+	   description="Runs unit and random tests about CSet/Regulars/etc">
+		<java classpath="bin/" failonerror="yes" classname="test.Test"/>
+	</target>
+</project>

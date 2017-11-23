@@ -119,13 +119,13 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             if (_jl_char <= 94) {
                 if (_jl_char <= 58) {
                     switch (_jl_char) {
-                    // 0x003a
-                    case 58: {
-                        return _jl_cell3();
-                    }
                     // 0x002f
                     case 47: {
                         return _jl_cell7();
+                    }
+                    // 0x003a
+                    case 58: {
+                        return _jl_cell3();
                     }
                     default:  {
                         return _jl_cell13();

@@ -3,7 +3,7 @@ package codegen;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -222,7 +222,8 @@ public abstract class DecisionTree {
 			CSet total = CSet.interval(min, max);
 			if (CSet.included(switch_.getDomain(), total))
 				return switch_;
-			Map<@NonNull CSet, @NonNull TransActions> clamped = new HashMap<>(switch_.table.size());
+			Map<@NonNull CSet, @NonNull TransActions> clamped = 
+				new LinkedHashMap<>(switch_.table.size());
 			switch_.table.forEach((cset, trans) -> {
 				CSet key = CSet.inter(cset, total);
 				if (key.isEmpty()) return;
@@ -340,7 +341,7 @@ public abstract class DecisionTree {
 		private static Map<@NonNull CSet, @NonNull TransActions>
 			partitionOf(List<@NonNull Segment> segments, int from, int length) {
 			// First regroup all segments which lead to the same transition actions
-			Map<@NonNull TransActions, @NonNull CSet> inverse = new IdentityHashMap<>(length);
+			Map<@NonNull TransActions, @NonNull CSet> inverse = new LinkedHashMap<>(length);
 			for (int i = from; i < from + length; ++i) {
 				Segment segi = segments.get(i);
 				CSet csi = CSet.interval(segi.first, segi.last);
@@ -352,7 +353,8 @@ public abstract class DecisionTree {
 			}
 			// Then invert the map, which must be bijective because we have
 			// built the values by merging segments that were all disjoint initially
-			Map<@NonNull CSet, @NonNull TransActions> partition = new HashMap<>(inverse.size());
+			Map<@NonNull CSet, @NonNull TransActions> partition =
+				new LinkedHashMap<>(inverse.size());
 			inverse.forEach((trans, cset) -> partition.put(cset, trans));
 			return partition;
 		}
