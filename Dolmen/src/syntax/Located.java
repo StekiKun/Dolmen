@@ -9,8 +9,9 @@ import codegen.LexBuffer.Position;
  * This class allows wrapping values of some type
  * with a start and end {@link Position positions}
  * as provided by the lexing engine. It only supports
- * wrapping non-null values and the start end end
- * positions must always specify the same {@link Position#filename source}.
+ * wrapping non-null values and the start and end
+ * positions must always specify the same 
+ * {@link Position#filename source}.
  * <p>
  * <b>Warning:</b> Equality test on located values is just
  * forwarded to the values themselves; in other words, the actual
@@ -86,6 +87,13 @@ public final class Located<@NonNull T> {
 	@Override
 	public @NonNull String toString() {
 		return val.toString() + " " + locToString(start, end);
+	}
+	
+	/**
+	 * @return the length of this location
+	 */
+	public int length() {
+		return end.offset - start.offset;
 	}
 	
 	/**

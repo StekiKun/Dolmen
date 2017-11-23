@@ -300,6 +300,10 @@ public final class Grammar {
 										!argnterms.contains(name))
 									reporter.add(Reports.unexpectedArguments(
 											rule, j, Nulls.ok(actual.args), name));
+								if (actual.args == null &&
+										argnterms.contains(name))
+									reporter.add(Reports.missingArguments(
+											rule, j, name));
 								// Not complete of course but better than nothing
 								if (actual.isBound() &&
 										voidnterms.contains(name))
@@ -362,6 +366,12 @@ public final class Grammar {
 			String msg = String.format("%s non-terminal \"%s\" does not expect arguments",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, args);
+		}
+
+		static IReport missingArguments(GrammarRule rule, int j, Located<String> nterm) {
+			String msg = String.format("%s non-terminal \"%s\" expects arguments",
+				inRule(rule, j), nterm.val);
+			return IReport.of(msg, Severity.ERROR, nterm);
 		}
 
 		static IReport voidNonTerminalBound(GrammarRule rule, int j,

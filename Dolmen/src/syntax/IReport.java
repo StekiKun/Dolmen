@@ -96,7 +96,7 @@ public interface IReport {
 			this.severity = severity;
 			this.filename = extent.filename;
 			this.startPos = extent.startPos;
-			this.endPos = extent.endPos;
+			this.endPos = extent.endPos + 1;	// extent are inclusives
 			this.line = extent.startLine;
 			this.column = extent.startCol;
 		}
@@ -106,7 +106,7 @@ public interface IReport {
 			this.severity = severity;
 			this.filename = loc.start.filename;
 			this.startPos = loc.start.offset;
-			this.endPos = loc.end.offset;
+			this.endPos = loc.end.offset;	// locations are exclusives
 			this.line = loc.start.line;
 			this.column = loc.start.column() - 1;
 		}
@@ -138,7 +138,7 @@ public interface IReport {
 
 		@Override
 		public int getLength() {
-			return endPos - startPos + 1;
+			return endPos - startPos;
 		}
 
 		@Override
