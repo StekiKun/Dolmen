@@ -111,11 +111,10 @@ public final class GrammarOutput {
 	
 	private void genMethods() {
 		buf.emit("private Token eat(Token.Kind kind)").openBlock();
-		buf.emitln("Token ctoken = peek();");
+		buf.emitln("Token ctoken = eat();");
 		buf.emitln("if (kind != ctoken.getKind())");
-		buf.incrIndent().emit("throw tokenError(ctoken, kind);")
+		buf.incrIndent().emit("    throw tokenError(ctoken, kind);")
 		   .decrIndent().newline();
-		buf.emitln("_jl_nextToken = null;");
 		buf.emit("return ctoken;");
 		buf.closeBlock();
 	}

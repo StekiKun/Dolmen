@@ -72,15 +72,14 @@ public final class JLParser extends BaseParser<JLToken> {
 	}
 	
 	private JLToken eat(JLToken.Kind kind) {
-		JLToken ctoken = peek();
+		JLToken ctoken = eat();
 		if (kind != ctoken.getKind())
 			throw tokenError(ctoken, kind);
-		_jl_nextToken = null;
 		return ctoken;
 	}
 	
 	private <@NonNull T> Located<T> withLoc(T value) {
-		return Located.of(value, _jl_lexbuf.getLexemeStart(), _jl_lastTokenEnd);
+		return Located.of(value, _jl_lastTokenStart, _jl_lastTokenEnd);
 	}
 	
 	/**

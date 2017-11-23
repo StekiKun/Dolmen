@@ -153,7 +153,9 @@ public abstract class JGParser {
 	    "     * 	consumed token\n" +
 	    "     */\n" +
 	    "    private <@NonNull T> @NonNull Located<T> withLoc(T t) {\n" +
-	    "	     return Located.of(t, _jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());\n" +
+	    "		 if (_jl_lastTokenStart != _jl_lexbuf.getLexemeStart())\n" +
+	    "        	throw new IllegalStateException(\"\");\n" +
+	    "	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);\n" +
 	    "    }\n";
 	
 	private static final String footer =

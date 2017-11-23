@@ -152,7 +152,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
      * 	consumed token
      */
     private <@NonNull T> @NonNull Located<T> withLoc(T t) {
-	     return Located.of(t, _jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
+		 if (_jl_lastTokenStart != _jl_lexbuf.getLexemeStart())
+        	throw new IllegalStateException("");
+	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
     }
 
     @SuppressWarnings("null")
@@ -161,10 +163,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private Token eat(Token.Kind kind) {
-        Token ctoken = peek();
+        Token ctoken = eat();
         if (kind != ctoken.getKind())
-        throw tokenError(ctoken, kind);
-        _jl_nextToken = null;
+            throw tokenError(ctoken, kind);
         return ctoken;
     }
     

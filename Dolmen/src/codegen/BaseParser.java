@@ -97,6 +97,13 @@ public abstract class BaseParser<Token> {
 	protected @Nullable Token _jl_nextToken;
 
 	/**
+	 * The start position of the last token that was consumed by
+	 * the parser, or the start-of-input position if no token
+	 * was consumed yet
+	 */
+	protected LexBuffer.Position _jl_lastTokenStart;
+
+	/**
 	 * The end position of the last token that was consumed by
 	 * the parser, or the start-of-input position if no token
 	 * was consumed yet
@@ -124,6 +131,7 @@ public abstract class BaseParser<Token> {
 		this._jl_lexbuf = lexbuf;
 		this._jl_tokens = () -> tokens.apply(lexbuf);
 		this._jl_nextToken = null;
+		this._jl_lastTokenStart = new Position(lexbuf.filename);
 		this._jl_lastTokenEnd = new Position(lexbuf.filename);
 	}
 	
@@ -137,11 +145,13 @@ public abstract class BaseParser<Token> {
 	}
 	
 	/**
-	 * Consumes the next token
+	 * Consumes the next token and returns it
 	 */
-	protected final void eat() {
-		peek(); _jl_nextToken = null;
+	protected final Token eat() {
+		Token t = peek(); _jl_nextToken = null;
+		_jl_lastTokenStart = _jl_lexbuf.getLexemeStart();
 		_jl_lastTokenEnd = _jl_lexbuf.getLexemeEnd();
+		return t;
 	}
 	
 	/**
