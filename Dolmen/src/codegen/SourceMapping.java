@@ -2,6 +2,7 @@ package codegen;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
 
@@ -33,11 +34,19 @@ public final class SourceMapping {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	private static final class Mapping {
-		private final int offset;
-		private final int length;
-		
-		private final Position origin;
+	public static final class Mapping {
+		/**
+		 * Character offset of the region being mapped
+		 */
+		public final int offset;
+		/**
+		 * Length in characters of the region being mapped
+		 */
+		public final int length;
+		/**
+		 * Original position of the mapped region
+		 */
+		public final Position origin;
 		
 		Mapping(int offset, int length, Position origin) {
 			this.offset = offset;
@@ -172,5 +181,15 @@ public final class SourceMapping {
 			}
 		}
 		return -1;	// no match
+	}
+	
+	/**
+	 * Iterates on all known mappings and 
+	 * applies {@code consumer} on each one
+	 * 
+	 * @param consumer
+	 */
+	public void forEach(Consumer<? super Mapping> consumer) {
+		mappings.forEach(consumer);
 	}
 }

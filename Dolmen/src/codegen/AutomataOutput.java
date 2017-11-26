@@ -21,6 +21,7 @@ import codegen.DecisionTree.Return;
 import codegen.DecisionTree.Split;
 import codegen.DecisionTree.Switch;
 import common.CSet;
+import common.CountingWriter;
 import common.Nulls;
 import syntax.Extent;
 import tagged.Optimiser.IdentInfo;
@@ -80,15 +81,13 @@ public final class AutomataOutput {
 	}
 		
 	private void genHeader() {
-		String hdr = aut.header.find();
-		if (hdr.isEmpty()) return;
-		buf.newline().emitln(aut.header.find());
+		if (aut.header.length() == 0) return;
+		buf.newline().emitTracked(aut.header).newline();
 	}
 
 	private void genFooter() {
-		String ftr = aut.footer.find();
-		if (ftr.isEmpty()) return;
-		buf.newline().emitln(aut.footer.find());
+		if (aut.footer.length() == 0) return;
+		buf.newline().emitTracked(aut.footer).newline();
 	}
 	
 	private static String cellName(int idx) {
@@ -274,7 +273,7 @@ public final class AutomataOutput {
 	
 	private void genEntryArgs(@Nullable Extent args) {
 		if (args == null) return;
-		buf.emit(args.find());
+		buf.emitTracked(args);
 	}
 	
 	private void genTagAddr(TagAddr addr) {
@@ -335,7 +334,7 @@ public final class AutomataOutput {
 				buf.emit("return; // TODO: missing semantic action");
 			}
 			else
-				buf.emit(finisher.loc.find());
+				buf.emitTracked(finisher.loc);
 			buf.closeBlock();
 		}
 		// Generate a default case for when input didn't match
@@ -350,7 +349,7 @@ public final class AutomataOutput {
 		    .emit(" * Entry point for rule ").emitln(entry.name)
 		    .emitln(" */")
 			.emit(entry.visibility ? "public " : "private ")
-			.emit(entry.returnType.find()).emit(" ")
+			.emitTracked(entry.returnType).emit(" ")
 			.emit(entry.name).emit("(");
 		genEntryArgs(entry.args);
 		buf.emit(")").openBlock();
@@ -417,17 +416,29 @@ public final class AutomataOutput {
 	 * Generates the code from the automata {@code aut} in
 	 * a Java class with name {@code className}, exported
 	 * using the given {@code writer}.
+	 * <p>
+	 * Returns the source mappings computed when emitting
+	 * the code. Positions in generated code are computed
+	 * assuming that {@code writer} is fresh, unless a
+	 * {@link CountingWriter} is passed in which case its
+	 * current character count is taken into account.
 	 * 
 	 * @param writer
 	 * @param className
 	 * @param aut
 	 * @throws IOException
 	 */
-	public static void output(Writer writer,
+	public static SourceMapping output(Writer writer,
 			String className, Automata aut) throws IOException {
 		AutomataOutput output = new AutomataOutput(aut);
+		int offset =
+			writer instanceof CountingWriter ?
+				(int) ((CountingWriter) writer).getCount() :
+				0;
+		output.buf.withTracker(className + ".java", offset);
 		output.genClass(className);
 		output.buf.print(writer);
+		return output.buf.getSourceMapping();
 	}
 	
 }
