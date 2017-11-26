@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import common.CountingWriter;
 import common.Iterables;
 import common.Maps;
 import syntax.Grammar;
@@ -93,9 +94,8 @@ public final class GrammarOutput {
 	}
 	
 	private void genHeader() {
-		String hdr = grammar.header.find();
-		if (hdr.isEmpty()) return;
-		buf.newline().emitln(grammar.header.find());
+		if (grammar.header.length() == 0) return;
+		buf.newline().emitTracked(grammar.header).newline();
 	}
 	
 	private void genConstructor(String name) {
@@ -120,9 +120,8 @@ public final class GrammarOutput {
 	}
 
 	private void genFooter() {
-		String ftr = grammar.footer.find();
-		if (ftr.isEmpty()) return;
-		buf.newline().emitln(grammar.footer.find());
+		if (grammar.footer.length() == 0) return;
+		buf.newline().emitTracked(grammar.footer).newline();
 	}
 	
 	private void genActual(Production.Actual actual) {
@@ -152,11 +151,11 @@ public final class GrammarOutput {
 					bound = null;
 				}
 				else
-					buf.emit(valueType.find())
+					buf.emitTracked(valueType)
 					   .emit(" ").emit(bound).emit(" = ");
 			}
 			else {
-				buf.emit(grammar.rule(actual.item.val).returnType.find())
+				buf.emitTracked(grammar.rule(actual.item.val).returnType)
 				   .emit(" ").emit(bound).emit(" = ");
 			}
 		}
@@ -180,7 +179,7 @@ public final class GrammarOutput {
 			buf.emit(ruleName(name)).emit("(");
 			@Nullable Extent args = actual.args;
 			if (args != null)
-				buf.emit(args.find());
+				buf.emitTracked(args);
 			buf.emit(");");
 			if (config.positions) {
 				buf.newline();
@@ -211,7 +210,7 @@ public final class GrammarOutput {
 			}
 			case ACTION: {
 				final ActionItem actionItem = (ActionItem) item;
-				buf.newline().emit(actionItem.extent.find());
+				buf.newline().emitTracked(actionItem.extent);
 				break;
 			}
 			}
@@ -221,9 +220,9 @@ public final class GrammarOutput {
 	private void genRule(GrammarRule rule, Map<String, List<Production>> trans) {
 		buf.newline();
 		buf.emit(rule.visibility ? "public " : "private ")
-		   .emit(rule.returnType.find()).emit(" ");
+		   .emitTracked(rule.returnType).emit(" ");
 		buf.emit(ruleName(rule.name.val)).emit("(");
-		if (rule.args != null) buf.emit(rule.args.find());
+		if (rule.args != null) buf.emitTracked(rule.args);
 		buf.emit(")").openBlock();
 		
 		// Now is the time to decide what production we are going to use
@@ -330,6 +329,12 @@ public final class GrammarOutput {
 	 * {@code predict} has no conflicts. The name of the
 	 * generated Java class is {@code className} and specific
 	 * configuration for the code generation is passed via {@code config}.
+	 * <p>
+	 * Returns the source mappings computed when emitting
+	 * the code. Positions in generated code are computed
+	 * assuming that {@code writer} is fresh, unless a
+	 * {@link CountingWriter} is passed in which case its
+	 * current character count is taken into account.
 	 * 
 	 * @param writer
 	 * @param className
@@ -338,14 +343,20 @@ public final class GrammarOutput {
 	 * @param predict
 	 * @throws IOException
 	 */
-	public static void output(Writer writer, String className, 
+	public static SourceMapping output(Writer writer, String className, 
 			Config config, Grammar grammar, PredictionTable predict)
 			throws IOException {
 		if (!predict.isLL1())
 			throw new IllegalArgumentException("Cannot generate LL(1) parser for this grammar");
 		GrammarOutput out = new GrammarOutput(config, grammar, predict);
+		int offset =
+				writer instanceof CountingWriter ?
+					(int) ((CountingWriter) writer).getCount() :
+					0;
+			out.buf.withTracker(className + ".java", offset);
 		out.genParser(className);
 		out.buf.print(writer);
+		return out.buf.getSourceMapping();
 	}
 	
 	/**
@@ -358,9 +369,9 @@ public final class GrammarOutput {
 	 * @param predict
 	 * @throws IOException
 	 */
-	public static void outputDefault(Writer writer,
+	public static SourceMapping outputDefault(Writer writer,
 		String className, Grammar grammar, PredictionTable predict)
 		throws IOException {
-		output(writer, className, DEFAULT_CONFIG, grammar, predict);
+		return output(writer, className, DEFAULT_CONFIG, grammar, predict);
 	}
 }
