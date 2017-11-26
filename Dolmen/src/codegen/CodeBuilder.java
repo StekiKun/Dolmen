@@ -2,11 +2,22 @@ package codegen;
 
 import java.io.IOException;
 
+import org.eclipse.jdt.annotation.Nullable;
+
+import codegen.LexBuffer.Position;
+import syntax.Extent;
+
 /**
  * An instance of this utility class manages a string
  * buffer with a current <i>indentation level</i>, which
  * allows for convenient declarative generation of 
  * user-readable code.
+ * <p>
+ * It can also be used to track the origins of some of the
+ * regions of the generated code, typically in order to keep
+ * track of pieces of code that are copied <i>verbatim</i> 
+ * from some other source file into the code builder
+ * (see {@link #withTracker(String, int)}).
  * 
  * @author Stéphane Lescuyer
  */
@@ -198,5 +209,150 @@ public final class CodeBuilder {
 	 */
 	public void print(Appendable appendable) throws IOException {
 		appendable.append(buf.toString());
+	}
+	
+	//=====================================
+	//     Code tracking functionality
+	//	(not as default behaviour for now)
+	//=====================================
+	
+	private @Nullable SourceMapping smap = null;
+	private int trackingBase = -1;
+	private int lastTrackedOffset = -1;
+	private @Nullable Position lastTracked = null;
+	
+	/**
+	 * Configures this {@link CodeBuilder} to be ready
+	 * to start tracking some regions of the emitted code.
+	 * <b>Should only be called once: extra calls will be ignored.</b>
+	 * <p>
+	 * Once this instance is configured, the various methods that
+	 * take advantage of region tracking can be used:
+	 * <ul>
+	 * <li> {@link #getSourceMapping()}
+	 * <li> {@link #startTrackedRange(Position)}
+	 * <li> {@link #endTrackedRange()}
+	 * <li> {@link #emitTracked(Extent)}
+	 * <li> {@link #emitTrackedIf(boolean, Extent)}
+	 * </ul>
+	 * <p>
+	 * The tracked regions will refer to their positions in the
+	 * emitted code <b>relative to</b> the current amount of code
+	 * already emitted when this method is called, plus the 
+	 * given {@code offset}.
+	 * 
+	 * @param generated	the name describing the code being generated
+	 * @param offset	a non-negative offset describing where this code
+	 * 					is going to be emitted in the actual generated file
+	 */
+	public void withTracker(String generated, int offset) {
+		if (offset < 0)
+			throw new IllegalArgumentException("Negative offset " + offset + " is not allowed");
+		if (this.smap != null) {
+			System.out.println("Ignoring extra call to #withTracker(" + generated + ")");
+			return;
+		}
+		this.smap = new SourceMapping(generated);
+		this.trackingBase = buf.length() - offset;
+	}
+	
+	/**
+	 * @return the current source mappings representing
+	 * 	the regions that have already been tracked
+	 * @throws IllegalArgumentException if tracking has
+	 * 	not been enabled with {@link #withTracker(String, int)}
+	 */
+	public SourceMapping getSourceMapping() {
+		@Nullable SourceMapping smap_ = smap;
+		if (smap_ == null)
+			throw new IllegalArgumentException("No tracking was configured");
+		return smap_;
+	}
+	
+	/**
+	 * Starts tracking a new region from the current position
+	 * in the emitted code. The region will be mapped with the
+	 * corresponding region at the given position {@code pos}
+	 * in the source file.
+	 * <p>
+	 * <b>Only one region can be tracked at any given time.</b>
+	 * Successive calls to {@link #startTrackedRange(Position)} 
+	 * without any calls to {@link #endTrackedRange()} will be
+	 * ignored.
+	 * 
+	 * @see #endTrackedRange()
+	 * @param pos
+	 * @throws IllegalArgumentException if tracking has
+	 * 	not been enabled with {@link #withTracker(String, int)}
+	 */
+	public void startTrackedRange(Position pos) {
+		getSourceMapping();
+		if (lastTracked != null) {
+			System.out.println("Already tracking some unclosed range: " + 
+					"ignoring call to #startTrackedRange(" + pos + ")");
+			return;
+		}
+		lastTrackedOffset = buf.length();
+		lastTracked = pos;
+	}
+	
+	/**
+	 * Closes the currently tracked region and maps it to
+	 * the source position given in the corresponding call
+	 * to {@link #startTrackedRange(Position)}. It will now
+	 * be registered into the {@link #getSourceMapping() source mappings}.
+	 * <p>
+	 * <i>If no region was being tracked, this call is ignored.</i>
+	 * 
+	 * @throws IllegalArgumentException if tracking has
+	 * 	not been enabled with {@link #withTracker(String, int)}
+	 */
+	public void endTrackedRange() {
+		SourceMapping smap_ = getSourceMapping();
+		@Nullable Position lastTracked_ = lastTracked;
+		if (lastTracked_ == null) {
+			System.out.println("No range being tracked: ignoring call to #endTrackedRange");
+			return;
+		}
+		smap_.add(lastTrackedOffset - trackingBase,
+					buf.length() - lastTrackedOffset, lastTracked_);
+		lastTrackedOffset = -1;
+		lastTracked = null;
+	}
+	
+	/**
+	 * Convenient helper which emits the content of some
+	 * verbatim piece of code described by the given extent,
+	 * and maps it to the extent's original position. 
+	 * <b>There should be no currently tracked region or
+	 *  the results will be unexpected.</b>
+	 * 
+	 * @param extent
+	 * 
+	 * @throws IllegalArgumentException if tracking has
+	 * 	not been enabled with {@link #withTracker(String, int)}
+	 */
+	public CodeBuilder emitTracked(Extent extent) {
+		getSourceMapping();
+		
+		startTrackedRange(new LexBuffer.Position(extent.filename,
+			extent.startPos, extent.startLine, extent.startPos - extent.startCol));
+		emit(extent.find());
+		endTrackedRange();
+		
+		return this;
+	}
+	
+	/**
+	 * Same as {@link #emitTracked(Extent)} but is only
+	 * performed if the given condition holds. Convenient
+	 * for conditional output based on preferences/debug/etc.
+	 * 
+	 * @param cond
+	 * @param extent
+	 */
+	public CodeBuilder emitTrackedIf(boolean cond, Extent extent) {
+		if (!cond) return this;
+		return emitTracked(extent);
 	}
 }
