@@ -26,6 +26,7 @@ import syntax.Extent;
 import syntax.IReport;
 import syntax.IReport.Severity;
 import syntax.Lexer;
+import syntax.Located;
 import syntax.Regular;
 import syntax.Reporter;
 import tagged.TLexerEntry.Finisher;
@@ -127,7 +128,7 @@ public final class Automata {
 	}
 
 	/** The imports to be added to the generated lexer */
-	public final List<@NonNull String> imports;
+	public final List<@NonNull Located<String>> imports;
 	/** The location of this lexer's header */
 	public final Extent header;
 	/** The list of automata entries, one for each lexer rule */
@@ -146,7 +147,7 @@ public final class Automata {
 	 * @param automataEntries
 	 * @param automataCells
 	 */
-	public Automata(List<String> imports, Extent header, Extent footer,
+	public Automata(List<@NonNull Located<String>> imports, Extent header, Extent footer,
 		List<Entry> automataEntries, DFA.@NonNull Cell[] automataCells) {
 		this.imports = imports;
 		this.header = header;

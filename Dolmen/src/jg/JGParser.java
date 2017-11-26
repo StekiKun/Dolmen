@@ -10,13 +10,14 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.GrammarOutput;
+import common.Lists;
+import syntax.Extent;
 import syntax.Grammar;
 import syntax.GrammarRule;
 import syntax.Grammars;
-import syntax.Located;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
-import syntax.Extent;
+import syntax.Located;
 import syntax.Production;
 
 /**
@@ -187,7 +188,8 @@ public abstract class JGParser {
 	 */
 	public static final Grammar GRAMMAR =
 		new Grammar.Builder(
-			imports, Extent.inlined(header), Extent.inlined(footer))
+			Lists.transform(imports, Located::dummy), 
+			Extent.inlined(header), Extent.inlined(footer))
 			// IDENT of String | ACTION of Extent | ARGUMENTS of Extent
 			// | EQUAL | BAR | SEMICOL | IMPORT | STATIC | DOT | STAR 
 			// | PUBLIC | PRIVATE | TOKEN | RULE | EOF
@@ -234,12 +236,14 @@ public abstract class JGParser {
 			 * typename0 -> IDENT typename
 			 * </pre>
 			 */
-			.addRule(rule("imports(@Nullable List<@NonNull String> imp)",
-					"@NonNull List<@NonNull String>",
+			.addRule(rule("imports(@Nullable List<@NonNull Located<@NonNull String>> imp)",
+					"@NonNull List<@NonNull Located<@NonNull String>>",
 				production("@return imp == null ? Lists.empty() : imp;"),
-				production("@@NonNull List<@NonNull String> acc = imp == null ? new ArrayList<>() : imp;",
-					"IMPORT", "elt = import_", "SEMICOL",
-					"@acc.add(\"import \" + elt + \";\");",
+				production("@@NonNull List<@NonNull Located<@NonNull String>> acc = "
+						+ "imp == null ? new ArrayList<>() : imp;",
+					"IMPORT", "@codegen.LexBuffer.Position start = _jl_lastTokenStart;", 
+					"elt = import_", "SEMICOL",
+					"@acc.add(Located.of(\"import \" + elt + \";\", start, _jl_lastTokenEnd));",
 					"imports(acc)",
 					"@return acc;")))
 			.addRule(rule("import_", "String",

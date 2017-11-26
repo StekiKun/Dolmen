@@ -395,7 +395,9 @@ public abstract class JLLexer {
 	 */
 	public final static Lexer INSTANCE =
 		new Lexer.Builder(
-			Arrays.asList("package jl;", "import static jl.JLToken.*;"),
+			Arrays.asList(
+				Located.dummy("package jl;"),
+				Located.dummy("import static jl.JLToken.*;")),
 			Extent.inlined(header),
 			Maps.empty(),
 			Extent.inlined(footer))

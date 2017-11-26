@@ -6,6 +6,7 @@ import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
 import syntax.Lexer;
+import syntax.Located;
 import syntax.Extent;
 
 /**
@@ -23,7 +24,7 @@ import syntax.Extent;
 public final class TLexer {
 
 	/** The imports to be added to the generated lexer */
-	public List<@NonNull String> imports;
+	public List<@NonNull Located<String>> imports;
 	/** The location of this lexer's header */
 	public final Extent header;
 	/** The list of encoded entries */
@@ -43,7 +44,7 @@ public final class TLexer {
 	 * @param charsets
 	 * @param footer
 	 */
-	public TLexer(List<String> imports, Extent header,
+	public TLexer(List<Located<String>> imports, Extent header,
 			List<TLexerEntry> entries, List<CSet> charsets,
 			Extent footer) {
 		this.imports = imports;
@@ -56,7 +57,7 @@ public final class TLexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		imports.forEach(imp -> System.out.println(imp));
+		imports.forEach(imp -> System.out.println(imp.val));
 		buf.append(header);
 		buf.append("\nchar sets:");
 		int i = 0;

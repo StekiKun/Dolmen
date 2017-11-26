@@ -285,15 +285,16 @@ public final class CodeBuilder {
 	 * @throws IllegalArgumentException if tracking has
 	 * 	not been enabled with {@link #withTracker(String, int)}
 	 */
-	public void startTrackedRange(Position pos) {
+	public CodeBuilder startTrackedRange(Position pos) {
 		getSourceMapping();
 		if (lastTracked != null) {
 			System.out.println("Already tracking some unclosed range: " + 
 					"ignoring call to #startTrackedRange(" + pos + ")");
-			return;
+			return this;
 		}
 		lastTrackedOffset = buf.length();
 		lastTracked = pos;
+		return this;
 	}
 	
 	/**
@@ -307,17 +308,18 @@ public final class CodeBuilder {
 	 * @throws IllegalArgumentException if tracking has
 	 * 	not been enabled with {@link #withTracker(String, int)}
 	 */
-	public void endTrackedRange() {
+	public CodeBuilder endTrackedRange() {
 		SourceMapping smap_ = getSourceMapping();
 		@Nullable Position lastTracked_ = lastTracked;
 		if (lastTracked_ == null) {
 			System.out.println("No range being tracked: ignoring call to #endTrackedRange");
-			return;
+			return this;
 		}
 		smap_.add(lastTrackedOffset - trackingBase,
 					buf.length() - lastTrackedOffset, lastTracked_);
 		lastTrackedOffset = -1;
 		lastTracked = null;
+		return this;
 	}
 	
 	/**

@@ -178,7 +178,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     public @NonNull Grammar start() {
         
         // imports = imports(null)
-        @NonNull List<@NonNull String> imports = imports(null);
+        @NonNull List<@NonNull Located<@NonNull String>> imports = imports(null);
         // tdecls = tokens(null)
         @NonNull List<@NonNull TokenDecl> tdecls = tokens(null);
         // header = ACTION
@@ -195,21 +195,22 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         return builder.build();
     }
     
-    private @NonNull List<@NonNull String> imports(@Nullable List<@NonNull String> imp) {
+    private @NonNull List<@NonNull Located<@NonNull String>> imports(@Nullable List<@NonNull Located<@NonNull String>> imp) {
         switch (peek().getKind()) {
             case ACTION:
             case TOKEN: {
                 return imp == null ? Lists.empty() : imp;
             }
             case IMPORT: {
-                @NonNull List<@NonNull String> acc = imp == null ? new ArrayList<>() : imp;
+                @NonNull List<@NonNull Located<@NonNull String>> acc = imp == null ? new ArrayList<>() : imp;
                 // IMPORT
                 eat(Token.Kind.IMPORT);
+                codegen.LexBuffer.Position start = _jl_lastTokenStart;
                 // elt = import_
                 String elt = import_();
                 // SEMICOL
                 eat(Token.Kind.SEMICOL);
-                acc.add("import " + elt + ";");
+                acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));
                 // imports(acc)
                 imports(acc);
                 return acc;

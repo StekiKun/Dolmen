@@ -184,7 +184,7 @@ public final class Lexer {
 	}
 
 	/** The Java imports to be added to the generated lexer */
-	public final List<@NonNull String> imports;
+	public final List<@NonNull Located<String>> imports;
 	/** The extent of this lexer's class header */
 	public final Extent header;
 	/** 
@@ -208,7 +208,7 @@ public final class Lexer {
 	 * 
 	 * Builds a lexer with the provided data
 	 */
-	 private Lexer(List<String> imports, 
+	 private Lexer(List<Located<String>> imports, 
 			Extent header, Map<Located<String>, Regular> regulars, 
 			List<Entry> entryPoints, Extent footer) {
 		this.imports = imports;
@@ -224,7 +224,7 @@ public final class Lexer {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		imports.forEach(imp -> System.out.println(imp));
+		imports.forEach(imp -> System.out.println(imp.val));
 		buf.append("{\n").append(header.find()).append("\n}");
 		boolean first = true;
 		for (Entry entry : entryPoints) {
@@ -273,7 +273,7 @@ public final class Lexer {
 	 * @see #addEntry(Entry)
 	 */
 	public static final class Builder {
-		private final List<String> imports;
+		private final List<Located<String>> imports;
 		private final Extent header;
 		private final Map<Located<String>, Regular> regulars;
 		private final List<Entry> entryPoints;
@@ -290,7 +290,7 @@ public final class Lexer {
 		 * @param regulars
 		 * @param footer
 		 */
-		public Builder(List<String> imports, Extent header,
+		public Builder(List<Located<String>> imports, Extent header,
 				Map<Located<String>, Regular> regulars, Extent footer) {
 			this.imports = imports;
 			this.header = header;
@@ -354,7 +354,7 @@ public final class Lexer {
 	 * 	the {@link Lexer.Builder builder} class to detect potential problems
 	 * @throws IllFormedException if the description is ill-formed
 	 */
-	public static Lexer of(List<String> imports, 
+	public static Lexer of(List<Located<String>> imports, 
 			Extent header, Map<Located<String>, Regular> regulars,
 			Iterable<Entry> entryPoints, Extent footer) {
 		 Lexer.Builder builder = new Lexer.Builder(imports, header, regulars, footer);

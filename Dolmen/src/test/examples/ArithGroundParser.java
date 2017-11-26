@@ -67,6 +67,8 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
         public static final Token EOF = new Singleton(Kind.EOF) {};
     }
     
+    
+    
     @SuppressWarnings("null")
     public <T extends codegen.LexBuffer>ArithGroundParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
         super(lexbuf, tokens);

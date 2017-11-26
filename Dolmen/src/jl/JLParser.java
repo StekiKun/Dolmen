@@ -97,7 +97,7 @@ public final class JLParser extends BaseParser<JLToken> {
 	 */
 	public Lexer parseLexer() {
 		definitions = new LinkedHashMap<>();
-		List<String> imports = parseImports();
+		List<@NonNull Located<String>> imports = parseImports();
 		Action header = (Action) (eat(Kind.ACTION));
 		parseDefinitions();
 		List<Lexer.Entry> entries = parseEntries();
@@ -120,23 +120,24 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * | IDENT DOT STAR
 	 */
 
-	private List<String> parseImports() {
-		List<String> imports = new ArrayList<>(2);
+	private List<@NonNull Located<String>> parseImports() {
+		List<@NonNull Located<String>> imports = new ArrayList<>(2);
 		while (peek() == IMPORT)
 			imports.add(parseImport());
 		if (imports.isEmpty()) return Lists.empty();
 		return imports;
 	}
 	
-	private String parseImport() {
+	private Located<String> parseImport() {
 		eat(Kind.IMPORT);
+		Position posStart = _jl_lastTokenStart;
 		StringBuilder buf = new StringBuilder();
 		buf.append("import ");
 		if (peek() == STATIC) {
 			eat(); buf.append("static ");
 		}
 		parseImportString(buf);
-		return buf.toString();
+		return Located.of(buf.toString(), posStart, _jl_lastTokenEnd);
 	}
 	
 	private void parseImportString(StringBuilder buf) {

@@ -83,7 +83,7 @@ public final class Grammar {
 	}
 	
 	/** The Java imports to be added to the generated parser */
-	public final List<@NonNull String> imports;
+	public final List<@NonNull Located<String>> imports;
 	/** The declarations for all terminals of this grammar */
 	public final List<@NonNull TokenDecl> tokenDecls;
 	/** The extent of this parser class' header */
@@ -102,7 +102,7 @@ public final class Grammar {
 	 * @param rules
 	 * @param footer
 	 */
-	private Grammar(List<String> imports, List<TokenDecl> tokenDecls, 
+	private Grammar(List<@NonNull Located<String>> imports, List<TokenDecl> tokenDecls, 
 			Extent header, Map<String, GrammarRule> rules, Extent footer) {
 		this.imports = imports;
 		this.tokenDecls = tokenDecls;
@@ -126,7 +126,7 @@ public final class Grammar {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
-		imports.forEach(imp -> buf.append(imp).append("\n"));
+		imports.forEach(imp -> buf.append(imp.val).append("\n"));
 		tokenDecls.forEach(token ->
 			buf.append("\n").append(token));
 		buf.append("\n{").append(header.find()).append("}");
@@ -173,7 +173,7 @@ public final class Grammar {
 	 * @see #addRule(GrammarRule)
 	 */
 	public static final class Builder {
-		private final List<String> imports;
+		private final List<Located<String>> imports;
 		private final List<TokenDecl> tokenDecls;
 		private final Extent header;
 		private final Extent footer;
@@ -188,7 +188,7 @@ public final class Grammar {
 		 * @param header
 		 * @param footer
 		 */
-		public Builder(List<String> imports, Extent header, Extent footer) {
+		public Builder(List<Located<String>> imports, Extent header, Extent footer) {
 			this.imports = imports;
 			this.tokenDecls = new ArrayList<>();
 			this.header = header;
