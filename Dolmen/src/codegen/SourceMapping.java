@@ -87,7 +87,7 @@ public final class SourceMapping {
 		 * 	by this mapping
 		 */
 		boolean maps(int toffset, int tlength) {
-			return (toffset >= offset && toffset + length <= offset + length);
+			return (toffset >= offset && toffset + tlength <= offset + length);
 		}
 	}
 	
