@@ -248,8 +248,8 @@ public final class GrammarOutput {
 		
 		// If no rules, well, is it supposed to happen?
 		if (prodTable.size() == 0) {
-			String msg = "Unproducable rule " + rule.name;
-			buf.emit("throw new ParsingException(\"")
+			String msg = "Unproducable rule " + rule.name.val;
+			buf.emit("throw parsingError(\"")
 			   .emit(msg).emit("\");");
 		}
 		// When only one production used, no need to switch!
