@@ -55,15 +55,16 @@ public final class GrammarRule {
 	
 	StringBuilder append(StringBuilder buf) {
 		buf.append(visibility ? "public " : "private ");
-		buf.append(name.val);
+		buf.append("{").append(returnType.find()).append("}");
+		buf.append(" rule ").append(name.val);
 		Extent args_ = args;
-		if (args_ == null) buf.append("()");
-		else buf.append("(").append(args_.find()).append(")");
-		buf.append(" : ").append(returnType.find());
+		if (args_ != null)
+			buf.append("(").append(args_.find()).append(")");
 		buf.append(" = ");
 		productions.forEach(prod -> {
 			buf.append("\n| ").append(prod);
 		});
+		buf.append(";");
 		return buf;
 	}
 

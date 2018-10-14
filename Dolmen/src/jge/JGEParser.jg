@@ -1,0 +1,132 @@
+// This grammar is for now equivalent to that of simple grammars,
+// it has been produced by pretty-printing the declarative 
+// grammar description built in jg.JGParser.
+
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import java.util.List;
+import java.util.ArrayList;
+import common.Lists;
+import syntax.Extent;
+import syntax.Located;
+import syntax.Production;
+import syntax.Grammar.TokenDecl;
+import syntax.GrammarRule;
+import syntax.Grammar;
+
+token {@NonNull String} IDENT
+token {@NonNull Extent} ACTION
+token {@NonNull Extent} ARGUMENTS
+token EQUAL
+token BAR
+token DOT
+token STAR
+token SEMICOL
+token IMPORT
+token STATIC
+token PUBLIC
+token PRIVATE
+token TOKEN
+token RULE
+token EOF
+
+{/**
+     * Returns {@code true} if the given string contains a lower-case letter
+     */
+    private static boolean isLowerId(String name) {
+        return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
+    }
+
+    private Production.@NonNull Actual actual(@Nullable Located<@NonNull String> binding,
+            @NonNull Located<@NonNull String> ident, @Nullable Extent args) {
+        if (args != null && Character.isUpperCase(ident.val.charAt(0)))
+            throw new ParsingException(ident.start, ident.length(),
+                "Terminal " + ident.val + " does not expect arguments.");
+        return new Production.Actual(binding, ident, args);
+    }
+
+    /**
+     * @param t
+     * @return the given value wrapped with the location of the last
+     * 	consumed token
+     */
+    private <@NonNull T> @NonNull Located<T> withLoc(T t) {
+	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
+    }
+}
+
+public {@NonNull Grammar} rule start = 
+|  imports = imports(null) tdecls = tokens(null) header = ACTION rules = rules(null) footer = ACTION EOF {Grammar.Builder builder = new Grammar.Builder(imports, header, footer);} {tdecls.forEach(tdecl -> builder.addToken(tdecl));} {rules.forEach(rule -> builder.addRule(rule));} {return builder.build();};
+
+private {@NonNull List<@NonNull Located<@NonNull String>>} rule imports(@Nullable List<@NonNull Located<@NonNull String>> imp) = 
+|  {return imp == null ? Lists.empty() : imp;}
+|  {@NonNull List<@NonNull Located<@NonNull String>> acc = imp == null ? new ArrayList<>() : imp;} IMPORT {codegen.LexBuffer.Position start = _jl_lastTokenStart;} elt = import_ SEMICOL {acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));} imports(acc) {return acc;};
+
+private {String} rule import_ = 
+|  STATIC id = IDENT tn = typename {return "static " + id + tn;}
+|  id = IDENT tn = typename {return id + tn;};
+
+private {String} rule typename = 
+|  {return "";}
+|  DOT ty = typename0 {return "." + ty;};
+
+private {String} rule typename0 = 
+|  STAR {return "*";}
+|  id = IDENT ty = typename {return id + ty;};
+
+private {@NonNull List<@NonNull TokenDecl>} rule tokens(@Nullable List<@NonNull TokenDecl> tokens) = 
+|  {return Lists.empty();}
+|  {@NonNull List<@NonNull TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;} TOKEN tok = token_ {acc.add(tok);} tokens(acc) {return acc;};
+
+private {@NonNull TokenDecl} rule token_ = 
+|  id = IDENT {if (isLowerId(id))} {   throw parsingError("Token name should be all uppercase: " + id);} {return new TokenDecl(withLoc(id), null);}
+|  val = ACTION id = IDENT {if (isLowerId(id))} {    throw parsingError("Token name should be all uppercase: " + id);} {return new TokenDecl(withLoc(id), val);};
+
+private {@NonNull List<@NonNull GrammarRule>} rule rules(@Nullable List<@NonNull GrammarRule> rules) = 
+|  {return Lists.empty();}
+|  r = rule_ {@NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;} {acc.add(r);} rules(acc) {return acc;};
+
+private {@NonNull GrammarRule} rule rule_ = 
+|  vis = visibility rtype = ACTION RULE name = IDENT {if (!Character.isLowerCase(name.charAt(0)))} {    throw parsingError("Rule name must start with a lower case letter: " + name);} {@NonNull Located<@NonNull String> lname = withLoc(name);} args = args EQUAL {GrammarRule.@NonNull Builder builder =} {	new GrammarRule.Builder(vis, rtype, lname, args);} prod = production {builder.addProduction(prod);} productions(builder) {return builder.build();};
+
+private {boolean} rule visibility = 
+|  PUBLIC {return true;}
+|  PRIVATE {return false;};
+
+private {@Nullable Extent} rule args = 
+|  {return null;}
+|  ext = ARGUMENTS {return ext;};
+
+private {void} rule productions(GrammarRule.@NonNull Builder builder) = 
+|  SEMICOL {return;}
+|  prod = production {builder.addProduction(prod);} productions(builder) {return;};
+
+private {@NonNull Production} rule production = 
+|  BAR {Production.Builder builder = new Production.Builder();} items(builder) {return builder.build();};
+
+private {void} rule items(Production.Builder builder) = 
+|  {return;}
+|  ext = ACTION {builder.addAction(ext);} items(builder) {return;}
+|  id = IDENT actual = actual(withLoc(id)) {builder.addActual(actual);} items(builder) {return;};
+
+private {Production.@NonNull Actual} rule actual(@NonNull Located<@NonNull String> id) =
+|  args = args {return actual(null, id, args);}
+|  EQUAL name = IDENT {Located<@NonNull String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
+
+{/**
+     * Testing this parser
+     */
+    public static void main(String[] args) throws java.io.IOException {
+		String prompt;
+       while ((prompt = common.Prompt.getInputLine(">")) != null) {
+			try {
+				JGELexer lexer = new JGELexer("-",
+					new java.io.StringReader(prompt));
+				JGEParser parser = new JGEParser(lexer, JGELexer::main);
+				System.out.println(parser.start());
+			} catch (ParsingException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+}

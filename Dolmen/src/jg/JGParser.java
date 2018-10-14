@@ -383,7 +383,10 @@ public abstract class JGParser {
 	 * @param args
 	 */
 	public static void main(String[] args) throws IOException {
-		 // generateLexer(StraightLineProgram.LEXER, "StraightLineLexer");
-		 generateParser("JGParserGenerated", GRAMMAR);
+//		File file = new File("src/jge/JGEParser.jg");
+//		try (FileWriter writer = new FileWriter(file, false)) {
+//			writer.append(GRAMMAR.toString());
+//		}
+		generateParser("JGParserGenerated", GRAMMAR);
 	}
 }

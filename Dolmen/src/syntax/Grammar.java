@@ -129,10 +129,10 @@ public final class Grammar {
 		imports.forEach(imp -> buf.append(imp.val).append("\n"));
 		tokenDecls.forEach(token ->
 			buf.append("\n").append(token));
-		buf.append("\n{").append(header.find()).append("}");
+		buf.append("\n\n{").append(header.find()).append("}");
 		rules.forEach((entry, rule) -> 
-			{ buf.append("\n"); rule.append(buf); });
-		buf.append("\n{").append(footer.find()).append("}");
+			{ buf.append("\n\n"); rule.append(buf); });
+		buf.append("\n\n{").append(footer.find()).append("}");
 		return buf.toString();
 	}
 	

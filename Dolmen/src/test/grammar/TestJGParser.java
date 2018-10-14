@@ -18,7 +18,7 @@ import syntax.Grammars;
 import syntax.Lexer;
 
 /**
- * This class tests the grammar description parser by
+ * This class tests the simple grammar description parser by
  * parsing a few .jg files from the tests directory.
  * 
  * @author Stéphane Lescuyer
