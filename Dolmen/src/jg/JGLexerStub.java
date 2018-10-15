@@ -8,6 +8,7 @@ import java.io.IOException;
 import automaton.Automata;
 import automaton.Determinize;
 import codegen.AutomataOutput;
+import common.Bookkeeper;
 import jl.JLLexerGenerated;
 import jl.JLParser;
 import syntax.Lexer;
@@ -25,25 +26,26 @@ import syntax.Lexer;
 public abstract class JGLexerStub {
 
 	private JGLexerStub() {
-		// TODO Auto-generated constructor stub
+		// Static utility only
 	}
 
 	static void generateLexer(String filename, String className) throws IOException {
-		System.out.println("Parsing lexer description " + filename + "...");
+		Bookkeeper tasks = Bookkeeper.start(System.out, "Generating lexer for " + filename);
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
 		@SuppressWarnings("null")
 		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
-		System.out.println("Computing automata...");
+		tasks.done("Successfully parsed lexer description");
 		Automata aut = Determinize.lexer(lexerDef, true);
+		tasks.done("Computed automata");
 		File file = new File("src/jg/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package jg;\n");
 			AutomataOutput.output(writer, className, aut);
 		}
-		System.out.println("Generated in " + file.getAbsolutePath());
+		tasks.leaveWith("Generated in " + file.getAbsolutePath());
 	}
 	
 	/**
