@@ -4,11 +4,17 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.EnumMap;
+
+import org.eclipse.jdt.annotation.NonNull;
 
 import automaton.Automata;
 import automaton.Determinize;
 import codegen.AutomataOutput;
+import codegen.Config;
 import codegen.GrammarOutput;
+import codegen.Config.Keys;
+import common.Maps;
 import jg.JGLexer;
 import jg.JGParserGenerated;
 import jl.JLLexerGenerated;
@@ -74,7 +80,9 @@ public abstract class TestJGParser {
 			System.out.println(predictTable.toString());
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			GrammarOutput.Config config = new GrammarOutput.Config(withPos);
+			Config config = new Config(
+					new EnumMap<>(
+						Maps.<@NonNull Keys, @NonNull Boolean> singleton(Keys.Positions, withPos)));
 			writer.append("package test.examples;\n");
 			GrammarOutput.output(writer, className, config, grammar, predictTable);
 		}

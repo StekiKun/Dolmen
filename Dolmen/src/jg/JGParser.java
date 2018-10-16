@@ -9,6 +9,7 @@ import java.util.List;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.Config;
 import codegen.GrammarOutput;
 import common.Lists;
 import syntax.Extent;
@@ -374,7 +375,7 @@ public abstract class JGParser {
 				return;
 			}
 			GrammarOutput.output(writer, className,
-				GrammarOutput.DEFAULT_CONFIG, grammar, predictTable);
+				Config.DEFAULT, grammar, predictTable);
 
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());

@@ -43,31 +43,6 @@ import syntax.Production.Actual;
  */
 public final class GrammarOutput {
 
-	/**
-	 * Configuration for {@link GrammarOutput}
-	 * 
-	 * @author Stéphane Lescuyer
-	 */
-	public static final class Config {
-		/** 
-		 * Whether the parser should keep positions for
-		 * non-terminal symbols as well as terminal symbols	
-		 */
-		public final boolean positions;
-		
-		/**
-		 * Builds a configuration for {@link GrammarOutput}
-		 * 
-		 * @param positions
-		 */
-		public Config(boolean positions) {
-			this.positions = positions;
-		}
-	}
-	
-	/** The default configuration for grammar generation */
-	public static final Config DEFAULT_CONFIG = new Config(false);
-	
 	private final Config config;
 	private final Grammar grammar;
 	private final PredictionTable predict;
@@ -364,7 +339,7 @@ public final class GrammarOutput {
 	
 	/**
 	 * Same as {@link #output(Writer, String, Config, Grammar, PredictionTable)}
-	 * with the default configuration {@link #DEFAULT_CONFIG}.
+	 * with the default configuration {@link Config#DEFAULT}.
 	 * 
 	 * @param writer
 	 * @param className
@@ -375,6 +350,6 @@ public final class GrammarOutput {
 	public static SourceMapping outputDefault(Writer writer,
 		String className, Grammar grammar, PredictionTable predict)
 		throws IOException {
-		return output(writer, className, DEFAULT_CONFIG, grammar, predict);
+		return output(writer, className, Config.DEFAULT, grammar, predict);
 	}
 }
