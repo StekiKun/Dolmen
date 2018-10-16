@@ -180,7 +180,7 @@ public abstract class BasicGrammars {
 		 */
 		public static final Grammar GRAMMAR =
 			new Grammar.Builder(
-				Lists.empty(), Extent.DUMMY, Extent.inlined(footer))
+				Lists.empty(), Lists.empty(), Extent.DUMMY, Extent.inlined(footer))
 				// INT of int | PLUS | MINUS | TIMES | EOF
 				.addToken(vtoken("INT", "int"))
 				.addToken(token("PLUS"))
@@ -302,7 +302,7 @@ public abstract class BasicGrammars {
 		 */
 		public static final Grammar GRAMMAR =
 			new Grammar.Builder(
-				Lists.empty(), Extent.inlined(header), Extent.inlined(footer))
+				Lists.empty(), Lists.empty(), Extent.inlined(header), Extent.inlined(footer))
 				// INT of int | ID of string | PLUS | MINUS | TIMES | DIV | 
 				// 	SEMICOLON | ASSIGN | PRINT | LPAREN | RPAREN | COMMA | EOF
 				.addToken(vtoken("INT", "int"))

@@ -188,6 +188,7 @@ public abstract class JGParser {
 	 */
 	public static final Grammar GRAMMAR =
 		new Grammar.Builder(
+			Lists.empty(),
 			Lists.transform(imports, Located::dummy), 
 			Extent.inlined(header), Extent.inlined(footer))
 			// IDENT of String | ACTION of Extent | ARGUMENTS of Extent
@@ -217,7 +218,7 @@ public abstract class JGParser {
 				production("imports = imports(null)", "tdecls = tokens(null)",
 					"header = ACTION", "rules = rules(null)",
 					"footer = ACTION", "EOF",
-					"@Grammar.Builder builder = new Grammar.Builder(imports, header, footer);",
+					"@Grammar.Builder builder = new Grammar.Builder(Lists.empty(), imports, header, footer);",
 					"@tdecls.forEach(tdecl -> builder.addToken(tdecl));",
 					"@rules.forEach(rule -> builder.addRule(rule));",
 					"@return builder.build();")))

@@ -75,7 +75,15 @@ public {Token} rule main =
 			  startLoc = start;
 			  return ARGUMENTS(ext);
 			}
+| '"'		{ Position start = getLexemeStart(); 
+			  stringBuffer.setLength(0);
+			  string();
+			  startLoc = start;
+			  return STRING(stringBuffer.toString());
+			}
 | ident		{ return identOrKeyword(getLexeme()); }
+| '['		{ return LSQUARE; }
+| ']'		{ return RSQUARE; }
 | ';'		{ return SEMICOL; }
 | '.'		{ return DOT; }
 | '='		{ return EQUAL; }
@@ -86,12 +94,6 @@ public {Token} rule main =
 private {void} rule comment =
 | "*/"		{ return; }
 | "*"		{ comment(); return; }
-// | '"'		{ stringBuffer.setLength(0);
-//  			  string();
-//  			  stringBuffer.setLength(0);
-//  			  comment(); return;
-//  			}
-// | "'"		{ skipChar(); comment(); return; }
 | eof		{ throw error("Unterminated comment"); }
 | nl		{ newline(); comment(); return; }
 | orelse	{ comment(); return; }

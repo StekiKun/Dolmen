@@ -189,7 +189,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         @NonNull Extent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // EOF
         eat(Token.Kind.EOF);
-        Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
+        Grammar.Builder builder = new Grammar.Builder(Lists.empty(), imports, header, footer);
         tdecls.forEach(tdecl -> builder.addToken(tdecl));
         rules.forEach(rule -> builder.addRule(rule));
         return builder.build();

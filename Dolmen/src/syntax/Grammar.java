@@ -82,6 +82,8 @@ public final class Grammar {
 		}
 	}
 	
+	/** The configuration options specified in this grammar, indexed by the option key */
+	public final Map<@NonNull String, @NonNull Option> options;
 	/** The Java imports to be added to the generated parser */
 	public final List<@NonNull Located<String>> imports;
 	/** The declarations for all terminals of this grammar */
@@ -96,14 +98,17 @@ public final class Grammar {
 	/**
 	 * Builds a grammar description from the given parameters
 	 * 
+	 * @param options
 	 * @param imports
 	 * @param tokenDecls
 	 * @param header
 	 * @param rules
 	 * @param footer
 	 */
-	private Grammar(List<@NonNull Located<String>> imports, List<TokenDecl> tokenDecls, 
+	private Grammar(Map<@NonNull String, @NonNull Option> options,
+			List<@NonNull Located<String>> imports, List<TokenDecl> tokenDecls, 
 			Extent header, Map<String, GrammarRule> rules, Extent footer) {
+		this.options = options;
 		this.imports = imports;
 		this.tokenDecls = tokenDecls;
 		this.header = header;
@@ -126,6 +131,7 @@ public final class Grammar {
 	@Override
 	public String toString() {
 		StringBuilder buf = new StringBuilder();
+		options.values().forEach(opt -> buf.append(opt).append("\n"));;
 		imports.forEach(imp -> buf.append(imp.val).append("\n"));
 		tokenDecls.forEach(token ->
 			buf.append("\n").append(token));
@@ -173,6 +179,7 @@ public final class Grammar {
 	 * @see #addRule(GrammarRule)
 	 */
 	public static final class Builder {
+		private final Map<String, Option> options;
 		private final List<Located<String>> imports;
 		private final List<TokenDecl> tokenDecls;
 		private final Extent header;
@@ -183,18 +190,29 @@ public final class Grammar {
 		public final Reporter reporter;
 		
 		/**
-		 * Returns a new builder with the given imports, header and footer
+		 * Returns a new builder with the given options, imports, header and footer
+		 * @param options
 		 * @param imports
 		 * @param header
 		 * @param footer
 		 */
-		public Builder(List<Located<String>> imports, Extent header, Extent footer) {
+		public Builder(List<Option> options,
+				List<Located<String>> imports, Extent header, Extent footer) {
 			this.imports = imports;
 			this.tokenDecls = new ArrayList<>();
 			this.header = header;
 			this.footer = footer;
 			this.rules = new LinkedHashMap<>();
 			this.reporter = new Reporter();
+			
+			// Index the option list by key
+			Map<String, Option> indexedOptions = new LinkedHashMap<>();
+			for (Option option : options) {
+				if (indexedOptions.containsKey(option.key.val))
+					reporter.add(Reports.duplicateOption(option));
+				indexedOptions.put(option.key.val, option);
+			}
+			this.options = indexedOptions;
 		}
 		
 		/**
@@ -241,7 +259,7 @@ public final class Grammar {
 					"Errors were found when trying to build this grammar (aborting):\n" + reporter,
 					reporter.getReports());
 				
-			return new Grammar(imports, tokenDecls, header, rules, footer);
+			return new Grammar(options, imports, tokenDecls, header, rules, footer);
 		}
 		
 		/**
@@ -325,6 +343,11 @@ public final class Grammar {
 	 * @author Stéphane Lescuyer
 	 */
 	private static abstract class Reports {
+
+		static IReport duplicateOption(Option option) {
+			String msg = String.format("Option \"%s\" is already set, this setting will be ignored");
+			return IReport.of(msg, Severity.WARNING, option.key);
+		}
 		
 		static IReport duplicateTokenDeclaration(Located<String> token) {
 			String msg = String.format("Token \"%s\" is already declared", token.val);

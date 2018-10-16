@@ -8,6 +8,7 @@ import common.Lists;
 import syntax.Extent;
 import syntax.Located;
 import syntax.Production;
+import syntax.Option;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
@@ -24,7 +25,10 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             IDENT,
             ACTION,
             ARGUMENTS,
+            STRING,
             EQUAL,
+            LSQUARE,
+            RSQUARE,
             BAR,
             DOT,
             STAR,
@@ -110,6 +114,27 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             return new ARGUMENTS(value);
         }
         
+        public final static class STRING extends Token {
+            public final @NonNull String value;
+            
+            private STRING(@NonNull String value) {
+                this.value = value;
+            }
+            
+            @Override
+            public String toString() {
+                return "STRING(" + value + ")";
+            }
+            
+            @Override
+            public Kind getKind() {
+                return Kind.STRING;
+            }
+        }
+        public static STRING STRING(@NonNull String value) {
+            return new STRING(value);
+        }
+        
         private static abstract class Singleton extends Token {
             private final Kind kind;
             private Singleton(Kind kind) { this.kind = kind; }
@@ -126,6 +151,8 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         }
         
         public static final Token EQUAL = new Singleton(Kind.EQUAL) {};
+        public static final Token LSQUARE = new Singleton(Kind.LSQUARE) {};
+        public static final Token RSQUARE = new Singleton(Kind.RSQUARE) {};
         public static final Token BAR = new Singleton(Kind.BAR) {};
         public static final Token DOT = new Singleton(Kind.DOT) {};
         public static final Token STAR = new Singleton(Kind.STAR) {};
@@ -140,7 +167,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
     }
     
     
-    /**
+       /**
      * Returns {@code true} if the given string contains a lower-case letter
      */
     private static boolean isLowerId(String name) {
@@ -178,6 +205,8 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
     
     public @NonNull Grammar start() {
         
+        // options = options(null)
+        @NonNull List<@NonNull Option> options = options(null);
         // imports = imports(null)
         @NonNull List<@NonNull Located<@NonNull String>> imports = imports(null);
         // tdecls = tokens(null)
@@ -190,10 +219,42 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         @NonNull Extent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // EOF
         eat(Token.Kind.EOF);
-        Grammar.Builder builder = new Grammar.Builder(imports, header, footer);
+        Grammar.Builder builder = new Grammar.Builder(options, imports, header, footer);
         tdecls.forEach(tdecl -> builder.addToken(tdecl));
         rules.forEach(rule -> builder.addRule(rule));
         return builder.build();
+    }
+    
+    private @NonNull List<@NonNull Option> options(@Nullable List<@NonNull Option> opts) {
+        switch (peek().getKind()) {
+            case ACTION:
+            case IMPORT:
+            case TOKEN: {
+                 return opts == null ? Lists.empty() : opts; 
+            }
+            case LSQUARE: {
+                // LSQUARE
+                eat(Token.Kind.LSQUARE);
+                 @NonNull List<@NonNull Option> acc = opts == null ? new ArrayList<>() : opts; 
+                // key = IDENT
+                @NonNull String key = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 @NonNull Located<@NonNull String> lkey = withLoc(key); 
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                // value = STRING
+                @NonNull String value = ((Token.STRING) eat(Token.Kind.STRING)).value;
+                 @NonNull Located<@NonNull String> lvalue = withLoc(value); 
+                // RSQUARE
+                eat(Token.Kind.RSQUARE);
+                 acc.add(Option.of(lkey, lvalue)); 
+                // options(acc)
+                options(acc);
+                 return acc; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LSQUARE, Token.Kind.TOKEN);
+            }
+        }
     }
     
     private @NonNull List<@NonNull Located<@NonNull String>> imports(@Nullable List<@NonNull Located<@NonNull String>> imp) {
@@ -504,7 +565,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         }
     }
     
-    /**
+       /**
      * Testing this parser
      */
     public static void main(String[] args) throws java.io.IOException {

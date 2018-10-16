@@ -102,7 +102,7 @@ public final class TestAnalyseGrammar {
 				.build();
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
+			new Grammar.Builder(Lists.empty(), Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("A")).addToken(token("C")).addToken(token("D"))
 				.addRule(ruleZ).addRule(ruleY).addRule(ruleX).build();
 	}
@@ -171,7 +171,7 @@ public final class TestAnalyseGrammar {
 				.build();
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
+			new Grammar.Builder(Lists.empty(), Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("PLUS")).addToken(token("MINUS"))
 				.addToken(token("MULT")).addToken(token("DIV"))
 				.addToken(token("EOF")).addToken(token("LPAREN")).addToken(token("RPAREN"))
@@ -208,7 +208,7 @@ public final class TestAnalyseGrammar {
 	final static class TestLatex {
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
+			new Grammar.Builder(Lists.empty(), Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
 				.addToken(token("LBRACE")).addToken(token("RBRACE"))
 				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))
@@ -265,7 +265,7 @@ public final class TestAnalyseGrammar {
 	final static class TestLatexLL1 {
 		
 		final static Grammar grammar =
-			new Grammar.Builder(Lists.empty(), Extent.DUMMY, Extent.DUMMY)
+			new Grammar.Builder(Lists.empty(), Lists.empty(), Extent.DUMMY, Extent.DUMMY)
 				.addToken(token("SLASH")).addToken(token("BEGIN")).addToken(token("END"))
 				.addToken(token("LBRACE")).addToken(token("RBRACE"))
 				.addToken(vtoken("WORD", "String")).addToken(token("EOF"))

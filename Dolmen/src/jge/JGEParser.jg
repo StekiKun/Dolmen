@@ -10,6 +10,7 @@ import common.Lists;
 import syntax.Extent;
 import syntax.Located;
 import syntax.Production;
+import syntax.Option;
 import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
@@ -17,7 +18,10 @@ import syntax.Grammar;
 token {@NonNull String} IDENT
 token {@NonNull Extent} ACTION
 token {@NonNull Extent} ARGUMENTS
+token {@NonNull String} STRING
 token EQUAL
+token LSQUARE 
+token RSQUARE
 token BAR
 token DOT
 token STAR
@@ -56,11 +60,39 @@ token EOF
 }
 
 public {@NonNull Grammar} rule start = 
-|  imports = imports(null) tdecls = tokens(null) header = ACTION rules = rules(null) footer = ACTION EOF {Grammar.Builder builder = new Grammar.Builder(imports, header, footer);} {tdecls.forEach(tdecl -> builder.addToken(tdecl));} {rules.forEach(rule -> builder.addRule(rule));} {return builder.build();};
+|   options = options(null)
+    imports = imports(null) 
+	tdecls = tokens(null) 
+	header = ACTION 
+	rules = rules(null) 
+	footer = ACTION EOF 
+	{Grammar.Builder builder = new Grammar.Builder(options, imports, header, footer);} 
+	{tdecls.forEach(tdecl -> builder.addToken(tdecl));} 
+	{rules.forEach(rule -> builder.addRule(rule));} 
+	{return builder.build();};
+
+private {@NonNull List<@NonNull Option>} rule options(@Nullable List<@NonNull Option> opts) =
+| 	
+	{ return opts == null ? Lists.empty() : opts; }
+|   LSQUARE
+	{ @NonNull List<@NonNull Option> acc = opts == null ? new ArrayList<>() : opts; }
+	key = IDENT 
+	{ @NonNull Located<@NonNull String> lkey = withLoc(key); }
+	EQUAL 
+	value = STRING	
+	{ @NonNull Located<@NonNull String> lvalue = withLoc(value); }
+	RSQUARE
+	{ acc.add(Option.of(lkey, lvalue)); }
+	options(acc)
+	{ return acc; }
+;
 
 private {@NonNull List<@NonNull Located<@NonNull String>>} rule imports(@Nullable List<@NonNull Located<@NonNull String>> imp) = 
 |  {return imp == null ? Lists.empty() : imp;}
-|  {@NonNull List<@NonNull Located<@NonNull String>> acc = imp == null ? new ArrayList<>() : imp;} IMPORT {codegen.LexBuffer.Position start = _jl_lastTokenStart;} elt = import_ SEMICOL {acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));} imports(acc) {return acc;};
+|  {@NonNull List<@NonNull Located<@NonNull String>> acc = imp == null ? new ArrayList<>() : imp;} 
+	IMPORT {codegen.LexBuffer.Position start = _jl_lastTokenStart;} 
+	elt = import_ SEMICOL {acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));} 
+	imports(acc) {return acc;};
 
 private {String} rule import_ = 
 |  STATIC id = IDENT tn = typename {return "static " + id + tn;}

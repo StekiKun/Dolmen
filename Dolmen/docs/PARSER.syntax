@@ -12,11 +12,15 @@ nor lowercase).
 
 ## A grammar definition (.jy) [PARSER]
 
+OPTION*	    // Configuration options
 IMPORT*		// Java imports
 TOKEN_DECL+ // Token declarations
 { JAVA }	// Java header
 RULE+		// Grammar rules
 { JAVA } 	// Java footer
+
+## Options [OPTION]
+[ IDENT = STRING ]	// Key = value
 
 ## Imports [IMPORT]
 

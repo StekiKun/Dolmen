@@ -136,6 +136,7 @@ public final class CodeBuilder {
 	 * @param line	should not contain newline characters
 	 */
 	public CodeBuilder emitlnIf(boolean cond, String line) {
+		if (!cond) return this;
 		emit(line);
 		newline();
 		return this;
