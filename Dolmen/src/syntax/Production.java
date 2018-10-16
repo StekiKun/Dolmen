@@ -11,7 +11,7 @@ import common.Iterables;
 
 /**
  * A grammar <i>production</i> consists of 
- * a sequence of {@link #items production items}
+ * a sequence of {@linkplain #items production items}
  * some of them being <i>actual</i> grammar items
  * (terminals or non-terminals) and others being
  * simply <i>semantic actions</i>.
@@ -44,9 +44,9 @@ public final class Production {
 	
 	/**
 	 * The base class for production items. Items can
-	 * either be {@link Actual actuals} when they 
+	 * either be {@linkplain Actual actuals} when they 
 	 * reference a terminal or non-terminal of the
-	 * grammar, or {@link ActionItem semantic actions}
+	 * grammar, or {@linkplain ActionItem semantic actions}
 	 * which are propagated in the generated parser code.
 	 * 
 	 * @author Stéphane Lescuyer
@@ -97,7 +97,7 @@ public final class Production {
 	 * a terminal or a non-terminal {@link #item}.
 	 * <p>
 	 * The production item can optionally be
-	 * bound to some Java {@link #binding identifier},
+	 * bound to some Java {@linkplain #binding identifier},
 	 * in which case the associated value is made
 	 * available in the enclosing production's
 	 * semantic action.
@@ -205,7 +205,7 @@ public final class Production {
 
 	/**
 	 * Builder class for productions, allows adding
-	 * {@link Item production items} incrementally
+	 * {@linkplain Item production items} incrementally
 	 * 
 	 * @author Stéphane Lescuyer
 	 */

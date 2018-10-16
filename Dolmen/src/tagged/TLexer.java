@@ -11,10 +11,10 @@ import syntax.Extent;
 
 /**
  * A tagged lexer definition is the encoded
- * version of a {@link Lexer lexer definition},
- * where all {@link #entries entries} have been
+ * version of a {@linkplain Lexer lexer definition},
+ * where all {@linkplain #entries entries} have been
  * encoded and optimised. It also contains the
- * {@link #charsets character set dictionary} for
+ * {@linkplain #charsets character set dictionary} for
  * the encoded regular expressions.
  * 
  * @author Stéphane Lescuyer

@@ -31,7 +31,7 @@ import tagged.TLexerEntry.Finisher;
 /**
  * This class generates a Java class that simulates the
  * automata in some {@link Automata} instance. Each
- * {@link automaton.Automata.Entry entry} is realized
+ * {@linkplain automaton.Automata.Entry entry} is realized
  * by an entry point with the corresponding return type.
  * 
  * @see #output(Writer, String, Automata)

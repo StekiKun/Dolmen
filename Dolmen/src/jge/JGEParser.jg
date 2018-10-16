@@ -30,7 +30,7 @@ token TOKEN
 token RULE
 token EOF
 
-{/**
+{   /**
      * Returns {@code true} if the given string contains a lower-case letter
      */
     private static boolean isLowerId(String name) {
@@ -113,7 +113,7 @@ private {Production.@NonNull Actual} rule actual(@NonNull Located<@NonNull Strin
 |  args = args {return actual(null, id, args);}
 |  EQUAL name = IDENT {Located<@NonNull String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
 
-{/**
+{   /**
      * Testing this parser
      */
     public static void main(String[] args) throws java.io.IOException {

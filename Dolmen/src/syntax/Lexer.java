@@ -11,7 +11,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import syntax.IReport.Severity;
 
 /**
- * A lexer definition is a set of {@link Entry lexer rules}
+ * A lexer definition is a set of {@linkplain Entry lexer rules}
  * along with arbitrary header and footer sections. The rules
  * come in no particular order, as every rule can theoretically
  * be used as an entry point to the generated lexer. When only
@@ -25,11 +25,11 @@ public final class Lexer {
 	/**
 	 * A lexer rule entry is a sequence of regular expressions
 	 * associated to semantic actions. A rule has a
-	 * {@link #name name}, a {@link #returnType return type} and may 
-	 * have some {@link #args arguments}. The regular expressions
-	 * that form the rule are called the {@link #clauses clauses}
+	 * {@linkplain #name name}, a {@linkplain #returnType return type} 
+	 * and may have some {@linkplain #args arguments}. The regular expressions
+	 * that form the rule are called the {@linkplain #clauses clauses}
 	 * and are normally interpreted with the <i>longest match 
-	 * priority</i>, unless {@link #shortest specified otherwise}.
+	 * priority</i>, unless {@linkplain #shortest specified otherwise}.
 	 * 
 	 * <p>
 	 * NB: In state-based lexer generators like JLex or JavaCC,
@@ -105,7 +105,7 @@ public final class Lexer {
 		}
 		
 		/**
-		 * A builder class for {@link Lexer.Entry lexer entries},
+		 * A builder class for {@linkplain Lexer.Entry lexer entries},
 		 * which lets one add clauses incrementally
 		 * 
 		 * @author Stéphane Lescuyer
@@ -237,10 +237,10 @@ public final class Lexer {
 	}
 
 	/**
-	 * Exception raised by the lexer {@link Lexer.Builder builder} class
+	 * Exception raised by the lexer {@linkplain Lexer.Builder builder} class
 	 * when trying to construct an ill-formed lexer description.
 	 * <p>
-	 * The exception contains the {@link #reports problems reported} during
+	 * The exception contains the {@linkplain #reports problems reported} during
 	 * the lexer construction.
 	 * 
 	 * @author Stéphane Lescuyer
@@ -351,7 +351,7 @@ public final class Lexer {
 	 * @param entryPoints
 	 * @param footer
 	 * @return a lexer description built out of the given data, using
-	 * 	the {@link Lexer.Builder builder} class to detect potential problems
+	 * 	the {@linkplain Lexer.Builder builder} class to detect potential problems
 	 * @throws IllFormedException if the description is ill-formed
 	 */
 	public static Lexer of(List<Located<String>> imports, 

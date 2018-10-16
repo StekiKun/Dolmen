@@ -23,8 +23,8 @@ import tagged.TLexerEntry.Finisher;
 
 /**
  * An instance of {@link Encoder} can be used
- * to encode syntactic {@link Regular regular expressions}
- * in tagged {@link TRegular regular expressions}.
+ * to encode syntactic {@linkplain Regular regular expressions}
+ * in tagged {@linkplain TRegular regular expressions}.
  * <p>
  * All regular expressions encoded within the same instance
  * share a common pool of character sets, which can be

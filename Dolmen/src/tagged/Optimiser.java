@@ -20,7 +20,7 @@ import tagged.TRegular.TagInfo;
 
 /**
  * This class implements optimisations of 
- * {@link TRegular tagged regular exceptions}
+ * {@linkplain TRegular tagged regular exceptions}
  * in order to minimise the number of tags
  * (which have a big impact on the complexity
  * of the translation into a DFA).
@@ -429,7 +429,7 @@ public final class Optimiser {
 	/**
 	 * Structure which represents how an indentifier in
 	 * a regular expression is realized in optimised tagged
-	 * regular expressions, i.e. provides {@link TagAddr tag
+	 * regular expressions, i.e. provides {@linkplain TagAddr tag
 	 * addresses} for the start and end of the expression bound
 	 * to the identifier, and whether it is optional or not.
 	 * <p>

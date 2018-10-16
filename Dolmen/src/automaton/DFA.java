@@ -40,7 +40,7 @@ public class DFA {
 	/**
 	 * A <i>memory map</i> describes what memory cell 
 	 * corresponds to each tag. Tags which are not 
-	 * bound in {@link #locs} are unititialized.
+	 * bound in {@link #locs} are uninitialized.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -65,7 +65,7 @@ public class DFA {
 	 * A state in the (tagged) deterministic finite automaton
 	 * corresponds to a set of states in the non-deterministic
 	 * automaton, each being associated with a 
-	 * {@link MemMap memory map}.
+	 * {@linkplain MemMap memory map}.
 	 * <p>
 	 * NFA States of the form {@link Event#onChars(int)}
 	 * are accounted for in {@link #others}, and are indexed
@@ -255,7 +255,7 @@ public class DFA {
 	}
 	
 	/**
-	 * A key is an abstraction of a {@link State DFA state}
+	 * A key is an abstraction of a {@linkplain State DFA state}
 	 * which represents the set of NFA states and memory maps
 	 * that the DFA state stands for, in such a way that two
 	 * different states with the same key can be made equal
@@ -304,7 +304,7 @@ public class DFA {
 	}
 	
 	/**
-	 * Packs together some {@link #tag tag} and a set of
+	 * Packs together some {@linkplain #tag tag} and a set of
 	 * NFA states (taken from a DFA state) that define 
 	 * this tag in the same memory cell. Used as an 
 	 * intermediate structure when computing the key of 
@@ -408,9 +408,9 @@ public class DFA {
 	 * Action on memory cells to take when following
 	 * a DFA transition
 	 * <p>
-	 * Actions are of two kinds: either {@link Set setting}
+	 * Actions are of two kinds: either {@linkplain Set setting}
 	 * some memory cell to the current position input, or
-	 * {@link Copy copying} one memory cell's contents into
+	 * {@linkplain Copy copying} one memory cell's contents into
 	 * another. 
 	 * 
 	 * @author Stéphane Lescuyer
@@ -467,7 +467,7 @@ public class DFA {
 		}
 		
 		/**
-		 * Represents a memory action where some meory
+		 * Represents a memory action where some memory
 		 * cell {@link #src} must be copied into 
 		 * another cell {@link #dst}
 		 * 
@@ -595,8 +595,8 @@ public class DFA {
 	 * when reaching a final state during traversal
 	 * of the automaton:
 	 * <ul>
-	 * <li> either do {@link Remember#NOTHING nothing}
-	 * <li> or {@link Remember#Remember(int, List) remember} 
+	 * <li> either do {@linkplain Remember#NOTHING nothing}
+	 * <li> or {@linkplain Remember#Remember(int, List) remember} 
 	 *  the associated action number
 	 * 	and tag actions for later (useful when backtracking
 	 * 	for longest match)

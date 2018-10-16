@@ -26,7 +26,7 @@ import tagged.TRegular.TagInfo;
 
 /**
  * This class contains various utility methods 
- * about {@link TRegular tagged regular expressions}.
+ * about {@linkplain TRegular tagged regular expressions}.
  * 
  * @author Stéphane Lescuyer
  */

@@ -11,9 +11,9 @@ import tagged.Optimiser.IdentInfo;
 
 /**
  * A tagged lexer entry is the encoded optimised
- * version of a syntactic {@link syntax.Lexer.Entry lexer entry}.
+ * version of a syntactic {@linkplain syntax.Lexer.Entry lexer entry}.
  * 
- * It contains a single {@link #regexp tagged regular expression}
+ * It contains a single {@linkplain #regexp tagged regular expression}
  * gathering all the different clauses of the original entry,
  * and describes semantic actions in terms of how bound names are
  * implemented into tags.

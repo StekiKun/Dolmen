@@ -7,11 +7,11 @@ import codegen.LexBuffer.Position;
 
 /**
  * This class allows wrapping values of some type
- * with a start and end {@link Position positions}
+ * with a start and end {@linkplain Position positions}
  * as provided by the lexing engine. It only supports
  * wrapping non-null values and the start and end
  * positions must always specify the same 
- * {@link Position#filename source}.
+ * {@linkplain Position#filename source}.
  * <p>
  * <b>Warning:</b> Equality test on located values is just
  * forwarded to the values themselves; in other words, the actual

@@ -74,7 +74,7 @@ public {Token} rule main =
 			    filename, p.offset, endOffset, p.line, p.column());
 			  startLoc = start;
 			  return ARGUMENTS(ext);
-			}			
+			}
 | ident		{ return identOrKeyword(getLexeme()); }
 | ';'		{ return SEMICOL; }
 | '.'		{ return DOT; }

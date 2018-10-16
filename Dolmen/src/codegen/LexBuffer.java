@@ -21,10 +21,10 @@ public class LexBuffer {
 	/**
 	 * Instances of this class describe a <i>position</i> in some input
 	 * (most frequently a file, but could be a string or any char sequence).
-	 * A position is given by the {@link #filename description} of the input,
-	 * the {@link #offset absolute position} in said input, the {@link #line}
+	 * A position is given by the {@linkplain #filename description} of the input,
+	 * the {@linkplain #offset absolute position} in said input, the {@link #line}
 	 * number in the input where this position occurs, and the 
-	 * {@link #bol offset of said line} in the input. The column number can
+	 * {@linkplain #bol offset of said line} in the input. The column number can
 	 * be retrieved via {@link #column()}.
 	 * <p>
 	 * {@link LexBuffer} uses {@link Position} to register the positions in 

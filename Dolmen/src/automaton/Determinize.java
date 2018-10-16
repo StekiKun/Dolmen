@@ -35,8 +35,8 @@ import tagged.TRegular.TagInfo;
 
 /**
  * An instance of this class can be used to determinize
- * a {@link NFA non-deterministic finite automaton} and
- * construct an equivalent {@link DFA deterministic
+ * a {@linkplain NFA non-deterministic finite automaton} and
+ * construct an equivalent {@linkplain DFA deterministic
  * finite automaton}.
  * 
  * @author Stéphane Lescuyer
@@ -507,7 +507,7 @@ public class Determinize {
 	
 	/**
 	 * Maps the function {@code f} on all states in
-	 * the {@link #todo toto stack}, appending the
+	 * the {@linkplain #todo todo stack}, appending the
 	 * results of {@code f} along with the input state
 	 * index in the provided accumulator {@code acc}.
 	 * <p>
@@ -626,7 +626,7 @@ public class Determinize {
 	}
 	
 	/**
-	 * Associates a {@link CSet character set} with
+	 * Associates a {@linkplain CSet character set} with
 	 * some DFA state. It is used to describe shifting
 	 * table from one state to another based on the
 	 * encountered character sets.

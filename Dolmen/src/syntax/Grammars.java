@@ -43,7 +43,7 @@ public abstract class Grammars {
 		 */
 		public final Map<String, Set<String>> forward;
 		/**
-		 * The backward dependencies assocaite to each non-terminal
+		 * The backward dependencies associate to each non-terminal
 		 * the set of non-terminals which mention it in the 
 		 * right-hand side of their productions
 		 */

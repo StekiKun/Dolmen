@@ -37,8 +37,8 @@ import tagged.TLexerEntry.Finisher;
  * various rules in a lexer definition.
  * <p>
  * The automata are described by the reunion of 
- * their {@link #automataCells cells} and by a
- * {@link #automataEntries description} of each 
+ * their {@linkplain #automataCells cells} and by a
+ * {@linkplain #automataEntries description} of each 
  * sub-automaton associated to a lexer entry, providing
  * its initial state, memory size for tag handling,
  * initializer and finisher actions, etc.
@@ -50,11 +50,11 @@ public final class Automata {
 
 	/**
 	 * Represents automaton information for one lexer
-	 * entry. Provides the {@link #memSize memory size} 
+	 * entry. Provides the {@linkplain #memSize memory size} 
 	 * required to execute the automaton, the
-	 * {@link #initialState initial state number} and
-	 * the {@link #initializer associated actions}, 
-	 * and the {@link #finishers finishers} associated
+	 * {@linkplain #initialState initial state number} and
+	 * the {@linkplain #initializer associated actions}, 
+	 * and the {@linkplain #finishers finishers} associated
 	 * to the semantic actions.
 	 * 
 	 * @author Stéphane Lescuyer

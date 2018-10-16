@@ -24,7 +24,7 @@ import syntax.Regular.Sequence;
 
 /**
  * This class contains various utility methods 
- * about {@link Regular regular expressions}.
+ * about {@linkplain Regular regular expressions}.
  * 
  * @author Stéphane Lescuyer
  */

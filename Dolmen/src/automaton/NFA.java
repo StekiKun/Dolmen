@@ -25,7 +25,7 @@ import tagged.TRegular.TagInfo;
  * Describes a tagged Non-deterministic Finite Automaton 
  * recognizing the language of some given tagged regular
  * expression. In particular, each transition is decorated
- * with the set of {@link TagInfo tags} that must be 
+ * with the set of {@linkplain TagInfo tags} that must be 
  * updated when following this transition.
  * 
  * @author Stéphane Lescuyer
@@ -125,8 +125,8 @@ public class NFA {
 	
 	/**
 	 * A <i>transition</i> in the NFA is an 
-	 * {@link Event event} decorated with a set of
-	 * {@link TagInfo tags}.
+	 * {@linkplain Event event} decorated with a set of
+	 * {@linkplain TagInfo tags}.
 	 * <p> 
 	 * The tags represent the
 	 * markers which must be updated with the current

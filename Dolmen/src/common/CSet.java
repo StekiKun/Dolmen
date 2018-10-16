@@ -677,8 +677,8 @@ public abstract class CSet implements Comparable<CSet> {
 	
 	/**
 	 * Generates random character sets based on a
-	 * probability {@link Config configuration}
-	 * and a {@link Random random number generator}
+	 * probability {@linkplain Config configuration}
+	 * and a {@linkplain Random random number generator}
 	 * 
 	 * @author Stéphane Lescuyer
 	 */

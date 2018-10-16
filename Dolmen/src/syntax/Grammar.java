@@ -14,14 +14,14 @@ import common.Nulls;
 import syntax.IReport.Severity;
 
 /**
- * A lexer description is a set of {@link GrammarRule grammar rules}
+ * A lexer description is a set of {@linkplain GrammarRule grammar rules}
  * along with arbitrary header and footer sections. The rules come
  * in no particular order, as every rule can theoretically be
  * used as an entry point to the generated parser. When only one
  * entry point really makes sense, it is conventionally the first
  * rule.
  * <p>
- * The rules use a set of {@link #tokenDecls terminals} which
+ * The rules use a set of {@linkplain #tokenDecls terminals} which
  * are provided before the header section in the source file.
  * Each terminal can optionally be associated to a value of
  * some Java type at run-time.
@@ -35,9 +35,9 @@ public final class Grammar {
 
 	/**
 	 * A token declaration describes the token
-	 * {@link #name name}, which is the name
+	 * {@linkplain #name name}, which is the name
 	 * used in grammar rules to denote that terminal,
-	 * and the potential {@link #valueType value type}
+	 * and the potential {@linkplain #valueType value type}
 	 * associated to these tokens.
 	 * 
 	 * @author Stéphane Lescuyer
@@ -137,10 +137,10 @@ public final class Grammar {
 	}
 	
 	/**
-	 * Exception raised by the grammar {@link Grammar.Builder builder} class
+	 * Exception raised by the grammar {@linkplain Grammar.Builder builder} class
 	 * when trying to construct an ill-formed grammar description.
 	 * <p>
-	 * The exception contains the {@link #reports problems reported} during
+	 * The exception contains the {@linkplain #reports problems reported} during
 	 * the grammar construction.
 	 * 
 	 * @author Stéphane Lescuyer

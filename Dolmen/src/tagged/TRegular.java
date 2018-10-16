@@ -32,7 +32,7 @@ public abstract class TRegular {
 
 	/**
 	 * Describes a <i>tag</i>, i.e. a marker
-	 * used in {@link TRegular tagged regular expressions}
+	 * used in {@linkplain TRegular tagged regular expressions}
 	 * to represent the boundaries of bound sub-expressions
 	 * 
 	 * @author Stéphane Lescuyer

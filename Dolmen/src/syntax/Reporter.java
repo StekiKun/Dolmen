@@ -8,7 +8,7 @@ import syntax.IReport.Severity;
 
 /**
  * An instance of {@link Reporter} can be used to
- * collect many problem {@link IReport reports} together.
+ * collect many problem {@linkplain IReport reports} together.
  * 
  * @author Stéphane Lescuyer
  */
