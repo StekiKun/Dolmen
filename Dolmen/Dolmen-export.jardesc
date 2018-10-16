@@ -19,6 +19,7 @@
         <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jl"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;jge"/>
         <file path="/Dolmen/.classpath"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>
     </selectedElements>
