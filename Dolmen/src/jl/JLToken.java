@@ -161,7 +161,6 @@ public abstract class JLToken {
 		private final Kind kind;
 		Singleton(Kind kind) { this.kind = kind; }
 		
-		@SuppressWarnings("null")
 		@Override
 		public @NonNull String toString() {
 			return kind.toString();

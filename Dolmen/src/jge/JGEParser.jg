@@ -15,10 +15,10 @@ import syntax.Grammar.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
 
-token {@NonNull String} IDENT
-token {@NonNull Extent} ACTION
-token {@NonNull Extent} ARGUMENTS
-token {@NonNull String} STRING
+token {String} IDENT
+token {Extent} ACTION
+token {Extent} ARGUMENTS
+token {String} STRING
 token EQUAL
 token LSQUARE 
 token RSQUARE
@@ -41,8 +41,8 @@ token EOF
         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
     }
 
-    private Production.@NonNull Actual actual(@Nullable Located<@NonNull String> binding,
-            @NonNull Located<@NonNull String> ident, @Nullable Extent args) {
+    private Production.Actual actual(@Nullable Located<String> binding,
+            Located<String> ident, @Nullable Extent args) {
         if (args != null && Character.isUpperCase(ident.val.charAt(0)))
             throw new ParsingException(ident.start, ident.length(),
                 "Terminal " + ident.val + " does not expect arguments.");
@@ -54,12 +54,12 @@ token EOF
      * @return the given value wrapped with the location of the last
      * 	consumed token
      */
-    private <@NonNull T> @NonNull Located<T> withLoc(T t) {
+    private <@NonNull T> Located<T> withLoc(T t) {
 	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
     }
 }
 
-public {@NonNull Grammar} rule start = 
+public {Grammar} rule start = 
 |   options = options(null)
     imports = imports(null) 
 	tdecls = tokens(null) 
@@ -71,25 +71,24 @@ public {@NonNull Grammar} rule start =
 	{rules.forEach(rule -> builder.addRule(rule));} 
 	{return builder.build();};
 
-private {@NonNull List<@NonNull Option>} rule options(@Nullable List<@NonNull Option> opts) =
+private {List<Option>} rule options(@Nullable List<Option> opts) =
 | 	
 	{ return opts == null ? Lists.empty() : opts; }
 |   LSQUARE
-	{ @NonNull List<@NonNull Option> acc = opts == null ? new ArrayList<>() : opts; }
+	{ List<Option> acc = opts == null ? new ArrayList<>() : opts; }
 	key = IDENT 
-	{ @NonNull Located<@NonNull String> lkey = withLoc(key); }
-	EQUAL 
-	value = STRING	
-	{ @NonNull Located<@NonNull String> lvalue = withLoc(value); }
+	{ Located<String> lkey = withLoc(key); }
+	EQUAL value = STRING	
+	{ Located<String> lvalue = withLoc(value); }
 	RSQUARE
 	{ acc.add(Option.of(lkey, lvalue)); }
 	options(acc)
 	{ return acc; }
 ;
 
-private {@NonNull List<@NonNull Located<@NonNull String>>} rule imports(@Nullable List<@NonNull Located<@NonNull String>> imp) = 
+private {List<Located<String>>} rule imports(@Nullable List<Located<String>> imp) = 
 |  {return imp == null ? Lists.empty() : imp;}
-|  {@NonNull List<@NonNull Located<@NonNull String>> acc = imp == null ? new ArrayList<>() : imp;} 
+|  {List<Located<String>> acc = imp == null ? new ArrayList<>() : imp;} 
 	IMPORT {codegen.LexBuffer.Position start = _jl_lastTokenStart;} 
 	elt = import_ SEMICOL {acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));} 
 	imports(acc) {return acc;};
@@ -106,20 +105,37 @@ private {String} rule typename0 =
 |  STAR {return "*";}
 |  id = IDENT ty = typename {return id + ty;};
 
-private {@NonNull List<@NonNull TokenDecl>} rule tokens(@Nullable List<@NonNull TokenDecl> tokens) = 
+private {List<TokenDecl>} rule tokens(@Nullable List<TokenDecl> tokens) = 
 |  {return Lists.empty();}
-|  {@NonNull List<@NonNull TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;} TOKEN tok = token_ {acc.add(tok);} tokens(acc) {return acc;};
+|  {List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;} 
+	TOKEN tok = token_ {acc.add(tok);} tokens(acc) {return acc;};
 
-private {@NonNull TokenDecl} rule token_ = 
-|  id = IDENT {if (isLowerId(id))} {   throw parsingError("Token name should be all uppercase: " + id);} {return new TokenDecl(withLoc(id), null);}
-|  val = ACTION id = IDENT {if (isLowerId(id))} {    throw parsingError("Token name should be all uppercase: " + id);} {return new TokenDecl(withLoc(id), val);};
+private {TokenDecl} rule token_ = 
+|  id = IDENT 
+	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); } 
+	{ return new TokenDecl(withLoc(id), null); }
+|  val = ACTION id = IDENT 
+	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); }
+	{ return new TokenDecl(withLoc(id), val); }
+;
 
-private {@NonNull List<@NonNull GrammarRule>} rule rules(@Nullable List<@NonNull GrammarRule> rules) = 
+private {List<GrammarRule>} rule rules(@Nullable List<GrammarRule> rules) = 
 |  {return Lists.empty();}
-|  r = rule_ {@NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;} {acc.add(r);} rules(acc) {return acc;};
+|  r = rule_ { List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules; } 
+	{ acc.add(r); } rules(acc) {return acc;};
 
-private {@NonNull GrammarRule} rule rule_ = 
-|  vis = visibility rtype = ACTION RULE name = IDENT {if (!Character.isLowerCase(name.charAt(0)))} {    throw parsingError("Rule name must start with a lower case letter: " + name);} {@NonNull Located<@NonNull String> lname = withLoc(name);} args = args EQUAL {GrammarRule.@NonNull Builder builder =} {	new GrammarRule.Builder(vis, rtype, lname, args);} prod = production {builder.addProduction(prod);} productions(builder) {return builder.build();};
+private {GrammarRule} rule rule_ = 
+|  vis = visibility rtype = ACTION RULE name = IDENT 
+	{ if (!Character.isLowerCase(name.charAt(0))) } 
+	{    throw parsingError("Rule name must start with a lower case letter: " + name); } 
+	{ Located<String> lname = withLoc(name); } 
+	args = args EQUAL 
+	{ GrammarRule.Builder builder = new GrammarRule.Builder(vis, rtype, lname, args); } 
+	prod = production 
+	{ builder.addProduction(prod); } 
+	productions(builder) 
+	{ return builder.build(); }
+;
 
 private {boolean} rule visibility = 
 |  PUBLIC {return true;}
@@ -129,11 +145,11 @@ private {@Nullable Extent} rule args =
 |  {return null;}
 |  ext = ARGUMENTS {return ext;};
 
-private {void} rule productions(GrammarRule.@NonNull Builder builder) = 
+private {void} rule productions(GrammarRule.Builder builder) = 
 |  SEMICOL {return;}
 |  prod = production {builder.addProduction(prod);} productions(builder) {return;};
 
-private {@NonNull Production} rule production = 
+private {Production} rule production = 
 |  BAR {Production.Builder builder = new Production.Builder();} items(builder) {return builder.build();};
 
 private {void} rule items(Production.Builder builder) = 
@@ -141,9 +157,9 @@ private {void} rule items(Production.Builder builder) =
 |  ext = ACTION {builder.addAction(ext);} items(builder) {return;}
 |  id = IDENT actual = actual(withLoc(id)) {builder.addActual(actual);} items(builder) {return;};
 
-private {Production.@NonNull Actual} rule actual(@NonNull Located<@NonNull String> id) =
+private {Production.Actual} rule actual(Located<String> id) =
 |  args = args {return actual(null, id, args);}
-|  EQUAL name = IDENT {Located<@NonNull String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
+|  EQUAL name = IDENT {Located<String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
 
 {   /**
      * Testing this parser

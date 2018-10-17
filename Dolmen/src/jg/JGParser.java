@@ -149,8 +149,8 @@ public abstract class JGParser {
 		"        return name.chars().anyMatch(ch -> Character.isLowerCase(ch));\n" +
 		"    }\n" +
 	    "\n" +
-		"    private Production.@NonNull Actual actual(@Nullable Located<@NonNull String> binding,\n" +
-	    "            @NonNull Located<@NonNull String> ident, @Nullable Extent args) {\n" +
+		"    private Production.Actual actual(@Nullable Located<String> binding,\n" +
+	    "            Located<String> ident, @Nullable Extent args) {\n" +
 		"        if (args != null && Character.isUpperCase(ident.val.charAt(0)))\n" +
 	    "            throw new ParsingException(ident.start, ident.length(),\n" +
 		"                \"Terminal \" + ident.val + \" does not expect arguments.\");\n" +
@@ -162,7 +162,7 @@ public abstract class JGParser {
 	    "     * @return the given value wrapped with the location of the last\n" +
 	    "     * 	consumed token\n" +
 	    "     */\n" +
-	    "    private <@NonNull T> @NonNull Located<T> withLoc(T t) {\n" +
+	    "    private <@NonNull T> Located<T> withLoc(T t) {\n" +
 	    "	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);\n" +
 	    "    }\n";
 	
@@ -195,9 +195,9 @@ public abstract class JGParser {
 			// IDENT of String | ACTION of Extent | ARGUMENTS of Extent
 			// | EQUAL | BAR | SEMICOL | IMPORT | STATIC | DOT | STAR 
 			// | PUBLIC | PRIVATE | TOKEN | RULE | EOF
-			.addToken(vtoken("IDENT", "@NonNull String"))
-			.addToken(vtoken("ACTION", "@NonNull Extent"))
-			.addToken(vtoken("ARGUMENTS", "@NonNull Extent"))
+			.addToken(vtoken("IDENT", "String"))
+			.addToken(vtoken("ACTION", "Extent"))
+			.addToken(vtoken("ARGUMENTS", "Extent"))
 			.addToken(token("EQUAL"))
 			.addToken(token("BAR"))
 			.addToken(token("DOT"))
@@ -215,7 +215,7 @@ public abstract class JGParser {
 			 * start -> imports tokens ACTION rules ACTION EOF
 			 * </pre>
 			 */
-			.addRule(prule("start", "@NonNull Grammar",
+			.addRule(prule("start", "Grammar",
 				production("imports = imports(null)", "tdecls = tokens(null)",
 					"header = ACTION", "rules = rules(null)",
 					"footer = ACTION", "EOF",
@@ -238,10 +238,10 @@ public abstract class JGParser {
 			 * typename0 -> IDENT typename
 			 * </pre>
 			 */
-			.addRule(rule("imports(@Nullable List<@NonNull Located<@NonNull String>> imp)",
-					"@NonNull List<@NonNull Located<@NonNull String>>",
+			.addRule(rule("imports(@Nullable List<Located<String>> imp)",
+					"List<Located<String>>",
 				production("@return imp == null ? Lists.empty() : imp;"),
-				production("@@NonNull List<@NonNull Located<@NonNull String>> acc = "
+				production("@List<Located<String>> acc = "
 						+ "imp == null ? new ArrayList<>() : imp;",
 					"IMPORT", "@codegen.LexBuffer.Position start = _jl_lastTokenStart;", 
 					"elt = import_", "SEMICOL",
@@ -268,14 +268,14 @@ public abstract class JGParser {
 			 * token -> ACTION IDENT
 			 * </pre>
 			 */
-			.addRule(rule("tokens(@Nullable List<@NonNull TokenDecl> tokens)",
-					"@NonNull List<@NonNull TokenDecl>",
+			.addRule(rule("tokens(@Nullable List<TokenDecl> tokens)",
+					"List<TokenDecl>",
 				production("@return Lists.empty();"),
 				production(
-					"@@NonNull List<@NonNull TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;",
+					"@List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;",
 					"TOKEN", "tok = token",
 					"@acc.add(tok);", "tokens(acc)", "@return acc;")))
-			.addRule(rule("token", "@NonNull TokenDecl",
+			.addRule(rule("token", "TokenDecl",
 				production("id = IDENT", 
 					"@if (isLowerId(id))",
 					"@   throw parsingError(\"Token name should be all uppercase: \" + id);",
@@ -299,22 +299,22 @@ public abstract class JGParser {
 			 * args -> ARGUMENTS
 			 * </pre>
 			 */
-			.addRule(rule("rules(@Nullable List<@NonNull GrammarRule> rules)",
-				"@NonNull List<@NonNull GrammarRule>", 
+			.addRule(rule("rules(@Nullable List<GrammarRule> rules)",
+				"List<GrammarRule>", 
 				production("@return Lists.empty();"),
 				production("rule = rule",
-					"@@NonNull List<@NonNull GrammarRule> acc = rules == null ? new ArrayList<>() : rules;",
+					"@List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules;",
 					"@acc.add(rule);",
 					"rules(acc)",
 					"@return acc;")))
-			.addRule(rule("rule", "@NonNull GrammarRule",
+			.addRule(rule("rule", "GrammarRule",
 				production("vis = visibility", "rtype = ACTION", "RULE",
 					"name = IDENT",
 					"@if (!Character.isLowerCase(name.charAt(0)))",
 					"@    throw parsingError(\"Rule name must start with a lower case letter: \" + name);",
-					"@@NonNull Located<@NonNull String> lname = withLoc(name);",
+					"@Located<String> lname = withLoc(name);",
 					"args = args", "EQUAL",
-					"@GrammarRule.@NonNull Builder builder =",
+					"@GrammarRule.Builder builder =",
 					"@	new GrammarRule.Builder(vis, rtype, lname, args);",
 					"prod = production", "@builder.addProduction(prod);",
 					"productions(builder)",
@@ -340,11 +340,11 @@ public abstract class JGParser {
 			 * actual -> EQUAL IDENT args
 			 * </pre>
 			 */
-			.addRule(rule("productions(GrammarRule.@NonNull Builder builder)", "void",
+			.addRule(rule("productions(GrammarRule.Builder builder)", "void",
 				production("SEMICOL", "@return;"),
 				production("prod = production", "@builder.addProduction(prod);",
 						"productions(builder)", "@return;")))
-			.addRule(rule("production", "@NonNull Production",
+			.addRule(rule("production", "Production",
 				production("BAR", "@Production.Builder builder = new Production.Builder();",
 						"items(builder)", "@return builder.build();")))
 			.addRule(rule("items(Production.Builder builder)", "void",
@@ -352,10 +352,10 @@ public abstract class JGParser {
 				production("ext = ACTION", "@builder.addAction(ext);", "items(builder)", "@return;"),
 				production("id = IDENT", "actual = actual(withLoc(id))",
 					"@builder.addActual(actual);", "items(builder)", "@return;")))
-			.addRule(rule("actual(@NonNull Located<@NonNull String> id)", "Production.@NonNull Actual",
+			.addRule(rule("actual(Located<String> id)", "Production.Actual",
 				production("args = args", "@return actual(null, id, args);"),
 				production("EQUAL", "name = IDENT", 
-				    "@Located<@NonNull String> lname = withLoc(name);", "args = args",
+				    "@Located<String> lname = withLoc(name);", "args = args",
 					"@return actual(id, lname, args);")))
 			.build();
 

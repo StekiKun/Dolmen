@@ -36,7 +36,6 @@ public final class TestPositions {
 	private static class PrettyPrinter {
 		private final CodeBuilder buf = new CodeBuilder(0);
 		
-		@SuppressWarnings("null")
 		private void append(Value<?> val) {
 			String loc = Value.locToString(val.start, val.end);
 			switch (val.getKind()) {
@@ -88,7 +87,6 @@ public final class TestPositions {
 			}
 		}
 		
-		@SuppressWarnings("null")
 		private void appendObjectEntry(Located<String> key, Value<?> val) {
 			String loc = Value.locToString(key.start, val.end);
 			buf.emit("Pair " + loc).emit(" ").newline();

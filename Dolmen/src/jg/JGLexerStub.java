@@ -33,7 +33,6 @@ public abstract class JGLexerStub {
 		Bookkeeper tasks = Bookkeeper.start(System.out, "Generating lexer for " + filename);
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
-		@SuppressWarnings("null")
 		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();

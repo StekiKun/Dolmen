@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import codegen.Config;
 import codegen.GrammarOutput;
 import syntax.Grammar;
 import syntax.Grammars;
@@ -36,7 +37,10 @@ public class TestGrammarOutput {
 				printConflicts(predictTable);
 				return;
 			}
-			GrammarOutput.outputDefault(writer, className, grammar, predictTable);
+			Config config = Config.start()
+				.classAnnotations("@SuppressWarnings({\"javadoc\", \"null\"})")
+				.done();
+			GrammarOutput.output(writer, className, config, grammar, predictTable);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (IOException e) {

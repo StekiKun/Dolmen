@@ -53,7 +53,6 @@ public abstract class TestJGParser {
 		System.out.println("Parsing lexer description " + filename + "...");
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
-		@SuppressWarnings("null")
 		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
@@ -98,9 +97,6 @@ public abstract class TestJGParser {
 		generateParser("tests/jg/JSon.jg", "JSonParser", false);
 
 		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
-		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);
-		
-		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
-		generateParser("tests/jg/JSonPos.jg", "JSonPosParser", true);
+		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);		
 	}
 }

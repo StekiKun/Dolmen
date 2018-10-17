@@ -20,8 +20,14 @@ import syntax.Reporter;
  * Options can be configured in the grammar description
  * using pairs of key-value descriptions. The set of
  * supported keys is described in the enumeration {@link Keys}.
+ * Configuration instances can then be built from such a list
+ * of key-value bindings (see {@link #ofOptions(List, Reporter)}).
  * <p>
- * A {@link #DEFAULT} configuration is available.
+ * For better declarative support, a configuration instance can
+ * also be built using a builder class with chained methods
+ * for each configurable option.
+ * <p>
+ * Finally, a {@link #DEFAULT} configuration is available.
  * 
  * @author Stéphane Lescuyer
  * @see #ofOptions(List, Reporter)
@@ -42,16 +48,30 @@ public final class Config {
 	 */
 	@SuppressWarnings("javadoc")
 	public static enum Keys {
-		Positions("positions", Keys::asBoolean);
+		Positions("positions", false, Keys::asBoolean),
+		ClassAnnotations("class_annotations", "@SuppressWarnings(\"javadoc\")", Keys::asString);
 		
 		/** Name of the key */
 		public final String key;
+		/** Default value of the option associated to that key */
+		public final Object defaultValue;
 		/** Parser function for the option value */
 		public final Function<String, Object> parser;
 		
-		private Keys(String key, Function<String, Object> parser) {
+		private <@NonNull B> Keys(String key, B defaultValue, Function<String, B> parser) {
 			this.key = key;
-			this.parser = parser;
+			this.defaultValue = defaultValue;
+			this.parser = (s) -> parser.apply(s); // η-expansion for type weakening 
+		}
+		
+		/**
+		 * @param options
+		 * @return the value set for this key in {@code options},
+		 * 	or the {@linkplain #defaultValue default value} if
+		 *  the key is not bound in {@code options}
+		 */
+		Object from(EnumMap<Keys, Object> options) {
+			return options.getOrDefault(this, this.defaultValue);
 		}
 		
 		public static final Map<String, Keys> fromName;
@@ -67,6 +87,10 @@ public final class Config {
 			else if ("false".equals(s)) return false;
 			throw new IllegalArgumentException("expected boolean value 'true' or 'false'");
 		}
+		
+		private static String asString(String s) {
+			return s;
+		}
 	}
 	
 	/** 
@@ -74,6 +98,12 @@ public final class Config {
 	 * non-terminal symbols as well as terminal symbols	
 	 */
 	public final boolean positions;
+	
+	/**
+	 * Annotations which must be added to the generated
+	 * parser class
+	 */
+	public final String classAnnotations;
 	
 	/**
 	 * Builds a default configuration
@@ -96,8 +126,8 @@ public final class Config {
 	 * 	associated to incompatible value types
 	 */
 	public Config(EnumMap<Keys, @NonNull Object> options) {
-		this.positions =
-			(boolean) options.getOrDefault(Keys.Positions, false);
+		this.positions = (boolean) Keys.Positions.from(options);
+		this.classAnnotations = (String) Keys.ClassAnnotations.from(options);
 	}
 	
 	/**
@@ -106,11 +136,11 @@ public final class Config {
 	 * through the reporter. Only <i>warnings</i> are reported.
 	 * 
 	 * @param options
-	 * @param reporter
+	 * @param reporter	can be null if no reporting is required
 	 * @return the grammar configuration that is implied
 	 * 	by the option settings given in {@code options}
 	 */
-	public static Config ofOptions(List<Option> options, Reporter reporter) {
+	public static Config ofOptions(List<Option> options, @Nullable Reporter reporter) {
 		EnumMap<Keys, Object> indexedOptions = new EnumMap<>(Keys.class);
 		
 		for (Option option : options) {
@@ -118,12 +148,14 @@ public final class Config {
 			final String keyName = option.key.val;
 			final @Nullable Keys key = Keys.fromName.get(keyName);
 			if (key == null) {
-				reporter.add(Reports.unknownOption(option));
+				if (reporter != null)
+					reporter.add(Reports.unknownOption(option));
 				continue;
 			}
 			// Check that it is not set multiple times
 			if (indexedOptions.containsKey(key)) {
-				reporter.add(Reports.duplicateOption(option));
+				if (reporter != null)
+					reporter.add(Reports.duplicateOption(option));
 				continue;
 			}
 			// Parse the associated value
@@ -132,7 +164,8 @@ public final class Config {
 				value = key.parser.apply(option.value.val);
 			}
 			catch (IllegalArgumentException e) {
-				reporter.add(Reports.illformedValue(option, e));
+				if (reporter != null)
+					reporter.add(Reports.illformedValue(option, e));
 				continue;
 			}
 			indexedOptions.put(key, value);
@@ -167,5 +200,54 @@ public final class Config {
 			return IReport.of(msg, Severity.WARNING, option.value);
 		}
 
+	}
+	
+	/**
+	 * @return a fresh configuration builder,
+	 * 	initialized with default values for all options
+	 */
+	public static Config.Builder start() {
+		return new Config.Builder();
+	}
+	
+	/**
+	 * A <i>builder</i> class for {@linkplain Config configurations},
+	 * which allows setting all options using method chaining.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public final static class Builder {
+		private final EnumMap<Keys, Object> options;
+		
+		Builder() {
+			this.options = new EnumMap<>(Keys.class);
+		}
+		
+		/**
+		 * @see Keys#Positions
+		 * @param b
+		 * @return {@code this}
+		 */
+		public Builder positions(boolean b) {
+			options.put(Keys.Positions, b);
+			return this;
+		}
+		
+		/**
+		 * @see Keys#ClassAnnotations
+		 * @param s
+		 * @return {@code this}
+		 */
+		public Builder classAnnotations(String s) {
+			options.put(Keys.ClassAnnotations, s);
+			return this;
+		}
+		
+		/**
+		 * @return the configuration from this builder's state
+		 */
+		public Config done() {
+			return new Config(options);
+		}
 	}
 }

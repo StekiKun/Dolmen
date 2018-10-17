@@ -289,6 +289,7 @@ public abstract class BasicLexers {
 		System.out.println(aut);
 		File file = new File("src-gen/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
+			writer.append("@SuppressWarnings({\"javadoc\", \"null\"})");
 			AutomataOutput.output(writer, className, aut);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());

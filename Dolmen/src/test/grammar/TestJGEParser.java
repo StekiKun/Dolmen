@@ -4,17 +4,12 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.EnumMap;
-
-import org.eclipse.jdt.annotation.NonNull;
 
 import automaton.Automata;
 import automaton.Determinize;
 import codegen.AutomataOutput;
 import codegen.Config;
-import codegen.Config.Keys;
 import codegen.GrammarOutput;
-import common.Maps;
 import jge.JGELexer;
 import jge.JGEParser;
 import jl.JLLexerGenerated;
@@ -53,7 +48,6 @@ public abstract class TestJGEParser {
 		System.out.println("Parsing lexer description " + filename + "...");
 		FileReader reader = new FileReader(filename);
 		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
-		@SuppressWarnings("null")
 		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
 		Lexer lexerDef = parser.parseLexer();
 		reader.close();
@@ -67,7 +61,7 @@ public abstract class TestJGEParser {
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}
 	
-	static void generateParser(String filename, String className, boolean withPos) throws IOException {
+	static void generateParser(String filename, String className) throws IOException {
 		FileReader reader = new FileReader(filename);
 		JGELexer lexer = new JGELexer(filename, reader);
 		JGEParser parser = of(lexer);
@@ -80,9 +74,7 @@ public abstract class TestJGEParser {
 			System.out.println(predictTable.toString());
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			Config config = new Config(
-				new EnumMap<>(
-					Maps.<@NonNull Keys, @NonNull Boolean> singleton(Keys.Positions, withPos)));
+			Config config = Config.ofOptions(grammar.options, null);
 			writer.append("package test.examples;\n");
 			GrammarOutput.output(writer, className, config, grammar, predictTable);
 		}
@@ -95,12 +87,12 @@ public abstract class TestJGEParser {
 	 */
 	public static void main(String[] args) throws IOException {
 		generateLexer("tests/jl/JSon.jl", "JSonLexer");
-		generateParser("tests/jg/JSon.jg", "JSonParser", false);
+		generateParser("tests/jg/JSon.jg", "JSonParser");
 
 		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
-		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);
+		generateParser("tests/jg/JSonLW.jg", "JSonLWParser");
 		
 		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
-		generateParser("tests/jg/JSonPos.jg", "JSonPosParser", true);
+		generateParser("tests/jg/JSonPos.jg", "JSonPosParser");
 	}
 }

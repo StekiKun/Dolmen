@@ -158,7 +158,6 @@ public abstract class AdvancedLexers {
 			Lexer.of(
 				Lists.empty(),
 				Extent.inlined(
-		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static abstract class Token {\n" +
 		"	private String rep;\n" +
 		"\n" +
@@ -198,7 +197,6 @@ public abstract class AdvancedLexers {
 				Maps.empty(),
 				Arrays.asList(mainEntry, commentEntry), 
 				Extent.inlined(
-		"@SuppressWarnings(\"javadoc\")\n" +
 		"public static void main(String[] args) throws java.io.IOException {\n" +
     	"    ArithExprsComment lexer = new ArithExprsComment(\n" +
     	"        \"-\", new java.io.InputStreamReader(System.in));\n" +

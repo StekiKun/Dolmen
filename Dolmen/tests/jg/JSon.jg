@@ -1,3 +1,4 @@
+import org.eclipse.jdt.annotation.Nullable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -132,7 +133,7 @@ token EOF
 	}
 	public static final ValueFalse valFalse = new ValueFalse();
 	
-	public static final class ValueNull extends Value<Object> {
+	public static final class ValueNull extends Value<@Nullable Object> {
 		private ValueNull() {
 			super(null);
 		}
@@ -169,7 +170,7 @@ private { List<Value<?>> } rule array =
 				{ return elts; }
 ;
 
-private { List<Value<?>> } rule elements(List<Value<?>> elts) =
+private { List<Value<?>> } rule elements(@Nullable List<Value<?>> elts) =
 | RSQUARE		{ return elts == null ? Lists.empty() : elts; }
 | val = value
 	{ List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; }
@@ -191,7 +192,7 @@ private { Map<String, Value<?>> } rule object =
 				{ return members; }
 ;
 
-private { Map<String, Value<?>> } rule members(Map<String, Value<?>> members) =
+private { Map<String, Value<?>> } rule members(@Nullable Map<String, Value<?>> members) =
 | RBRACKET		{ return members == null ? Maps.empty() : members; }
 | 	{ Map<String, Value<?>> acc = members == null ? new HashMap<>() : members; }
   pair(acc)

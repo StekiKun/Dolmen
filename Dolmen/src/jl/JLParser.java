@@ -507,7 +507,6 @@ public final class JLParser extends BaseParser<JLToken> {
 	/** Whether tokens should be printed along the way, for debug */
 	private static boolean tokenize = true;
 
-	@SuppressWarnings("null")
 	private static JLParser of(JLLexerGenerated lexer) {
 		if (!tokenize)
 			return new JLParser(lexer, JLLexerGenerated::main);

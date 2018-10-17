@@ -1,3 +1,7 @@
+ // Enable automatic position tracking
+[ positions = "true" ]
+
+import org.eclipse.jdt.annotation.Nullable;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
@@ -156,7 +160,7 @@ token EOF
 	   return new ValueFalse(start, end);
 	}
 	
-	public static final class ValueNull extends Value<Object> {
+	public static final class ValueNull extends Value<@Nullable Object> {
 		private ValueNull(Position start, Position end) {
 			super(start, end, null);
 		}
@@ -198,7 +202,7 @@ private { List<Value<?>> } rule array =
 				{ return elts; }
 ;
 
-private { List<Value<?>> } rule elements(List<Value<?>> elts) =
+private { List<Value<?>> } rule elements(@Nullable List<Value<?>> elts) =
 | RSQUARE		{ return elts == null ? Lists.empty() : elts; }
 | val = value
 	{ List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; }
@@ -225,7 +229,7 @@ private { Map<Located<String>, Value<?>> } rule object =
 				{ return members; }
 ;
 
-private { Map<Located<String>, Value<?>> } rule members(Map<Located<String>, Value<?>> members) =
+private { Map<Located<String>, Value<?>> } rule members(@Nullable Map<Located<String>, Value<?>> members) =
 | RBRACKET		{ return members == null ? Maps.empty() : members; }
 | 	{ Map<Located<String>, Value<?>> acc = members == null ? new LinkedHashMap<>() : members; }
   pair(acc)
