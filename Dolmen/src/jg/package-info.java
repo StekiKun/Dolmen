@@ -27,7 +27,7 @@
  * Dolmen grammars, see the package {@link jge}.
  * <p>
  * <i>NB: The process of generating {@link jg.JGLexer} and
- * {@link jg.JGParser} is automated in the {@code build.xml}
+ * {@link jg.JGParserGenerated} is automated in the {@code build.xml}
  * ANT script through the eponym targets.</i>
  */
 @org.eclipse.jdt.annotation.NonNullByDefault package jg;

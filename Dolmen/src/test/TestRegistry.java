@@ -5,8 +5,8 @@ import java.util.Map;
 
 /**
  * Instances of {@link TestRegistry} collect a number of
- * different {@link TestUnit test units} which can be
- * run together. Test registries are built in two
+ * different {@linkplain TestUnit test units} which can be
+ * run together. Test registers are built in two
  * phases using a <i>builder</i> class, typically
  * like this:
  * <pre>
