@@ -3,18 +3,18 @@ package test.examples;
 import static test.examples.BasicLexers.test;
 import static test.examples.BasicLexers.testOutput;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
 
 import common.CSet;
 import common.Lists;
 import common.Maps;
+import syntax.Extent;
 import syntax.Lexer;
 import syntax.Located;
-import syntax.Extent;
 import syntax.Regular;
 
 /**
@@ -33,10 +33,10 @@ public abstract class AdvancedLexers {
 	 * @param objs	clauses and inlined contents, interleaved
 	 * @return a list of ordered clauses with inlined locations
 	 */
-	static Map<Located<Regular>, Extent> inlinedClauses(@NonNull Object... objs) {
+	static List<Lexer.Clause> inlinedClauses(@NonNull Object... objs) {
 		if (objs.length % 2 != 0) throw new IllegalArgumentException();
 		int n = objs.length / 2;
-		Map<Located<Regular>, Extent> res = new LinkedHashMap<>(n);
+		List<Lexer.Clause> res = new ArrayList<>(n);
 		for (int i = 0; i < n; ++i) {
 			int k = 2 * i;
 			Object reg = objs[k];
@@ -44,8 +44,9 @@ public abstract class AdvancedLexers {
 			if (!(reg instanceof Regular)
 				|| !(msg instanceof String))
 				throw new IllegalArgumentException();
-			res.put(Located.dummy((Regular) reg), 
-					Extent.inlined((String) msg));
+			res.add(new Lexer.Clause(
+					Located.dummy((Regular) reg), 
+					Extent.inlined((String) msg)));
 		}
 		return res;
 	}
@@ -118,7 +119,7 @@ public abstract class AdvancedLexers {
 					Regular.star(Regular.chars(hexdigit)),
 					Located.dummy("hex")));
 		
-		private static final Map<Located<Regular>, Extent> mainClauses =
+		private static final List<Lexer.Clause> mainClauses =
 			inlinedClauses(
 				ws,						" return main(); ",
 				newline,				" newline(); return main(); ",
@@ -139,7 +140,7 @@ public abstract class AdvancedLexers {
 		private static final CSet inComment =
 			CSet.complement(
 				CSet.union(CSet.singleton('\r'), CSet.singleton('\n')));
-		private static final Map<Located<Regular>, Extent> commentClauses =
+		private static final List<Lexer.Clause> commentClauses =
 			inlinedClauses(
 				Regular.string("*/"),		" return; ",
 				newline,		 			" newline(); comment(); return;",

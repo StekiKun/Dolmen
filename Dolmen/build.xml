@@ -5,7 +5,8 @@
 	   parsers, both the simple declarative parser and
 	   the extended one must be generated.
 	 -->
-	<target name="dolmen" depends="jllexer,jglexer,jgparser,jgelexer,jgeparser"
+	<target name="dolmen" 
+		depends="jllexer,jglexer,jgparser,jlelexer,jleparser,jgelexer,jgeparser"
 		description="Builds the Dolmen lexers and parsers">
 		<echo>Dolmen: finished build.</echo>
 	</target>
@@ -28,7 +29,19 @@
 		</java>
 	</target>
 
-	<target name="jgelexer" depends="jllexer">
+	<target name="jlelexer" depends="jllexer">
+		<echo>Dolmen: compiling extended Lexer lexical analyzer...</echo>
+		<java classpath="bin/" failonerror="yes" classname="jle.JLELexerStub">
+		</java>
+	</target>
+
+	<target name="jleparser" depends="jllexer,jglexer,jgparser,jlelexer">
+		<echo>Dolmen: compiling extended Lexer syntax analyzer...</echo>
+		<java classpath="bin/" failonerror="yes" classname="jle.JLEParserStub">
+		</java>
+	</target>
+
+	<target name="jgelexer" depends="jleparser">
 		<echo>Dolmen: compiling extended Grammar lexical analyzer...</echo>
 		<java classpath="bin/" failonerror="yes" classname="jge.JGELexerStub">
 		</java>

@@ -3,13 +3,12 @@ package tagged;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import common.CSet;
-import syntax.Lexer;
-import syntax.Located;
 import syntax.Extent;
+import syntax.Lexer;
+import syntax.Lexer.Clause;
 import syntax.Regular;
 import syntax.Regular.Alternate;
 import syntax.Regular.Binding;
@@ -153,9 +152,9 @@ public final class Encoder {
 		int ntags = 0;
 		// Go through all clauses and encode them, building a giant
 		// disjunction in tr
-		for (Map.Entry<Located<Regular>, Extent> clause : entry.clauses.entrySet()) {
-			final Regular expr = Regulars.removeNestedBindings2(clause.getKey().val);
-			final Extent act = clause.getValue();
+		for (Clause clause : entry.clauses) {
+			final Regular expr = Regulars.removeNestedBindings2(clause.regular.val);
+			final Extent act = clause.action;
 			final VarsInfo varsInfo = Regulars.analyseVars(expr);
 			final Set<String> charVars = varsInfo.getCharVars();
 			

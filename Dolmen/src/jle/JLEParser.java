@@ -471,7 +471,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         // shortest = shortest()
          boolean  shortest = shortest();
         // clauses = clauses()
-         Map<Located<Regular>, Extent>  clauses = clauses();
+         List<Lexer.Clause>  clauses = clauses();
          return new Lexer.Entry(vis, lname, returnType, shortest,
 							args, clauses);
 	
@@ -527,9 +527,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         }
     }
     
-    private  Map<Located<Regular>, Extent>  clauses() {
+    private  List<Lexer.Clause>  clauses() {
         
-         Map<Located<Regular>, Extent> clauses = new LinkedHashMap<>(); 
+         List<Lexer.Clause> clauses = new ArrayList<>(); 
         // clause(clauses)
         clause(clauses);
         // more_clauses(clauses)
@@ -537,7 +537,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
          return clauses; 
     }
     
-    private  void  more_clauses(Map<Located<Regular>, Extent> acc) {
+    private  void  more_clauses(List<Lexer.Clause> acc) {
         switch (peek().getKind()) {
             case ACTION:
             case PRIVATE:
@@ -557,7 +557,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         }
     }
     
-    private  void  clause(Map<Located<Regular>, Extent> acc) {
+    private  void  clause(List<Lexer.Clause> acc) {
         
         // OR
         eat(Token.Kind.OR);
@@ -566,14 +566,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         // action = ACTION
         Extent action = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         
-		if (acc.containsKey(lreg))
-			// TODO How do report to users about this?
-			return;
-		acc.put(lreg, action);
+		acc.add(new Lexer.Clause(lreg, action));
 	
     }
     
-    private  Located<Regular>  regular_orelse(Map<Located<Regular>, Extent> acc) {
+    private  Located<Regular>  regular_orelse(List<Lexer.Clause> acc) {
         switch (peek().getKind()) {
             case EOF:
             case IDENT:
@@ -594,8 +591,8 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
 		// Deal with the special default clause by finding
 		// all possible first characters matched by other clauses
 		CSet possible = CSet.EMPTY;
-		for (Located<Regular> r : acc.keySet())
-			possible = CSet.union(possible, Regulars.first(r.val));
+		for (Lexer.Clause cl : acc)
+			possible = CSet.union(possible, Regulars.first(cl.regular.val));
 		CSet others = CSet.complement(possible);
 		Regular reg = Regular.plus(Regular.chars(others));	
 		return withLoc(reg);	// location of 'orelse'

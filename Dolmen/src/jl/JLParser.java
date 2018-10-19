@@ -34,8 +34,8 @@ import jl.JLToken.Ident;
 import jl.JLToken.Kind;
 import jl.JLToken.LChar;
 import jl.JLToken.LString;
-import syntax.Extent;
 import syntax.Lexer;
+import syntax.Lexer.Clause;
 import syntax.Located;
 import syntax.Regular;
 import syntax.Regular.Characters;
@@ -230,7 +230,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			shortest = true;
 		}
 		
-		Map<Located<Regular>, Extent> clauses = parseClauses();
+		List<Clause> clauses = parseClauses();
 		
 		return new Lexer.Entry(vis, lname, returnType.value, shortest, 
 				args == null ? null : args.value, clauses);
@@ -255,15 +255,15 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * 	OR Regular ACTION
 	 */
 	
-	private Map<Located<Regular>, Extent> parseClauses() {
-		Map<Located<Regular>, Extent> clauses = new LinkedHashMap<>();
+	private List<Clause> parseClauses() {
+		List<Clause> clauses = new ArrayList<>();
 		parseClause(clauses);
 		while (peek().getKind() == Kind.OR)
 			parseClause(clauses);
 		return clauses;
 	}
 	
-	private void parseClause(Map<Located<Regular>, Extent> acc) {
+	private void parseClause(List<Clause> acc) {
 		eat(Kind.OR);
 		Located<Regular> lreg;
 		if (peek().getKind() == Kind.ORELSE) {
@@ -272,14 +272,9 @@ public final class JLParser extends BaseParser<JLToken> {
 			// all possible first characters matched by other
 			// clauses
 			CSet possible = CSet.EMPTY;
-			for (Located<Regular> r : acc.keySet())
-				possible = CSet.union(possible, Regulars.first(r.val));
+			for (Clause cl : acc)
+				possible = CSet.union(possible, Regulars.first(cl.regular.val));
 			CSet others = CSet.complement(possible);
-			if (others.isEmpty()) {
-				// Ignore, but warn
-				System.out.println("Ignoring empty orelse clause");
-				return;
-			}
 			Regular reg = Regular.plus(Regular.chars(others));
 			lreg = withLoc(reg);	// location of 'orelse'
 		}
@@ -289,12 +284,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			lreg = Located.of(reg, start, _jl_lastTokenEnd);
 		}
 		Action action = (Action) eat(Kind.ACTION);
-		if (acc.containsKey(lreg)) {
-			// Ignore, but warn
-			System.out.println("Ignoring useless clause " + lreg);
-			return;
-		}
-		acc.put(lreg, action.value);
+		acc.add(new Clause(lreg, action.value));
 	}
 	
 	/**

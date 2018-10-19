@@ -250,38 +250,35 @@ private { boolean } rule shortest() =
  	       | OR orelse ACTION
  */
 
-private { Map<Located<Regular>, Extent> } rule clauses() =
-|	{ Map<Located<Regular>, Extent> clauses = new LinkedHashMap<>(); }
+private { List<Lexer.Clause> } rule clauses() =
+|	{ List<Lexer.Clause> clauses = new ArrayList<>(); }
 	clause(clauses)
 	more_clauses(clauses)
 	{ return clauses; }
 ;
 
-private { void } rule more_clauses(Map<Located<Regular>, Extent> acc) =
+private { void } rule more_clauses(List<Lexer.Clause> acc) =
 |	{ return; }
 |	clause(acc)
 	more_clauses(acc)
 	{ return; }
 ;
 
-private { void } rule clause(Map<Located<Regular>, Extent> acc) =
+private { void } rule clause(List<Lexer.Clause> acc) =
 |	OR	lreg = regular_orelse(acc)  action = ACTION
 	{
-		if (acc.containsKey(lreg))
-			// TODO How do report to users about this?
-			return;
-		acc.put(lreg, action);
+		acc.add(new Lexer.Clause(lreg, action));
 	}
 ;
 
-private { Located<Regular> } rule regular_orelse(Map<Located<Regular>, Extent> acc) =
+private { Located<Regular> } rule regular_orelse(List<Lexer.Clause> acc) =
 |	ORELSE 
 	{
 		// Deal with the special default clause by finding
 		// all possible first characters matched by other clauses
 		CSet possible = CSet.EMPTY;
-		for (Located<Regular> r : acc.keySet())
-			possible = CSet.union(possible, Regulars.first(r.val));
+		for (Lexer.Clause cl : acc)
+			possible = CSet.union(possible, Regulars.first(cl.regular.val));
 		CSet others = CSet.complement(possible);
 		Regular reg = Regular.plus(Regular.chars(others));	
 		return withLoc(reg);	// location of 'orelse'

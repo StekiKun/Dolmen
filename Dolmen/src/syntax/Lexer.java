@@ -1,7 +1,6 @@
 package syntax;
 
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -22,6 +21,39 @@ import syntax.IReport.Severity;
  */
 public final class Lexer {
 
+	/**
+	 * A clause associates a {@linkplain Regular regular expression}
+	 * to a {@linkplain Extent Java semantic action}. Each lexer
+	 * {@link Entry} is made of a number of clauses, and a clause's
+	 * semantic action can be taken when the input matches the
+	 * clause's regular expression.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public final static class Clause {
+		/** The regular expression of this clause */
+		public final Located<Regular> regular;
+		/** The Java action which can be executed when this clauses matches */
+		public final Extent action;
+		
+		/**
+		 * @param regular
+		 * @param action
+		 */
+		public Clause(Located<Regular> regular, Extent action) {
+			this.regular = regular;
+			this.action = action;
+		}
+		
+		@Override
+		public String toString() {
+			StringBuilder buf = new StringBuilder();
+			buf.append("| ").append(regular.val);
+			buf.append(" {").append(action.find()).append("}");
+			return buf.toString();
+		}
+	}
+	
 	/**
 	 * A lexer rule entry is a sequence of regular expressions
 	 * associated to semantic actions. A rule has a
@@ -59,7 +91,7 @@ public final class Lexer {
 		 * as priority between same-length matches goes to the
 		 * first matching rule in this map.</b>
 		 */
-		public final Map<@NonNull Located<Regular>, @NonNull Extent> clauses;
+		public final List<Clause> clauses;
 		
 		/**
 		 * @param visibility
@@ -74,7 +106,7 @@ public final class Lexer {
 		 */
 		public Entry(boolean visibility, 
 				Located<String> name, Extent returnType, boolean shortest,
-				@Nullable Extent args, Map<Located<Regular>, Extent> clauses) {
+				@Nullable Extent args, List<Clause> clauses) {
 			this.visibility = visibility;
 			this.name = name;
 			this.returnType = returnType;
@@ -90,9 +122,8 @@ public final class Lexer {
 			else buf.append("(").append(args_.find()).append(")");
 			buf.append(" : ").append(returnType.find());
 			buf.append(" = ").append(shortest ? "shortest" : "parse");
-			clauses.forEach((reg, act) -> {
-				buf.append("\n| ").append(reg.val);
-				buf.append(" {").append(act.find()).append("}");
+			clauses.forEach(clause -> {
+				buf.append("\n").append(clause.toString());
 			});
 			return buf;
 		}
@@ -116,7 +147,7 @@ public final class Lexer {
 			private boolean shortest;
 			private final @Nullable Extent args;
 			private final Extent returnType;
-			private final Map<@NonNull Located<Regular>, @NonNull Extent> clauses;
+			private final List<Clause> clauses;
 
 			/**
 			 * Constructs a fresh builder with longest-match rule
@@ -134,7 +165,7 @@ public final class Lexer {
 				this.shortest = false;
 				this.args = args;
 				this.returnType = returnType;
-				this.clauses = new LinkedHashMap<>();
+				this.clauses = new ArrayList<>();
 			}
 			
 			/**
@@ -154,7 +185,7 @@ public final class Lexer {
 			 * @return the receiver
 			 */
 			public Builder add(Located<Regular> regular, Extent loc) {
-				clauses.put(regular, loc);
+				clauses.add(new Clause(regular, loc));
 				return this;
 			}
 			
@@ -166,8 +197,7 @@ public final class Lexer {
 			 * @return the receiver
 			 */
 			public Builder add(Regular regular, String inlined) {
-				clauses.put(Located.dummy(regular), Extent.inlined(inlined));
-				return this;
+				return add(Located.dummy(regular), Extent.inlined(inlined));
 			}
 			
 			/**
@@ -178,7 +208,7 @@ public final class Lexer {
 					throw new IllegalArgumentException(
 						"There must be at least one clause in every lexer entry");
 				return new Entry(visibility, name, returnType, shortest,
-						args, new LinkedHashMap<>(clauses));
+						args, new ArrayList<>(clauses));
 			}
 		}
 	}

@@ -27,7 +27,6 @@ import syntax.IReport;
 import syntax.IReport.Severity;
 import syntax.Lexer;
 import syntax.Located;
-import syntax.Regular;
 import syntax.Reporter;
 import tagged.TLexerEntry.Finisher;
 
@@ -245,7 +244,7 @@ public final class Automata {
 			if (!visited.add(s)) continue;
 			
 			// Handle the corresponding cell: if final, record
-			// the corresponding action as reachabl ; if not a
+			// the corresponding action as reachable; if not a
 			// sink state record all possible successors
 			Cell cell = automataCells[s];
 			switch (cell.getKind()) {
@@ -272,13 +271,12 @@ public final class Automata {
 		
 		// Now report all unreachable actions in this lexer entry
 		int i = 0;
-		for (Map.Entry<syntax.@NonNull Located<Regular>, @NonNull Extent> clause : 
-			entry.clauses.entrySet()) {
+		for (Lexer.Clause clause : entry.clauses) {
 			if (!reachable[i]) {
 				String msg = String.format(
 					"This clause is never used (entry %s, clause #%d)", entry.name.val, i);
 				reporter.add(
-					IReport.of(msg, Severity.WARNING, clause.getKey()));
+					IReport.of(msg, Severity.WARNING, clause.regular));
 			}
 			++i;
 		}
