@@ -12,6 +12,7 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
         <javaElement handleIdentifier="=Dolmen/src&lt;codegen"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;jle"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;syntax"/>
         <file path="/Dolmen/.project"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jg"/>

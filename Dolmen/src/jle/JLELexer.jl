@@ -103,9 +103,9 @@ public { Token } rule main =
 | "'" '\\' (escaped as c) "'"
 				{ return LCHAR(forBackslash(c)); }
 | "'" '\\' (octal as code) "'"
-				{ return LCHAR(fromOctalCode(c)); }
+				{ return LCHAR(fromOctalCode(code)); }
 | "'" '\\' 'u'+ (hexdigit<4> as code) "'"
-				{ return LCHAR(fromHexCode(c)); }
+				{ return LCHAR(fromHexCode(code)); }
 | "'" '\\' 'u'+ { throw error("Invalid Unicode escape sequence"); }
 | '='			{ return EQUAL; }
 | '|'			{ return OR; }
@@ -148,23 +148,23 @@ private { void } rule comment =
  */
 private { void } rule string =
 | '"'					{ return; }
-| '\\' (escaped as c)	{ stringBuffer.appends(forBackslash(c));
+| '\\' (escaped as c)	{ stringBuffer.append(forBackslash(c));
 						  string(); return;
 						}
-| '\\' (octal as code)	{ stringBuffer.appends(fromOctalCode(code));
+| '\\' (octal as code)	{ stringBuffer.append(fromOctalCode(code));
 						  string(); return;
 						}
 | '\\' 'u'+ (hexdigit<4> as code)
-						{ stringBuffer.appends(fromHexCode(code));
+						{ stringBuffer.append(fromHexCode(code));
 						  string(); return; 
 						}
 | '\\' 'u'+				{ throw error("Invalid Unicode escape sequence"); }
-| '\\' (_ as c)			{ stringBuffer.appends('\\').appends(c);
+| '\\' (_ as c)			{ stringBuffer.append('\\').append(c);
 						  string(); return;
 						}
 | '\\'					{ throw error("Unterminated escape sequence in string literal"); }
 | eof					{ throw error("Unterminated string literal"); }
-| orelse				{ stringBuffer.appends(getLexeme());
+| orelse				{ stringBuffer.append(getLexeme());
 						  string(); return;
 						}
 
