@@ -87,11 +87,17 @@ public final class GrammarOutput {
 	}
 	
 	private void genConstructor(String name) {
-		// buf.emitln("@SuppressWarnings(\"null\")");
-		buf.emit("public <T extends codegen.LexBuffer> ").emit(name).emit("(")
+		buf.emitln("/**");
+	    buf.emitln(" * Builds a new parser based on the given lexical buffer");
+	    buf.emitln(" * and tokenizer");
+	    buf.emitln(" * @param lexbuf");
+	    buf.emitln(" * @param tokens");
+	    buf.emitln(" */");
+		buf.emit("public <T extends codegen.LexBuffer> ").incrIndent().newline();
+		buf.emit(name).emit("(")
 		   .emit("T lexbuf, ")
 		   .emit("java.util.function.Function<T, Token> tokens)")
-		   .openBlock();
+		   .decrIndent().openBlock();
 		buf.emit("super(lexbuf, tokens);")
 		   .closeBlock();
 		buf.newline();
@@ -187,8 +193,8 @@ public final class GrammarOutput {
 		//  the return type is void, and of course not
 		//	to return in the middle of a production rule.
 		if (config.positions)
-			buf.newline()
-			   .emit("enter(" + Iterables.size(prod.actuals()) + ");");
+			buf.emit("enter(" + Iterables.size(prod.actuals()) + ");")
+			   .newline();
 		for (Production.Item item : prod.items) {
 			switch (item.getKind()) {
 			case ACTUAL: {
@@ -207,6 +213,11 @@ public final class GrammarOutput {
 	
 	private void genRule(GrammarRule rule, Map<String, List<Production>> trans) {
 		buf.newline();
+		if (rule.visibility) {
+			buf.emitln("/**");
+			buf.emitln(" * Entry point for the non-terminal " + rule.name.val);
+			buf.emitln(" */");
+		}
 		buf.emit(rule.visibility ? "public " : "private ")
 		   .emitTracked(rule.returnType).emit(" ");
 		buf.emit(ruleName(rule.name.val)).emit("(");
@@ -255,7 +266,7 @@ public final class GrammarOutput {
 					else buf.newline();
 					buf.emit("case ").emit(term).emit(":");
 				}
-				buf.emit(" {").incrIndent();
+				buf.emit(" {").incrIndent().newline();
 				genProduction(prod);
 				buf.closeBlock();
 			}
@@ -297,7 +308,8 @@ public final class GrammarOutput {
 		buf.newline();
 		
 		// Before anything else, generate the token class
-		TokensOutput tokensOutput = new TokensOutput("Token", grammar.tokenDecls, buf);
+		TokensOutput tokensOutput = 
+			new TokensOutput("Token", config, grammar.tokenDecls, buf);
 		tokensOutput.genTokens();
 		tokensOutput = null;	// free mem
 		buf.newline();
@@ -307,7 +319,7 @@ public final class GrammarOutput {
 		genMethods();
 
 		// Generate a nest of recursive parsing methods,
-		// one for each terminal
+		// one for each non-terminal
 		genRules();
 		
 		genFooter();

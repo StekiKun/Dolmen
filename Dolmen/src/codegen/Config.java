@@ -49,7 +49,8 @@ public final class Config {
 	@SuppressWarnings("javadoc")
 	public static enum Keys {
 		Positions("positions", false, Keys::asBoolean),
-		ClassAnnotations("class_annotations", "@SuppressWarnings(\"javadoc\")", Keys::asString);
+		TokenAnnotations("token_annotations", "@SuppressWarnings(\"javadoc\")", Keys::asString),
+		ClassAnnotations("class_annotations", "", Keys::asString);
 		
 		/** Name of the key */
 		public final String key;
@@ -101,10 +102,16 @@ public final class Config {
 	
 	/**
 	 * Annotations which must be added to the generated
-	 * parser class
+	 * parser or lexer class
 	 */
 	public final String classAnnotations;
-	
+
+	/**
+	 * Annotations which must be added to the generated
+	 * token class in a generated parser
+	 */
+	public final String tokenAnnotations;
+
 	/**
 	 * Builds a default configuration
 	 */
@@ -128,6 +135,7 @@ public final class Config {
 	public Config(EnumMap<Keys, @NonNull Object> options) {
 		this.positions = (boolean) Keys.Positions.from(options);
 		this.classAnnotations = (String) Keys.ClassAnnotations.from(options);
+		this.tokenAnnotations = (String) Keys.TokenAnnotations.from(options);
 	}
 	
 	/**
@@ -241,6 +249,16 @@ public final class Config {
 		 */
 		public Builder classAnnotations(String s) {
 			options.put(Keys.ClassAnnotations, s);
+			return this;
+		}
+		
+		/**
+		 * @see Keys#TokenAnnotations
+		 * @param s
+		 * @return {@code this}
+		 */
+		public Builder tokenAnnotations(String s) {
+			options.put(Keys.TokenAnnotations, s);
 			return this;
 		}
 		

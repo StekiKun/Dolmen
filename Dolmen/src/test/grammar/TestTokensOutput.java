@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 
+import codegen.Config;
 import codegen.TokensOutput;
 import syntax.Grammar;
 
@@ -22,7 +23,11 @@ public class TestTokensOutput {
 	private static void testOutput(String className, Grammar grammar) {
 		File file = new File("src-gen/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			TokensOutput.output(writer, className, 0, grammar.tokenDecls);
+			Config config = Config.start()
+				.tokenAnnotations("@SuppressWarnings(\"javadoc\")\n" +
+								  "@org.eclipse.jdt.annotation.NonNullByDefault()")
+				.done();
+			TokensOutput.output(writer, className, config, 0, grammar.tokenDecls);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (IOException e) {

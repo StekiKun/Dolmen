@@ -1,5 +1,7 @@
  // Enable automatic position tracking
 [ positions = "true" ]
+[ class_annotations = "@SuppressWarnings(\"javadoc\")" ]
+[ token_annotations = ""]
 
 import org.eclipse.jdt.annotation.Nullable;
 import java.util.List;

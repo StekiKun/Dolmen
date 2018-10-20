@@ -255,7 +255,14 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
 	   return new ValueNull(start, end);
     }
 
-    public <T extends codegen.LexBuffer> JSonPosParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
+    /**
+     * Builds a new parser based on the given lexical buffer
+     * and tokenizer
+     * @param lexbuf
+     * @param tokens
+     */
+    public <T extends codegen.LexBuffer> 
+        JSonPosParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
         super(lexbuf, tokens);
     }
     
@@ -266,9 +273,12 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         return ctoken;
     }
     
+    /**
+     * Entry point for the non-terminal json
+     */
     public  Value<?>  json() {
-        
         enter(2);
+        
         // v = value
          Value<?>  v = value();
         leave("v");
@@ -283,6 +293,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             case ARRAY:
             case LSQUARE: {
                 enter(2);
+                
                 // array_kwd
                 array_kwd();
                 leave(null);
@@ -293,6 +304,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case FALSE: {
                 enter(1);
+                
                 // FALSE
                 eat(Token.Kind.FALSE);
                 shift(null);
@@ -301,6 +313,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             case LBRACKET:
             case OBJECT: {
                 enter(2);
+                
                 // object_kwd
                 object_kwd();
                 leave(null);
@@ -311,6 +324,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case NULL: {
                 enter(1);
+                
                 // NULL
                 eat(Token.Kind.NULL);
                 shift(null);
@@ -318,6 +332,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case NUMBER: {
                 enter(1);
+                
                 // n = NUMBER
                  double  n = ((Token.NUMBER) eat(Token.Kind.NUMBER)).value;
                 shift("n");
@@ -325,6 +340,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case STRING: {
                 enter(1);
+                
                 // s = STRING
                  String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
                 shift("s");
@@ -332,6 +348,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case TRUE: {
                 enter(1);
+                
                 // TRUE
                 eat(Token.Kind.TRUE);
                 shift(null);
@@ -347,6 +364,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         switch (peek().getKind()) {
             case ARRAY: {
                 enter(1);
+                
                 // ARRAY
                 eat(Token.Kind.ARRAY);
                 shift(null);
@@ -354,6 +372,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case LSQUARE: {
                 enter(0);
+                
                  return; 
             }
             default: {
@@ -363,8 +382,8 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  List<Value<?>>  array() {
-        
         enter(2);
+        
         // LSQUARE
         eat(Token.Kind.LSQUARE);
         shift(null);
@@ -386,6 +405,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             case STRING:
             case TRUE: {
                 enter(2);
+                
                 // val = value
                  Value<?>  val = value();
                 leave("val");
@@ -398,6 +418,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case RSQUARE: {
                 enter(1);
+                
                 // RSQUARE
                 eat(Token.Kind.RSQUARE);
                 shift(null);
@@ -413,6 +434,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         switch (peek().getKind()) {
             case COMMA: {
                 enter(3);
+                
                 // COMMA
                 eat(Token.Kind.COMMA);
                 shift(null);
@@ -427,6 +449,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case RSQUARE: {
                 enter(1);
+                
                 // RSQUARE
                 eat(Token.Kind.RSQUARE);
                 shift(null);
@@ -442,10 +465,12 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         switch (peek().getKind()) {
             case LBRACKET: {
                 enter(0);
+                
                  return; 
             }
             case OBJECT: {
                 enter(1);
+                
                 // OBJECT
                 eat(Token.Kind.OBJECT);
                 shift(null);
@@ -458,8 +483,8 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  Map<Located<String>, Value<?>>  object() {
-        
         enter(2);
+        
         // LBRACKET
         eat(Token.Kind.LBRACKET);
         shift(null);
@@ -473,6 +498,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         switch (peek().getKind()) {
             case RBRACKET: {
                 enter(1);
+                
                 // RBRACKET
                 eat(Token.Kind.RBRACKET);
                 shift(null);
@@ -480,6 +506,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case STRING: {
                 enter(2);
+                
                  Map<Located<String>, Value<?>> acc = members == null ? new LinkedHashMap<>() : members; 
                 // pair(acc)
                 pair(acc);
@@ -499,6 +526,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         switch (peek().getKind()) {
             case COMMA: {
                 enter(3);
+                
                 // COMMA
                 eat(Token.Kind.COMMA);
                 shift(null);
@@ -512,6 +540,7 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
             }
             case RBRACKET: {
                 enter(1);
+                
                 // RBRACKET
                 eat(Token.Kind.RBRACKET);
                 shift(null);
@@ -524,8 +553,8 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  void  pair(Map<Located<String>, Value<?>> map) {
-        
         enter(3);
+        
         // s = STRING
          String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
         shift("s");

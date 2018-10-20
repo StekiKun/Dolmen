@@ -38,7 +38,7 @@ public class TestGrammarOutput {
 				return;
 			}
 			Config config = Config.start()
-				.classAnnotations("@SuppressWarnings({\"javadoc\", \"null\"})")
+				.classAnnotations("@SuppressWarnings(\"null\")")
 				.done();
 			GrammarOutput.output(writer, className, config, grammar, predictTable);
 			System.out.println("----------JAVA--------");

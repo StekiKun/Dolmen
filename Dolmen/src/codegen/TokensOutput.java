@@ -25,31 +25,46 @@ import syntax.Extent;
  * and a static factory to be used in the lexer's
  * semantic actions.
  * 
- * @see #output(Writer, String, int, List)
+ * @see #output(Writer, String, Config, int, List)
  * 
  * @author Stéphane Lescuyer
  */
 public final class TokensOutput {
 
 	private final String className;
+	private final Config config;
 	private final boolean nested;
 	private final List<@NonNull TokenDecl> tokenDecls;
 	private final CodeBuilder buf;
 	
-	protected TokensOutput(String className,
+	protected TokensOutput(String className, Config config,
 			List<TokenDecl> tokenDecls, CodeBuilder buf) {
 		this.className = className;
+		this.config = config;
 		this.nested = buf.getCurrentLevel() > 0;
 		this.tokenDecls = tokenDecls;
 		this.buf = buf;
 	}
 	
-	private TokensOutput(String className,
+	private TokensOutput(String className, Config config,
 			List<TokenDecl> tokenDecls, int level) {
 		this.className = className;
+		this.config = config;
 		this.nested = level > 0;
 		this.tokenDecls = tokenDecls;
 		this.buf = new CodeBuilder(level);
+	}
+
+	private void genAnnotations(String annotations) {
+		// In case the configuration provides several annotations
+		// split around newlines and trim potential leading blanks
+		if (annotations.isEmpty()) return;
+		String[] lines = annotations.split("\n");
+		for (String line : lines) {
+			String lline = line.trim();
+			if (lline.isEmpty()) continue;
+			buf.emitln(line);
+		}
 	}
 
 	private void genTokenKind() {
@@ -156,10 +171,7 @@ public final class TokensOutput {
 	}
 	
 	protected void genTokens() {
-		if (!nested) {
-			buf.emitln("@SuppressWarnings(\"javadoc\")");
-			buf.emitln("@org.eclipse.jdt.annotation.NonNullByDefault({})");
-		}
+		genAnnotations(config.tokenAnnotations);
 		buf.emit("public ").emit(nested ? "static " : "")
 		   .emit("abstract class ").emit(className).openBlock();
 		buf.newline();
@@ -178,13 +190,14 @@ public final class TokensOutput {
 	 * 
 	 * @param writer
 	 * @param className
+	 * @param config
 	 * @param level
 	 * @param tokenDecls
 	 * @throws IOException
 	 */
 	public static void output(Writer writer, String className, 
-			int level, List<TokenDecl> tokenDecls) throws IOException {
-		TokensOutput out = new TokensOutput(className, tokenDecls, level);
+			Config config, int level, List<TokenDecl> tokenDecls) throws IOException {
+		TokensOutput out = new TokensOutput(className, config, tokenDecls, level);
 		out.genTokens();
 		out.buf.print(writer);
 	}

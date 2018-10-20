@@ -22,11 +22,13 @@ token EOF
 
 // Java class header, with the concrete JSON type
 {
+	@SuppressWarnings("javadoc")
 	public enum ValueKind {
 		STRING, NUMBER, OBJECT, ARRAY,
 		TRUE, FALSE, NULL;
 	}
 
+	@SuppressWarnings("javadoc")
 	public static abstract class Value<T> {
 		public final T val;
 		private Value(T val) { this.val = val; }
@@ -35,6 +37,7 @@ token EOF
 		public abstract ValueKind getKind();
 	}
 
+	@SuppressWarnings("javadoc")
 	public static final class ValueString extends Value<String> {
 		private ValueString(String val) {
 			super(val);
@@ -48,10 +51,12 @@ token EOF
 			return ValueKind.STRING;
 		}
 	}
+	@SuppressWarnings("javadoc")
 	public static ValueString valString(String s) {
 		return new ValueString(s);
 	}
-
+	
+	@SuppressWarnings("javadoc")
 	public static final class ValueNumber extends Value<Double> {
 		private ValueNumber(double val) {
 			super(val);
@@ -65,10 +70,12 @@ token EOF
 			return ValueKind.NUMBER;
 		}
 	}
+	@SuppressWarnings("javadoc")
 	public static ValueNumber valNumber(double val) {
 		return new ValueNumber(val);
 	}
-	
+
+	@SuppressWarnings("javadoc")
 	public static final class ValueObject extends Value<Map<String, Value<?>>> {
 		private ValueObject(Map<String, Value<?>> val) {
 			super(val);
@@ -82,10 +89,12 @@ token EOF
 			return ValueKind.OBJECT;
 		}
 	}
+	@SuppressWarnings("javadoc")
 	public static ValueObject valObject(Map<String, Value<?>> obj) {
 		return new ValueObject(obj);
 	}
 	
+	@SuppressWarnings("javadoc")
 	public static final class ValueArray extends Value<List<Value<?>>> {
 		private ValueArray(List<Value<?>> val) {
 			super(val);
@@ -99,10 +108,12 @@ token EOF
 			return ValueKind.ARRAY;
 		}
 	}
+	@SuppressWarnings("javadoc")
 	public static ValueArray valArray(List<Value<?>> arr) {
 		return new ValueArray(arr);
 	}
 	
+	@SuppressWarnings("javadoc")
 	public static final class ValueTrue extends Value<Boolean> {
 		private ValueTrue() {
 			super(true);
@@ -116,8 +127,10 @@ token EOF
 			return ValueKind.TRUE;
 		}	
 	}
+	@SuppressWarnings("javadoc")
 	public static final ValueTrue valTrue = new ValueTrue();
 	
+	@SuppressWarnings("javadoc")
 	public static final class ValueFalse extends Value<Boolean> {
 		private ValueFalse() {
 			super(false);
@@ -131,8 +144,10 @@ token EOF
 			return ValueKind.FALSE;
 		}	
 	}
+	@SuppressWarnings("javadoc")
 	public static final ValueFalse valFalse = new ValueFalse();
 	
+	@SuppressWarnings("javadoc")
 	public static final class ValueNull extends Value<@Nullable Object> {
 		private ValueNull() {
 			super(null);
@@ -146,6 +161,7 @@ token EOF
 			return ValueKind.NULL;
 		}	
 	}
+	@SuppressWarnings("javadoc")
 	public static final ValueNull valNull = new ValueNull();
 }
 
