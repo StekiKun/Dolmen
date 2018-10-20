@@ -158,6 +158,7 @@ public abstract class AdvancedLexers {
 		final static Lexer LEXER =
 			Lexer.of(
 				Lists.empty(),
+				Lists.empty(),
 				Extent.inlined(
 		"public static abstract class Token {\n" +
 		"	private String rep;\n" +

@@ -16,6 +16,7 @@ import automaton.Automata;
 import automaton.Determinize;
 import codegen.AutomataOutput;
 import common.CSet;
+import common.Lists;
 import common.Maps;
 import syntax.Lexer;
 import syntax.Located;
@@ -395,6 +396,7 @@ public abstract class JLLexer {
 	 */
 	public final static Lexer INSTANCE =
 		new Lexer.Builder(
+			Lists.empty(),
 			Arrays.asList(
 				Located.dummy("package jl;"),
 				Located.dummy("import static jl.JLToken.*;")),

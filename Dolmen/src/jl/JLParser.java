@@ -104,7 +104,7 @@ public final class JLParser extends BaseParser<JLToken> {
 		Action footer= (Action) (eat(Kind.ACTION));
 		eat(Kind.END);
 		Lexer.Builder builder =
-			new Lexer.Builder(imports, header.value, definitions, footer.value);
+			new Lexer.Builder(Lists.empty(), imports, header.value, definitions, footer.value);
 		for (Lexer.Entry entry : entries)
 			builder.addEntry(entry);
 		return builder.build();

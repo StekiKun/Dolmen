@@ -213,6 +213,8 @@ public final class Lexer {
 		}
 	}
 
+	/** The configuration options specified in this grammar */
+	public final List<@NonNull Option> options;
 	/** The Java imports to be added to the generated lexer */
 	public final List<@NonNull Located<String>> imports;
 	/** The extent of this lexer's class header */
@@ -230,6 +232,7 @@ public final class Lexer {
 	public final Extent footer;
 	
 	/**
+	 * @param options
 	 * @param imports
 	 * @param header
 	 * @param regulars
@@ -238,9 +241,10 @@ public final class Lexer {
 	 * 
 	 * Builds a lexer with the provided data
 	 */
-	 private Lexer(List<Located<String>> imports, 
+	 private Lexer(List<Option> options, List<Located<String>> imports, 
 			Extent header, Map<Located<String>, Regular> regulars, 
 			List<Entry> entryPoints, Extent footer) {
+		this.options = options;
 		this.imports = imports;
 		this.header = header;
 		this.regulars = regulars;
@@ -303,6 +307,7 @@ public final class Lexer {
 	 * @see #addEntry(Entry)
 	 */
 	public static final class Builder {
+		private final List<Option> options;
 		private final List<Located<String>> imports;
 		private final Extent header;
 		private final Map<Located<String>, Regular> regulars;
@@ -313,15 +318,17 @@ public final class Lexer {
 		public final Reporter reporter;
 		
 		/**
-		 * Returns a new builder with the given imports, header, auxiliary
-		 * regular expressions and footer
+		 * Returns a new builder with the given options, imports, 
+		 * header, auxiliary regular expressions and footer
+		 * @param options
 		 * @param imports
 		 * @param header
 		 * @param regulars
 		 * @param footer
 		 */
-		public Builder(List<Located<String>> imports, Extent header,
-				Map<Located<String>, Regular> regulars, Extent footer) {
+		public Builder(List<Option> options, List<Located<String>> imports, 
+				Extent header, Map<Located<String>, Regular> regulars, Extent footer) {
+			this.options = options;
 			this.imports = imports;
 			this.header = header;
 			this.regulars = regulars;
@@ -369,12 +376,13 @@ public final class Lexer {
 					"Errors were found when trying to build this lexer (aborting):\n" + reporter,
 					reporter.getReports());
 				
-			return new Lexer(imports, header, regulars, entryPoints, footer);
+			return new Lexer(options, imports, header, regulars, entryPoints, footer);
 		}
 		
 	}
 
 	/**
+	 * @param options
 	 * @param imports
 	 * @param header
 	 * @param regulars
@@ -384,10 +392,11 @@ public final class Lexer {
 	 * 	the {@linkplain Lexer.Builder builder} class to detect potential problems
 	 * @throws IllFormedException if the description is ill-formed
 	 */
-	public static Lexer of(List<Located<String>> imports, 
+	public static Lexer of(
+			List<Option> options, List<Located<String>> imports, 
 			Extent header, Map<Located<String>, Regular> regulars,
 			Iterable<Entry> entryPoints, Extent footer) {
-		 Lexer.Builder builder = new Lexer.Builder(imports, header, regulars, footer);
+		 Lexer.Builder builder = new Lexer.Builder(options, imports, header, regulars, footer);
 		 for (Entry entry : entryPoints)
 			 builder.addEntry(entry);
 		 return builder.build();

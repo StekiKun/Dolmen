@@ -189,7 +189,8 @@ public final class Config {
 		}
 		
 		static IReport unknownOption(Option option) {
-			String msg = String.format("Unknown option \"%s\", this setting will be ignored", option.key.val);
+			String msg = String.format(
+				"Unknown option \"%s\", this setting will be ignored", option.key.val);
 			return IReport.of(msg, Severity.WARNING, option.key);
 		}
 		

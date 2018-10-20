@@ -16,11 +16,15 @@
 
 ## A lexer definition (.jl) [LEXER]
 
+OPTION*	    // Configuration options
 IMPORT*			// Java imports
 { JAVA }		// header
 REGEXP_DEF*		// regular expression definitions
 ENTRY+			// lexer entries
 { JAVA }		// footer
+
+## Options [OPTION]
+[ IDENT = STRING ]	// Key = value
 
 ## Imports [IMPORT]
 

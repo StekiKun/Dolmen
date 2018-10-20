@@ -20,6 +20,7 @@ import syntax.Regular;
 import syntax.Regular.Characters;
 import syntax.Regulars;
 import syntax.Lexer;
+import syntax.Option;
 
 // The tokens of the lexer description language
 
@@ -97,10 +98,11 @@ token END
 // The parsing rules
 
 /**
- * lexer := import* ACTION definition* entry+ ACTION END
+ * lexer := option* import* ACTION definition* entry+ ACTION END
  */
 public { Lexer } rule lexer =
-|	imports = imports(null) 
+|	options = options(null)
+	imports = imports(null) 
 	header = ACTION
 	definitions()
 	entries = entries()
@@ -108,11 +110,26 @@ public { Lexer } rule lexer =
 	END
 	{
 		Lexer.Builder builder =
-			new Lexer.Builder(imports, header, definitions, footer);
+			new Lexer.Builder(options, imports, header, definitions, footer);
 		for (Lexer.Entry entry : entries)
 			builder.addEntry(entry);
 		return builder.build();
 	}
+;
+
+private { List<Option> } rule options(@Nullable List<Option> opts) =
+| 	
+	{ return opts == null ? Lists.empty() : opts; }
+|   LBRACKET
+	{ List<Option> acc = opts == null ? new ArrayList<>() : opts; }
+	key = IDENT 
+	{ Located<String> lkey = withLoc(key); }
+	EQUAL value = LSTRING	
+	{ Located<String> lvalue = withLoc(value); }
+	RBRACKET
+	{ acc.add(Option.of(lkey, lvalue)); }
+	options(acc)
+	{ return acc; }
 ;
 
 private { List<Located<String>> } rule imports(@Nullable List<Located<String>> imports) =

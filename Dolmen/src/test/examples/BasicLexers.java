@@ -81,7 +81,7 @@ public abstract class BasicLexers {
 				Lists.singleton(new Clause(Located.dummy(ident), Extent.DUMMY)));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -114,7 +114,7 @@ public abstract class BasicLexers {
 				Lists.singleton(new Clause(Located.dummy(ident), Extent.DUMMY)));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 
@@ -153,7 +153,7 @@ public abstract class BasicLexers {
 					Extent.inlined("System.out.println(id); return;"))));
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -194,7 +194,7 @@ public abstract class BasicLexers {
 					Located.dummy("ident_int"), VOID, false, null, clauses);
 		
 		final static Lexer LEXER = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 	}
 	
@@ -261,10 +261,10 @@ public abstract class BasicLexers {
 			new Lexer.Entry(true, Located.dummy("identkw"), VOID, true, null, clauses);
 		
 		final static Lexer LEXER =
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(entry), Extent.DUMMY);
 		final static Lexer SHORTEST = 
-			Lexer.of(Lists.empty(), Extent.DUMMY, Maps.empty(),
+			Lexer.of(Lists.empty(), Lists.empty(), Extent.DUMMY, Maps.empty(),
 					Lists.singleton(sh_entry), Extent.DUMMY);
 	}
 	
