@@ -418,7 +418,7 @@ public abstract class JLLexer {
 		System.out.println(aut);
 		File file = new File("src/jl/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			AutomataOutput.output(writer, className, aut);
+			AutomataOutput.outputDefault(writer, className, aut);
 			System.out.println("----------JAVA--------");
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (IOException e) {

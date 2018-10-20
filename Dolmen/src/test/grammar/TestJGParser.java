@@ -61,7 +61,7 @@ public abstract class TestJGParser {
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package test.examples;\n");
-			AutomataOutput.output(writer, className, aut);
+			AutomataOutput.outputDefault(writer, className, aut);
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}

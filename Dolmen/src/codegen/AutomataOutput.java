@@ -35,19 +35,24 @@ import tagged.TLexerEntry.Finisher;
  * {@linkplain automaton.Automata.Entry entry} is realized
  * by an entry point with the corresponding return type.
  * 
- * @see #output(Writer, String, Automata)
+ * @see #output(Writer, String, Config, Automata)
  * 
  * @author Stéphane Lescuyer
  */
 public final class AutomataOutput {
 
+	/** The configuration attached to the lexer being generated */
+	@SuppressWarnings("unused")
+	private final Config config;
+	
 	/** The automata being generated */
 	private final Automata aut;
 	
 	/** The code buffer being used */
 	private final CodeBuilder buf;
 	
-	private AutomataOutput(Automata aut) {
+	private AutomataOutput(Config config, Automata aut) {
+		this.config = config;
 		this.aut = aut;
 		this.buf = new CodeBuilder(0);
 	}
@@ -420,7 +425,8 @@ public final class AutomataOutput {
 	/**
 	 * Generates the code from the automata {@code aut} in
 	 * a Java class with name {@code className}, exported
-	 * using the given {@code writer}.
+	 * using the given {@code writer} and parameterized
+	 * by the configuration {@code config}.
 	 * <p>
 	 * Returns the source mappings computed when emitting
 	 * the code. Positions in generated code are computed
@@ -430,12 +436,13 @@ public final class AutomataOutput {
 	 * 
 	 * @param writer
 	 * @param className
+	 * @param config
 	 * @param aut
 	 * @throws IOException
 	 */
 	public static SourceMapping output(Writer writer,
-			String className, Automata aut) throws IOException {
-		AutomataOutput output = new AutomataOutput(aut);
+			String className, Config config, Automata aut) throws IOException {
+		AutomataOutput output = new AutomataOutput(config, aut);
 		int offset =
 			writer instanceof CountingWriter ?
 				(int) ((CountingWriter) writer).getCount() :
@@ -446,4 +453,18 @@ public final class AutomataOutput {
 		return output.buf.getSourceMapping();
 	}
 	
+	/**
+	 * Same as {@link #output(Writer, String, Config, Automata)}
+	 * but the the {@linkplain Config#DEFAULT default configuration}.
+	 * 
+	 * @param writer
+	 * @param className
+	 * @param aut
+	 * @return the source mapping computed when emitting the code
+	 * @throws IOException
+	 */
+	public static SourceMapping outputDefault(Writer writer,
+			String className, Automata aut) throws IOException {
+		return output(writer, className, Config.DEFAULT, aut);
+	}
 }

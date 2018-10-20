@@ -42,7 +42,7 @@ public abstract class JGLexerStub {
 		File file = new File("src/jg/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package jg;\n");
-			AutomataOutput.output(writer, className, aut);
+			AutomataOutput.outputDefault(writer, className, aut);
 		}
 		tasks.leaveWith("Generated in " + file.getAbsolutePath());
 	}

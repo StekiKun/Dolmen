@@ -41,7 +41,7 @@ public abstract class JGELexerStub {
 		File file = new File("src/jge/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package jge;\n");
-			AutomataOutput.output(writer, className, aut);
+			AutomataOutput.outputDefault(writer, className, aut);
 		}
 		tasks.leaveWith("Generated in " + file.getAbsolutePath());
 	}

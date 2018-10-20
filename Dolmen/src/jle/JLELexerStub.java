@@ -41,7 +41,7 @@ public abstract class JLELexerStub {
 		File file = new File("src/jle/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package jle;\n");
-			AutomataOutput.output(writer, className, aut);
+			AutomataOutput.outputDefault(writer, className, aut);
 		}
 		tasks.leaveWith("Generated in " + file.getAbsolutePath());
 	}
