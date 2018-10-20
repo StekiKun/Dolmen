@@ -9,19 +9,26 @@ import java.util.function.Function;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import syntax.Grammar;
 import syntax.IReport;
 import syntax.IReport.Severity;
+import syntax.Lexer;
 import syntax.Option;
 import syntax.Reporter;
 
 /**
- * Configuration description for {@link GrammarOutput}
+ * Configuration description for Dolmen generation of
+ * both lexical and syntax analyzers.
  * <p>
  * Options can be configured in the grammar description
  * using pairs of key-value descriptions. The set of
  * supported keys is described in the enumeration {@link Keys}.
  * Configuration instances can then be built from such a list
- * of key-value bindings (see {@link #ofOptions(List, Reporter)}).
+ * of key-value bindings 
+ * (see {@link #ofOptions(Relevance, List, Reporter)}).
+ * <p>
+ * Each option can be relevant to either solely lexer generation
+ * or parser generation, or to both.
  * <p>
  * For better declarative support, a configuration instance can
  * also be built using a builder class with chained methods
@@ -30,9 +37,48 @@ import syntax.Reporter;
  * Finally, a {@link #DEFAULT} configuration is available.
  * 
  * @author Stéphane Lescuyer
- * @see #ofOptions(List, Reporter)
+ * @see #ofOptions(Relevance, List, Reporter)
  */
 public final class Config {
+	
+	/**
+	 * Enumeration representing the relevance of a
+	 * configuration: it can be usable only within a lexer
+	 * description, a parser description, or both.
+	 * <p>
+	 * Relevance values form a semi-lattice with {@link #BOTH}
+	 * as a bottom element for the {@link #includes(Relevance)}
+	 * relation.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static enum Relevance {
+		/** Only relevant to generation of lexical analyzers */
+		LEXER,
+		/** Only relevant to generation of syntax analyzers */
+		PARSER,
+		/** Relevant for both lexical and syntax analyzers */
+		BOTH;
+		
+		/**
+		 * @param r
+		 * @return whether this relevance value is more
+		 * 	permissive than {@code r}, i.e. whether all
+		 * 	options relevant in {@code r} are also relevant
+		 * 	in {@code this}
+		 */
+		public boolean includes(Relevance r) {
+			switch (this) {
+			case BOTH:
+				return true;
+			case LEXER:
+				return r == LEXER;
+			case PARSER:
+				return r == PARSER;
+			}
+			return false;
+		}
+	}
 	
 	/**
 	 * Enumeration of the keys for configurable options.
@@ -48,10 +94,12 @@ public final class Config {
 	 */
 	@SuppressWarnings("javadoc")
 	public static enum Keys {
-		Positions("positions", false, Keys::asBoolean),
-		TokenAnnotations("token_annotations", "@SuppressWarnings(\"javadoc\")", Keys::asString),
-		ClassAnnotations("class_annotations", "", Keys::asString);
+		Positions(Relevance.PARSER, "positions", false, Keys::asBoolean),
+		TokenAnnotations(Relevance.PARSER, "token_annotations", "@SuppressWarnings(\"javadoc\")", Keys::asString),
+		ClassAnnotations(Relevance.BOTH, "class_annotations", "", Keys::asString);
 		
+		/** Relevance of the option associated to that key */
+		public final Relevance relevance;
 		/** Name of the key */
 		public final String key;
 		/** Default value of the option associated to that key */
@@ -59,7 +107,9 @@ public final class Config {
 		/** Parser function for the option value */
 		public final Function<String, Object> parser;
 		
-		private <@NonNull B> Keys(String key, B defaultValue, Function<String, B> parser) {
+		private <@NonNull B> Keys(Relevance relevance, 
+				String key, B defaultValue, Function<String, B> parser) {
+			this.relevance = relevance;
 			this.key = key;
 			this.defaultValue = defaultValue;
 			this.parser = (s) -> parser.apply(s); // η-expansion for type weakening 
@@ -123,10 +173,9 @@ public final class Config {
 	public static final Config DEFAULT = new Config();
 	
 	/**
-	 * Builds a configuration for {@link GrammarOutput} from
-	 * the given options. Not all options need be configured
-	 * in {@code options}, those that are unspecified will
-	 * take on default values.
+	 * Builds a configuration from the given options. 
+	 * Not all options need be configured in {@code options}, 
+	 * those that are unspecified will take on default values.
 	 * 
 	 * @param options
 	 * @throws ClassCastException if some options are
@@ -143,12 +192,14 @@ public final class Config {
 	 * can report unexpected things such as illegal keys or values 
 	 * through the reporter. Only <i>warnings</i> are reported.
 	 * 
+	 * @param relevance	context where the configuration should be relevant
 	 * @param options
 	 * @param reporter	can be null if no reporting is required
-	 * @return the grammar configuration that is implied
+	 * @return the configuration that is implied
 	 * 	by the option settings given in {@code options}
 	 */
-	public static Config ofOptions(List<Option> options, @Nullable Reporter reporter) {
+	public static Config ofOptions(Relevance relevance, 
+			List<Option> options, @Nullable Reporter reporter) {
 		EnumMap<Keys, Object> indexedOptions = new EnumMap<>(Keys.class);
 		
 		for (Option option : options) {
@@ -156,6 +207,12 @@ public final class Config {
 			final String keyName = option.key.val;
 			final @Nullable Keys key = Keys.fromName.get(keyName);
 			if (key == null) {
+				if (reporter != null)
+					reporter.add(Reports.unknownOption(option));
+				continue;
+			}
+			// Check that the option is relevant here
+			if (!key.relevance.includes(relevance)) {
 				if (reporter != null)
 					reporter.add(Reports.unknownOption(option));
 				continue;
@@ -180,6 +237,31 @@ public final class Config {
 		}
 
 		return new Config(indexedOptions);
+	}
+	
+	/**
+	 * Same as {@link #ofOptions(Relevance, List, Reporter) 
+	 * 	ofOptions(Relevance.PARSER, grammar.options, reporter)}.
+	 * 
+	 * @param grammar
+	 * @param reporter
+	 * @return the configuration that is implied from the options
+	 * 	in {@code grammar}
+	 */
+	public static Config ofGrammar(Grammar grammar, @Nullable Reporter reporter) {
+		return ofOptions(Relevance.PARSER, grammar.options, reporter);
+	}
+	/**
+	 * Same as {@link #ofOptions(Relevance, List, Reporter) 
+	 * 	ofOptions(Relevance.LEXER, grammar.options, reporter)}.
+	 * 
+	 * @param lexer
+	 * @param reporter
+	 * @return the configuration that is implied from the options
+	 * 	in {@code lexer}
+	 */
+	public static Config ofLexer(Lexer lexer, @Nullable Reporter reporter) {
+		return ofOptions(Relevance.LEXER, lexer.options, reporter);
 	}
 	
 	/**

@@ -74,7 +74,7 @@ public abstract class TestJGEParser {
 			System.out.println(predictTable.toString());
 		File file = new File("src/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			Config config = Config.ofOptions(grammar.options, null);
+			Config config = Config.ofGrammar(grammar, null);
 			writer.append("package test.examples;\n");
 			GrammarOutput.output(writer, className, config, grammar, predictTable);
 		}
