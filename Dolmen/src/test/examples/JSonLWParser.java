@@ -209,7 +209,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  more_elements() {
-        while (true) {
         switch (peek().getKind()) {
             case COMMA: {
                 
@@ -218,7 +217,8 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 // value
                 value();
                 // more_elements
-                continue; 
+                more_elements();
+                 return; 
             }
             case RSQUARE: {
                 
@@ -229,7 +229,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
             }
-        }
         }
     }
     
@@ -265,7 +264,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  more_members() {
-    	while (true) {
         switch (peek().getKind()) {
             case COMMA: {
                 
@@ -274,7 +272,8 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 // pair
                 pair();
                 // more_members
-                continue; 
+                more_members();
+                 return; 
             }
             case RBRACKET: {
                 
@@ -286,7 +285,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
             }
         }
-    	}
     }
     
     private  void  pair() {

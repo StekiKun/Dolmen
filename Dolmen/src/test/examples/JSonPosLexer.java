@@ -38,137 +38,146 @@ public final class JSonPosLexer extends codegen.LexBuffer {
      * Entry point for rule main
      */
     public  Token  main() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell0();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return main(); 
-        }
-        case 1:  {
-             newline(); return main(); 
-        }
-        case 2:  {
-             return LBRACKET; 
-        }
-        case 3:  {
-             return RBRACKET; 
-        }
-        case 4:  {
-             return COMMA; 
-        }
-        case 5:  {
-             return COLON; 
-        }
-        case 6:  {
-             return LSQUARE; 
-        }
-        case 7:  {
-             return RSQUARE; 
-        }
-        case 8:  {
-             return TRUE; 
-        }
-        case 9:  {
-             return FALSE; 
-        }
-        case 10:  {
-             return NULL; 
-        }
-        case 11:  {
-             return OBJECT; 
-        }
-        case 12:  {
-             return ARRAY; 
-        }
-        case 13:  {
-             
+        main:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell0();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return main(); 
+            }
+            case 1:  {
+                 newline(); return main(); 
+            }
+            case 2:  {
+                 return LBRACKET; 
+            }
+            case 3:  {
+                 return RBRACKET; 
+            }
+            case 4:  {
+                 return COMMA; 
+            }
+            case 5:  {
+                 return COLON; 
+            }
+            case 6:  {
+                 return LSQUARE; 
+            }
+            case 7:  {
+                 return RSQUARE; 
+            }
+            case 8:  {
+                 return TRUE; 
+            }
+            case 9:  {
+                 return FALSE; 
+            }
+            case 10:  {
+                 return NULL; 
+            }
+            case 11:  {
+                 return OBJECT; 
+            }
+            case 12:  {
+                 return ARRAY; 
+            }
+            case 13:  {
+                 
               Position stringStart = getLexemeStart();
 			  buf.setLength(0); string();
 			  startLoc = stringStart;
 			  return STRING(buf.toString());
 			
+            }
+            case 14:  {
+                 return NUMBER(Double.parseDouble(getLexeme())); 
+            }
+            case 15:  {
+                 return EOF; 
+            }
+            default:
+                break main;
+            }
         }
-        case 14:  {
-             return NUMBER(Double.parseDouble(getLexeme())); 
-        }
-        case 15:  {
-             return EOF; 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule string
      */
     private  void  string() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell46();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return; 
-        }
-        case 1:  {
-            final char c = getSubLexemeChar(startPos + 1);
-             
+        string:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell46();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return; 
+            }
+            case 1:  {
+                final char c = getSubLexemeChar(startPos + 1);
+                 
 			  buf.append(escapedChar(c));
 			  string();
 			  return;
 			
-        }
-        case 2:  {
-             
+            }
+            case 2:  {
+                 
 			  char c = hexUnicode(); 
 			  buf.append(c);
 			  string();
 			  return;
 			
-        }
-        case 3:  {
-            final char c = getSubLexemeChar(startPos + 1);
-             throw error("Unknown escape sequence: " + c); 
-        }
-        case 4:  {
-             throw error("Unterminated string"); 
-        }
-        case 5:  {
-             
+            }
+            case 3:  {
+                final char c = getSubLexemeChar(startPos + 1);
+                 throw error("Unknown escape sequence: " + c); 
+            }
+            case 4:  {
+                 throw error("Unterminated string"); 
+            }
+            case 5:  {
+                 
 			  buf.append(getLexeme());
 			  string();
 			  return;
 			
+            }
+            default:
+                break string;
+            }
         }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule hexUnicode
      */
     private  char hexUnicode() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell54();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return (char)(Integer.parseInt(getLexeme(), 16)); 
+        hexUnicode:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell54();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return (char)(Integer.parseInt(getLexeme(), 16)); 
+            }
+            case 1:  {
+                 throw error("Illegal \\u Unicode sequence"); 
+            }
+            default:
+                break hexUnicode;
+            }
         }
-        case 1:  {
-             throw error("Illegal \\u Unicode sequence"); 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     private int _jl_cell0() {

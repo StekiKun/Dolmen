@@ -328,8 +328,8 @@ public final class AutomataOutput {
 		buf.emitln(");");
 	}
 	
-	private void genFinishers(List<@NonNull Finisher> finishers) {
-		for (Finisher finisher : finishers) {
+	private void genFinishers(Automata.Entry entry) {
+		for (Finisher finisher : entry.finishers) {
 			buf.emit("case " + finisher.action + ": ").openBlock();
 			// Prepare the environment with bindings, for the
 			// semantic action
@@ -343,8 +343,12 @@ public final class AutomataOutput {
 			buf.closeBlock();
 		}
 		// Generate a default case for when input didn't match
+		// we actually break from the loop and report the empty
+		// token after the loop. This is a trick to make sure the
+		// label before the loop is always used and generates no
+		// warnings when the user does not need the continuation.
 		buf.emit("default:").incrIndent().newline();
-		buf.emit("throw error(\"Empty token\");");
+		buf.emit("break ").emit(entry.name).emit(";");
 		buf.decrIndent().newline();
 	}
 	
@@ -358,6 +362,10 @@ public final class AutomataOutput {
 			.emit(entry.name).emit("(");
 		genEntryArgs(entry.args);
 		buf.emit(")").openBlock();
+		// Add infinite loop around the entry's code for
+		// action which want to efficiently reenter
+		buf.emitln(entry.name + ":");
+		buf.emit("while (true)").openBlock();
 		// Initialization of lexer variables for this entry
 		buf.emitln("// Initialize lexer for this automaton");
 		if (entry.memSize > 0) {
@@ -379,8 +387,12 @@ public final class AutomataOutput {
 		// (if Backtrack is encountered before a final state,
 		//  lastAction will be -1)
 		buf.emitln("switch (result) {");
-		genFinishers(entry.finishers);
-		buf.emitln("}");
+		genFinishers(entry);
+		buf.emit("}");
+		// Close the loop, and if report the empty token if 
+		// no input did match
+		buf.closeBlock();
+		buf.emit("throw error(\"Empty token\");");
 		buf.closeBlock();
 		// Add a final field for the memory used by this entry
 		if (entry.memSize > 0) {

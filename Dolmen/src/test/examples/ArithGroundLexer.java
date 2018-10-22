@@ -22,33 +22,36 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
      * Entry point for rule main
      */
     public Token main() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell0();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return main(); 
+        main:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell0();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return main(); 
+            }
+            case 1:  {
+                 return INT(Integer.parseInt(getLexeme())); 
+            }
+            case 2:  {
+                 return PLUS; 
+            }
+            case 3:  {
+                 return TIMES; 
+            }
+            case 4:  {
+                 return MINUS; 
+            }
+            case 5:  {
+                 return EOF; 
+            }
+            default:
+                break main;
+            }
         }
-        case 1:  {
-             return INT(Integer.parseInt(getLexeme())); 
-        }
-        case 2:  {
-             return PLUS; 
-        }
-        case 3:  {
-             return TIMES; 
-        }
-        case 4:  {
-             return MINUS; 
-        }
-        case 5:  {
-             return EOF; 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     private int _jl_cell0() {

@@ -22,57 +22,60 @@ public final class StraightLineLexer extends codegen.LexBuffer {
      * Entry point for rule main
      */
     public Token main() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell0();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return main(); 
+        main:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell0();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return main(); 
+            }
+            case 1:  {
+                 return INT(Integer.parseInt(getLexeme())); 
+            }
+            case 2:  {
+                 return PRINT; 
+            }
+            case 3:  {
+                 return ID(getLexeme()); 
+            }
+            case 4:  {
+                 return PLUS; 
+            }
+            case 5:  {
+                 return TIMES; 
+            }
+            case 6:  {
+                 return MINUS; 
+            }
+            case 7:  {
+                 return DIV; 
+            }
+            case 8:  {
+                 return COMMA; 
+            }
+            case 9:  {
+                 return LPAREN; 
+            }
+            case 10:  {
+                 return RPAREN; 
+            }
+            case 11:  {
+                 return ASSIGN; 
+            }
+            case 12:  {
+                 return SEMICOLON; 
+            }
+            case 13:  {
+                 return EOF; 
+            }
+            default:
+                break main;
+            }
         }
-        case 1:  {
-             return INT(Integer.parseInt(getLexeme())); 
-        }
-        case 2:  {
-             return PRINT; 
-        }
-        case 3:  {
-             return ID(getLexeme()); 
-        }
-        case 4:  {
-             return PLUS; 
-        }
-        case 5:  {
-             return TIMES; 
-        }
-        case 6:  {
-             return MINUS; 
-        }
-        case 7:  {
-             return DIV; 
-        }
-        case 8:  {
-             return COMMA; 
-        }
-        case 9:  {
-             return LPAREN; 
-        }
-        case 10:  {
-             return RPAREN; 
-        }
-        case 11:  {
-             return ASSIGN; 
-        }
-        case 12:  {
-             return SEMICOLON; 
-        }
-        case 13:  {
-             return EOF; 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     private int _jl_cell0() {

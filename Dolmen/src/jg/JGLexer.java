@@ -50,25 +50,27 @@ public final class JGLexer extends codegen.LexBuffer {
      * Entry point for rule main
      */
     public Token main() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell0();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return main(); 
-        }
-        case 1:  {
-             newline(); return main(); 
-        }
-        case 2:  {
-             comment(); return main(); 
-        }
-        case 3:  {
-             return main(); 
-        }
-        case 4:  {
-             braceDepth = 1;
+        main:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell0();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return main(); 
+            }
+            case 1:  {
+                 newline(); return main(); 
+            }
+            case 2:  {
+                 comment(); return main(); 
+            }
+            case 3:  {
+                 return main(); 
+            }
+            case 4:  {
+                 braceDepth = 1;
               Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = action();
@@ -77,9 +79,9 @@ public final class JGLexer extends codegen.LexBuffer {
               startLoc = start;
 			  return ACTION(ext);
 			
-        }
-        case 5:  {
-             parenDepth = 1;
+            }
+            case 5:  {
+                 parenDepth = 1;
               Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
 			  int endOffset = arguments();
@@ -88,231 +90,247 @@ public final class JGLexer extends codegen.LexBuffer {
 			  startLoc = start;
 			  return ARGUMENTS(ext);
 			
+            }
+            case 6:  {
+                 return identOrKeyword(getLexeme()); 
+            }
+            case 7:  {
+                 return SEMICOL; 
+            }
+            case 8:  {
+                 return DOT; 
+            }
+            case 9:  {
+                 return EQUAL; 
+            }
+            case 10:  {
+                 return BAR; 
+            }
+            case 11:  {
+                 return EOF; 
+            }
+            case 12:  {
+                 throw error("Unfinished token"); 
+            }
+            default:
+                break main;
+            }
         }
-        case 6:  {
-             return identOrKeyword(getLexeme()); 
-        }
-        case 7:  {
-             return SEMICOL; 
-        }
-        case 8:  {
-             return DOT; 
-        }
-        case 9:  {
-             return EQUAL; 
-        }
-        case 10:  {
-             return BAR; 
-        }
-        case 11:  {
-             return EOF; 
-        }
-        case 12:  {
-             throw error("Unfinished token"); 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule comment
      */
     private void comment() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell16();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return; 
+        comment:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell16();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return; 
+            }
+            case 1:  {
+                 comment(); return; 
+            }
+            case 2:  {
+                 throw error("Unterminated comment"); 
+            }
+            case 3:  {
+                 newline(); comment(); return; 
+            }
+            case 4:  {
+                 comment(); return; 
+            }
+            default:
+                break comment;
+            }
         }
-        case 1:  {
-             comment(); return; 
-        }
-        case 2:  {
-             throw error("Unterminated comment"); 
-        }
-        case 3:  {
-             newline(); comment(); return; 
-        }
-        case 4:  {
-             comment(); return; 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule string
      */
     private void string() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell23();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return; 
-        }
-        case 1:  {
-            final char c = getSubLexemeChar(startPos + 1);
-             stringBuffer.append(forBackslash(c));
+        string:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell23();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return; 
+            }
+            case 1:  {
+                final char c = getSubLexemeChar(startPos + 1);
+                 stringBuffer.append(forBackslash(c));
 			  string(); return; 
 			
-        }
-        case 2:  {
-            final char c = getSubLexemeChar(startPos + 1);
-             stringBuffer.append('\\').append(c);
+            }
+            case 2:  {
+                final char c = getSubLexemeChar(startPos + 1);
+                 stringBuffer.append('\\').append(c);
 			  string(); return; 
 			
-        }
-        case 3:  {
-             throw error("Unterminated escape sequence in string literal"); 
-        }
-        case 4:  {
-             throw error("Unterminated string literal"); 
-        }
-        case 5:  {
-             stringBuffer.append(getLexeme()); 
+            }
+            case 3:  {
+                 throw error("Unterminated escape sequence in string literal"); 
+            }
+            case 4:  {
+                 throw error("Unterminated string literal"); 
+            }
+            case 5:  {
+                 stringBuffer.append(getLexeme()); 
 			  string(); return; 
 			
+            }
+            default:
+                break string;
+            }
         }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule action
      */
     private int action() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell31();
-        endToken();
-        switch (result) {
-        case 0:  {
-             ++braceDepth; return action(); 
-        }
-        case 1:  {
-             --braceDepth;
+        action:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell31();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 ++braceDepth; return action(); 
+            }
+            case 1:  {
+                 --braceDepth;
 			  if (braceDepth == 0) return getLexemeStart().offset - 1;
 			  return action();
 			
-        }
-        case 2:  {
-             stringBuffer.setLength(0);
+            }
+            case 2:  {
+                 stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
 			  return action();
 			
+            }
+            case 3:  {
+                 skipChar(); return action(); 
+            }
+            case 4:  {
+                 comment(); return action(); 
+            }
+            case 5:  {
+                 return action(); 
+            }
+            case 6:  {
+                 throw error("Unterminated action"); 
+            }
+            case 7:  {
+                 newline(); return action(); 
+            }
+            case 8:  {
+                 return action(); 
+            }
+            case 9:  {
+                 return action(); 
+            }
+            default:
+                break action;
+            }
         }
-        case 3:  {
-             skipChar(); return action(); 
-        }
-        case 4:  {
-             comment(); return action(); 
-        }
-        case 5:  {
-             return action(); 
-        }
-        case 6:  {
-             throw error("Unterminated action"); 
-        }
-        case 7:  {
-             newline(); return action(); 
-        }
-        case 8:  {
-             return action(); 
-        }
-        case 9:  {
-             return action(); 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule arguments
      */
     private int arguments() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell43();
-        endToken();
-        switch (result) {
-        case 0:  {
-             ++parenDepth; return arguments(); 
-        }
-        case 1:  {
-             --parenDepth;
+        arguments:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell43();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 ++parenDepth; return arguments(); 
+            }
+            case 1:  {
+                 --parenDepth;
 			  if (parenDepth == 0) return getLexemeStart().offset - 1;
 			  return arguments();
 			
-        }
-        case 2:  {
-             stringBuffer.setLength(0);
+            }
+            case 2:  {
+                 stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
 			  return arguments();
 			
+            }
+            case 3:  {
+                 skipChar(); return arguments(); 
+            }
+            case 4:  {
+                 comment(); return arguments(); 
+            }
+            case 5:  {
+                 return arguments(); 
+            }
+            case 6:  {
+                 throw error("Unterminated arguments"); 
+            }
+            case 7:  {
+                 newline(); return arguments(); 
+            }
+            case 8:  {
+                 return arguments(); 
+            }
+            case 9:  {
+                 return arguments(); 
+            }
+            default:
+                break arguments;
+            }
         }
-        case 3:  {
-             skipChar(); return arguments(); 
-        }
-        case 4:  {
-             comment(); return arguments(); 
-        }
-        case 5:  {
-             return arguments(); 
-        }
-        case 6:  {
-             throw error("Unterminated arguments"); 
-        }
-        case 7:  {
-             newline(); return arguments(); 
-        }
-        case 8:  {
-             return arguments(); 
-        }
-        case 9:  {
-             return arguments(); 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     /**
      * Entry point for rule skipChar
      */
     private void skipChar() {
-        // Initialize lexer for this automaton
-        startToken();
-        int result = _jl_cell55();
-        endToken();
-        switch (result) {
-        case 0:  {
-             return; 
+        skipChar:
+        while (true) {
+            // Initialize lexer for this automaton
+            startToken();
+            int result = _jl_cell55();
+            endToken();
+            switch (result) {
+            case 0:  {
+                 return; 
+            }
+            case 1:  {
+                 return; 
+            }
+            case 2:  {
+                 return; 
+            }
+            default:
+                break skipChar;
+            }
         }
-        case 1:  {
-             return; 
-        }
-        case 2:  {
-             return; 
-        }
-        default:
-            throw error("Empty token");
-        }
-        
+        throw error("Empty token");
     }
     
     private int _jl_cell0() {
