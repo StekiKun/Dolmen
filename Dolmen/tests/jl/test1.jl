@@ -41,8 +41,8 @@ public { Object } rule arithExpr =
 
 private { void } rule comment =
 | "*/" { return; }
-| '*' [^'/'] [^'*']*  { comment(); return; }
-| orelse              { comment(); return; }
+| '*' [^'/'] [^'*']*  { continue comment; }
+| orelse              { continue comment; }
 | eof				  { throw new LexicalError(getLexemeStart(), "Unterminated comment"); }
 
 { }

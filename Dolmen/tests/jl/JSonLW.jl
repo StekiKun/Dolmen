@@ -35,8 +35,8 @@ number = int frac? exp?;
 hex = ['0'-'9''a'-'f''A'-'F'];
 
 public { Token } rule main =
-| ws		{ return main(); }
-| nl		{ newline(); return main(); }
+| ws		{ continue main; }
+| nl		{ newline(); continue main; }
 | '{'		{ return LBRACKET; }
 | '}'		{ return RBRACKET; }
 | ','		{ return COMMA; }
@@ -60,23 +60,20 @@ private { void } rule string =
 | '\\' (escaped as c)
 			{ 
 			  buf.append(escapedChar(c));
-			  string();
-			  return;
+			  continue string;
 			}
 | '\\' 'u'
 			{ 
 			  char c = hexUnicode(); 
 			  buf.append(c);
-			  string();
-			  return;
+			  continue string;
 			}
 | '\\' (_ as c)
 			{ throw error("Unknown escape sequence: " + c); }
 | eof		{ throw error("Unterminated string"); }
 | orelse	{ 
 			  buf.append(getLexeme());
-			  string();
-			  return;
+			  continue string;
 			}
 
 private { char} rule hexUnicode =

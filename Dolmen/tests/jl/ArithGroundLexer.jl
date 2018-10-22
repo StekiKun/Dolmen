@@ -7,7 +7,7 @@ integer = digit+;
 ws = [' ' '\t' '\b' '\n' '\r'];
 
 public {Token} rule main =
-| ws+	{ return main(); }
+| ws+	{ continue main; }
 | integer { return INT(Integer.parseInt(getLexeme())); }
 | '+'   { return PLUS; }
 | '*'   { return TIMES; }

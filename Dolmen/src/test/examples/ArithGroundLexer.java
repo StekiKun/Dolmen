@@ -30,7 +30,7 @@ public final class ArithGroundLexer extends codegen.LexBuffer {
             endToken();
             switch (result) {
             case 0:  {
-                 return main(); 
+                 continue main; 
             }
             case 1:  {
                  return INT(Integer.parseInt(getLexeme())); 

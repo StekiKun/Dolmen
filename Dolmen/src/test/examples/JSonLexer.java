@@ -46,10 +46,10 @@ public final class JSonLexer extends codegen.LexBuffer {
             endToken();
             switch (result) {
             case 0:  {
-                 return main(); 
+                 continue main; 
             }
             case 1:  {
-                 newline(); return main(); 
+                 newline(); continue main; 
             }
             case 2:  {
                  return LBRACKET; 
@@ -117,16 +117,14 @@ public final class JSonLexer extends codegen.LexBuffer {
                 final char c = getSubLexemeChar(startPos + 1);
                  
 			  buf.append(escapedChar(c));
-			  string();
-			  return;
+			  continue string;
 			
             }
             case 2:  {
                  
 			  char c = hexUnicode(); 
 			  buf.append(c);
-			  string();
-			  return;
+			  continue string;
 			
             }
             case 3:  {
@@ -139,8 +137,7 @@ public final class JSonLexer extends codegen.LexBuffer {
             case 5:  {
                  
 			  buf.append(getLexeme());
-			  string();
-			  return;
+			  continue string;
 			
             }
             default:
