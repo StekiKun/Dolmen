@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import common.CSet;
 import common.Lists;
 import common.Maps;
+import common.Java;
 import codegen.LexBuffer.Position;
 import syntax.Extent;
 import syntax.Located;
@@ -255,6 +256,12 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
      */
     private <@NonNull T> Located<T> withLoc(T t) {
 	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
+    }
+    
+    private String validJavaIdent(String id) {
+    	if (Java.keywordSet.contains(id))
+    		throw parsingError("Invalid name: reserved Java identifier");
+    	return id;
     }
 
     /**
@@ -519,7 +526,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         eat(Token.Kind.RULE);
         // name = IDENT
         String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-         Located<String> lname = Located.of(name,
+         Located<String> lname = Located.of(validJavaIdent(name),
 		_jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
 	
         // args = args()
@@ -695,8 +702,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 eat(Token.Kind.AS);
                 // id = IDENT
                 String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // reg = regular_op(Regular.binding(r, withLoc(id)))
-                 Regular  reg = regular_op(Regular.binding(r, withLoc(id)));
+                 Located<String> lid = withLoc(validJavaIdent(id)); 
+                // reg = regular_op(Regular.binding(r, lid))
+                 Regular  reg = regular_op(Regular.binding(r, lid));
                  return reg; 
             }
             default: {

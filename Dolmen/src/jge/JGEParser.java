@@ -5,6 +5,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import java.util.List;
 import java.util.ArrayList;
 import common.Lists;
+import common.Java;
 import syntax.Extent;
 import syntax.Located;
 import syntax.Production;
@@ -189,6 +190,12 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
      */
     private <@NonNull T> Located<T> withLoc(T t) {
 	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
+    }
+    
+    private String validJavaIdent(String id) {
+    	if (Java.keywordSet.contains(id))
+    		throw parsingError("Invalid name: reserved Java identifier");
+    	return id;
     }
 
     /**
@@ -447,7 +454,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
          if (!Character.isLowerCase(name.charAt(0))) 
             throw parsingError("Rule name must start with a lower case letter: " + name); 
-         Located<String> lname = withLoc(name); 
+         Located<String> lname = withLoc(validJavaIdent(name)); 
         // args = args
         @Nullable Extent args = args();
         // EQUAL
@@ -583,6 +590,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             }
             case EQUAL: {
                 
+                 validJavaIdent(id.val); 
                 // EQUAL
                 eat(Token.Kind.EQUAL);
                 // name = IDENT

@@ -7,6 +7,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import java.util.List;
 import java.util.ArrayList;
 import common.Lists;
+import common.Java;
 import syntax.Extent;
 import syntax.Located;
 import syntax.Production;
@@ -56,6 +57,12 @@ token EOF
      */
     private <@NonNull T> Located<T> withLoc(T t) {
 	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
+    }
+    
+    private String validJavaIdent(String id) {
+    	if (Java.keywordSet.contains(id))
+    		throw parsingError("Invalid name: reserved Java identifier");
+    	return id;
     }
 }
 
@@ -110,7 +117,8 @@ private {List<TokenDecl>} rule tokens(@Nullable List<TokenDecl> tokens) =
 |  {List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;} 
 	TOKEN tok = token_ {acc.add(tok);} tokens(acc) {return acc;};
 
-private {TokenDecl} rule token_ = 
+private {TokenDecl} rule token_ =
+// NB: all reserved Java keywords/literals are lowercase, so no clash with tokens 
 |  id = IDENT 
 	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); } 
 	{ return new TokenDecl(withLoc(id), null); }
@@ -128,7 +136,7 @@ private {GrammarRule} rule rule_ =
 |  vis = visibility rtype = ACTION RULE name = IDENT 
 	{ if (!Character.isLowerCase(name.charAt(0))) } 
 	{    throw parsingError("Rule name must start with a lower case letter: " + name); } 
-	{ Located<String> lname = withLoc(name); } 
+	{ Located<String> lname = withLoc(validJavaIdent(name)); } 
 	args = args EQUAL 
 	{ GrammarRule.Builder builder = new GrammarRule.Builder(vis, rtype, lname, args); } 
 	prod = production 
@@ -159,7 +167,8 @@ private {void} rule items(Production.Builder builder) =
 
 private {Production.Actual} rule actual(Located<String> id) =
 |  args = args {return actual(null, id, args);}
-|  EQUAL name = IDENT {Located<String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
+|  { validJavaIdent(id.val); }
+	EQUAL name = IDENT {Located<String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
 
 {   /**
      * Testing this parser
