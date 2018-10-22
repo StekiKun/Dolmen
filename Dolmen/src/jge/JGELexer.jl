@@ -53,10 +53,10 @@ slcomment = "//" notnl*;
 
 // Lexer rules
 public {Token} rule main =
-| ws+		{ return main(); }
-| nl		{ newline(); return main(); }
-| "/*"		{ comment(); return main(); }
-| slcomment	{ return main(); }
+| ws+		{ continue main; }
+| nl		{ newline(); continue main; }
+| "/*"		{ comment(); continue main; }
+| slcomment	{ continue main; }
 | '{'		{ braceDepth = 1;
               Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
@@ -93,64 +93,64 @@ public {Token} rule main =
 
 private {void} rule comment =
 | "*/"		{ return; }
-| "*"		{ comment(); return; }
+| "*"		{ continue comment; }
 | eof		{ throw error("Unterminated comment"); }
-| nl		{ newline(); comment(); return; }
-| orelse	{ comment(); return; }
+| nl		{ newline(); continue comment; }
+| orelse	{ continue comment; }
 
 private {void} rule string =
 | '"'		{ return; }
 | '\\' (escaped as c)
 			{ stringBuffer.append(forBackslash(c));
-			  string(); return; 
+			  continue string;
 			}
 | '\\' (_ as c)
 			{ stringBuffer.append('\\').append(c);
-			  string(); return; 
+			  continue string; 
 			}
 | '\\' eof  { throw error("Unterminated escape sequence in string literal"); }
 | eof 		{ throw error("Unterminated string literal"); }
 | orelse	{ stringBuffer.append(getLexeme()); 
-			  string(); return; 
+			  continue string; 
 			}
 
 private {int} rule action =
-| '{'		{ ++braceDepth; return action(); }
+| '{'		{ ++braceDepth; continue action; }
 | '}'		{ --braceDepth;
 			  if (braceDepth == 0) return getLexemeStart().offset - 1;
-			  return action();
+			  continue action;
 			}
 | '"'		{ stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
-			  return action();
+			  continue action;
 			}
-| "'"		{ skipChar(); return action(); }
-| "/*"		{ comment(); return action(); }
-| slcomment { return action(); }
+| "'"		{ skipChar(); continue action; }
+| "/*"		{ comment(); continue action; }
+| slcomment { continue action; }
 | eof		{ throw error("Unterminated action"); }
-| nl		{ newline(); return action(); }
-| orelse    { return action(); }
-| _         { return action(); }
+| nl		{ newline(); continue action; }
+| orelse    { continue action; }
+| _         { continue action; }
 
 private {int} rule arguments =
-| '('		{ ++parenDepth; return arguments(); }
+| '('		{ ++parenDepth; continue arguments; }
 | ')'		{ --parenDepth;
 			  if (parenDepth == 0) return getLexemeStart().offset - 1;
-			  return arguments();
+			  continue arguments;
 			}
 | '"'		{ stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
-			  return arguments();
+			  continue arguments;
 			}
-| "'"		{ skipChar(); return arguments(); }
-| "/*"		{ comment(); return arguments(); }
+| "'"		{ skipChar(); continue arguments; }
+| "/*"		{ comment(); continue arguments; }
 | slcomment { return arguments(); }
 | eof		{ throw error("Unterminated arguments"); }
-| nl		{ newline(); return arguments(); }
-| orelse	{ return arguments(); }
-| _         { return arguments(); }
+| nl		{ newline(); continue arguments; }
+| orelse	{ continue arguments; }
+| _         { continue arguments; }
 
 private {void} rule skipChar =
 | [^ '\\' '\''] "'"

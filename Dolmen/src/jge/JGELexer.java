@@ -58,16 +58,16 @@ public final class JGELexer extends codegen.LexBuffer {
             endToken();
             switch (result) {
             case 0:  {
-                 return main(); 
+                 continue main; 
             }
             case 1:  {
-                 newline(); return main(); 
+                 newline(); continue main; 
             }
             case 2:  {
-                 comment(); return main(); 
+                 comment(); continue main; 
             }
             case 3:  {
-                 return main(); 
+                 continue main; 
             }
             case 4:  {
                  braceDepth = 1;
@@ -148,16 +148,16 @@ public final class JGELexer extends codegen.LexBuffer {
                  return; 
             }
             case 1:  {
-                 comment(); return; 
+                 continue comment; 
             }
             case 2:  {
                  throw error("Unterminated comment"); 
             }
             case 3:  {
-                 newline(); comment(); return; 
+                 newline(); continue comment; 
             }
             case 4:  {
-                 comment(); return; 
+                 continue comment; 
             }
             default:
                 break comment;
@@ -183,13 +183,13 @@ public final class JGELexer extends codegen.LexBuffer {
             case 1:  {
                 final char c = getSubLexemeChar(startPos + 1);
                  stringBuffer.append(forBackslash(c));
-			  string(); return; 
+			  continue string;
 			
             }
             case 2:  {
                 final char c = getSubLexemeChar(startPos + 1);
                  stringBuffer.append('\\').append(c);
-			  string(); return; 
+			  continue string; 
 			
             }
             case 3:  {
@@ -200,7 +200,7 @@ public final class JGELexer extends codegen.LexBuffer {
             }
             case 5:  {
                  stringBuffer.append(getLexeme()); 
-			  string(); return; 
+			  continue string; 
 			
             }
             default:
@@ -222,41 +222,41 @@ public final class JGELexer extends codegen.LexBuffer {
             endToken();
             switch (result) {
             case 0:  {
-                 ++braceDepth; return action(); 
+                 ++braceDepth; continue action; 
             }
             case 1:  {
                  --braceDepth;
 			  if (braceDepth == 0) return getLexemeStart().offset - 1;
-			  return action();
+			  continue action;
 			
             }
             case 2:  {
                  stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
-			  return action();
+			  continue action;
 			
             }
             case 3:  {
-                 skipChar(); return action(); 
+                 skipChar(); continue action; 
             }
             case 4:  {
-                 comment(); return action(); 
+                 comment(); continue action; 
             }
             case 5:  {
-                 return action(); 
+                 continue action; 
             }
             case 6:  {
                  throw error("Unterminated action"); 
             }
             case 7:  {
-                 newline(); return action(); 
+                 newline(); continue action; 
             }
             case 8:  {
-                 return action(); 
+                 continue action; 
             }
             case 9:  {
-                 return action(); 
+                 continue action; 
             }
             default:
                 break action;
@@ -277,26 +277,26 @@ public final class JGELexer extends codegen.LexBuffer {
             endToken();
             switch (result) {
             case 0:  {
-                 ++parenDepth; return arguments(); 
+                 ++parenDepth; continue arguments; 
             }
             case 1:  {
                  --parenDepth;
 			  if (parenDepth == 0) return getLexemeStart().offset - 1;
-			  return arguments();
+			  continue arguments;
 			
             }
             case 2:  {
                  stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
-			  return arguments();
+			  continue arguments;
 			
             }
             case 3:  {
-                 skipChar(); return arguments(); 
+                 skipChar(); continue arguments; 
             }
             case 4:  {
-                 comment(); return arguments(); 
+                 comment(); continue arguments; 
             }
             case 5:  {
                  return arguments(); 
@@ -305,13 +305,13 @@ public final class JGELexer extends codegen.LexBuffer {
                  throw error("Unterminated arguments"); 
             }
             case 7:  {
-                 newline(); return arguments(); 
+                 newline(); continue arguments; 
             }
             case 8:  {
-                 return arguments(); 
+                 continue arguments; 
             }
             case 9:  {
-                 return arguments(); 
+                 continue arguments; 
             }
             default:
                 break arguments;

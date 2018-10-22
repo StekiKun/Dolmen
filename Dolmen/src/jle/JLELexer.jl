@@ -75,10 +75,10 @@ escaped = ['\\' '\'' '"' 'n' 't' 'b' 'f' 'r' ' '];
  */
 
 public { Token } rule main =
-| ws+			{ return main(); }
-| nl			{ newline(); return main(); }
-| "/*"			{ comment(); return main(); }
-| slcomment		{ return main(); }
+| ws+			{ continue main; }
+| nl			{ newline(); continue main; }
+| "/*"			{ comment(); continue main; }
+| slcomment		{ continue main; }
 | '"'			{ Position stringStart = getLexemeStart();
 				  stringBuffer.setLength(0);
 				  string();
@@ -132,16 +132,16 @@ public { Token } rule main =
  */
 private { void } rule comment =
 | "*/"				{ return; }
-| '*'				{ comment(); return; }
+| '*'				{ continue comment; }
 | '"'				{ stringBuffer.setLength(0);
 					  string();
 					  stringBuffer.setLength(0);
-					  comment(); return;
+					  continue comment;
 					}
-| "'"				{ skipChar(); comment(); return; }
+| "'"				{ skipChar(); continue comment; }
 | eof				{ throw error("Unterminated comment"); }
-| nl				{ newline(); comment(); return; }
-| orelse			{ comment(); return; } 
+| nl				{ newline(); continue comment; }
+| orelse			{ continue comment; } 
 
 /**
  * Matches string literals, both in and outside Java actions
@@ -149,47 +149,47 @@ private { void } rule comment =
 private { void } rule string =
 | '"'					{ return; }
 | '\\' (escaped as c)	{ stringBuffer.append(forBackslash(c));
-						  string(); return;
+						  continue string;
 						}
 | '\\' (octal as code)	{ stringBuffer.append(fromOctalCode(code));
-						  string(); return;
+						  continue string;
 						}
 | '\\' 'u'+ (hexdigit<4> as code)
 						{ stringBuffer.append(fromHexCode(code));
-						  string(); return; 
+						  continue string;
 						}
 | '\\' 'u'+				{ throw error("Invalid Unicode escape sequence"); }
 | '\\' (_ as c)			{ stringBuffer.append('\\').append(c);
-						  string(); return;
+						  continue string;
 						}
 | '\\'					{ throw error("Unterminated escape sequence in string literal"); }
 | eof					{ throw error("Unterminated string literal"); }
 | orelse				{ stringBuffer.append(getLexeme());
-						  string(); return;
+						  continue string;
 						}
 
 /**
  * Matches Java actions
  */
 private { int } rule action =
-| '{'		{ ++braceDepth; return action(); }
+| '{'		{ ++braceDepth; continue action; }
 | '}'		{ --braceDepth;
 			  if (braceDepth == 0) return getLexemeStart().offset - 1;
-			  return action();
+			  continue action;
 			}
 | '"'		{ stringBuffer.setLength(0);
 			  string();
 			  stringBuffer.setLength(0);
-			  return action();
+			  continue action;
 			}
-| '\''		{ skipChar(); return action(); }
-| "/*"		{ comment(); return action(); }
-| slcomment { return action(); }
+| '\''		{ skipChar(); continue action; }
+| "/*"		{ comment(); continue action; }
+| slcomment { continue action; }
 | eof		{ throw error("Unterminated action"); }
-| nl		{ newline(); return action(); }
+| nl		{ newline(); continue action; }
 // Cannot do char-by-char without tail-call elimination
-| '/' 		{ return action(); }
-| orelse	{ return action(); }
+| '/' 		{ continue action; }
+| orelse	{ continue action; }
 
 /**
  * Matches character literals in Java actions
