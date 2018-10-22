@@ -43,30 +43,27 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             EOF;
         }
         
-        private Token()  {
-            // nothing to do
+        private Token(Kind kind)  {
+            this.kind = kind;
         }
+        private final Kind kind;
         
         @Override
         public abstract String toString();
         
-        public abstract Kind getKind();
+        public final Kind getKind() { return kind; }
         
         public final static class IDENT extends Token {
             public final String value;
             
             private IDENT(String value) {
+                super(Kind.IDENT);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "IDENT(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.IDENT;
             }
         }
         public static IDENT IDENT(String value) {
@@ -77,17 +74,13 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             public final Extent value;
             
             private ACTION(Extent value) {
+                super(Kind.ACTION);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "ACTION(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.ACTION;
             }
         }
         public static ACTION ACTION(Extent value) {
@@ -98,17 +91,13 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             public final Extent value;
             
             private ARGUMENTS(Extent value) {
+                super(Kind.ARGUMENTS);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "ARGUMENTS(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.ARGUMENTS;
             }
         }
         public static ARGUMENTS ARGUMENTS(Extent value) {
@@ -119,6 +108,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             public final String value;
             
             private STRING(String value) {
+                super(Kind.STRING);
                 this.value = value;
             }
             
@@ -126,45 +116,34 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             public String toString() {
                 return "STRING(" + value + ")";
             }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.STRING;
-            }
         }
         public static STRING STRING(String value) {
             return new STRING(value);
         }
         
-        private static abstract class Singleton extends Token {
-            private final Kind kind;
-            private Singleton(Kind kind) { this.kind = kind; }
+        private static final class Singleton extends Token {
+            private Singleton(Kind kind) { super(kind); }
             
             @Override
             public String toString() {
-                return kind.toString();
-            }
-            
-            @Override
-            public Kind getKind() {
-                return kind;
+                return getKind().toString();
             }
         }
         
-        public static final Token EQUAL = new Singleton(Kind.EQUAL) {};
-        public static final Token LSQUARE = new Singleton(Kind.LSQUARE) {};
-        public static final Token RSQUARE = new Singleton(Kind.RSQUARE) {};
-        public static final Token BAR = new Singleton(Kind.BAR) {};
-        public static final Token DOT = new Singleton(Kind.DOT) {};
-        public static final Token STAR = new Singleton(Kind.STAR) {};
-        public static final Token SEMICOL = new Singleton(Kind.SEMICOL) {};
-        public static final Token IMPORT = new Singleton(Kind.IMPORT) {};
-        public static final Token STATIC = new Singleton(Kind.STATIC) {};
-        public static final Token PUBLIC = new Singleton(Kind.PUBLIC) {};
-        public static final Token PRIVATE = new Singleton(Kind.PRIVATE) {};
-        public static final Token TOKEN = new Singleton(Kind.TOKEN) {};
-        public static final Token RULE = new Singleton(Kind.RULE) {};
-        public static final Token EOF = new Singleton(Kind.EOF) {};
+        public static final Token EQUAL = new Singleton(Kind.EQUAL);
+        public static final Token LSQUARE = new Singleton(Kind.LSQUARE);
+        public static final Token RSQUARE = new Singleton(Kind.RSQUARE);
+        public static final Token BAR = new Singleton(Kind.BAR);
+        public static final Token DOT = new Singleton(Kind.DOT);
+        public static final Token STAR = new Singleton(Kind.STAR);
+        public static final Token SEMICOL = new Singleton(Kind.SEMICOL);
+        public static final Token IMPORT = new Singleton(Kind.IMPORT);
+        public static final Token STATIC = new Singleton(Kind.STATIC);
+        public static final Token PUBLIC = new Singleton(Kind.PUBLIC);
+        public static final Token PRIVATE = new Singleton(Kind.PRIVATE);
+        public static final Token TOKEN = new Singleton(Kind.TOKEN);
+        public static final Token RULE = new Singleton(Kind.RULE);
+        public static final Token EOF = new Singleton(Kind.EOF);
     }
     
     

@@ -16,19 +16,21 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
             EOF;
         }
         
-        private Token()  {
-            // nothing to do
+        private Token(Kind kind)  {
+            this.kind = kind;
         }
+        private final Kind kind;
         
         @Override
         public abstract String toString();
         
-        public abstract Kind getKind();
+        public final Kind getKind() { return kind; }
         
         public final static class INT extends Token {
             public final int value;
             
             private INT(int value) {
+                super(Kind.INT);
                 this.value = value;
             }
             
@@ -36,35 +38,24 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
             public String toString() {
                 return "INT(" + value + ")";
             }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.INT;
-            }
         }
         public static INT INT(int value) {
             return new INT(value);
         }
         
-        private static abstract class Singleton extends Token {
-            private final Kind kind;
-            private Singleton(Kind kind) { this.kind = kind; }
+        private static final class Singleton extends Token {
+            private Singleton(Kind kind) { super(kind); }
             
             @Override
             public String toString() {
-                return kind.toString();
-            }
-            
-            @Override
-            public Kind getKind() {
-                return kind;
+                return getKind().toString();
             }
         }
         
-        public static final Token PLUS = new Singleton(Kind.PLUS) {};
-        public static final Token MINUS = new Singleton(Kind.MINUS) {};
-        public static final Token TIMES = new Singleton(Kind.TIMES) {};
-        public static final Token EOF = new Singleton(Kind.EOF) {};
+        public static final Token PLUS = new Singleton(Kind.PLUS);
+        public static final Token MINUS = new Singleton(Kind.MINUS);
+        public static final Token TIMES = new Singleton(Kind.TIMES);
+        public static final Token EOF = new Singleton(Kind.EOF);
     }
     
     

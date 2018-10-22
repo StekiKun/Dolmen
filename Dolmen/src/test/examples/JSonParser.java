@@ -30,30 +30,27 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
             EOF;
         }
         
-        private Token()  {
-            // nothing to do
+        private Token(Kind kind)  {
+            this.kind = kind;
         }
+        private final Kind kind;
         
         @Override
         public abstract String toString();
         
-        public abstract Kind getKind();
+        public final Kind getKind() { return kind; }
         
         public final static class STRING extends Token {
             public final  String  value;
             
             private STRING( String  value) {
+                super(Kind.STRING);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "STRING(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.STRING;
             }
         }
         public static STRING STRING( String  value) {
@@ -64,6 +61,7 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
             public final  double  value;
             
             private NUMBER( double  value) {
+                super(Kind.NUMBER);
                 this.value = value;
             }
             
@@ -71,41 +69,30 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
             public String toString() {
                 return "NUMBER(" + value + ")";
             }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.NUMBER;
-            }
         }
         public static NUMBER NUMBER( double  value) {
             return new NUMBER(value);
         }
         
-        private static abstract class Singleton extends Token {
-            private final Kind kind;
-            private Singleton(Kind kind) { this.kind = kind; }
+        private static final class Singleton extends Token {
+            private Singleton(Kind kind) { super(kind); }
             
             @Override
             public String toString() {
-                return kind.toString();
-            }
-            
-            @Override
-            public Kind getKind() {
-                return kind;
+                return getKind().toString();
             }
         }
         
-        public static final Token LBRACKET = new Singleton(Kind.LBRACKET) {};
-        public static final Token RBRACKET = new Singleton(Kind.RBRACKET) {};
-        public static final Token COMMA = new Singleton(Kind.COMMA) {};
-        public static final Token COLON = new Singleton(Kind.COLON) {};
-        public static final Token LSQUARE = new Singleton(Kind.LSQUARE) {};
-        public static final Token RSQUARE = new Singleton(Kind.RSQUARE) {};
-        public static final Token TRUE = new Singleton(Kind.TRUE) {};
-        public static final Token FALSE = new Singleton(Kind.FALSE) {};
-        public static final Token NULL = new Singleton(Kind.NULL) {};
-        public static final Token EOF = new Singleton(Kind.EOF) {};
+        public static final Token LBRACKET = new Singleton(Kind.LBRACKET);
+        public static final Token RBRACKET = new Singleton(Kind.RBRACKET);
+        public static final Token COMMA = new Singleton(Kind.COMMA);
+        public static final Token COLON = new Singleton(Kind.COLON);
+        public static final Token LSQUARE = new Singleton(Kind.LSQUARE);
+        public static final Token RSQUARE = new Singleton(Kind.RSQUARE);
+        public static final Token TRUE = new Singleton(Kind.TRUE);
+        public static final Token FALSE = new Singleton(Kind.FALSE);
+        public static final Token NULL = new Singleton(Kind.NULL);
+        public static final Token EOF = new Singleton(Kind.EOF);
     }
     
     

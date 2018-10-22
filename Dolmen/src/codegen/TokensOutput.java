@@ -73,6 +73,7 @@ public final class TokensOutput {
 		for (TokenDecl decl : tokenDecls) {
 			if (first) first = false;
 			else buf.emitln(",");
+			
 			buf.emit(decl.name.val);
 		}
 		buf.emit(";");
@@ -81,14 +82,15 @@ public final class TokensOutput {
 	}
 	
 	private void genMethods() {
-		buf.emit("private ").emit(className).emit("() ").openBlock();
-		buf.emit("// nothing to do");
+		buf.emit("private ").emit(className).emit("(Kind kind) ").openBlock();
+		buf.emit("this.kind = kind;");
 		buf.closeBlock();
+		buf.emitln("private final Kind kind;");
 		buf.newline();
 		buf.emitln("@Override");
 		buf.emitln("public abstract String toString();");
 		buf.newline();
-		buf.emitln("public abstract Kind getKind();");
+		buf.emitln("public final Kind getKind() { return kind; }");
 		buf.newline();
 	}
 	
@@ -106,6 +108,7 @@ public final class TokensOutput {
 		
 		buf.emit("private ").emit(name).emit("(")
 		   .emit(valType).emit(" value)").openBlock();
+		buf.emit("super(Kind.").emit(name).emitln(");");
 		buf.emit("this.value = value;");
 		buf.closeBlock();
 		buf.newline();
@@ -113,12 +116,6 @@ public final class TokensOutput {
 		buf.emitln("@Override");
 		buf.emit("public String toString()").openBlock();
 		buf.emit("return \"").emit(name).emit("(\" + value + \")\";");
-		buf.closeBlock();
-		buf.newline();
-		
-		buf.emitln("@Override");
-		buf.emit("public Kind getKind()").openBlock();
-		buf.emit("return Kind.").emit(name).emit(";");
 		buf.closeBlock0();
 		
 		buf.closeBlock();
@@ -138,26 +135,21 @@ public final class TokensOutput {
 	}
 	
 	private void genSingleton() {
-		buf.emit("private static abstract class Singleton extends ")
+		buf.emit("private static final class Singleton extends ")
 		   .emit(className).openBlock();
-		buf.emitln("private final Kind kind;");
-		buf.emitln("private Singleton(Kind kind) { this.kind = kind; }");
+		buf.emitln("private Singleton(Kind kind) { super(kind); }");
 		buf.newline();
 		// buf.emitln("@SuppressWarnings(\"null\")");
 		buf.emitln("@Override");
 		buf.emit("public String toString()").openBlock();
-		buf.emit("return kind.toString();").closeBlock();
-		buf.newline();
-		buf.emitln("@Override");
-		buf.emit("public Kind getKind()").openBlock();
-		buf.emit("return kind;").closeBlock0();
+		buf.emit("return getKind().toString();").closeBlock0();
 		buf.closeBlock();
 	}
 	
 	private void genSingletonToken(TokenDecl decl) {
 		buf.newline();
 		buf.emit("public static final ").emit(className).emit(" " + decl.name.val)
-		   .emit(" = new Singleton(Kind.").emit(decl.name.val).emit(") {};");
+		   .emit(" = new Singleton(Kind.").emit(decl.name.val).emit(");");
 	}
 	
 	private void genSingletonTokens() {

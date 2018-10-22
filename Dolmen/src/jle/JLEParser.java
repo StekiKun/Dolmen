@@ -63,30 +63,27 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             END;
         }
         
-        private Token()  {
-            // nothing to do
+        private Token(Kind kind)  {
+            this.kind = kind;
         }
+        private final Kind kind;
         
         @Override
         public abstract String toString();
         
-        public abstract Kind getKind();
+        public final Kind getKind() { return kind; }
         
         public final static class IDENT extends Token {
             public final String value;
             
             private IDENT(String value) {
+                super(Kind.IDENT);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "IDENT(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.IDENT;
             }
         }
         public static IDENT IDENT(String value) {
@@ -97,17 +94,13 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             public final String value;
             
             private LSTRING(String value) {
+                super(Kind.LSTRING);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "LSTRING(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.LSTRING;
             }
         }
         public static LSTRING LSTRING(String value) {
@@ -118,17 +111,13 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             public final char value;
             
             private LCHAR(char value) {
+                super(Kind.LCHAR);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "LCHAR(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.LCHAR;
             }
         }
         public static LCHAR LCHAR(char value) {
@@ -139,17 +128,13 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             public final int value;
             
             private INTEGER(int value) {
+                super(Kind.INTEGER);
                 this.value = value;
             }
             
             @Override
             public String toString() {
                 return "INTEGER(" + value + ")";
-            }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.INTEGER;
             }
         }
         public static INTEGER INTEGER(int value) {
@@ -160,6 +145,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             public final Extent value;
             
             private ACTION(Extent value) {
+                super(Kind.ACTION);
                 this.value = value;
             }
             
@@ -167,59 +153,48 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             public String toString() {
                 return "ACTION(" + value + ")";
             }
-            
-            @Override
-            public Kind getKind() {
-                return Kind.ACTION;
-            }
         }
         public static ACTION ACTION(Extent value) {
             return new ACTION(value);
         }
         
-        private static abstract class Singleton extends Token {
-            private final Kind kind;
-            private Singleton(Kind kind) { this.kind = kind; }
+        private static final class Singleton extends Token {
+            private Singleton(Kind kind) { super(kind); }
             
             @Override
             public String toString() {
-                return kind.toString();
-            }
-            
-            @Override
-            public Kind getKind() {
-                return kind;
+                return getKind().toString();
             }
         }
         
-        public static final Token RULE = new Singleton(Kind.RULE) {};
-        public static final Token SHORTEST = new Singleton(Kind.SHORTEST) {};
-        public static final Token EOF = new Singleton(Kind.EOF) {};
-        public static final Token AS = new Singleton(Kind.AS) {};
-        public static final Token ORELSE = new Singleton(Kind.ORELSE) {};
-        public static final Token IMPORT = new Singleton(Kind.IMPORT) {};
-        public static final Token STATIC = new Singleton(Kind.STATIC) {};
-        public static final Token PUBLIC = new Singleton(Kind.PUBLIC) {};
-        public static final Token PRIVATE = new Singleton(Kind.PRIVATE) {};
-        public static final Token UNDERSCORE = new Singleton(Kind.UNDERSCORE) {};
-        public static final Token EQUAL = new Singleton(Kind.EQUAL) {};
-        public static final Token OR = new Singleton(Kind.OR) {};
-        public static final Token LBRACKET = new Singleton(Kind.LBRACKET) {};
-        public static final Token RBRACKET = new Singleton(Kind.RBRACKET) {};
-        public static final Token STAR = new Singleton(Kind.STAR) {};
-        public static final Token MAYBE = new Singleton(Kind.MAYBE) {};
-        public static final Token PLUS = new Singleton(Kind.PLUS) {};
-        public static final Token LPAREN = new Singleton(Kind.LPAREN) {};
-        public static final Token RPAREN = new Singleton(Kind.RPAREN) {};
-        public static final Token CARET = new Singleton(Kind.CARET) {};
-        public static final Token DASH = new Singleton(Kind.DASH) {};
-        public static final Token HASH = new Singleton(Kind.HASH) {};
-        public static final Token DOT = new Singleton(Kind.DOT) {};
-        public static final Token LANGLE = new Singleton(Kind.LANGLE) {};
-        public static final Token RANGLE = new Singleton(Kind.RANGLE) {};
-        public static final Token COMMA = new Singleton(Kind.COMMA) {};
-        public static final Token SEMICOL = new Singleton(Kind.SEMICOL) {};
-        public static final Token END = new Singleton(Kind.END) {};
+        public static final Token RULE = new Singleton(Kind.RULE);
+        public static final Token SHORTEST = new Singleton(Kind.SHORTEST);
+        public static final Token EOF = new Singleton(Kind.EOF);
+        public static final Token AS = new Singleton(Kind.AS);
+        public static final Token ORELSE = new Singleton(Kind.ORELSE);
+        public static final Token IMPORT = new Singleton(Kind.IMPORT);
+        public static final Token STATIC = new Singleton(Kind.STATIC);
+        public static final Token PUBLIC = new Singleton(Kind.PUBLIC);
+        public static final Token PRIVATE = new Singleton(Kind.PRIVATE);
+        public static final Token UNDERSCORE = new Singleton(Kind.UNDERSCORE);
+        public static final Token EQUAL = new Singleton(Kind.EQUAL);
+        public static final Token OR = new Singleton(Kind.OR);
+        public static final Token LBRACKET = new Singleton(Kind.LBRACKET);
+        public static final Token RBRACKET = new Singleton(Kind.RBRACKET);
+        public static final Token STAR = new Singleton(Kind.STAR);
+        public static final Token MAYBE = new Singleton(Kind.MAYBE);
+        public static final Token PLUS = new Singleton(Kind.PLUS);
+        public static final Token LPAREN = new Singleton(Kind.LPAREN);
+        public static final Token RPAREN = new Singleton(Kind.RPAREN);
+        public static final Token CARET = new Singleton(Kind.CARET);
+        public static final Token DASH = new Singleton(Kind.DASH);
+        public static final Token HASH = new Singleton(Kind.HASH);
+        public static final Token DOT = new Singleton(Kind.DOT);
+        public static final Token LANGLE = new Singleton(Kind.LANGLE);
+        public static final Token RANGLE = new Singleton(Kind.RANGLE);
+        public static final Token COMMA = new Singleton(Kind.COMMA);
+        public static final Token SEMICOL = new Singleton(Kind.SEMICOL);
+        public static final Token END = new Singleton(Kind.END);
     }
     
     
