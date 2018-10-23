@@ -199,8 +199,8 @@ private { void } rule more_elements(List<Value<?>> elts) =
 | RSQUARE				{ return; }
 | COMMA	 val = value 
 	{ elts.add(val); }
-  more_elements(elts)	
-  	{ return; }
+  // more_elements(elts)	
+  	{ continue more_elements; }
 ;
 
 private { Map<String, Value<?>> } rule object =
@@ -218,8 +218,8 @@ private { Map<String, Value<?>> } rule members(@Nullable Map<String, Value<?>> m
 
 private { void } rule more_members(Map<String, Value<?>> members) =
 | RBRACKET					{ return; }
-| COMMA pair(members) more_members(members)	
-							{ return; }
+| COMMA pair(members) // more_members(members)
+							{ continue more_members; }
 ;
 
 private { void } rule pair(Map<String, Value<?>> map) =

@@ -218,9 +218,10 @@ public final class GrammarOutput {
 			buf.emitln(" * Entry point for the non-terminal " + rule.name.val);
 			buf.emitln(" */");
 		}
+		final String ruleName = ruleName(rule.name.val);
 		buf.emit(rule.visibility ? "public " : "private ")
 		   .emitTracked(rule.returnType).emit(" ");
-		buf.emit(ruleName(rule.name.val)).emit("(");
+		buf.emit(ruleName).emit("(");
 		if (rule.args != null) buf.emitTracked(rule.args);
 		buf.emit(")").openBlock();
 		
@@ -257,6 +258,11 @@ public final class GrammarOutput {
 		}
 		// When more than one production used, we have to peek and switch
 		else {
+			// Add infinite loop around the productions' code for an
+			// action which want to efficiently reenter the same rule.
+			buf.emitln(ruleName + ":");
+			buf.emit("while (true)").openBlock();
+
 			buf.emit("switch (peek().getKind())").openBlock();
 			for (Map.Entry<Production, List<String>> entry : prodTable.entrySet()) {
 				final Production prod = entry.getKey();
@@ -271,16 +277,22 @@ public final class GrammarOutput {
 				buf.closeBlock();
 			}
 			// Generate a default rule for when no tokens
-			// (Beware: if all tokens are accounted for, do not generate
-			//  a default clause)
-			if (trans.size() < grammar.tokenDecls.size()) {
+			// (Beware: even if all tokens are accounted for, we do generate
+			//  a default clause, this avoids spurious warnings in Java and
+			//  makes sure we use the loop's label at least once)
+			if (trans.size() <= grammar.tokenDecls.size()) {
 				buf.emit("default:").openBlock();
-				buf.emit("throw tokenError(peek()");
-				trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));
-				buf.emit(");");
+				buf.emit("break ").emit(ruleName).emit(";");
 				buf.closeBlock0();
 			}
 			buf.closeBlock0();
+			buf.closeBlock();
+		
+			// If we reach oustide the loop, it means we fell in the default
+			// case and thus encountered an unexpected token
+			buf.emit("throw tokenError(peek()");
+			trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));
+			buf.emit(");");
 		}
 		
 		buf.closeBlock();

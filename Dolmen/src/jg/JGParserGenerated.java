@@ -188,172 +188,200 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private List<Located<String>> imports(@Nullable List<Located<String>> imp) {
-        switch (peek().getKind()) {
-            case ACTION:
-            case TOKEN: {
-                
-                return imp == null ? Lists.empty() : imp;
-            }
-            case IMPORT: {
-                
-                List<Located<String>> acc = imp == null ? new ArrayList<>() : imp;
-                // IMPORT
-                eat(Token.Kind.IMPORT);
-                codegen.LexBuffer.Position start = _jl_lastTokenStart;
-                // elt = import_
-                String elt = import_();
-                // SEMICOL
-                eat(Token.Kind.SEMICOL);
-                acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));
-                // imports(acc)
-                imports(acc);
-                return acc;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.TOKEN);
+        imports:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION:
+                case TOKEN: {
+                    
+                    return imp == null ? Lists.empty() : imp;
+                }
+                case IMPORT: {
+                    
+                    List<Located<String>> acc = imp == null ? new ArrayList<>() : imp;
+                    // IMPORT
+                    eat(Token.Kind.IMPORT);
+                    codegen.LexBuffer.Position start = _jl_lastTokenStart;
+                    // elt = import_
+                    String elt = import_();
+                    // SEMICOL
+                    eat(Token.Kind.SEMICOL);
+                    acc.add(Located.of("import " + elt + ";", start, _jl_lastTokenEnd));
+                    // imports(acc)
+                    imports(acc);
+                    return acc;
+                }
+                default: {
+                    break imports;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.TOKEN);
     }
     
     private String import_() {
-        switch (peek().getKind()) {
-            case IDENT: {
-                
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // tn = typename
-                String tn = typename();
-                return id + tn;
-            }
-            case STATIC: {
-                
-                // STATIC
-                eat(Token.Kind.STATIC);
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // tn = typename
-                String tn = typename();
-                return "static " + id + tn;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
+        import_:
+        while (true) {
+            switch (peek().getKind()) {
+                case IDENT: {
+                    
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    // tn = typename
+                    String tn = typename();
+                    return id + tn;
+                }
+                case STATIC: {
+                    
+                    // STATIC
+                    eat(Token.Kind.STATIC);
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    // tn = typename
+                    String tn = typename();
+                    return "static " + id + tn;
+                }
+                default: {
+                    break import_;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
     }
     
     private String typename() {
-        switch (peek().getKind()) {
-            case DOT: {
-                
-                // DOT
-                eat(Token.Kind.DOT);
-                // ty = typename0
-                String ty = typename0();
-                return "." + ty;
-            }
-            case SEMICOL: {
-                
-                return "";
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
+        typename:
+        while (true) {
+            switch (peek().getKind()) {
+                case DOT: {
+                    
+                    // DOT
+                    eat(Token.Kind.DOT);
+                    // ty = typename0
+                    String ty = typename0();
+                    return "." + ty;
+                }
+                case SEMICOL: {
+                    
+                    return "";
+                }
+                default: {
+                    break typename;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
     }
     
     private String typename0() {
-        switch (peek().getKind()) {
-            case IDENT: {
-                
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // ty = typename
-                String ty = typename();
-                return id + ty;
-            }
-            case STAR: {
-                
-                // STAR
-                eat(Token.Kind.STAR);
-                return "*";
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
+        typename0:
+        while (true) {
+            switch (peek().getKind()) {
+                case IDENT: {
+                    
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    // ty = typename
+                    String ty = typename();
+                    return id + ty;
+                }
+                case STAR: {
+                    
+                    // STAR
+                    eat(Token.Kind.STAR);
+                    return "*";
+                }
+                default: {
+                    break typename0;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
     }
     
     private List<TokenDecl> tokens(@Nullable List<TokenDecl> tokens) {
-        switch (peek().getKind()) {
-            case ACTION: {
-                
-                return Lists.empty();
-            }
-            case TOKEN: {
-                
-                List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;
-                // TOKEN
-                eat(Token.Kind.TOKEN);
-                // tok = token
-                TokenDecl tok = token();
-                acc.add(tok);
-                // tokens(acc)
-                tokens(acc);
-                return acc;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.TOKEN);
+        tokens:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION: {
+                    
+                    return Lists.empty();
+                }
+                case TOKEN: {
+                    
+                    List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;
+                    // TOKEN
+                    eat(Token.Kind.TOKEN);
+                    // tok = token
+                    TokenDecl tok = token();
+                    acc.add(tok);
+                    // tokens(acc)
+                    tokens(acc);
+                    return acc;
+                }
+                default: {
+                    break tokens;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.TOKEN);
     }
     
     private TokenDecl token() {
-        switch (peek().getKind()) {
-            case ACTION: {
-                
-                // val = ACTION
-                Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                if (isLowerId(id))
-                    throw parsingError("Token name should be all uppercase: " + id);
-                return new TokenDecl(withLoc(id), val);
-            }
-            case IDENT: {
-                
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                if (isLowerId(id))
-                   throw parsingError("Token name should be all uppercase: " + id);
-                return new TokenDecl(withLoc(id), null);
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
+        token:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION: {
+                    
+                    // val = ACTION
+                    Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    if (isLowerId(id))
+                        throw parsingError("Token name should be all uppercase: " + id);
+                    return new TokenDecl(withLoc(id), val);
+                }
+                case IDENT: {
+                    
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    if (isLowerId(id))
+                       throw parsingError("Token name should be all uppercase: " + id);
+                    return new TokenDecl(withLoc(id), null);
+                }
+                default: {
+                    break token;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
     }
     
     private List<GrammarRule> rules(@Nullable List<GrammarRule> rules) {
-        switch (peek().getKind()) {
-            case ACTION: {
-                
-                return Lists.empty();
-            }
-            case PRIVATE:
-            case PUBLIC: {
-                
-                // rule = rule
-                GrammarRule rule = rule();
-                List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
-                acc.add(rule);
-                // rules(acc)
-                rules(acc);
-                return acc;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
+        rules:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION: {
+                    
+                    return Lists.empty();
+                }
+                case PRIVATE:
+                case PUBLIC: {
+                    
+                    // rule = rule
+                    GrammarRule rule = rule();
+                    List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
+                    acc.add(rule);
+                    // rules(acc)
+                    rules(acc);
+                    return acc;
+                }
+                default: {
+                    break rules;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private GrammarRule rule() {
@@ -384,68 +412,80 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private boolean visibility() {
-        switch (peek().getKind()) {
-            case PRIVATE: {
-                
-                // PRIVATE
-                eat(Token.Kind.PRIVATE);
-                return false;
-            }
-            case PUBLIC: {
-                
-                // PUBLIC
-                eat(Token.Kind.PUBLIC);
-                return true;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
+        visibility:
+        while (true) {
+            switch (peek().getKind()) {
+                case PRIVATE: {
+                    
+                    // PRIVATE
+                    eat(Token.Kind.PRIVATE);
+                    return false;
+                }
+                case PUBLIC: {
+                    
+                    // PUBLIC
+                    eat(Token.Kind.PUBLIC);
+                    return true;
+                }
+                default: {
+                    break visibility;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private @Nullable Extent args() {
-        switch (peek().getKind()) {
-            case ACTION:
-            case BAR:
-            case EQUAL:
-            case IDENT:
-            case SEMICOL: {
-                
-                return null;
-            }
-            case ARGUMENTS: {
-                
-                // ext = ARGUMENTS
-                Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
-                return ext;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
+        args:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION:
+                case BAR:
+                case EQUAL:
+                case IDENT:
+                case SEMICOL: {
+                    
+                    return null;
+                }
+                case ARGUMENTS: {
+                    
+                    // ext = ARGUMENTS
+                    Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
+                    return ext;
+                }
+                default: {
+                    break args;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
     }
     
     private void productions(GrammarRule.Builder builder) {
-        switch (peek().getKind()) {
-            case BAR: {
-                
-                // prod = production
-                Production prod = production();
-                builder.addProduction(prod);
-                // productions(builder)
-                productions(builder);
-                return;
-            }
-            case SEMICOL: {
-                
-                // SEMICOL
-                eat(Token.Kind.SEMICOL);
-                return;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.BAR, Token.Kind.SEMICOL);
+        productions:
+        while (true) {
+            switch (peek().getKind()) {
+                case BAR: {
+                    
+                    // prod = production
+                    Production prod = production();
+                    builder.addProduction(prod);
+                    // productions(builder)
+                    productions(builder);
+                    return;
+                }
+                case SEMICOL: {
+                    
+                    // SEMICOL
+                    eat(Token.Kind.SEMICOL);
+                    return;
+                }
+                default: {
+                    break productions;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.BAR, Token.Kind.SEMICOL);
     }
     
     private Production production() {
@@ -459,65 +499,73 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private void items(Production.Builder builder) {
-        switch (peek().getKind()) {
-            case ACTION: {
-                
-                // ext = ACTION
-                Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                builder.addAction(ext);
-                // items(builder)
-                items(builder);
-                return;
-            }
-            case BAR:
-            case SEMICOL: {
-                
-                return;
-            }
-            case IDENT: {
-                
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                // actual = actual(withLoc(id))
-                Production.Actual actual = actual(withLoc(id));
-                builder.addActual(actual);
-                // items(builder)
-                items(builder);
-                return;
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.IDENT, Token.Kind.SEMICOL);
+        items:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION: {
+                    
+                    // ext = ACTION
+                    Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                    builder.addAction(ext);
+                    // items(builder)
+                    items(builder);
+                    return;
+                }
+                case BAR:
+                case SEMICOL: {
+                    
+                    return;
+                }
+                case IDENT: {
+                    
+                    // id = IDENT
+                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    // actual = actual(withLoc(id))
+                    Production.Actual actual = actual(withLoc(id));
+                    builder.addActual(actual);
+                    // items(builder)
+                    items(builder);
+                    return;
+                }
+                default: {
+                    break items;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.IDENT, Token.Kind.SEMICOL);
     }
     
     private Production.Actual actual(Located<String> id) {
-        switch (peek().getKind()) {
-            case ACTION:
-            case ARGUMENTS:
-            case BAR:
-            case IDENT:
-            case SEMICOL: {
-                
-                // args = args
-                @Nullable Extent args = args();
-                return actual(null, id, args);
-            }
-            case EQUAL: {
-                
-                // EQUAL
-                eat(Token.Kind.EQUAL);
-                // name = IDENT
-                String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                Located<String> lname = withLoc(name);
-                // args = args
-                @Nullable Extent args = args();
-                return actual(id, lname, args);
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
+        actual:
+        while (true) {
+            switch (peek().getKind()) {
+                case ACTION:
+                case ARGUMENTS:
+                case BAR:
+                case IDENT:
+                case SEMICOL: {
+                    
+                    // args = args
+                    @Nullable Extent args = args();
+                    return actual(null, id, args);
+                }
+                case EQUAL: {
+                    
+                    // EQUAL
+                    eat(Token.Kind.EQUAL);
+                    // name = IDENT
+                    String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                    Located<String> lname = withLoc(name);
+                    // args = args
+                    @Nullable Extent args = args();
+                    return actual(id, lname, args);
+                }
+                default: {
+                    break actual;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
     }
     
     /**

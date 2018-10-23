@@ -122,53 +122,57 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  value() {
-        switch (peek().getKind()) {
-            case FALSE: {
-                
-                // FALSE
-                eat(Token.Kind.FALSE);
-                 return; 
-            }
-            case LBRACKET: {
-                
-                // object
-                object();
-                 return; 
-            }
-            case LSQUARE: {
-                
-                // array
-                array();
-                 return; 
-            }
-            case NULL: {
-                
-                // NULL
-                eat(Token.Kind.NULL);
-                 return; 
-            }
-            case NUMBER: {
-                
-                // NUMBER
-                eat(Token.Kind.NUMBER);
-                 return; 
-            }
-            case STRING: {
-                
-                // STRING
-                eat(Token.Kind.STRING);
-                 return; 
-            }
-            case TRUE: {
-                
-                // TRUE
-                eat(Token.Kind.TRUE);
-                 return; 
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.STRING, Token.Kind.TRUE);
+        value:
+        while (true) {
+            switch (peek().getKind()) {
+                case FALSE: {
+                    
+                    // FALSE
+                    eat(Token.Kind.FALSE);
+                     return; 
+                }
+                case LBRACKET: {
+                    
+                    // object
+                    object();
+                     return; 
+                }
+                case LSQUARE: {
+                    
+                    // array
+                    array();
+                     return; 
+                }
+                case NULL: {
+                    
+                    // NULL
+                    eat(Token.Kind.NULL);
+                     return; 
+                }
+                case NUMBER: {
+                    
+                    // NUMBER
+                    eat(Token.Kind.NUMBER);
+                     return; 
+                }
+                case STRING: {
+                    
+                    // STRING
+                    eat(Token.Kind.STRING);
+                     return; 
+                }
+                case TRUE: {
+                    
+                    // TRUE
+                    eat(Token.Kind.TRUE);
+                     return; 
+                }
+                default: {
+                    break value;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.STRING, Token.Kind.TRUE);
     }
     
     private  void  array() {
@@ -181,55 +185,61 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  elements() {
-        switch (peek().getKind()) {
-            case FALSE:
-            case LBRACKET:
-            case LSQUARE:
-            case NULL:
-            case NUMBER:
-            case STRING:
-            case TRUE: {
-                
-                // value
-                value();
-                // more_elements
-                more_elements();
-                 return; 
-            }
-            case RSQUARE: {
-                
-                // RSQUARE
-                eat(Token.Kind.RSQUARE);
-                 return; 
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
+        elements:
+        while (true) {
+            switch (peek().getKind()) {
+                case FALSE:
+                case LBRACKET:
+                case LSQUARE:
+                case NULL:
+                case NUMBER:
+                case STRING:
+                case TRUE: {
+                    
+                    // value
+                    value();
+                    // more_elements
+                    more_elements();
+                     return; 
+                }
+                case RSQUARE: {
+                    
+                    // RSQUARE
+                    eat(Token.Kind.RSQUARE);
+                     return; 
+                }
+                default: {
+                    break elements;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
     }
     
     private  void  more_elements() {
-        switch (peek().getKind()) {
-            case COMMA: {
-                
-                // COMMA
-                eat(Token.Kind.COMMA);
-                // value
-                value();
-                // more_elements
-                more_elements();
-                 return; 
-            }
-            case RSQUARE: {
-                
-                // RSQUARE
-                eat(Token.Kind.RSQUARE);
-                 return; 
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
+        more_elements:
+        while (true) {
+            switch (peek().getKind()) {
+                case COMMA: {
+                    
+                    // COMMA
+                    eat(Token.Kind.COMMA);
+                    // value
+                    value();
+                     continue more_elements; 
+                }
+                case RSQUARE: {
+                    
+                    // RSQUARE
+                    eat(Token.Kind.RSQUARE);
+                     return; 
+                }
+                default: {
+                    break more_elements;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
     }
     
     private  void  object() {
@@ -242,49 +252,55 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  members() {
-        switch (peek().getKind()) {
-            case RBRACKET: {
-                
-                // RBRACKET
-                eat(Token.Kind.RBRACKET);
-                 return; 
-            }
-            case STRING: {
-                
-                // pair
-                pair();
-                // more_members
-                more_members();
-                 return; 
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
+        members:
+        while (true) {
+            switch (peek().getKind()) {
+                case RBRACKET: {
+                    
+                    // RBRACKET
+                    eat(Token.Kind.RBRACKET);
+                     return; 
+                }
+                case STRING: {
+                    
+                    // pair
+                    pair();
+                    // more_members
+                    more_members();
+                     return; 
+                }
+                default: {
+                    break members;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
     }
     
     private  void  more_members() {
-        switch (peek().getKind()) {
-            case COMMA: {
-                
-                // COMMA
-                eat(Token.Kind.COMMA);
-                // pair
-                pair();
-                // more_members
-                more_members();
-                 return; 
-            }
-            case RBRACKET: {
-                
-                // RBRACKET
-                eat(Token.Kind.RBRACKET);
-                 return; 
-            }
-            default: {
-                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
+        more_members:
+        while (true) {
+            switch (peek().getKind()) {
+                case COMMA: {
+                    
+                    // COMMA
+                    eat(Token.Kind.COMMA);
+                    // pair
+                    pair();
+                     continue more_members; 
+                }
+                case RBRACKET: {
+                    
+                    // RBRACKET
+                    eat(Token.Kind.RBRACKET);
+                     return; 
+                }
+                default: {
+                    break more_members;
+                }
             }
         }
+        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
     }
     
     private  void  pair() {
