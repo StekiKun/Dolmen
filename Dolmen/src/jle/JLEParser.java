@@ -261,7 +261,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
      * Entry point for the non-terminal lexer
      */
     public  Lexer  lexer() {
-        
         // options = options(null)
          List<Option>  options = options(null);
         // imports = imports(null)
@@ -291,11 +290,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             switch (peek().getKind()) {
                 case ACTION:
                 case IMPORT: {
-                    
                      return opts == null ? Lists.empty() : opts; 
                 }
                 case LBRACKET: {
-                    
                     // LBRACKET
                     eat(Token.Kind.LBRACKET);
                      List<Option> acc = opts == null ? new ArrayList<>() : opts; 
@@ -327,11 +324,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                      return imports == null ? Lists.empty() : imports; 
                 }
                 case IMPORT: {
-                    
                     // IMPORT
                     eat(Token.Kind.IMPORT);
                     
@@ -363,7 +358,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // typename(buf)
                     typename(buf);
                     // SEMICOL
@@ -371,7 +365,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      buf.append(";"); return; 
                 }
                 case STATIC: {
-                    
                     // STATIC
                     eat(Token.Kind.STATIC);
                      buf.append("static "); 
@@ -390,7 +383,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  void  typename(StringBuilder buf) {
-        
         // id = IDENT
         String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
          buf.append(id); 
@@ -404,7 +396,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case DOT: {
-                    
                     // DOT
                     eat(Token.Kind.DOT);
                      buf.append('.'); 
@@ -413,7 +404,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      return; 
                 }
                 case SEMICOL: {
-                    
                      return; 
                 }
                 default: {
@@ -429,13 +419,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // typename(buf)
                     typename(buf);
                      return; 
                 }
                 case STAR: {
-                    
                     // STAR
                     eat(Token.Kind.STAR);
                      buf.append('*'); return; 
@@ -453,7 +441,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                      Located<String> lid = withLoc(id); 
@@ -470,7 +457,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 }
                 case PRIVATE:
                 case PUBLIC: {
-                    
                      return; 
                 }
                 default: {
@@ -482,7 +468,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  List<Lexer.Entry>  entries() {
-        
         // entry = entry()
          Lexer.Entry  entry = entry();
          List<Lexer.Entry> acc = new ArrayList<>();
@@ -498,12 +483,10 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                      return; 
                 }
                 case PRIVATE:
                 case PUBLIC: {
-                    
                     // entry = entry()
                      Lexer.Entry  entry = entry();
                      acc.add(entry); 
@@ -520,7 +503,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Lexer.Entry  entry() {
-        
         // vis = visibility()
          boolean  vis = visibility();
         // returnType = ACTION
@@ -550,13 +532,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case PRIVATE: {
-                    
                     // PRIVATE
                     eat(Token.Kind.PRIVATE);
                      return false; 
                 }
                 case PUBLIC: {
-                    
                     // PUBLIC
                     eat(Token.Kind.PUBLIC);
                      return true; 
@@ -574,13 +554,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     // args = ACTION
                     Extent args = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                      return args; 
                 }
                 case EQUAL: {
-                    
                      return null; 
                 }
                 default: {
@@ -596,11 +574,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case OR: {
-                    
                      return false; 
                 }
                 case SHORTEST: {
-                    
                     // SHORTEST
                     eat(Token.Kind.SHORTEST);
                      return true; 
@@ -614,7 +590,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  List<Lexer.Clause>  clauses() {
-        
          List<Lexer.Clause> clauses = new ArrayList<>(); 
         // clause(clauses)
         clause(clauses);
@@ -630,11 +605,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case ACTION:
                 case PRIVATE:
                 case PUBLIC: {
-                    
                      return; 
                 }
                 case OR: {
-                    
                     // clause(acc)
                     clause(acc);
                     // more_clauses(acc)
@@ -650,7 +623,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  void  clause(List<Lexer.Clause> acc) {
-        
         // OR
         eat(Token.Kind.OR);
         // lreg = regular_orelse(acc)
@@ -673,14 +645,12 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case LPAREN:
                 case LSTRING:
                 case UNDERSCORE: {
-                    
                      Position start = _jl_lastTokenEnd; 
                     // reg = regular()
                      Regular  reg = regular();
                      return Located.of(reg, start, _jl_lastTokenEnd); 
                 }
                 case ORELSE: {
-                    
                     // ORELSE
                     eat(Token.Kind.ORELSE);
                     
@@ -703,7 +673,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  regular() {
-        
         // r = altRegular()
          Regular  r = altRegular();
         // reg = regular_op(r)
@@ -718,11 +687,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case ACTION:
                 case RPAREN:
                 case SEMICOL: {
-                    
                      return r; 
                 }
                 case AS: {
-                    
                     // AS
                     eat(Token.Kind.AS);
                     // id = IDENT
@@ -741,7 +708,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  altRegular() {
-        
         // r = seqRegular()
          Regular  r = seqRegular();
         // reg = altRegular_op(r)
@@ -757,11 +723,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case AS:
                 case RPAREN:
                 case SEMICOL: {
-                    
                      return r1; 
                 }
                 case OR: {
-                    
                     // OR
                     eat(Token.Kind.OR);
                     // r2 = altRegular()
@@ -777,7 +741,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  seqRegular() {
-        
         // r = postfixRegular()
          Regular  r = postfixRegular();
         // reg = seqRegular_op(r)
@@ -794,7 +757,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case OR:
                 case RPAREN:
                 case SEMICOL: {
-                    
                      return r1; 
                 }
                 case EOF:
@@ -804,7 +766,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case LPAREN:
                 case LSTRING:
                 case UNDERSCORE: {
-                    
                     // r2 = seqRegular()
                      Regular  r2 = seqRegular();
                      return Regular.seq(r1, r2); 
@@ -818,7 +779,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  postfixRegular() {
-        
         // r = diffRegular()
          Regular  r = diffRegular();
         // reg = postfixRegular_op(r)
@@ -842,11 +802,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case RPAREN:
                 case SEMICOL:
                 case UNDERSCORE: {
-                    
                      return r; 
                 }
                 case LANGLE: {
-                    
                     // LANGLE
                     eat(Token.Kind.LANGLE);
                     // min = INTEGER
@@ -859,19 +817,16 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      return reg; 
                 }
                 case MAYBE: {
-                    
                     // MAYBE
                     eat(Token.Kind.MAYBE);
                      return Regular.or(Regular.EPSILON, r); 
                 }
                 case PLUS: {
-                    
                     // PLUS
                     eat(Token.Kind.PLUS);
                      return Regular.plus(r); 
                 }
                 case STAR: {
-                    
                     // STAR
                     eat(Token.Kind.STAR);
                      return Regular.star(r); 
@@ -889,7 +844,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // max = INTEGER
@@ -905,7 +859,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      return Regular.repeat(r, min, max); 
                 }
                 case RANGLE: {
-                    
                     // RANGLE
                     eat(Token.Kind.RANGLE);
                      return Regular.repeat(r, min); 
@@ -919,7 +872,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  diffRegular() {
-        
         // r1 = atomicRegular()
          Regular  r1 = atomicRegular();
         // reg = diffRegular_HASH(r1)
@@ -947,11 +899,9 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 case SEMICOL:
                 case STAR:
                 case UNDERSCORE: {
-                    
                      return r1; 
                 }
                 case HASH: {
-                    
                     // HASH
                     eat(Token.Kind.HASH);
                     // r2 = atomicRegular()
@@ -971,13 +921,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case EOF: {
-                    
                     // EOF
                     eat(Token.Kind.EOF);
                      return Regular.chars(CSet.EOF); 
                 }
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                      @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
@@ -987,19 +935,16 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
 				
                 }
                 case LBRACKET: {
-                    
                     // cs = charClass()
                      CSet  cs = charClass();
                      return Regular.chars(cs); 
                 }
                 case LCHAR: {
-                    
                     // ch = LCHAR
                     char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
                      return Regular.chars(CSet.singleton(ch)); 
                 }
                 case LPAREN: {
-                    
                     // LPAREN
                     eat(Token.Kind.LPAREN);
                     // reg = regular()
@@ -1009,13 +954,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      return reg; 
                 }
                 case LSTRING: {
-                    
                     // s = LSTRING
                     String s = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
                      return Regular.string(s); 
                 }
                 case UNDERSCORE: {
-                    
                     // UNDERSCORE
                     eat(Token.Kind.UNDERSCORE);
                      return Regular.chars(CSet.ALL_BUT_EOF); 
@@ -1029,7 +972,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  CSet  charClass() {
-        
         // LBRACKET
         eat(Token.Kind.LBRACKET);
         // c = charSet()
@@ -1044,7 +986,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case CARET: {
-                    
                     // CARET
                     eat(Token.Kind.CARET);
                     // c = charSetPositive()
@@ -1052,7 +993,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                      return CSet.complement(c); 
                 }
                 case LCHAR: {
-                    
                     // c = charSetPositive()
                      CSet  c = charSetPositive();
                      return c; 
@@ -1066,7 +1006,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  CSet  charSetPositive() {
-        
         // ch = LCHAR
         char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
         // cs = charSetInterval(ch)
@@ -1081,7 +1020,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case DASH: {
-                    
                     // DASH
                     eat(Token.Kind.DASH);
                     // last = LCHAR
@@ -1090,7 +1028,6 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 }
                 case LCHAR:
                 case RBRACKET: {
-                    
                      return CSet.singleton(first); 
                 }
                 default: {
@@ -1106,13 +1043,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case LCHAR: {
-                    
                     // cs = charSetPositive()
                      CSet  cs = charSetPositive();
                      return CSet.union(acc, cs); 
                 }
                 case RBRACKET: {
-                    
                      return acc; 
                 }
                 default: {

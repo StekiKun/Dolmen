@@ -82,7 +82,6 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
      * Entry point for the non-terminal start
      */
     public int start() {
-        
         // n = exp
         int n = exp();
         // EOF
@@ -91,7 +90,6 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     }
     
     private int exp() {
-        
         // n1 = factor
         int n1 = factor();
         // n2 = exp_rhs
@@ -104,11 +102,9 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
         while (true) {
             switch (peek().getKind()) {
                 case EOF: {
-                    
                     return 0;
                 }
                 case MINUS: {
-                    
                     // MINUS
                     eat(Token.Kind.MINUS);
                     // n = exp
@@ -116,7 +112,6 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
                     return -n;
                 }
                 case PLUS: {
-                    
                     // PLUS
                     eat(Token.Kind.PLUS);
                     // n = exp
@@ -132,7 +127,6 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     }
     
     private int factor() {
-        
         // n1 = atomic
         int n1 = atomic();
         // n2 = factor_rhs
@@ -147,11 +141,9 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
                 case EOF:
                 case MINUS:
                 case PLUS: {
-                    
                     return 1;
                 }
                 case TIMES: {
-                    
                     // TIMES
                     eat(Token.Kind.TIMES);
                     // n = factor
@@ -171,13 +163,11 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
         while (true) {
             switch (peek().getKind()) {
                 case INT: {
-                    
                     // n = INT
                     int n = ((Token.INT) eat(Token.Kind.INT)).value;
                     return n;
                 }
                 case MINUS: {
-                    
                     // MINUS
                     eat(Token.Kind.MINUS);
                     // n = atomic

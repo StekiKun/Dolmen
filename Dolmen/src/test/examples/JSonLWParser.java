@@ -113,7 +113,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
      * Entry point for the non-terminal json
      */
     public  void  json() {
-        
         // value
         value();
         // EOF
@@ -126,43 +125,36 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case FALSE: {
-                    
                     // FALSE
                     eat(Token.Kind.FALSE);
                      return; 
                 }
                 case LBRACKET: {
-                    
                     // object
                     object();
                      return; 
                 }
                 case LSQUARE: {
-                    
                     // array
                     array();
                      return; 
                 }
                 case NULL: {
-                    
                     // NULL
                     eat(Token.Kind.NULL);
                      return; 
                 }
                 case NUMBER: {
-                    
                     // NUMBER
                     eat(Token.Kind.NUMBER);
                      return; 
                 }
                 case STRING: {
-                    
                     // STRING
                     eat(Token.Kind.STRING);
                      return; 
                 }
                 case TRUE: {
-                    
                     // TRUE
                     eat(Token.Kind.TRUE);
                      return; 
@@ -176,7 +168,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  array() {
-        
         // LSQUARE
         eat(Token.Kind.LSQUARE);
         // elements
@@ -195,7 +186,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                 case NUMBER:
                 case STRING:
                 case TRUE: {
-                    
                     // value
                     value();
                     // more_elements
@@ -203,7 +193,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                      return; 
                 }
                 case RSQUARE: {
-                    
                     // RSQUARE
                     eat(Token.Kind.RSQUARE);
                      return; 
@@ -221,7 +210,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // value
@@ -229,7 +217,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                      continue more_elements; 
                 }
                 case RSQUARE: {
-                    
                     // RSQUARE
                     eat(Token.Kind.RSQUARE);
                      return; 
@@ -243,7 +230,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  object() {
-        
         // LBRACKET
         eat(Token.Kind.LBRACKET);
         // members
@@ -256,13 +242,11 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case RBRACKET: {
-                    
                     // RBRACKET
                     eat(Token.Kind.RBRACKET);
                      return; 
                 }
                 case STRING: {
-                    
                     // pair
                     pair();
                     // more_members
@@ -282,7 +266,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // pair
@@ -290,7 +273,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
                      continue more_members; 
                 }
                 case RBRACKET: {
-                    
                     // RBRACKET
                     eat(Token.Kind.RBRACKET);
                      return; 
@@ -304,7 +286,6 @@ public final class JSonLWParser extends codegen.BaseParser<JSonLWParser.Token> {
     }
     
     private  void  pair() {
-        
         // STRING
         eat(Token.Kind.STRING);
         // COLON

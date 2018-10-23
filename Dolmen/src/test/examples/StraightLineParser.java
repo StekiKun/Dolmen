@@ -128,7 +128,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
      * Entry point for the non-terminal program
      */
     public void program() {
-        
         // stmts
         stmts();
         // EOF
@@ -137,7 +136,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private void stmts() {
-        
         // stmt
         stmt();
         // stmts_rhs
@@ -150,11 +148,9 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
         while (true) {
             switch (peek().getKind()) {
                 case EOF: {
-                    
                     return;
                 }
                 case SEMICOLON: {
-                    
                     // SEMICOLON
                     eat(Token.Kind.SEMICOLON);
                     // stmts
@@ -174,7 +170,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
         while (true) {
             switch (peek().getKind()) {
                 case ID: {
-                    
                     // id = ID
                     String id = ((Token.ID) eat(Token.Kind.ID)).value;
                     // ASSIGN
@@ -184,7 +179,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                     update(id, n); return;
                 }
                 case PRINT: {
-                    
                     // PRINT
                     eat(Token.Kind.PRINT);
                     // LPAREN
@@ -210,7 +204,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // pexpr
@@ -220,7 +213,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                     return;
                 }
                 case RPAREN: {
-                    
                     return;
                 }
                 default: {
@@ -232,21 +224,18 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private void pexpr() {
-        
         // e = expr
         int e = expr();
         System.out.println(e); return;
     }
     
     private int expr() {
-        
         // n = term
         int n = term();
         return n;
     }
     
     private int term() {
-        
         // n1 = factor
         int n1 = factor();
         // res = term_rhs(n1)
@@ -262,11 +251,9 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 case EOF:
                 case RPAREN:
                 case SEMICOLON: {
-                    
                     return lhs;
                 }
                 case MINUS: {
-                    
                     // MINUS
                     eat(Token.Kind.MINUS);
                     // n = term
@@ -274,7 +261,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                     return lhs - n;
                 }
                 case PLUS: {
-                    
                     // PLUS
                     eat(Token.Kind.PLUS);
                     // n = term
@@ -290,7 +276,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private int factor() {
-        
         // n1 = atomic
         int n1 = atomic();
         // res = factor_rhs(n1)
@@ -308,11 +293,9 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                 case PLUS:
                 case RPAREN:
                 case SEMICOLON: {
-                    
                     return lhs;
                 }
                 case DIV: {
-                    
                     // DIV
                     eat(Token.Kind.DIV);
                     // n = factor
@@ -320,7 +303,6 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
                     return lhs / n;
                 }
                 case TIMES: {
-                    
                     // TIMES
                     eat(Token.Kind.TIMES);
                     // n = factor
@@ -340,19 +322,16 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
         while (true) {
             switch (peek().getKind()) {
                 case ID: {
-                    
                     // id = ID
                     String id = ((Token.ID) eat(Token.Kind.ID)).value;
                     return lookup(id);
                 }
                 case INT: {
-                    
                     // n = INT
                     int n = ((Token.INT) eat(Token.Kind.INT)).value;
                     return n;
                 }
                 case LPAREN: {
-                    
                     // LPAREN
                     eat(Token.Kind.LPAREN);
                     // e = expr

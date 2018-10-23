@@ -168,7 +168,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
      * Entry point for the non-terminal start
      */
     public Grammar start() {
-        
         // imports = imports(null)
         List<Located<String>> imports = imports(null);
         // tdecls = tokens(null)
@@ -193,11 +192,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             switch (peek().getKind()) {
                 case ACTION:
                 case TOKEN: {
-                    
                     return imp == null ? Lists.empty() : imp;
                 }
                 case IMPORT: {
-                    
                     List<Located<String>> acc = imp == null ? new ArrayList<>() : imp;
                     // IMPORT
                     eat(Token.Kind.IMPORT);
@@ -224,7 +221,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // tn = typename
@@ -232,7 +228,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                     return id + tn;
                 }
                 case STATIC: {
-                    
                     // STATIC
                     eat(Token.Kind.STATIC);
                     // id = IDENT
@@ -254,7 +249,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case DOT: {
-                    
                     // DOT
                     eat(Token.Kind.DOT);
                     // ty = typename0
@@ -262,7 +256,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                     return "." + ty;
                 }
                 case SEMICOL: {
-                    
                     return "";
                 }
                 default: {
@@ -278,7 +271,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // ty = typename
@@ -286,7 +278,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                     return id + ty;
                 }
                 case STAR: {
-                    
                     // STAR
                     eat(Token.Kind.STAR);
                     return "*";
@@ -304,11 +295,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     return Lists.empty();
                 }
                 case TOKEN: {
-                    
                     List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;
                     // TOKEN
                     eat(Token.Kind.TOKEN);
@@ -332,7 +321,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     // val = ACTION
                     Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                     // id = IDENT
@@ -342,7 +330,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                     return new TokenDecl(withLoc(id), val);
                 }
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     if (isLowerId(id))
@@ -362,12 +349,10 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     return Lists.empty();
                 }
                 case PRIVATE:
                 case PUBLIC: {
-                    
                     // rule = rule
                     GrammarRule rule = rule();
                     List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules;
@@ -385,7 +370,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private GrammarRule rule() {
-        
         // vis = visibility
         boolean vis = visibility();
         // rtype = ACTION
@@ -416,13 +400,11 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case PRIVATE: {
-                    
                     // PRIVATE
                     eat(Token.Kind.PRIVATE);
                     return false;
                 }
                 case PUBLIC: {
-                    
                     // PUBLIC
                     eat(Token.Kind.PUBLIC);
                     return true;
@@ -444,11 +426,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 case EQUAL:
                 case IDENT:
                 case SEMICOL: {
-                    
                     return null;
                 }
                 case ARGUMENTS: {
-                    
                     // ext = ARGUMENTS
                     Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                     return ext;
@@ -466,7 +446,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case BAR: {
-                    
                     // prod = production
                     Production prod = production();
                     builder.addProduction(prod);
@@ -475,7 +454,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                     return;
                 }
                 case SEMICOL: {
-                    
                     // SEMICOL
                     eat(Token.Kind.SEMICOL);
                     return;
@@ -489,7 +467,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
     }
     
     private Production production() {
-        
         // BAR
         eat(Token.Kind.BAR);
         Production.Builder builder = new Production.Builder();
@@ -503,7 +480,6 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     // ext = ACTION
                     Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                     builder.addAction(ext);
@@ -513,11 +489,9 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 }
                 case BAR:
                 case SEMICOL: {
-                    
                     return;
                 }
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // actual = actual(withLoc(id))
@@ -544,13 +518,11 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 case BAR:
                 case IDENT:
                 case SEMICOL: {
-                    
                     // args = args
                     @Nullable Extent args = args();
                     return actual(null, id, args);
                 }
                 case EQUAL: {
-                    
                     // EQUAL
                     eat(Token.Kind.EQUAL);
                     // name = IDENT

@@ -120,7 +120,6 @@ public final class GrammarOutput {
 	
 	private void genActual(Production.Actual actual) {
 		final String name = actual.item.val;
-		buf.newline();
 		buf.emitln("// " + actual.toString());
 		@Nullable Located<String> boundLoc = actual.binding;
 		@Nullable String bound = boundLoc == null ? null : boundLoc.val;
@@ -193,9 +192,11 @@ public final class GrammarOutput {
 		//  the return type is void, and of course not
 		//	to return in the middle of a production rule.
 		if (config.positions)
-			buf.emit("enter(" + Iterables.size(prod.actuals()) + ");")
-			   .newline();
+			buf.emitln("enter(" + Iterables.size(prod.actuals()) + ");");
+		boolean first = true;
 		for (Production.Item item : prod.items) {
+			if (first) first = false;
+			else buf.newline();
 			switch (item.getKind()) {
 			case ACTUAL: {
 				final Actual actual = (Actual) item;				
@@ -204,7 +205,7 @@ public final class GrammarOutput {
 			}
 			case ACTION: {
 				final ActionItem actionItem = (ActionItem) item;
-				buf.newline().emitTracked(actionItem.extent);
+				buf.emitTracked(actionItem.extent);
 				break;
 			}
 			}
@@ -272,7 +273,7 @@ public final class GrammarOutput {
 					else buf.newline();
 					buf.emit("case ").emit(term).emit(":");
 				}
-				buf.emit(" {").incrIndent().newline();
+				buf.openBlock();
 				genProduction(prod);
 				buf.closeBlock();
 			}

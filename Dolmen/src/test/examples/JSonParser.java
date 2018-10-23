@@ -261,7 +261,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
      * Entry point for the non-terminal json
      */
     public  Value<?>  json() {
-        
         // v = value
          Value<?>  v = value();
         // EOF
@@ -274,43 +273,36 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case FALSE: {
-                    
                     // FALSE
                     eat(Token.Kind.FALSE);
                      return valFalse; 
                 }
                 case LBRACKET: {
-                    
                     // o = object
                      Map<String, Value<?>>  o = object();
                      return valObject(o); 
                 }
                 case LSQUARE: {
-                    
                     // a = array
                      List<Value<?>>  a = array();
                      return valArray(a); 
                 }
                 case NULL: {
-                    
                     // NULL
                     eat(Token.Kind.NULL);
                      return valNull; 
                 }
                 case NUMBER: {
-                    
                     // n = NUMBER
                      double  n = ((Token.NUMBER) eat(Token.Kind.NUMBER)).value;
                      return valNumber(n); 
                 }
                 case STRING: {
-                    
                     // s = STRING
                      String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
                      return valString(s); 
                 }
                 case TRUE: {
-                    
                     // TRUE
                     eat(Token.Kind.TRUE);
                      return valTrue; 
@@ -324,7 +316,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     }
     
     private  List<Value<?>>  array() {
-        
         // LSQUARE
         eat(Token.Kind.LSQUARE);
         // elts = elements(null)
@@ -343,7 +334,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                 case NUMBER:
                 case STRING:
                 case TRUE: {
-                    
                     // val = value
                      Value<?>  val = value();
                      List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; 
@@ -353,7 +343,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                      return acc; 
                 }
                 case RSQUARE: {
-                    
                     // RSQUARE
                     eat(Token.Kind.RSQUARE);
                      return elts == null ? Lists.empty() : elts; 
@@ -371,7 +360,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // val = value
@@ -380,7 +368,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                      continue more_elements; 
                 }
                 case RSQUARE: {
-                    
                     // RSQUARE
                     eat(Token.Kind.RSQUARE);
                      return; 
@@ -394,7 +381,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     }
     
     private  Map<String, Value<?>>  object() {
-        
         // LBRACKET
         eat(Token.Kind.LBRACKET);
         // members = members(null)
@@ -407,13 +393,11 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case RBRACKET: {
-                    
                     // RBRACKET
                     eat(Token.Kind.RBRACKET);
                      return members == null ? Maps.empty() : members; 
                 }
                 case STRING: {
-                    
                      Map<String, Value<?>> acc = members == null ? new HashMap<>() : members; 
                     // pair(acc)
                     pair(acc);
@@ -434,7 +418,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    
                     // COMMA
                     eat(Token.Kind.COMMA);
                     // pair(members)
@@ -442,7 +425,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
                      continue more_members; 
                 }
                 case RBRACKET: {
-                    
                     // RBRACKET
                     eat(Token.Kind.RBRACKET);
                      return; 
@@ -456,7 +438,6 @@ public final class JSonParser extends codegen.BaseParser<JSonParser.Token> {
     }
     
     private  void  pair(Map<String, Value<?>> map) {
-        
         // s = STRING
          String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
         // COLON

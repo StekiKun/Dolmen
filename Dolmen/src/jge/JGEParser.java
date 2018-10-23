@@ -199,7 +199,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
      * Entry point for the non-terminal start
      */
     public Grammar start() {
-        
         // options = options(null)
         List<Option> options = options(null);
         // imports = imports(null)
@@ -227,11 +226,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 case ACTION:
                 case IMPORT:
                 case TOKEN: {
-                    
                      return opts == null ? Lists.empty() : opts; 
                 }
                 case LSQUARE: {
-                    
                     // LSQUARE
                     eat(Token.Kind.LSQUARE);
                      List<Option> acc = opts == null ? new ArrayList<>() : opts; 
@@ -264,11 +261,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             switch (peek().getKind()) {
                 case ACTION:
                 case TOKEN: {
-                    
                     return imp == null ? Lists.empty() : imp;
                 }
                 case IMPORT: {
-                    
                     List<Located<String>> acc = imp == null ? new ArrayList<>() : imp;
                     // IMPORT
                     eat(Token.Kind.IMPORT);
@@ -295,7 +290,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // tn = typename
@@ -303,7 +297,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                     return id + tn;
                 }
                 case STATIC: {
-                    
                     // STATIC
                     eat(Token.Kind.STATIC);
                     // id = IDENT
@@ -325,7 +318,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case DOT: {
-                    
                     // DOT
                     eat(Token.Kind.DOT);
                     // ty = typename0
@@ -333,7 +325,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                     return "." + ty;
                 }
                 case SEMICOL: {
-                    
                     return "";
                 }
                 default: {
@@ -349,7 +340,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // ty = typename
@@ -357,7 +347,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                     return id + ty;
                 }
                 case STAR: {
-                    
                     // STAR
                     eat(Token.Kind.STAR);
                     return "*";
@@ -375,11 +364,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     return Lists.empty();
                 }
                 case TOKEN: {
-                    
                     List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;
                     // TOKEN
                     eat(Token.Kind.TOKEN);
@@ -403,7 +390,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     // val = ACTION
                     Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                     // id = IDENT
@@ -412,7 +398,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                      return new TokenDecl(withLoc(id), val); 
                 }
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                      if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); 
@@ -431,12 +416,10 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     return Lists.empty();
                 }
                 case PRIVATE:
                 case PUBLIC: {
-                    
                     // r = rule_
                     GrammarRule r = rule_();
                      List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules; 
@@ -454,7 +437,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
     }
     
     private GrammarRule rule_() {
-        
         // vis = visibility
         boolean vis = visibility();
         // rtype = ACTION
@@ -484,13 +466,11 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case PRIVATE: {
-                    
                     // PRIVATE
                     eat(Token.Kind.PRIVATE);
                     return false;
                 }
                 case PUBLIC: {
-                    
                     // PUBLIC
                     eat(Token.Kind.PUBLIC);
                     return true;
@@ -512,11 +492,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 case EQUAL:
                 case IDENT:
                 case SEMICOL: {
-                    
                     return null;
                 }
                 case ARGUMENTS: {
-                    
                     // ext = ARGUMENTS
                     Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                     return ext;
@@ -534,7 +512,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case BAR: {
-                    
                     // prod = production
                     Production prod = production();
                     builder.addProduction(prod);
@@ -543,7 +520,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                     return;
                 }
                 case SEMICOL: {
-                    
                     // SEMICOL
                     eat(Token.Kind.SEMICOL);
                     return;
@@ -557,7 +533,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
     }
     
     private Production production() {
-        
         // BAR
         eat(Token.Kind.BAR);
         Production.Builder builder = new Production.Builder();
@@ -571,7 +546,6 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         while (true) {
             switch (peek().getKind()) {
                 case ACTION: {
-                    
                     // ext = ACTION
                     Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                     builder.addAction(ext);
@@ -581,11 +555,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 }
                 case BAR:
                 case SEMICOL: {
-                    
                     return;
                 }
                 case IDENT: {
-                    
                     // id = IDENT
                     String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                     // actual = actual(withLoc(id))
@@ -612,13 +584,11 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 case BAR:
                 case IDENT:
                 case SEMICOL: {
-                    
                     // args = args
                     @Nullable Extent args = args();
                     return actual(null, id, args);
                 }
                 case EQUAL: {
-                    
                      validJavaIdent(id.val); 
                     // EQUAL
                     eat(Token.Kind.EQUAL);
