@@ -33,6 +33,7 @@ token PUBLIC
 token PRIVATE
 token TOKEN
 token RULE
+token CONTINUE
 token EOF
 
 {   /**
@@ -63,6 +64,10 @@ token EOF
     	if (Java.keywordSet.contains(id))
     		throw parsingError("Invalid name: reserved Java identifier");
     	return id;
+    }
+    
+    private void invalidContinuation() {
+    	throw parsingError("Continuation must appear last in a production rule");
     }
 }
 
@@ -145,30 +150,51 @@ private {GrammarRule} rule rule_ =
 	{ return builder.build(); }
 ;
 
-private {boolean} rule visibility = 
-|  PUBLIC {return true;}
-|  PRIVATE {return false;};
+private { boolean } rule visibility = 
+|  PUBLIC { return true; }
+|  PRIVATE { return false; }
+;
 
-private {@Nullable Extent} rule args = 
-|  {return null;}
-|  ext = ARGUMENTS {return ext;};
+private { @Nullable Extent } rule args = 
+|  { return null; }
+|  ext = ARGUMENTS { return ext; }
+;
 
 private {void} rule productions(GrammarRule.Builder builder) = 
-|  SEMICOL {return;}
-|  prod = production {builder.addProduction(prod);} productions(builder) {return;};
+|   SEMICOL { return; }
+|   prod = production { builder.addProduction(prod); } 
+	productions(builder) { return; }
+;
 
-private {Production} rule production = 
-|  BAR {Production.Builder builder = new Production.Builder();} items(builder) {return builder.build();};
+private { Production } rule production = 
+|   BAR  { Production.Builder builder = new Production.Builder(); } 
+	items(builder) { return builder.build(); }
+;
 
-private {void} rule items(Production.Builder builder) = 
-|  {return;}
-|  ext = ACTION {builder.addAction(ext);} items(builder) {return;}
-|  id = IDENT actual = actual(withLoc(id)) {builder.addActual(actual);} items(builder) {return;};
+private { void } rule items(Production.Builder builder) = 
+|	{ return ;}
+|   ext = ACTION { builder.addAction(ext); } items(builder) { return; }
+|   id = IDENT actual = actual(withLoc(id)) { builder.addActual(actual); } 
+	items(builder) { return; }
+|	CONTINUE 
+	{ builder.addItem(new Production.Continue(withLoc("continue"))); }
+	// A dummy rule to provide a specific error message
+	forbid_more_items() 
+	{ return; }
+;
 
-private {Production.Actual} rule actual(Located<String> id) =
-|  args = args {return actual(null, id, args);}
+private { void } rule forbid_more_items() =
+|	{ return; }
+|	{ invalidContinuation(); } ACTION { return; /* dead code */ }
+|	{ invalidContinuation(); } IDENT  { return; /* dead code */ }
+;
+
+private { Production.Actual } rule actual(Located<String> id) =
+|  args = args { return actual(null, id, args); }
 |  { validJavaIdent(id.val); }
-	EQUAL name = IDENT {Located<String> lname = withLoc(name);} args = args {return actual(id, lname, args);};
+	EQUAL name = IDENT { Located<String> lname = withLoc(name); }
+	args = args { return actual(id, lname, args); }
+;
 
 {   /**
      * Testing this parser

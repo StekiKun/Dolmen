@@ -34,7 +34,8 @@ public final class Production {
 	@SuppressWarnings("javadoc")
 	public static enum ItemKind {
 		ACTUAL(Actual.class), 
-		ACTION(ActionItem.class);
+		ACTION(ActionItem.class),
+		CONTINUE(Continue.class);
 		
 		public final Class<?> witness;
 		private ItemKind(Class<?> witness) {
@@ -48,6 +49,11 @@ public final class Production {
 	 * reference a terminal or non-terminal of the
 	 * grammar, or {@linkplain ActionItem semantic actions}
 	 * which are propagated in the generated parser code.
+	 * <p>
+	 * An extra special kind of item is the 
+	 * {@linkplain Continue continuation} which allows
+	 * to reenter the current rule and can only be used
+	 * last in a production.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -89,6 +95,42 @@ public final class Production {
 		@Override
 		public String toString() {
 			return "{" + extent.find() + "}";
+		}
+	}
+	
+	/**
+	 * Represents a continuation of the current rule,
+	 * and unlike the equivalent {@linkplain Actual actual},
+	 * this allows the generator to produce an optimized
+	 * tail-recursive call.
+	 * <br>
+	 * A continuation can only be used last in a production
+	 * rule, and for now can only reenter the current rule 
+	 * with the same original arguments.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public static final class Continue extends Item {
+		
+		/** The location of the item (for error reporting) */
+		public final Located<String> cont;
+		
+		/**
+		 * Builds a continuation item at the given location
+		 * @param cont
+		 */
+		public Continue(Located<String> cont) {
+			this.cont = cont;
+		}
+		
+		@Override
+		public final ItemKind getKind() {
+			return ItemKind.CONTINUE;
+		}
+		
+		@Override
+		public String toString() {
+			return "continue";
 		}
 	}
 	
@@ -181,18 +223,35 @@ public final class Production {
 	/**
 	 * Builds a grammar production based on the given parameters
 	 * @param items
+	 * @throws IllegalArgumentException if {@code items} contains
+	 * 	a {@linkplain Continue} elsewhere than as the last item
 	 */
 	public Production(List<Item> items) {
 		this.items = items;
 	}
 	
 	/**
+	 * <i>This does not include potential continuations, although
+	 *  on many aspects they act as actuals.</i>
+	 * 
 	 * @return the list of actual production items
 	 * 	in this production rule, in the same order
 	 *  as they appear in {@link #items}
 	 */
 	public Iterable<@NonNull Actual> actuals() {
 		return Iterables.filterClass(items, Actual.class);
+	}
+	
+	/**
+	 * @return the continuation at the end of this production
+	 * 	rule if any, and {@code null} otherwise
+	 */
+	public @Nullable Continue continuation() {
+		if (items.isEmpty()) return null;
+		Item item = items.get(items.size() - 1);
+		if (item.getKind() == ItemKind.CONTINUE)
+			return (Continue) item;
+		return null;
 	}
 	
 	@Override

@@ -53,6 +53,14 @@ public final class GrammarRule {
 		this.productions = productions;
 	}
 	
+	/**
+	 * @return {@code true} if one of the rule's productions at least
+	 * 	has a continuation
+	 */
+	public boolean hasContinuation() {
+		return productions.stream().anyMatch(prod -> prod.continuation() != null);
+	}
+	
 	StringBuilder append(StringBuilder buf) {
 		buf.append(visibility ? "public " : "private ");
 		buf.append("{").append(returnType.find()).append("}");

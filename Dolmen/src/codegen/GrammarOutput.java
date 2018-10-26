@@ -24,6 +24,7 @@ import syntax.Extent;
 import syntax.Production;
 import syntax.Production.ActionItem;
 import syntax.Production.Actual;
+import syntax.Production.Continue;
 
 /**
  * This class generates a Java class that implements
@@ -182,7 +183,7 @@ public final class GrammarOutput {
 		}
 	}
 	
-	private void genProduction(Production prod) {
+	private void genProduction(@Nullable String continuation, Production prod) {
 		// For each item, either call the corresponding
 		// non-terminal method, or eat the terminal token.
 		// Semantic actions are simply inlined in generated
@@ -191,7 +192,10 @@ public final class GrammarOutput {
 		//	return; or return val; depending on whether
 		//  the return type is void, and of course not
 		//	to return in the middle of a production rule.
-		if (config.positions)
+		//  The exception is the continuation which acts
+		//  as an actual + the corresponding return at the
+		//  same time.
+		if (config.positions && continuation == null)
 			buf.emitln("enter(" + Iterables.size(prod.actuals()) + ");");
 		boolean first = true;
 		for (Production.Item item : prod.items) {
@@ -208,6 +212,15 @@ public final class GrammarOutput {
 				buf.emitTracked(actionItem.extent);
 				break;
 			}
+			case CONTINUE: {
+				@SuppressWarnings("unused")
+				final Continue cont = (Continue) item;
+				buf.emitlnIf(config.positions, "rewind();");
+				if (continuation == null)
+					throw new IllegalStateException();
+				buf.emit("continue ").emit(continuation).emit(";");
+				break;
+			}
 			}
 		}
 	}
@@ -220,6 +233,10 @@ public final class GrammarOutput {
 			buf.emitln(" */");
 		}
 		final String ruleName = ruleName(rule.name.val);
+		final @Nullable String continuation = 
+			rule.hasContinuation() ? ruleName : null;
+		final boolean continued = continuation != null;
+		
 		buf.emit(rule.visibility ? "public " : "private ")
 		   .emitTracked(rule.returnType).emit(" ");
 		buf.emit(ruleName).emit("(");
@@ -255,15 +272,34 @@ public final class GrammarOutput {
 		}
 		// When only one production used, no need to switch!
 		else if (prodTable.size() == 1) {
-			genProduction(prodTable.keySet().iterator().next());
+			// There should be no need for a loop either, as if there is a continuation
+			// this rule should never return anyway... Let's do it nonetheless if
+			// users write some fancy unexpected logic in semantic actions.
+			Production prod = prodTable.keySet().iterator().next();
+			if (continued) {
+				// Cf. comment below in general case for why the position buffer
+				// is allocated here
+				buf.emitlnIf(config.positions, "enter(" + Iterables.size(prod.actuals()) + ");");
+				buf.emitln(ruleName + ":");
+				buf.emit("while (true)").openBlock();
+			}
+			genProduction(continuation, prod);
+			if (continued) buf.closeBlock();
 		}
 		// When more than one production used, we have to peek and switch
 		else {
 			// Add infinite loop around the productions' code for an
 			// action which want to efficiently reenter the same rule.
-			buf.emitln(ruleName + ":");
-			buf.emit("while (true)").openBlock();
-
+			// Also, in that case we want to reuse the same buffer on the position 
+			// stack when reentering the rule, and thus need to allocate it once
+			// and for all outside the switch.
+			if (continued) {
+				int maxsize = prodTable.keySet().stream().mapToInt(
+					prod -> Iterables.size(prod.actuals())).max().getAsInt();
+				buf.emitlnIf(config.positions, "enter(" + maxsize + ");");
+				buf.emitln(ruleName + ":");
+				buf.emit("while (true)").openBlock();
+			}
 			buf.emit("switch (peek().getKind())").openBlock();
 			for (Map.Entry<Production, List<String>> entry : prodTable.entrySet()) {
 				final Production prod = entry.getKey();
@@ -274,26 +310,20 @@ public final class GrammarOutput {
 					buf.emit("case ").emit(term).emit(":");
 				}
 				buf.openBlock();
-				genProduction(prod);
+				genProduction(continuation, prod);
 				buf.closeBlock();
 			}
 			// Generate a default rule for when no tokens
-			// (Beware: even if all tokens are accounted for, we do generate
-			//  a default clause, this avoids spurious warnings in Java and
-			//  makes sure we use the loop's label at least once)
-			if (trans.size() <= grammar.tokenDecls.size()) {
+			if (trans.size() < grammar.tokenDecls.size()) {
 				buf.emit("default:").openBlock();
-				buf.emit("break ").emit(ruleName).emit(";");
+				buf.emit("throw tokenError(peek()");
+				trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));
+				buf.emit(");");
 				buf.closeBlock0();
 			}
+			if (continued)
+				buf.closeBlock0();
 			buf.closeBlock0();
-			buf.closeBlock();
-		
-			// If we reach oustide the loop, it means we fell in the default
-			// case and thus encountered an unexpected token
-			buf.emit("throw tokenError(peek()");
-			trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));
-			buf.emit(");");
 		}
 		
 		buf.closeBlock();

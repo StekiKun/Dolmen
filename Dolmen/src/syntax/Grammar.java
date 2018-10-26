@@ -296,7 +296,7 @@ public final class Grammar {
 						if (actual.isTerminal()) {
 							if (!tokens.contains(name))
 								reporter.add(Reports.undeclaredToken(rule, j, name));
-							// Only due the value check if the token is declared
+							// Only do the value check if the token is declared
 							else if (actual.isBound() && 
 								!valuedTokens.contains(name))
 								reporter.add(Reports.unvaluedTokenBound(
@@ -304,7 +304,7 @@ public final class Grammar {
 						} else {
 							if (!nonterms.contains(name))
 								reporter.add(Reports.undeclaredNonTerminal(rule, j, name));
-							// Only due the value and args checks if the non-term is declared
+							// Only do the value and args checks if the non-term is declared
 							else {
 								if (actual.args != null &&
 										!argnterms.contains(name))
@@ -390,6 +390,6 @@ public final class Grammar {
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, binding);
 		}
-
+		
 	}
 }

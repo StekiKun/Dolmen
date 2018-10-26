@@ -16,6 +16,7 @@ import common.Maps;
 import common.Nulls;
 import common.Sets;
 import syntax.IReport.Severity;
+import syntax.Production.ItemKind;
 
 /**
  * Static utilities about {@link Grammar}s
@@ -96,14 +97,27 @@ public abstract class Grammars {
 			final Set<String> deps = Nulls.ok(fwd.get(name));
 			
 			for (Production prod : rule.productions) {
-				for (Production.Actual actual : prod.actuals()) {
-					if (!actual.isTerminal()) {
-						deps.add(actual.item.val);
-						// bwd was initialized with all defined non-terminals
-						// (and the Grammar.Builder ensures that a production
-						//  rule cannot reference undefined non-terminals)
-						Nulls.ok(bwd.get(actual.item.val)).add(name);
+				for (Production.Item item : prod.items) {
+					@Nullable String called = null;
+					switch (item.getKind()) {
+					case ACTION:
+						break;
+					case ACTUAL:
+						Production.Actual actual = (Production.Actual) item;
+						if (!actual.isTerminal())
+							called = actual.item.val;
+						break;
+					case CONTINUE:
+						called = name;
+						break;
 					}
+					if (called == null) continue;
+					
+					deps.add(called);
+					// bwd was initialized with all defined non-terminals
+					// (and the Grammar.Builder ensures that a production
+					//  rule cannot reference undefined non-terminals)
+					Nulls.ok(bwd.get(called)).add(name);
 				}
 			}
 		}
@@ -218,13 +232,16 @@ public abstract class Grammars {
 	}
 	
 	private static @Nullable Boolean
-		nullableProd(Production prod, Map<String, Boolean> nullable) {
+		nullableProd(String ruleName, Production prod, Map<String, Boolean> nullable) {
 		for (Production.Actual actual : prod.actuals()) {
 			if (actual.isTerminal()) return false;
 			String id = actual.item.val;
 			@Nullable Boolean b = Maps.get(nullable, id);
 			if (b == null || !b) return b;
 		}
+		// If we are checking this production, the corresponding rule's nullability
+		// is still unknown so if there is a continuation it will remain so
+		if (prod.continuation() != null) return null;
 		return true;
 	}
 	
@@ -250,7 +267,7 @@ public abstract class Grammars {
 			final GrammarRule rule = grammar.rule(name);
 			boolean allNonNull = true;
 			for (Production prod : rule.productions) {
-				@Nullable Boolean b = nullableProd(prod, nullable);
+				@Nullable Boolean b = nullableProd(name, prod, nullable);
 				if (b == null)
 					allNonNull = false;
 				else if (b) {
@@ -301,8 +318,10 @@ public abstract class Grammars {
 						continue prod;
 					}
 					changed |= first.addAll(res.get(itemName));
-					if (!nullable.contains(itemName)) break;
+					if (!nullable.contains(itemName)) 
+						continue prod;
 				}
+				// Continuation would contribute nothing new
 			}
 			// If we changed the FIRST set of the current rule,
 			// we need to revisit the non-terminals which depend on it
@@ -334,10 +353,25 @@ public abstract class Grammars {
 				// the last non-terminal such that all items in-between 
 				// are nullable.
 				// (All non-terminals were added to res initially)
-				Set<String> follow = Nulls.ok(res.get(name));	// beware: for R only 
+				Set<String> follow = Nulls.ok(res.get(name));	// beware: for R only
+				// The initial follow-set to apply to the right-most item
+				// depends on whether there is a continuation or not:
+				//  - if there is not, it is the follow-set of the rule
+				//  - if there is, it is the first-set of the rule,
+				//	  extended with its follow-set if the rule is nullable
+				//    as well
+				if (prod.continuation() != null) {
+					// (FIRST was computed for all non-terminals)
+					Set<String> firsts = Nulls.ok(first.get(name));
+					if (nullable.contains(name))
+						follow = Sets.union(follow, firsts);
+					else
+						follow = firsts;
+				}
+				
 				for (int k = prod.items.size() - 1; k >= 0; --k) {
 					Production.Item item = prod.items.get(k);
-					if (!(item instanceof Production.Actual)) continue;
+					if (item.getKind() != ItemKind.ACTUAL) continue;
 					final Production.Actual actual = (Production.Actual) item;
 					if (actual.isTerminal()) {
 						// When encountering a terminal item, we can
@@ -462,6 +496,8 @@ public abstract class Grammars {
 					prods.forEach(prod -> {
 						message.append("[");
 						prod.actuals().forEach(a -> message.append(" ").append(a.toString()));
+						if (prod.continuation() != null) 
+							message.append(" ").append(prod.continuation());
 						message.append(" ]");
 					});
 					reporter.add(IReport.of(message.toString(), Severity.ERROR, rule.name));

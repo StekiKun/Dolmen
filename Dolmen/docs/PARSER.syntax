@@ -45,7 +45,7 @@ Exactly like in Java
 
 ## Grammar productions [PRODUCTION]
 
-  | ITEM*
+  | ITEM* continue?
   
 ## Production items [ITEM]
 
