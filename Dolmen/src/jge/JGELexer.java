@@ -33,6 +33,7 @@ public final class JGELexer extends codegen.LexBuffer {
 		else if (id.equals("private")) return PRIVATE;
 		else if (id.equals("token")) return TOKEN;
 		else if (id.equals("rule")) return RULE;
+		else if (id.equals("continue")) return CONTINUE;
 		else return IDENT(id);
 	}	
 

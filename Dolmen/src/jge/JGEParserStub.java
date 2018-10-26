@@ -70,16 +70,13 @@ public abstract class JGEParserStub {
 			return;
 		}
 		catch (LexicalError e) {
-			tasks.aborted("Lexical error in grammar description");
-			log.println(e.getMessage());
+			tasks.aborted("Lexical error in grammar description: " + e.getMessage());
 		}
 		catch (ParsingException e) {
-			tasks.aborted("Syntax error in grammar description");
-			log.println(e.getMessage());
+			tasks.aborted("Syntax error in grammar description: " + e.getMessage());
 		}
 		catch (Grammar.IllFormedException e) {
-			tasks.aborted("Grammar description is not well-formed");
-			log.println(e.getMessage());
+			tasks.aborted("Grammar description is not well-formed: " + e.getMessage());
 		}
 		catch (FileNotFoundException e) {
 			e.printStackTrace(log);

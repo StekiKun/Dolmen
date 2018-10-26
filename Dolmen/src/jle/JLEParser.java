@@ -285,101 +285,89 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  List<Option>  options(@Nullable List<Option> opts) {
-        options:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case IMPORT: {
-                     return opts == null ? Lists.empty() : opts; 
-                }
-                case LBRACKET: {
-                    // LBRACKET
-                    eat(Token.Kind.LBRACKET);
-                     List<Option> acc = opts == null ? new ArrayList<>() : opts; 
-                    // key = IDENT
-                    String key = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                     Located<String> lkey = withLoc(key); 
-                    // EQUAL
-                    eat(Token.Kind.EQUAL);
-                    // value = LSTRING
-                    String value = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
-                     Located<String> lvalue = withLoc(value); 
-                    // RBRACKET
-                    eat(Token.Kind.RBRACKET);
-                     acc.add(Option.of(lkey, lvalue)); 
-                    // options(acc)
-                    options(acc);
-                     return acc; 
-                }
-                default: {
-                    break options;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case IMPORT: {
+                 return opts == null ? Lists.empty() : opts; 
+            }
+            case LBRACKET: {
+                // LBRACKET
+                eat(Token.Kind.LBRACKET);
+                 List<Option> acc = opts == null ? new ArrayList<>() : opts; 
+                // key = IDENT
+                String key = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 Located<String> lkey = withLoc(key); 
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                // value = LSTRING
+                String value = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
+                 Located<String> lvalue = withLoc(value); 
+                // RBRACKET
+                eat(Token.Kind.RBRACKET);
+                 acc.add(Option.of(lkey, lvalue)); 
+                // options(acc)
+                options(acc);
+                 return acc; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LBRACKET);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LBRACKET);
     }
     
     private  List<Located<String>>  imports(@Nullable List<Located<String>> imports) {
-        imports:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION: {
-                     return imports == null ? Lists.empty() : imports; 
-                }
-                case IMPORT: {
-                    // IMPORT
-                    eat(Token.Kind.IMPORT);
-                    
+        switch (peek().getKind()) {
+            case ACTION: {
+                 return imports == null ? Lists.empty() : imports; 
+            }
+            case IMPORT: {
+                // IMPORT
+                eat(Token.Kind.IMPORT);
+                
 		List<Located<String>> acc = imports == null ? new ArrayList<>() : imports; 
 		Position posStart = _jl_lastTokenStart;
 	  	StringBuilder buf = new StringBuilder();
 	  	buf.append("import ");
 	
-                    // import_(buf)
-                    import_(buf);
-                    
+                // import_(buf)
+                import_(buf);
+                
 		Located<String> imp = Located.of(buf.toString(), posStart, _jl_lastTokenEnd);
 		acc.add(imp);
 	
-                    // imports(acc)
-                    imports(acc);
-                     return acc; 
-                }
-                default: {
-                    break imports;
-                }
+                // imports(acc)
+                imports(acc);
+                 return acc; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT);
     }
     
     private  void  import_(StringBuilder buf) {
-        import_:
-        while (true) {
-            switch (peek().getKind()) {
-                case IDENT: {
-                    // typename(buf)
-                    typename(buf);
-                    // SEMICOL
-                    eat(Token.Kind.SEMICOL);
-                     buf.append(";"); return; 
-                }
-                case STATIC: {
-                    // STATIC
-                    eat(Token.Kind.STATIC);
-                     buf.append("static "); 
-                    // typename(buf)
-                    typename(buf);
-                    // SEMICOL
-                    eat(Token.Kind.SEMICOL);
-                     buf.append(";"); return; 
-                }
-                default: {
-                    break import_;
-                }
+        switch (peek().getKind()) {
+            case IDENT: {
+                // typename(buf)
+                typename(buf);
+                // SEMICOL
+                eat(Token.Kind.SEMICOL);
+                 buf.append(";"); return; 
+            }
+            case STATIC: {
+                // STATIC
+                eat(Token.Kind.STATIC);
+                 buf.append("static "); 
+                // typename(buf)
+                typename(buf);
+                // SEMICOL
+                eat(Token.Kind.SEMICOL);
+                 buf.append(";"); return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
             }
         }
-        throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
     }
     
     private  void  typename(StringBuilder buf) {
@@ -392,79 +380,67 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  void  maybe_more_typename(StringBuilder buf) {
-        maybe_more_typename:
-        while (true) {
-            switch (peek().getKind()) {
-                case DOT: {
-                    // DOT
-                    eat(Token.Kind.DOT);
-                     buf.append('.'); 
-                    // more_typename(buf)
-                    more_typename(buf);
-                     return; 
-                }
-                case SEMICOL: {
-                     return; 
-                }
-                default: {
-                    break maybe_more_typename;
-                }
+        switch (peek().getKind()) {
+            case DOT: {
+                // DOT
+                eat(Token.Kind.DOT);
+                 buf.append('.'); 
+                // more_typename(buf)
+                more_typename(buf);
+                 return; 
+            }
+            case SEMICOL: {
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
             }
         }
-        throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
     }
     
     private  void  more_typename(StringBuilder buf) {
-        more_typename:
-        while (true) {
-            switch (peek().getKind()) {
-                case IDENT: {
-                    // typename(buf)
-                    typename(buf);
-                     return; 
-                }
-                case STAR: {
-                    // STAR
-                    eat(Token.Kind.STAR);
-                     buf.append('*'); return; 
-                }
-                default: {
-                    break more_typename;
-                }
+        switch (peek().getKind()) {
+            case IDENT: {
+                // typename(buf)
+                typename(buf);
+                 return; 
+            }
+            case STAR: {
+                // STAR
+                eat(Token.Kind.STAR);
+                 buf.append('*'); return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
             }
         }
-        throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
     }
     
     private  void  definitions() {
-        definitions:
-        while (true) {
-            switch (peek().getKind()) {
-                case IDENT: {
-                    // id = IDENT
-                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                     Located<String> lid = withLoc(id); 
-                    // EQUAL
-                    eat(Token.Kind.EQUAL);
-                    // reg = regular()
-                     Regular  reg = regular();
-                    // SEMICOL
-                    eat(Token.Kind.SEMICOL);
-                     definitions.put(lid, reg); 
-                    // definitions()
-                    definitions();
-                     return; 
-                }
-                case PRIVATE:
-                case PUBLIC: {
-                     return; 
-                }
-                default: {
-                    break definitions;
-                }
+        switch (peek().getKind()) {
+            case IDENT: {
+                // id = IDENT
+                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 Located<String> lid = withLoc(id); 
+                // EQUAL
+                eat(Token.Kind.EQUAL);
+                // reg = regular()
+                 Regular  reg = regular();
+                // SEMICOL
+                eat(Token.Kind.SEMICOL);
+                 definitions.put(lid, reg); 
+                // definitions()
+                definitions();
+                 return; 
+            }
+            case PRIVATE:
+            case PUBLIC: {
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
-        throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private  List<Lexer.Entry>  entries() {
@@ -479,27 +455,23 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  void  more_entries(List<Lexer.Entry> acc) {
-        more_entries:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION: {
-                     return; 
-                }
-                case PRIVATE:
-                case PUBLIC: {
-                    // entry = entry()
-                     Lexer.Entry  entry = entry();
-                     acc.add(entry); 
-                    // more_entries(acc)
-                    more_entries(acc);
-                     return; 
-                }
-                default: {
-                    break more_entries;
-                }
+        switch (peek().getKind()) {
+            case ACTION: {
+                 return; 
+            }
+            case PRIVATE:
+            case PUBLIC: {
+                // entry = entry()
+                 Lexer.Entry  entry = entry();
+                 acc.add(entry); 
+                // more_entries(acc)
+                more_entries(acc);
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private  Lexer.Entry  entry() {
@@ -528,65 +500,53 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  boolean  visibility() {
-        visibility:
-        while (true) {
-            switch (peek().getKind()) {
-                case PRIVATE: {
-                    // PRIVATE
-                    eat(Token.Kind.PRIVATE);
-                     return false; 
-                }
-                case PUBLIC: {
-                    // PUBLIC
-                    eat(Token.Kind.PUBLIC);
-                     return true; 
-                }
-                default: {
-                    break visibility;
-                }
+        switch (peek().getKind()) {
+            case PRIVATE: {
+                // PRIVATE
+                eat(Token.Kind.PRIVATE);
+                 return false; 
+            }
+            case PUBLIC: {
+                // PUBLIC
+                eat(Token.Kind.PUBLIC);
+                 return true; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
-        throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private  @Nullable Extent  args() {
-        args:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION: {
-                    // args = ACTION
-                    Extent args = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                     return args; 
-                }
-                case EQUAL: {
-                     return null; 
-                }
-                default: {
-                    break args;
-                }
+        switch (peek().getKind()) {
+            case ACTION: {
+                // args = ACTION
+                Extent args = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                 return args; 
+            }
+            case EQUAL: {
+                 return null; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.EQUAL);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.EQUAL);
     }
     
     private  boolean  shortest() {
-        shortest:
-        while (true) {
-            switch (peek().getKind()) {
-                case OR: {
-                     return false; 
-                }
-                case SHORTEST: {
-                    // SHORTEST
-                    eat(Token.Kind.SHORTEST);
-                     return true; 
-                }
-                default: {
-                    break shortest;
-                }
+        switch (peek().getKind()) {
+            case OR: {
+                 return false; 
+            }
+            case SHORTEST: {
+                // SHORTEST
+                eat(Token.Kind.SHORTEST);
+                 return true; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.OR, Token.Kind.SHORTEST);
             }
         }
-        throw tokenError(peek(), Token.Kind.OR, Token.Kind.SHORTEST);
     }
     
     private  List<Lexer.Clause>  clauses() {
@@ -599,27 +559,23 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  void  more_clauses(List<Lexer.Clause> acc) {
-        more_clauses:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case PRIVATE:
-                case PUBLIC: {
-                     return; 
-                }
-                case OR: {
-                    // clause(acc)
-                    clause(acc);
-                    // more_clauses(acc)
-                    more_clauses(acc);
-                     return; 
-                }
-                default: {
-                    break more_clauses;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case PRIVATE:
+            case PUBLIC: {
+                 return; 
+            }
+            case OR: {
+                // clause(acc)
+                clause(acc);
+                // more_clauses(acc)
+                more_clauses(acc);
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.OR, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.OR, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
     }
     
     private  void  clause(List<Lexer.Clause> acc) {
@@ -635,25 +591,23 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Located<Regular>  regular_orelse(List<Lexer.Clause> acc) {
-        regular_orelse:
-        while (true) {
-            switch (peek().getKind()) {
-                case EOF:
-                case IDENT:
-                case LBRACKET:
-                case LCHAR:
-                case LPAREN:
-                case LSTRING:
-                case UNDERSCORE: {
-                     Position start = _jl_lastTokenEnd; 
-                    // reg = regular()
-                     Regular  reg = regular();
-                     return Located.of(reg, start, _jl_lastTokenEnd); 
-                }
-                case ORELSE: {
-                    // ORELSE
-                    eat(Token.Kind.ORELSE);
-                    
+        switch (peek().getKind()) {
+            case EOF:
+            case IDENT:
+            case LBRACKET:
+            case LCHAR:
+            case LPAREN:
+            case LSTRING:
+            case UNDERSCORE: {
+                 Position start = _jl_lastTokenEnd; 
+                // reg = regular()
+                 Regular  reg = regular();
+                 return Located.of(reg, start, _jl_lastTokenEnd); 
+            }
+            case ORELSE: {
+                // ORELSE
+                eat(Token.Kind.ORELSE);
+                
 		// Deal with the special default clause by finding
 		// all possible first characters matched by other clauses
 		CSet possible = CSet.EMPTY;
@@ -663,13 +617,11 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
 		Regular reg = Regular.plus(Regular.chars(others));	
 		return withLoc(reg);	// location of 'orelse'
 	
-                }
-                default: {
-                    break regular_orelse;
-                }
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.ORELSE, Token.Kind.UNDERSCORE);
             }
         }
-        throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.ORELSE, Token.Kind.UNDERSCORE);
     }
     
     private  Regular  regular() {
@@ -681,30 +633,26 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  regular_op(Regular r) {
-        regular_op:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case RPAREN:
-                case SEMICOL: {
-                     return r; 
-                }
-                case AS: {
-                    // AS
-                    eat(Token.Kind.AS);
-                    // id = IDENT
-                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                     Located<String> lid = withLoc(validJavaIdent(id)); 
-                    // reg = regular_op(Regular.binding(r, lid))
-                     Regular  reg = regular_op(Regular.binding(r, lid));
-                     return reg; 
-                }
-                default: {
-                    break regular_op;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case RPAREN:
+            case SEMICOL: {
+                 return r; 
+            }
+            case AS: {
+                // AS
+                eat(Token.Kind.AS);
+                // id = IDENT
+                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 Located<String> lid = withLoc(validJavaIdent(id)); 
+                // reg = regular_op(Regular.binding(r, lid))
+                 Regular  reg = regular_op(Regular.binding(r, lid));
+                 return reg; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.RPAREN, Token.Kind.SEMICOL);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.RPAREN, Token.Kind.SEMICOL);
     }
     
     private  Regular  altRegular() {
@@ -716,28 +664,24 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  altRegular_op(Regular r1) {
-        altRegular_op:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case AS:
-                case RPAREN:
-                case SEMICOL: {
-                     return r1; 
-                }
-                case OR: {
-                    // OR
-                    eat(Token.Kind.OR);
-                    // r2 = altRegular()
-                     Regular  r2 = altRegular();
-                     return Regular.or(r1, r2); 
-                }
-                default: {
-                    break altRegular_op;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case AS:
+            case RPAREN:
+            case SEMICOL: {
+                 return r1; 
+            }
+            case OR: {
+                // OR
+                eat(Token.Kind.OR);
+                // r2 = altRegular()
+                 Regular  r2 = altRegular();
+                 return Regular.or(r1, r2); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL);
     }
     
     private  Regular  seqRegular() {
@@ -749,33 +693,29 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  seqRegular_op(Regular r1) {
-        seqRegular_op:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case AS:
-                case OR:
-                case RPAREN:
-                case SEMICOL: {
-                     return r1; 
-                }
-                case EOF:
-                case IDENT:
-                case LBRACKET:
-                case LCHAR:
-                case LPAREN:
-                case LSTRING:
-                case UNDERSCORE: {
-                    // r2 = seqRegular()
-                     Regular  r2 = seqRegular();
-                     return Regular.seq(r1, r2); 
-                }
-                default: {
-                    break seqRegular_op;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case AS:
+            case OR:
+            case RPAREN:
+            case SEMICOL: {
+                 return r1; 
+            }
+            case EOF:
+            case IDENT:
+            case LBRACKET:
+            case LCHAR:
+            case LPAREN:
+            case LSTRING:
+            case UNDERSCORE: {
+                // r2 = seqRegular()
+                 Regular  r2 = seqRegular();
+                 return Regular.seq(r1, r2); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.UNDERSCORE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.UNDERSCORE);
     }
     
     private  Regular  postfixRegular() {
@@ -787,88 +727,80 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  postfixRegular_op(Regular r) {
-        postfixRegular_op:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case AS:
-                case EOF:
-                case IDENT:
-                case LBRACKET:
-                case LCHAR:
-                case LPAREN:
-                case LSTRING:
-                case OR:
-                case RPAREN:
-                case SEMICOL:
-                case UNDERSCORE: {
-                     return r; 
-                }
-                case LANGLE: {
-                    // LANGLE
-                    eat(Token.Kind.LANGLE);
-                    // min = INTEGER
-                    int min = ((Token.INTEGER) eat(Token.Kind.INTEGER)).value;
-                     if (min < 0)
+        switch (peek().getKind()) {
+            case ACTION:
+            case AS:
+            case EOF:
+            case IDENT:
+            case LBRACKET:
+            case LCHAR:
+            case LPAREN:
+            case LSTRING:
+            case OR:
+            case RPAREN:
+            case SEMICOL:
+            case UNDERSCORE: {
+                 return r; 
+            }
+            case LANGLE: {
+                // LANGLE
+                eat(Token.Kind.LANGLE);
+                // min = INTEGER
+                int min = ((Token.INTEGER) eat(Token.Kind.INTEGER)).value;
+                 if (min < 0)
 				throw parsingError("Invalid repetition count " + min);
 			
-                    // reg = repetitions(r, min)
-                     Regular  reg = repetitions(r, min);
-                     return reg; 
-                }
-                case MAYBE: {
-                    // MAYBE
-                    eat(Token.Kind.MAYBE);
-                     return Regular.or(Regular.EPSILON, r); 
-                }
-                case PLUS: {
-                    // PLUS
-                    eat(Token.Kind.PLUS);
-                     return Regular.plus(r); 
-                }
-                case STAR: {
-                    // STAR
-                    eat(Token.Kind.STAR);
-                     return Regular.star(r); 
-                }
-                default: {
-                    break postfixRegular_op;
-                }
+                // reg = repetitions(r, min)
+                 Regular  reg = repetitions(r, min);
+                 return reg; 
+            }
+            case MAYBE: {
+                // MAYBE
+                eat(Token.Kind.MAYBE);
+                 return Regular.or(Regular.EPSILON, r); 
+            }
+            case PLUS: {
+                // PLUS
+                eat(Token.Kind.PLUS);
+                 return Regular.plus(r); 
+            }
+            case STAR: {
+                // STAR
+                eat(Token.Kind.STAR);
+                 return Regular.star(r); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
     }
     
     private  Regular  repetitions(Regular r, int min) {
-        repetitions:
-        while (true) {
-            switch (peek().getKind()) {
-                case COMMA: {
-                    // COMMA
-                    eat(Token.Kind.COMMA);
-                    // max = INTEGER
-                    int max = ((Token.INTEGER) eat(Token.Kind.INTEGER)).value;
-                     if (max < 0)
+        switch (peek().getKind()) {
+            case COMMA: {
+                // COMMA
+                eat(Token.Kind.COMMA);
+                // max = INTEGER
+                int max = ((Token.INTEGER) eat(Token.Kind.INTEGER)).value;
+                 if (max < 0)
 		throw parsingError("Invalid repetition count " + max);
 	  if (max < min)
 	  	throw parsingError("Maximum repetition " + max 
 	  		+ " is strictly smaller than minimum " + min);
 	
-                    // RANGLE
-                    eat(Token.Kind.RANGLE);
-                     return Regular.repeat(r, min, max); 
-                }
-                case RANGLE: {
-                    // RANGLE
-                    eat(Token.Kind.RANGLE);
-                     return Regular.repeat(r, min); 
-                }
-                default: {
-                    break repetitions;
-                }
+                // RANGLE
+                eat(Token.Kind.RANGLE);
+                 return Regular.repeat(r, min, max); 
+            }
+            case RANGLE: {
+                // RANGLE
+                eat(Token.Kind.RANGLE);
+                 return Regular.repeat(r, min); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
     }
     
     private  Regular  diffRegular() {
@@ -880,95 +812,87 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  Regular  diffRegular_HASH(Regular r1) {
-        diffRegular_HASH:
-        while (true) {
-            switch (peek().getKind()) {
-                case ACTION:
-                case AS:
-                case EOF:
-                case IDENT:
-                case LANGLE:
-                case LBRACKET:
-                case LCHAR:
-                case LPAREN:
-                case LSTRING:
-                case MAYBE:
-                case OR:
-                case PLUS:
-                case RPAREN:
-                case SEMICOL:
-                case STAR:
-                case UNDERSCORE: {
-                     return r1; 
-                }
-                case HASH: {
-                    // HASH
-                    eat(Token.Kind.HASH);
-                    // r2 = atomicRegular()
-                     Regular  r2 = atomicRegular();
-                     return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2))); 
-                }
-                default: {
-                    break diffRegular_HASH;
-                }
+        switch (peek().getKind()) {
+            case ACTION:
+            case AS:
+            case EOF:
+            case IDENT:
+            case LANGLE:
+            case LBRACKET:
+            case LCHAR:
+            case LPAREN:
+            case LSTRING:
+            case MAYBE:
+            case OR:
+            case PLUS:
+            case RPAREN:
+            case SEMICOL:
+            case STAR:
+            case UNDERSCORE: {
+                 return r1; 
+            }
+            case HASH: {
+                // HASH
+                eat(Token.Kind.HASH);
+                // r2 = atomicRegular()
+                 Regular  r2 = atomicRegular();
+                 return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2))); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.HASH, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.HASH, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
     }
     
     private  Regular  atomicRegular() {
-        atomicRegular:
-        while (true) {
-            switch (peek().getKind()) {
-                case EOF: {
-                    // EOF
-                    eat(Token.Kind.EOF);
-                     return Regular.chars(CSet.EOF); 
-                }
-                case IDENT: {
-                    // id = IDENT
-                    String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                     @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
+        switch (peek().getKind()) {
+            case EOF: {
+                // EOF
+                eat(Token.Kind.EOF);
+                 return Regular.chars(CSet.EOF); 
+            }
+            case IDENT: {
+                // id = IDENT
+                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
 				  if (reg == null)
 				  	throw parsingError("Undefined regular expression " + reg);
 				  return reg;
 				
-                }
-                case LBRACKET: {
-                    // cs = charClass()
-                     CSet  cs = charClass();
-                     return Regular.chars(cs); 
-                }
-                case LCHAR: {
-                    // ch = LCHAR
-                    char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
-                     return Regular.chars(CSet.singleton(ch)); 
-                }
-                case LPAREN: {
-                    // LPAREN
-                    eat(Token.Kind.LPAREN);
-                    // reg = regular()
-                     Regular  reg = regular();
-                    // RPAREN
-                    eat(Token.Kind.RPAREN);
-                     return reg; 
-                }
-                case LSTRING: {
-                    // s = LSTRING
-                    String s = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
-                     return Regular.string(s); 
-                }
-                case UNDERSCORE: {
-                    // UNDERSCORE
-                    eat(Token.Kind.UNDERSCORE);
-                     return Regular.chars(CSet.ALL_BUT_EOF); 
-                }
-                default: {
-                    break atomicRegular;
-                }
+            }
+            case LBRACKET: {
+                // cs = charClass()
+                 CSet  cs = charClass();
+                 return Regular.chars(cs); 
+            }
+            case LCHAR: {
+                // ch = LCHAR
+                char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
+                 return Regular.chars(CSet.singleton(ch)); 
+            }
+            case LPAREN: {
+                // LPAREN
+                eat(Token.Kind.LPAREN);
+                // reg = regular()
+                 Regular  reg = regular();
+                // RPAREN
+                eat(Token.Kind.RPAREN);
+                 return reg; 
+            }
+            case LSTRING: {
+                // s = LSTRING
+                String s = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
+                 return Regular.string(s); 
+            }
+            case UNDERSCORE: {
+                // UNDERSCORE
+                eat(Token.Kind.UNDERSCORE);
+                 return Regular.chars(CSet.ALL_BUT_EOF); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.UNDERSCORE);
             }
         }
-        throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.UNDERSCORE);
     }
     
     private  CSet  charClass() {
@@ -982,27 +906,23 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  CSet  charSet() {
-        charSet:
-        while (true) {
-            switch (peek().getKind()) {
-                case CARET: {
-                    // CARET
-                    eat(Token.Kind.CARET);
-                    // c = charSetPositive()
-                     CSet  c = charSetPositive();
-                     return CSet.complement(c); 
-                }
-                case LCHAR: {
-                    // c = charSetPositive()
-                     CSet  c = charSetPositive();
-                     return c; 
-                }
-                default: {
-                    break charSet;
-                }
+        switch (peek().getKind()) {
+            case CARET: {
+                // CARET
+                eat(Token.Kind.CARET);
+                // c = charSetPositive()
+                 CSet  c = charSetPositive();
+                 return CSet.complement(c); 
+            }
+            case LCHAR: {
+                // c = charSetPositive()
+                 CSet  c = charSetPositive();
+                 return c; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.CARET, Token.Kind.LCHAR);
             }
         }
-        throw tokenError(peek(), Token.Kind.CARET, Token.Kind.LCHAR);
     }
     
     private  CSet  charSetPositive() {
@@ -1016,46 +936,38 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
     }
     
     private  CSet  charSetInterval(char first) {
-        charSetInterval:
-        while (true) {
-            switch (peek().getKind()) {
-                case DASH: {
-                    // DASH
-                    eat(Token.Kind.DASH);
-                    // last = LCHAR
-                    char last = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
-                     return CSet.interval(first, last); 
-                }
-                case LCHAR:
-                case RBRACKET: {
-                     return CSet.singleton(first); 
-                }
-                default: {
-                    break charSetInterval;
-                }
+        switch (peek().getKind()) {
+            case DASH: {
+                // DASH
+                eat(Token.Kind.DASH);
+                // last = LCHAR
+                char last = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
+                 return CSet.interval(first, last); 
+            }
+            case LCHAR:
+            case RBRACKET: {
+                 return CSet.singleton(first); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.DASH, Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
         }
-        throw tokenError(peek(), Token.Kind.DASH, Token.Kind.LCHAR, Token.Kind.RBRACKET);
     }
     
     private  CSet  more_charSetPositive(CSet acc) {
-        more_charSetPositive:
-        while (true) {
-            switch (peek().getKind()) {
-                case LCHAR: {
-                    // cs = charSetPositive()
-                     CSet  cs = charSetPositive();
-                     return CSet.union(acc, cs); 
-                }
-                case RBRACKET: {
-                     return acc; 
-                }
-                default: {
-                    break more_charSetPositive;
-                }
+        switch (peek().getKind()) {
+            case LCHAR: {
+                // cs = charSetPositive()
+                 CSet  cs = charSetPositive();
+                 return CSet.union(acc, cs); 
+            }
+            case RBRACKET: {
+                 return acc; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
         }
-        throw tokenError(peek(), Token.Kind.LCHAR, Token.Kind.RBRACKET);
     }
     
      
