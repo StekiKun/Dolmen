@@ -1,0 +1,127 @@
+Object (small.json[1,0+0]..small.json[21,665+1])
+     [
+         Pair (small.json[2,2+4]..small.json[2,2+31]) 
+         [
+             Key type (small.json[2,2+4]..small.json[2,2+10])
+             String FeatureCollection (small.json[2,2+12]..small.json[2,2+31])
+         ]
+         Pair (small.json[3,35+4]..small.json[20,659+5]) 
+         [
+             Key features (small.json[3,35+4]..small.json[3,35+14])
+             Array (small.json[3,35+16]..small.json[20,659+5])
+             [
+                 Object (small.json[4,53+1]..small.json[19,656+2])
+                 [
+                     Pair (small.json[4,53+3]..small.json[4,53+20]) 
+                     [
+                         Key type (small.json[4,53+3]..small.json[4,53+9])
+                         String Feature (small.json[4,53+11]..small.json[4,53+20])
+                     ]
+                     Pair (small.json[5,76+3]..small.json[13,288+24]) 
+                     [
+                         Key properties (small.json[5,76+3]..small.json[5,76+15])
+                         Object (small.json[5,76+17]..small.json[13,288+24])
+                         [
+                             Pair (small.json[5,76+19]..small.json[5,76+46]) 
+                             [
+                                 Key MAPBLKLOT (small.json[5,76+19]..small.json[5,76+30])
+                                 String 0001005 (small.json[5,76+32]..small.json[5,76+46])
+                             ]
+                             Pair (small.json[6,124+5]..small.json[6,124+24]) 
+                             [
+                                 Key BLKLOT (small.json[6,124+5]..small.json[6,124+13])
+                                 String 0001001 (small.json[6,124+15]..small.json[6,124+24])
+                             ]
+                             Pair (small.json[7,150+5]..small.json[7,150+24]) 
+                             [
+                                 Key BLOCK_NUM (small.json[7,150+5]..small.json[7,150+16])
+                                 String 0001 (small.json[7,150+18]..small.json[7,150+24])
+                             ]
+                             Pair (small.json[8,176+5]..small.json[8,176+21]) 
+                             [
+                                 Key LOT_NUM (small.json[8,176+5]..small.json[8,176+14])
+                                 String 001 (small.json[8,176+16]..small.json[8,176+21])
+                             ]
+                             Pair (small.json[9,199+5]..small.json[9,199+19]) 
+                             [
+                                 Key FROM_ST (small.json[9,199+5]..small.json[9,199+14])
+                                 String 0 (small.json[9,199+16]..small.json[9,199+19])
+                             ]
+                             Pair (small.json[10,220+5]..small.json[10,220+18]) 
+                             [
+                                 Key TO_ST (small.json[10,220+5]..small.json[10,220+12])
+                                 True (small.json[10,220+14]..small.json[10,220+18])
+                             ]
+                             Pair (small.json[11,240+5]..small.json[11,240+24]) 
+                             [
+                                 Key STREET (small.json[11,240+5]..small.json[11,240+13])
+                                 String UNKNOWN (small.json[11,240+15]..small.json[11,240+24])
+                             ]
+                             Pair (small.json[12,266+5]..small.json[12,266+20]) 
+                             [
+                                 Key ST_TYPE (small.json[12,266+5]..small.json[12,266+14])
+                                 Null (small.json[12,266+16]..small.json[12,266+20])
+                             ]
+                             Pair (small.json[13,288+5]..small.json[13,288+22]) 
+                             [
+                                 Key ODD_EVEN (small.json[13,288+5]..small.json[13,288+15])
+                                 False (small.json[13,288+17]..small.json[13,288+22])
+                             ]
+                         ]
+                     ]
+                     Pair (small.json[14,314+3]..small.json[18,646+9]) 
+                     [
+                         Key geometry (small.json[14,314+3]..small.json[14,314+13])
+                         Object (small.json[14,314+15]..small.json[18,646+9])
+                         [
+                             Pair (small.json[14,314+17]..small.json[14,314+34]) 
+                             [
+                                 Key type (small.json[14,314+17]..small.json[14,314+23])
+                                 String Polygon (small.json[14,314+25]..small.json[14,314+34])
+                             ]
+                             Pair (small.json[15,350+3]..small.json[17,533+112]) 
+                             [
+                                 Key coordinates (small.json[15,350+3]..small.json[15,350+16])
+                                 Array (small.json[15,350+18]..small.json[17,533+112])
+                                 [
+                                     Array (small.json[15,350+20]..small.json[17,533+110])
+                                     [
+                                         Array (small.json[15,350+22]..small.json[15,350+71])
+                                         [
+                                             Number -122.42200352825247 (small.json[15,350+24]..small.json[15,350+44])
+                                             Number 37.80848009696725 (small.json[15,350+46]..small.json[15,350+64])
+                                             Number 0.0 (small.json[15,350+66]..small.json[15,350+69])
+                                         ]
+                                         Array (small.json[16,423+8]..small.json[16,423+57])
+                                         [
+                                             Number -122.42207601332528 (small.json[16,423+10]..small.json[16,423+30])
+                                             Number 37.808835019815085 (small.json[16,423+32]..small.json[16,423+50])
+                                             Number 0.0 (small.json[16,423+52]..small.json[16,423+55])
+                                         ]
+                                         Array (small.json[16,423+59]..small.json[16,423+108])
+                                         [
+                                             Number -122.42110217434863 (small.json[16,423+61]..small.json[16,423+81])
+                                             Number 37.808803534992904 (small.json[16,423+83]..small.json[16,423+101])
+                                             Number 0.0 (small.json[16,423+103]..small.json[16,423+106])
+                                         ]
+                                         Array (small.json[17,533+8]..small.json[17,533+57])
+                                         [
+                                             Number -122.42106256906727 (small.json[17,533+10]..small.json[17,533+30])
+                                             Number 37.80860105681815 (small.json[17,533+32]..small.json[17,533+50])
+                                             Number 0.0 (small.json[17,533+52]..small.json[17,533+55])
+                                         ]
+                                         Array (small.json[17,533+59]..small.json[17,533+108])
+                                         [
+                                             Number -122.42200352825247 (small.json[17,533+61]..small.json[17,533+81])
+                                             Number 37.80848009696725 (small.json[17,533+83]..small.json[17,533+101])
+                                             Number 0.0 (small.json[17,533+103]..small.json[17,533+106])
+                                         ]
+                                     ]
+                                 ]
+                             ]
+                         ]
+                     ]
+                 ]
+             ]
+         ]
+     ]
