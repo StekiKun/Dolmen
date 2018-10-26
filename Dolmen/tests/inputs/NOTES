@@ -57,4 +57,8 @@
   It is possible to get rid of 300Mb of pointers by inlining the positions
   in the nodes, and one of the int's in positions could probably be
   turned into a short (saving ~60Mb), but this is definitely an issue.
-   
+  
+  NB: If instead of two positions, we keep two 32-bit offsets
+  in each node, the parsing of citylots.json does indeed complete
+  successfully, in slightly less than 30s. Main cost is allocation
+  though, and has nothing to do with Dolmen. 

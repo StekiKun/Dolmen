@@ -217,8 +217,7 @@ private { void } rule more_elements(List<Value<?>> elts) =
 | RSQUARE				{ return; }
 | COMMA	 val = value 
 	{ elts.add(val); }
-  more_elements(elts)	
-  	{ return; }
+  continue
 ;
 
 private { void } rule object_kwd =
@@ -241,8 +240,7 @@ private { Map<Located<String>, Value<?>> } rule members(@Nullable Map<Located<St
 
 private { void } rule more_members(Map<Located<String>, Value<?>> members) =
 | RBRACKET					{ return; }
-| COMMA pair(members) more_members(members)	
-							{ return; }
+| COMMA pair(members) continue
 ;
 
 private { void } rule pair(Map<Located<String>, Value<?>> map) =

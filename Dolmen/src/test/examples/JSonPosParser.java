@@ -275,95 +275,87 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  Value<?>  value() {
-        value:
-        while (true) {
-            switch (peek().getKind()) {
-                case ARRAY:
-                case LSQUARE: {
-                    enter(2);
-                    // array_kwd
-                    array_kwd();
-                    leave(null);
-                    // a = array
-                     List<Value<?>>  a = array();
-                    leave("a");
-                     return valArray(getSymbolStartPos(), getEndPos(), a); 
-                }
-                case FALSE: {
-                    enter(1);
-                    // FALSE
-                    eat(Token.Kind.FALSE);
-                    shift(null);
-                     return valFalse(getStartPos(), getEndPos()); 
-                }
-                case LBRACKET:
-                case OBJECT: {
-                    enter(2);
-                    // object_kwd
-                    object_kwd();
-                    leave(null);
-                    // o = object
-                     Map<Located<String>, Value<?>>  o = object();
-                    leave("o");
-                     return valObject(getSymbolStartPos(), getEndPos(), o); 
-                }
-                case NULL: {
-                    enter(1);
-                    // NULL
-                    eat(Token.Kind.NULL);
-                    shift(null);
-                     return valNull(getStartPos(), getEndPos()); 
-                }
-                case NUMBER: {
-                    enter(1);
-                    // n = NUMBER
-                     double  n = ((Token.NUMBER) eat(Token.Kind.NUMBER)).value;
-                    shift("n");
-                     return valNumber(getStartPos(), getEndPos(), n); 
-                }
-                case STRING: {
-                    enter(1);
-                    // s = STRING
-                     String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
-                    shift("s");
-                     return valString(getStartPos(), getEndPos(), s); 
-                }
-                case TRUE: {
-                    enter(1);
-                    // TRUE
-                    eat(Token.Kind.TRUE);
-                    shift(null);
-                     return valTrue(getStartPos(), getEndPos()); 
-                }
-                default: {
-                    break value;
-                }
+        switch (peek().getKind()) {
+            case ARRAY:
+            case LSQUARE: {
+                enter(2);
+                // array_kwd
+                array_kwd();
+                leave(null);
+                // a = array
+                 List<Value<?>>  a = array();
+                leave("a");
+                 return valArray(getSymbolStartPos(), getEndPos(), a); 
+            }
+            case FALSE: {
+                enter(1);
+                // FALSE
+                eat(Token.Kind.FALSE);
+                shift(null);
+                 return valFalse(getStartPos(), getEndPos()); 
+            }
+            case LBRACKET:
+            case OBJECT: {
+                enter(2);
+                // object_kwd
+                object_kwd();
+                leave(null);
+                // o = object
+                 Map<Located<String>, Value<?>>  o = object();
+                leave("o");
+                 return valObject(getSymbolStartPos(), getEndPos(), o); 
+            }
+            case NULL: {
+                enter(1);
+                // NULL
+                eat(Token.Kind.NULL);
+                shift(null);
+                 return valNull(getStartPos(), getEndPos()); 
+            }
+            case NUMBER: {
+                enter(1);
+                // n = NUMBER
+                 double  n = ((Token.NUMBER) eat(Token.Kind.NUMBER)).value;
+                shift("n");
+                 return valNumber(getStartPos(), getEndPos(), n); 
+            }
+            case STRING: {
+                enter(1);
+                // s = STRING
+                 String  s = ((Token.STRING) eat(Token.Kind.STRING)).value;
+                shift("s");
+                 return valString(getStartPos(), getEndPos(), s); 
+            }
+            case TRUE: {
+                enter(1);
+                // TRUE
+                eat(Token.Kind.TRUE);
+                shift(null);
+                 return valTrue(getStartPos(), getEndPos()); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.STRING, Token.Kind.TRUE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.STRING, Token.Kind.TRUE);
     }
     
     private  void  array_kwd() {
-        array_kwd:
-        while (true) {
-            switch (peek().getKind()) {
-                case ARRAY: {
-                    enter(1);
-                    // ARRAY
-                    eat(Token.Kind.ARRAY);
-                    shift(null);
-                     return; 
-                }
-                case LSQUARE: {
-                    enter(0);
-                     return; 
-                }
-                default: {
-                    break array_kwd;
-                }
+        switch (peek().getKind()) {
+            case ARRAY: {
+                enter(1);
+                // ARRAY
+                eat(Token.Kind.ARRAY);
+                shift(null);
+                 return; 
+            }
+            case LSQUARE: {
+                enter(0);
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.LSQUARE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.LSQUARE);
     }
     
     private  List<Value<?>>  array() {
@@ -378,50 +370,46 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  List<Value<?>>  elements(@Nullable List<Value<?>> elts) {
-        elements:
-        while (true) {
-            switch (peek().getKind()) {
-                case ARRAY:
-                case FALSE:
-                case LBRACKET:
-                case LSQUARE:
-                case NULL:
-                case NUMBER:
-                case OBJECT:
-                case STRING:
-                case TRUE: {
-                    enter(2);
-                    // val = value
-                     Value<?>  val = value();
-                    leave("val");
-                     List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; 
-                     acc.add(val); 
-                    // more_elements(acc)
-                    more_elements(acc);
-                    leave(null);
-                     return acc; 
-                }
-                case RSQUARE: {
-                    enter(1);
-                    // RSQUARE
-                    eat(Token.Kind.RSQUARE);
-                    shift(null);
-                     return elts == null ? Lists.empty() : elts; 
-                }
-                default: {
-                    break elements;
-                }
+        switch (peek().getKind()) {
+            case ARRAY:
+            case FALSE:
+            case LBRACKET:
+            case LSQUARE:
+            case NULL:
+            case NUMBER:
+            case OBJECT:
+            case STRING:
+            case TRUE: {
+                enter(2);
+                // val = value
+                 Value<?>  val = value();
+                leave("val");
+                 List<Value<?>> acc = elts == null ? new ArrayList<>() : elts; 
+                 acc.add(val); 
+                // more_elements(acc)
+                more_elements(acc);
+                leave(null);
+                 return acc; 
+            }
+            case RSQUARE: {
+                enter(1);
+                // RSQUARE
+                eat(Token.Kind.RSQUARE);
+                shift(null);
+                 return elts == null ? Lists.empty() : elts; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
             }
         }
-        throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
     }
     
     private  void  more_elements(List<Value<?>> elts) {
+        enter(2);
         more_elements:
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    enter(3);
                     // COMMA
                     eat(Token.Kind.COMMA);
                     shift(null);
@@ -429,47 +417,39 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
                      Value<?>  val = value();
                     leave("val");
                      elts.add(val); 
-                    // more_elements(elts)
-                    more_elements(elts);
-                    leave(null);
-                     return; 
+                    rewind();
+                    continue more_elements;
                 }
                 case RSQUARE: {
-                    enter(1);
                     // RSQUARE
                     eat(Token.Kind.RSQUARE);
                     shift(null);
                      return; 
                 }
                 default: {
-                    break more_elements;
+                    throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
                 }
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
     }
     
     private  void  object_kwd() {
-        object_kwd:
-        while (true) {
-            switch (peek().getKind()) {
-                case LBRACKET: {
-                    enter(0);
-                     return; 
-                }
-                case OBJECT: {
-                    enter(1);
-                    // OBJECT
-                    eat(Token.Kind.OBJECT);
-                    shift(null);
-                     return; 
-                }
-                default: {
-                    break object_kwd;
-                }
+        switch (peek().getKind()) {
+            case LBRACKET: {
+                enter(0);
+                 return; 
+            }
+            case OBJECT: {
+                enter(1);
+                // OBJECT
+                eat(Token.Kind.OBJECT);
+                shift(null);
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.LBRACKET, Token.Kind.OBJECT);
             }
         }
-        throw tokenError(peek(), Token.Kind.LBRACKET, Token.Kind.OBJECT);
     }
     
     private  Map<Located<String>, Value<?>>  object() {
@@ -484,65 +464,57 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
     }
     
     private  Map<Located<String>, Value<?>>  members(@Nullable Map<Located<String>, Value<?>> members) {
-        members:
-        while (true) {
-            switch (peek().getKind()) {
-                case RBRACKET: {
-                    enter(1);
-                    // RBRACKET
-                    eat(Token.Kind.RBRACKET);
-                    shift(null);
-                     return members == null ? Maps.empty() : members; 
-                }
-                case STRING: {
-                    enter(2);
-                     Map<Located<String>, Value<?>> acc = members == null ? new LinkedHashMap<>() : members; 
-                    // pair(acc)
-                    pair(acc);
-                    leave(null);
-                    // more_members(acc)
-                    more_members(acc);
-                    leave(null);
-                     return acc; 
-                }
-                default: {
-                    break members;
-                }
+        switch (peek().getKind()) {
+            case RBRACKET: {
+                enter(1);
+                // RBRACKET
+                eat(Token.Kind.RBRACKET);
+                shift(null);
+                 return members == null ? Maps.empty() : members; 
+            }
+            case STRING: {
+                enter(2);
+                 Map<Located<String>, Value<?>> acc = members == null ? new LinkedHashMap<>() : members; 
+                // pair(acc)
+                pair(acc);
+                leave(null);
+                // more_members(acc)
+                more_members(acc);
+                leave(null);
+                 return acc; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
             }
         }
-        throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
     }
     
     private  void  more_members(Map<Located<String>, Value<?>> members) {
+        enter(2);
         more_members:
         while (true) {
             switch (peek().getKind()) {
                 case COMMA: {
-                    enter(3);
                     // COMMA
                     eat(Token.Kind.COMMA);
                     shift(null);
                     // pair(members)
                     pair(members);
                     leave(null);
-                    // more_members(members)
-                    more_members(members);
-                    leave(null);
-                     return; 
+                    rewind();
+                    continue more_members;
                 }
                 case RBRACKET: {
-                    enter(1);
                     // RBRACKET
                     eat(Token.Kind.RBRACKET);
                     shift(null);
                      return; 
                 }
                 default: {
-                    break more_members;
+                    throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
                 }
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
     }
     
     private  void  pair(Map<Located<String>, Value<?>> map) {

@@ -98,32 +98,28 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     }
     
     private int exp_rhs() {
-        exp_rhs:
-        while (true) {
-            switch (peek().getKind()) {
-                case EOF: {
-                    return 0;
-                }
-                case MINUS: {
-                    // MINUS
-                    eat(Token.Kind.MINUS);
-                    // n = exp
-                    int n = exp();
-                    return -n;
-                }
-                case PLUS: {
-                    // PLUS
-                    eat(Token.Kind.PLUS);
-                    // n = exp
-                    int n = exp();
-                    return n;
-                }
-                default: {
-                    break exp_rhs;
-                }
+        switch (peek().getKind()) {
+            case EOF: {
+                return 0;
+            }
+            case MINUS: {
+                // MINUS
+                eat(Token.Kind.MINUS);
+                // n = exp
+                int n = exp();
+                return -n;
+            }
+            case PLUS: {
+                // PLUS
+                eat(Token.Kind.PLUS);
+                // n = exp
+                int n = exp();
+                return n;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS);
             }
         }
-        throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS);
     }
     
     private int factor() {
@@ -135,51 +131,43 @@ public final class ArithGroundParser extends codegen.BaseParser<ArithGroundParse
     }
     
     private int factor_rhs() {
-        factor_rhs:
-        while (true) {
-            switch (peek().getKind()) {
-                case EOF:
-                case MINUS:
-                case PLUS: {
-                    return 1;
-                }
-                case TIMES: {
-                    // TIMES
-                    eat(Token.Kind.TIMES);
-                    // n = factor
-                    int n = factor();
-                    return n;
-                }
-                default: {
-                    break factor_rhs;
-                }
+        switch (peek().getKind()) {
+            case EOF:
+            case MINUS:
+            case PLUS: {
+                return 1;
+            }
+            case TIMES: {
+                // TIMES
+                eat(Token.Kind.TIMES);
+                // n = factor
+                int n = factor();
+                return n;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.TIMES);
             }
         }
-        throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.TIMES);
     }
     
     private int atomic() {
-        atomic:
-        while (true) {
-            switch (peek().getKind()) {
-                case INT: {
-                    // n = INT
-                    int n = ((Token.INT) eat(Token.Kind.INT)).value;
-                    return n;
-                }
-                case MINUS: {
-                    // MINUS
-                    eat(Token.Kind.MINUS);
-                    // n = atomic
-                    int n = atomic();
-                    return -n;
-                }
-                default: {
-                    break atomic;
-                }
+        switch (peek().getKind()) {
+            case INT: {
+                // n = INT
+                int n = ((Token.INT) eat(Token.Kind.INT)).value;
+                return n;
+            }
+            case MINUS: {
+                // MINUS
+                eat(Token.Kind.MINUS);
+                // n = atomic
+                int n = atomic();
+                return -n;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.INT, Token.Kind.MINUS);
             }
         }
-        throw tokenError(peek(), Token.Kind.INT, Token.Kind.MINUS);
     }
     
     /**

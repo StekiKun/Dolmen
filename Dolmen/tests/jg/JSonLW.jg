@@ -43,8 +43,8 @@ private { void } rule elements =
 ;
 
 private { void } rule more_elements =
-| RSQUARE				{ return; }
-| COMMA	 value { continue more_elements; }
+| RSQUARE		{ return; }
+| COMMA	 value 	continue
 ;
 
 private { void } rule object =
@@ -57,8 +57,8 @@ private { void } rule members =
 ;
 
 private { void } rule more_members =
-| RBRACKET					{ return; }
-| COMMA pair { continue more_members; }
+| RBRACKET		{ return; }
+| COMMA pair continue
 ;
 
 private { void } rule pair =

@@ -94,7 +94,7 @@ public abstract class TestJGParser {
 	 */
 	public static void main(String[] args) throws IOException {
 		generateLexer("tests/jl/JSon.jl", "JSonLexer");
-		generateParser("tests/jg/JSon.jg", "JSonParser", false);
+		generateParser("tests/jg/JSon.jg", "JSonParser", true);
 
 		generateLexer("tests/jl/JSonLW.jl", "JSonLWLexer");
 		generateParser("tests/jg/JSonLW.jg", "JSonLWParser", false);		

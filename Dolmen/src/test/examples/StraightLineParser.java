@@ -144,83 +144,71 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private void stmts_rhs() {
-        stmts_rhs:
-        while (true) {
-            switch (peek().getKind()) {
-                case EOF: {
-                    return;
-                }
-                case SEMICOLON: {
-                    // SEMICOLON
-                    eat(Token.Kind.SEMICOLON);
-                    // stmts
-                    stmts();
-                    return;
-                }
-                default: {
-                    break stmts_rhs;
-                }
+        switch (peek().getKind()) {
+            case EOF: {
+                return;
+            }
+            case SEMICOLON: {
+                // SEMICOLON
+                eat(Token.Kind.SEMICOLON);
+                // stmts
+                stmts();
+                return;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.SEMICOLON);
             }
         }
-        throw tokenError(peek(), Token.Kind.EOF, Token.Kind.SEMICOLON);
     }
     
     private void stmt() {
-        stmt:
-        while (true) {
-            switch (peek().getKind()) {
-                case ID: {
-                    // id = ID
-                    String id = ((Token.ID) eat(Token.Kind.ID)).value;
-                    // ASSIGN
-                    eat(Token.Kind.ASSIGN);
-                    // n = expr
-                    int n = expr();
-                    update(id, n); return;
-                }
-                case PRINT: {
-                    // PRINT
-                    eat(Token.Kind.PRINT);
-                    // LPAREN
-                    eat(Token.Kind.LPAREN);
-                    // pexpr
-                    pexpr();
-                    // pexprs
-                    pexprs();
-                    // RPAREN
-                    eat(Token.Kind.RPAREN);
-                    return;
-                }
-                default: {
-                    break stmt;
-                }
+        switch (peek().getKind()) {
+            case ID: {
+                // id = ID
+                String id = ((Token.ID) eat(Token.Kind.ID)).value;
+                // ASSIGN
+                eat(Token.Kind.ASSIGN);
+                // n = expr
+                int n = expr();
+                update(id, n); return;
+            }
+            case PRINT: {
+                // PRINT
+                eat(Token.Kind.PRINT);
+                // LPAREN
+                eat(Token.Kind.LPAREN);
+                // pexpr
+                pexpr();
+                // pexprs
+                pexprs();
+                // RPAREN
+                eat(Token.Kind.RPAREN);
+                return;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ID, Token.Kind.PRINT);
             }
         }
-        throw tokenError(peek(), Token.Kind.ID, Token.Kind.PRINT);
     }
     
     private void pexprs() {
-        pexprs:
-        while (true) {
-            switch (peek().getKind()) {
-                case COMMA: {
-                    // COMMA
-                    eat(Token.Kind.COMMA);
-                    // pexpr
-                    pexpr();
-                    // pexprs
-                    pexprs();
-                    return;
-                }
-                case RPAREN: {
-                    return;
-                }
-                default: {
-                    break pexprs;
-                }
+        switch (peek().getKind()) {
+            case COMMA: {
+                // COMMA
+                eat(Token.Kind.COMMA);
+                // pexpr
+                pexpr();
+                // pexprs
+                pexprs();
+                return;
+            }
+            case RPAREN: {
+                return;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RPAREN);
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RPAREN);
     }
     
     private void pexpr() {
@@ -244,35 +232,31 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private int term_rhs(int lhs) {
-        term_rhs:
-        while (true) {
-            switch (peek().getKind()) {
-                case COMMA:
-                case EOF:
-                case RPAREN:
-                case SEMICOLON: {
-                    return lhs;
-                }
-                case MINUS: {
-                    // MINUS
-                    eat(Token.Kind.MINUS);
-                    // n = term
-                    int n = term();
-                    return lhs - n;
-                }
-                case PLUS: {
-                    // PLUS
-                    eat(Token.Kind.PLUS);
-                    // n = term
-                    int n = term();
-                    return lhs + n;
-                }
-                default: {
-                    break term_rhs;
-                }
+        switch (peek().getKind()) {
+            case COMMA:
+            case EOF:
+            case RPAREN:
+            case SEMICOLON: {
+                return lhs;
+            }
+            case MINUS: {
+                // MINUS
+                eat(Token.Kind.MINUS);
+                // n = term
+                int n = term();
+                return lhs - n;
+            }
+            case PLUS: {
+                // PLUS
+                eat(Token.Kind.PLUS);
+                // n = term
+                int n = term();
+                return lhs + n;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON);
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON);
     }
     
     private int factor() {
@@ -284,68 +268,60 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
     }
     
     private int factor_rhs(int lhs) {
-        factor_rhs:
-        while (true) {
-            switch (peek().getKind()) {
-                case COMMA:
-                case EOF:
-                case MINUS:
-                case PLUS:
-                case RPAREN:
-                case SEMICOLON: {
-                    return lhs;
-                }
-                case DIV: {
-                    // DIV
-                    eat(Token.Kind.DIV);
-                    // n = factor
-                    int n = factor();
-                    return lhs / n;
-                }
-                case TIMES: {
-                    // TIMES
-                    eat(Token.Kind.TIMES);
-                    // n = factor
-                    int n = factor();
-                    return lhs * n;
-                }
-                default: {
-                    break factor_rhs;
-                }
+        switch (peek().getKind()) {
+            case COMMA:
+            case EOF:
+            case MINUS:
+            case PLUS:
+            case RPAREN:
+            case SEMICOLON: {
+                return lhs;
+            }
+            case DIV: {
+                // DIV
+                eat(Token.Kind.DIV);
+                // n = factor
+                int n = factor();
+                return lhs / n;
+            }
+            case TIMES: {
+                // TIMES
+                eat(Token.Kind.TIMES);
+                // n = factor
+                int n = factor();
+                return lhs * n;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.DIV, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON, Token.Kind.TIMES);
             }
         }
-        throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.DIV, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON, Token.Kind.TIMES);
     }
     
     private int atomic() {
-        atomic:
-        while (true) {
-            switch (peek().getKind()) {
-                case ID: {
-                    // id = ID
-                    String id = ((Token.ID) eat(Token.Kind.ID)).value;
-                    return lookup(id);
-                }
-                case INT: {
-                    // n = INT
-                    int n = ((Token.INT) eat(Token.Kind.INT)).value;
-                    return n;
-                }
-                case LPAREN: {
-                    // LPAREN
-                    eat(Token.Kind.LPAREN);
-                    // e = expr
-                    int e = expr();
-                    // RPAREN
-                    eat(Token.Kind.RPAREN);
-                    return e;
-                }
-                default: {
-                    break atomic;
-                }
+        switch (peek().getKind()) {
+            case ID: {
+                // id = ID
+                String id = ((Token.ID) eat(Token.Kind.ID)).value;
+                return lookup(id);
+            }
+            case INT: {
+                // n = INT
+                int n = ((Token.INT) eat(Token.Kind.INT)).value;
+                return n;
+            }
+            case LPAREN: {
+                // LPAREN
+                eat(Token.Kind.LPAREN);
+                // e = expr
+                int e = expr();
+                // RPAREN
+                eat(Token.Kind.RPAREN);
+                return e;
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ID, Token.Kind.INT, Token.Kind.LPAREN);
             }
         }
-        throw tokenError(peek(), Token.Kind.ID, Token.Kind.INT, Token.Kind.LPAREN);
     }
     
     /**
