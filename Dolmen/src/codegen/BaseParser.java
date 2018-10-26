@@ -225,7 +225,7 @@ public abstract class BaseParser<Token> {
 			this._jl_locationStack = new Stack<>();
 		}
 
-		private final static boolean withDebug = false;
+		private final static boolean withDebug = true;
 		private final void print() {
 			System.out.println(String.format("  lastToken=%s", Objects.toString(_jl_lastTokenEnd)));
 			System.out.println(String.format("  stack=%s", _jl_locationStack));
@@ -233,6 +233,7 @@ public abstract class BaseParser<Token> {
 		}
 		
 		private int maxStack = 0;
+		private int maxWidth = 0;
 		protected final void enter(int ruleSize) {	// ruleSize is not strictly necessary
 			_jl_locationStack.push(new ArrayList<Range>(ruleSize));
 			if (!withDebug) return;
@@ -242,7 +243,7 @@ public abstract class BaseParser<Token> {
 				System.out.println("Stack reached depth " + sz);
 			}
 			System.out.println(String.format("Entering %d",  ruleSize));
-			print();			
+			print();
 		}
 		
 		protected final void shift(@Nullable String name) {
@@ -250,6 +251,11 @@ public abstract class BaseParser<Token> {
 			LexBuffer.Position end = _jl_lexbuf.getLexemeEnd();
 			_jl_locationStack.peek().add(new Range(name, start, end));
 			if (!withDebug) return;
+			int n = _jl_locationStack.peek().size();
+			if (n > maxWidth) {
+				maxWidth = n;
+				System.out.println("Stack element reached width " + n);
+			}
 			System.out.println(String.format("Shift (%s)",  Objects.toString(name)));
 			print();
 		}
@@ -260,7 +266,19 @@ public abstract class BaseParser<Token> {
 			_jl_locationStack.pop();
 			_jl_locationStack.peek().add(new Range(name, start, end));
 			if (!withDebug) return;
+			int n = _jl_locationStack.peek().size();
+			if (n > maxWidth) {
+				maxWidth = n;
+				System.out.println("Stack element reached width " + n);
+			}
 			System.out.println(String.format("Leave (%s)",  Objects.toString(name)));
+			print();
+		}
+		
+		protected final void rewind() {
+			_jl_locationStack.peek().clear();
+			if (!withDebug) return;
+			System.out.println("Rewind");
 			print();
 		}
 		
