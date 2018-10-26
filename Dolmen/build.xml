@@ -60,6 +60,8 @@
 		<delete file="src/jg/JGParserGenerated.java"/>
 		<delete file="src/jge/JGELexer.java"/>
 		<delete file="src/jge/JGEParser.java"/>
+		<delete file="src/jle/JLELexer.java"/>
+		<delete file="src/jle/JLEParser.java"/>
 	</target>
 
 	<!-- Various test targets -->
