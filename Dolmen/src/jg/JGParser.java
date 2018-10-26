@@ -209,6 +209,7 @@ public abstract class JGParser {
 			.addToken(token("PRIVATE"))
 			.addToken(token("TOKEN"))
 			.addToken(token("RULE"))
+			.addToken(token("CONTINUE"))
 			.addToken(token("EOF"))
 			/**
 			 * <pre>
@@ -333,6 +334,7 @@ public abstract class JGParser {
 			 * production -> BAR items
 			 * 
 			 * items -> 
+			 * items -> CONTINUE			// no right-recursion, CONTINUE must appear last
 			 * items -> ACTION items
 			 * items -> IDENT actual items
 			 * 
@@ -349,6 +351,8 @@ public abstract class JGParser {
 						"items(builder)", "@return builder.build();")))
 			.addRule(rule("items(Production.Builder builder)", "void",
 				production("@return;"),
+				production("CONTINUE", 
+					"@builder.addItem(new Production.Continue(withLoc(\"continue\")));", "@return;"),
 				production("ext = ACTION", "@builder.addAction(ext);", "items(builder)", "@return;"),
 				production("id = IDENT", "actual = actual(withLoc(id))",
 					"@builder.addActual(actual);", "items(builder)", "@return;")))

@@ -34,6 +34,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             PRIVATE,
             TOKEN,
             RULE,
+            CONTINUE,
             EOF;
         }
         
@@ -118,6 +119,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         public static final Token PRIVATE = new Singleton(Kind.PRIVATE);
         public static final Token TOKEN = new Singleton(Kind.TOKEN);
         public static final Token RULE = new Singleton(Kind.RULE);
+        public static final Token CONTINUE = new Singleton(Kind.CONTINUE);
         public static final Token EOF = new Singleton(Kind.EOF);
     }
     
@@ -389,6 +391,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
         switch (peek().getKind()) {
             case ACTION:
             case BAR:
+            case CONTINUE:
             case EQUAL:
             case IDENT:
             case SEMICOL: {
@@ -400,7 +403,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return ext;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }
@@ -449,6 +452,12 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case SEMICOL: {
                 return;
             }
+            case CONTINUE: {
+                // CONTINUE
+                eat(Token.Kind.CONTINUE);
+                builder.addItem(new Production.Continue(withLoc("continue")));
+                return;
+            }
             case IDENT: {
                 // id = IDENT
                 String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
@@ -460,7 +469,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return;
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.IDENT, Token.Kind.SEMICOL);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }
@@ -470,6 +479,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             case ACTION:
             case ARGUMENTS:
             case BAR:
+            case CONTINUE:
             case IDENT:
             case SEMICOL: {
                 // args = args
@@ -487,7 +497,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
                 return actual(id, lname, args);
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
         }
     }
