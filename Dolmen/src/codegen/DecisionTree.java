@@ -10,6 +10,7 @@ import java.util.Map;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
+import automaton.Automata;
 import automaton.DFA.GotoAction;
 import automaton.DFA.TransActions;
 import common.CSet;
@@ -17,25 +18,58 @@ import common.Hierarchy;
 import common.Lists;
 import common.Nulls;
 
-// WIP
-@SuppressWarnings("javadoc")
+/**
+ * An instance of {@link DecisionTree} describes the transition table 
+ * for a lexer {@link Automata} cell, i.e. the {@link TransActions shifting action}
+ * to take with respect to the next character read from the input stream.
+ * <p>
+ * The point of {@link DecisionTree} is that it provides several implementations
+ * of how these transition tables can be encoded,  giving different trade-offs
+ * depending on the shape of the transition table. The method {@link #compile(Map)}
+ * is used to build a "good" decision tree from a raw transition table.
+ * 
+ * @author Stéphane Lescuyer
+ */
 @Hierarchy("getKind")
 public abstract class DecisionTree {
 
+	/**
+	 * The different kinds of available implementations of {@link DecisionTree}
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public static enum Kind {
+		/** {@link Return} */
 		RETURN(Return.class),
+		/** {@link Split} */
 		SPLIT(Split.class),
+		/** {@link Switch} */
 		SWITCH(Switch.class),
+		/** {@link Table} */
 		TABLE(Table.class),
+		/** {@link Impossible} */
 		IMPOSSIBLE(Impossible.class);
 		
 		private Kind(Class<? extends DecisionTree> clazz) { }
 	}
 	
+	/**
+	 * @return the domain set for which this transition table is defined,
+	 * 	i.e. the characters which are mapped to some shifting action
+	 */
 	public abstract CSet getDomain();
 	
+	/**
+	 * @return what kind of decision tree this is
+	 */
 	public abstract Kind getKind();
 	
+	/**
+	 * A specific implementation of {@link DecisionTree} to represents
+	 * empty transition tables
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public final static class Impossible extends DecisionTree {
 		static final Impossible INSTANCE = new Impossible();
 		private Impossible() { }
@@ -50,9 +84,23 @@ public abstract class DecisionTree {
 			return Kind.IMPOSSIBLE;
 		}
 	}
+	/**
+	 * The decision tree for the empty transition table
+	 */
 	public static final Impossible IMPOSSIBLE = Impossible.INSTANCE;
 	
+	/**
+	 * An implementation of {@link DecisionTree} which maps
+	 * some specific {@linkplain TransActions shifting action}
+	 * to all possible characters.
+	 * <p>
+	 * It is mostly used as leaves in binary decision trees
+	 * (see {@link Split}).
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public final static class Return extends DecisionTree {
+		/** The action to take, whatever the next character is */
 		public final TransActions transActions;
 		
 		private Return(TransActions transActions) {
@@ -69,13 +117,41 @@ public abstract class DecisionTree {
 			return Kind.RETURN;
 		}
 	}
+	/**
+	 * @param transActions
+	 * @return a decision tree that takes {@code transActions}
+	 * 	in response to any character
+	 */
 	public final static Return ret(TransActions transActions) {
 		return new Return(transActions);
 	}
 	
+	/**
+	 * An implementation of {@link DecisionTree} which represents
+	 * a binary choice with respect to some {@link #pivot} character:
+	 * <ul>
+	 * <li> every character below or equal to the {@link #pivot}
+	 * 	is mapped to the result of a recursive decision tree {@link #left}
+	 * <li> every character higher than the {@link #pivot}
+	 *  is mapped to the result of a recursive decision tree {@link #right}
+	 * </ul>
+	 * This implementation is used as an internal node to implement
+	 * binary decision trees.
+	 * 
+	 * <i>NB: Note that the transitions in left and right recursive subtrees
+	 * 	are only relevant for the intervals resp. below and above the pivot,
+	 *  which means it is possible to use {@link Return} as a leaf and it will
+	 *  only be applied to some sub-interval.
+	 * </i>
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public final static class Split extends DecisionTree {
+		/** The pivot character */
 		public final char pivot;
+		/** The decision tree to use for characters {@code c <= pivot} */
 		public final DecisionTree left;
+		/** The decision tree to use for characters {@code c > pivot} */
 		public final DecisionTree right;
 		
 		private Split(char pivot, DecisionTree left, DecisionTree right) {
@@ -97,6 +173,13 @@ public abstract class DecisionTree {
 			return Kind.SPLIT;
 		}
 	}
+	/**
+	 * @param pivot
+	 * @param left
+	 * @param right
+	 * @return the decision tree which maps characters to {@code left} or {@code right}
+	 * 	depending on their position relative to {@code pivot}
+	 */
 	public final static DecisionTree split(char pivot, DecisionTree left, DecisionTree right) {
 		if (pivot == 0xFFFF) return left;
 		if (left == IMPOSSIBLE) return right;
@@ -105,7 +188,17 @@ public abstract class DecisionTree {
 		return new Split(pivot, left, right);
 	}
 	
+	/**
+	 * An implementation of {@link DecisionTree} which represents the
+	 * transition table as a switch mapping some character sets
+	 * to {@link TransActions}.
+	 * <p>
+	 * It can typically be used as a leaf of binary decision trees.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public final static class Switch extends DecisionTree {
+		/** The transition table implemented in this switch */
 		public final Map<@NonNull CSet, @NonNull TransActions> table;
 		
 		private Switch(Map<@NonNull CSet, @NonNull TransActions> table) {
@@ -125,13 +218,29 @@ public abstract class DecisionTree {
 			return Kind.SWITCH;
 		}
 	}
+	/**
+	 * @param table
+	 * @return a decision tree expressing the given {@code table}
+	 * 	as a switch between character sets
+	 */
 	public final static DecisionTree switchTable(Map<@NonNull CSet, @NonNull TransActions> table) {
 		if (table.isEmpty()) return IMPOSSIBLE;
 		return new Switch(table);
 	}
 
+	/**
+	 * An implementation of {@link DecisionTree} which represents the transitions
+	 * from a contiguous set of characters, starting at character {@link #base},
+	 * as an array of actions.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public final static class Table extends DecisionTree {
+		/** The base character of this decision tree's domain */
 		public final char base;
+		/** The table of shifting actions to use for characters between
+		 * {@link #base} and {@link #base} + {@link #table}.length
+		 */
 		public final @NonNull TransActions table[];
 		
 		private Table(char base, @NonNull TransActions table[]) {
@@ -149,6 +258,13 @@ public abstract class DecisionTree {
 			return Kind.TABLE;
 		}
 	}
+	/**
+	 * @param base
+	 * @param table
+	 * @return a decision tree expressing the transition table of all characters
+	 * 	between {@code base} and {@code base} + {@code table.length}, as given
+	 *  by {@code table}
+	 */
 	public final static DecisionTree tabulated(char base, @NonNull TransActions table[]) {
 		if (table.length == 0) return IMPOSSIBLE;
 		return new Table(base, table);
@@ -161,6 +277,14 @@ public abstract class DecisionTree {
 		return buf.toString();
 	}
 	
+	/**
+	 * Pretty-prints {@code tree} to the given buffer, where {@code prefix}
+	 * if the current indentation + prefix to use
+	 * 
+	 * @param buf
+	 * @param tree
+	 * @param prefix
+	 */
 	private static void prettyPrint(StringBuilder buf, DecisionTree tree, String prefix) {
 		switch (tree.getKind()) {
 		case RETURN:
@@ -201,6 +325,14 @@ public abstract class DecisionTree {
 		throw new IllegalStateException("Unexpected DecisionTree.Kind: " + tree.getKind());
 	}
 	
+	/**
+	 * @param tree
+	 * @param min
+	 * @param max
+	 * @return a decision tree which is equivalent to {@code tree} on
+	 * 	the domain given by the interval {@code [min, max]}, and is potentially
+	 * 	simpler than {@code tree}
+	 */
 	private static DecisionTree clamp(DecisionTree tree, char min, char max) {
 		if (max < min)
 			throw new IllegalArgumentException("min: " + min + ", max: " + max);
@@ -258,12 +390,34 @@ public abstract class DecisionTree {
 		throw new IllegalStateException("Unexpected DecisionTree.Kind: " + tree.getKind());
 	}
 	
+	/**
+	 * This method tries to simplify the given tree in order to
+	 * obtain an equivalent decision tree by removing useless
+	 * parts.
+	 * 
+	 * @param tree
+	 * @return an optimized decision tree equivalent to {@code tree}
+	 */
 	public static DecisionTree simplify(DecisionTree tree) {
 		// return clamp(tree, (char)49, (char)49);
 		return clamp(tree, (char)0, (char)0xFFFF);
 	}
 	
+	/**
+	 * Class representing the state of the algorithm that compiles
+	 * raw transition tables (expressed as partitions of character sets
+	 * to transition actions) into decision trees
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class Compiling {
+		/**
+		 * A segment represents an contiguous interval of characters
+		 * from {@link #first} to {@link #last} (inclusive) which are
+		 * all mapped to the same {@linkplain #trans action}
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
 		static final class Segment {
 			final char first;
 			final char last;
@@ -426,14 +580,15 @@ public abstract class DecisionTree {
 		}
 	}
 	
+	/**
+	 * @param partition	a transition table for a lexer's automaton cell,
+	 * 		mapping sets of characters to the associated shifting action
+	 * @return a decision tree that encodes the given transition table {@code partition}
+	 * 	in a hopefully concise and efficient way
+	 */
 	public static DecisionTree compile(Map<@NonNull CSet, @NonNull TransActions> partition) {
 		DecisionTree tree = Compiling.compile(partition);
 		tree = simplify(tree);
-//		if (tree.getKind() == Kind.SPLIT) {
-//			System.out.println("Initial partition: " + partition);
-//			System.out.println("Decision tree:\n" + tree);
-//			System.out.println("Simplified tree:\n" + tree);
-//		}
 		return tree;
 	}
 	
@@ -449,6 +604,11 @@ public abstract class DecisionTree {
 		System.out.println(simplify(tree));
 	}
 	
+	/**
+	 * Functional tests of decision trees and {@link #compile(Map)}
+	 * 
+	 * @param args
+	 */
 	public static void main(String[] args) {
 		Return rewind = ret(TransActions.BACKTRACK);
 		Return r1 = ret(new TransActions(GotoAction.Goto(1), Lists.empty()));
