@@ -20,6 +20,10 @@ import common.Prompt;
  * Generated parsers extend this class to inherit
  * the tokenizer mechanism, as well as the parsing exceptions
  * utilities.
+ * <p>
+ * Generated parsers which require systematic position tracking
+ * of terminals and non-terminals extend {@link BaseParser.WithPositions},
+ * a sub-class of {@link BaseParser}.
  * 
  * @author Stéphane Lescuyer
  */
@@ -178,7 +182,25 @@ public abstract class BaseParser<Token> {
 	}
 	
 	/**
-	 * TODO doc
+	 * Base class for generated parsers which track positions
+	 * of terminals and non-terminals as the parsing goes on.
+	 * Positions are then available from semantic actions by 
+	 * using some of the methods inherited from this class:
+	 * <ul>
+	 * <li> {@link #getStartPos()} / {@link #getEndPos()}
+	 * <li> {@link #getStartPos(int)} / {@link #getEndPos(int)}
+	 * <li> {@link #getStartPos(String)} / {@link #getEndPos(String)}
+	 * </ul>
+	 * <p>
+	 * The following methods are also inherited from this class
+	 * but should only be used by the generated code and not
+	 * in semantic actions:
+	 * <ul>
+	 * <li> {@link #enter(int)}
+	 * <li> {@link #shift(String)}
+	 * <li> {@link #leave(String)}
+	 * <li> {@link #rewind()}
+	 * </ul>
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -217,6 +239,18 @@ public abstract class BaseParser<Token> {
 			}
 		}
 		
+		/**
+		 * The stack tracking the various positions of terminals and 
+		 * non-terminals during the parsing:
+		 * <ul>
+		 * <li> each entry in a rule leads to some new list pushed onto the stack
+		 * <li> each shift in a production leads to the location of the token 
+		 * 	being appended to the stack's top-level list
+		 * <li> each reduction of a non-terminal leads to the top-level list being
+		 * 	collapsed and popped from the stack, and the overall range represented
+		 *  from that list is appened to the new stack's top-level list
+		 * </ul>
+		 */
 		private Stack<@NonNull List<@NonNull Range>> _jl_locationStack;
 		
 		protected <T extends LexBuffer> 
@@ -234,6 +268,11 @@ public abstract class BaseParser<Token> {
 		
 		private int maxStack = 0;
 		private int maxWidth = 0;
+		/**
+		 * Enters a new rule of the grammar, with room for the locations
+		 * of {@code ruleSize} production items (i.e. terminals or non-terminals)
+		 * @param ruleSize
+		 */
 		protected final void enter(int ruleSize) {	// ruleSize is not strictly necessary
 			_jl_locationStack.push(new ArrayList<Range>(ruleSize));
 			if (!withDebug) return;
@@ -246,6 +285,14 @@ public abstract class BaseParser<Token> {
 			print();
 		}
 		
+		/**
+		 * Shifts the last consumed token, which means its position
+		 * will be registered on the location stack's current top-level
+		 * element. The position is bound to {@code name}.
+		 * 
+		 * @param name	the name to which this terminal is bound in
+		 * 		the rule, or {@code null} if it is not bound
+		 */
 		protected final void shift(@Nullable String name) {
 			LexBuffer.Position start = _jl_lexbuf.getLexemeStart();
 			LexBuffer.Position end = _jl_lexbuf.getLexemeEnd();
@@ -260,6 +307,15 @@ public abstract class BaseParser<Token> {
 			print();
 		}
 		
+		/**
+		 * Reduces the current top-level rule, which means that the
+		 * the stack's current top-level element is popped from the
+		 * stack and its overall range is appended to the stack's
+		 * new top-level element. The range is bound to {@code name}.
+		 * 
+		 * @param name the name to which this non-terminal is bound in
+		 * 	the rule, or {@code null} if it is not bound
+		 */
 		protected final void leave(@Nullable String name) {
 			LexBuffer.Position start = getStartPos();
 			LexBuffer.Position end = getEndPos();
@@ -275,6 +331,12 @@ public abstract class BaseParser<Token> {
 			print();
 		}
 		
+		/**
+		 * Rewinds the current rule at the top of the location stack,
+		 * meaning that the positions will be overwritten as new tokens
+		 * are shifted. This is used to preserve tail-recursion when
+		 * reentering rules from production items via continuations.
+		 */
 		protected final void rewind() {
 			_jl_locationStack.peek().clear();
 			if (!withDebug) return;
@@ -288,6 +350,11 @@ public abstract class BaseParser<Token> {
 					+ method + " outside of a semantic action?");
 		}
 		
+		/**
+		 * @return the starting position of the parsed production,
+		 * 	or the end position of the last consumed token if
+		 *  the production matched the empty string
+		 */
 		protected final LexBuffer.Position getStartPos() {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -299,6 +366,11 @@ public abstract class BaseParser<Token> {
 			return locs.get(0).start;
 		}
 		
+		/**
+		 * @return the ending position of the parsed production,
+		 * 	or the end position of the last consumed token if
+		 *  the production matched the empty string
+		 */
 		protected final LexBuffer.Position getEndPos() {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -310,6 +382,16 @@ public abstract class BaseParser<Token> {
 			return locs.get(locs.size() - 1).end;
 		}
 		
+		/**
+		 * In comparison to {@link #getStartPos()}, this is often a better
+		 * representation of the production's starting position when the
+		 * first items in a production can match the empty string.
+		 * 
+		 * @return the starting position of the first item in the 
+		 *  parsed production which matched a non-empty part of
+		 *  the input, or the end position of the last consumed token if
+		 *  the production matched the empty string
+		 */
 		protected final LexBuffer.Position getSymbolStartPos() {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -332,6 +414,14 @@ public abstract class BaseParser<Token> {
 				"Cannot find actual " + i + " in the current production, which has " + size);
 		}
 		
+		/**
+		 * Items are numbered from 0, and included all terminals and
+		 * non-terminals, bound or not.
+		 * 
+		 * @param i
+		 * @return the starting position of the {@code i}-th item
+		 * 	in the parsed production
+		 */
 		protected final LexBuffer.Position getStartPos(int i) {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -342,7 +432,15 @@ public abstract class BaseParser<Token> {
 				throw noActual(i, locs.size());
 			return locs.get(i - 1).start;
 		}
-		
+
+		/**
+		 * Items are numbered from 0, and included all terminals and
+		 * non-terminals, bound or not.
+		 * 
+		 * @param i
+		 * @return the end position of the {@code i}-th item
+		 * 	in the parsed production
+		 */
 		protected final LexBuffer.Position getEndPos(int i) {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -359,6 +457,11 @@ public abstract class BaseParser<Token> {
 				"Cannot find actual with name " + id + " in the current production");
 		}
 		
+		/**
+		 * @param id
+		 * @return the starting position of the item bound to
+		 * 	the name {@code id} in the parsed production
+		 */
 		protected final LexBuffer.Position getStartPos(String id) {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
@@ -375,7 +478,12 @@ public abstract class BaseParser<Token> {
 				throw noBinding(id);
 			return found.start;
 		}
-		
+
+		/**
+		 * @param id
+		 * @return the end position of the item bound to
+		 * 	the name {@code id} in the parsed production
+		 */
 		protected final LexBuffer.Position getEndPos(String id) {
 			List<@NonNull Range> locs;
 			try { locs = _jl_locationStack.peek(); }
