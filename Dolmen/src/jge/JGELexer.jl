@@ -110,6 +110,9 @@ private {void} rule string =
 			  continue string; 
 			}
 | '\\' eof  { throw error("Unterminated escape sequence in string literal"); }
+| nl		{ newline(); 
+			  stringBuffer.append(getLexeme());
+			  continue string; }
 | eof 		{ throw error("Unterminated string literal"); }
 | orelse	{ stringBuffer.append(getLexeme()); 
 			  continue string; 
@@ -154,7 +157,7 @@ private {int} rule arguments =
 | _         { continue arguments; }
 
 private {void} rule skipChar =
-| [^ '\\' '\''] "'"
+| (notnl # ['\\' '\'']) "'"
 			{ return; }
 | '\\' _ "'"
 			{ return; }

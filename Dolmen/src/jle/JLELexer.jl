@@ -163,6 +163,9 @@ private { void } rule string =
 						  continue string;
 						}
 | '\\'					{ throw error("Unterminated escape sequence in string literal"); }
+| nl					{ newline(); 
+						  stringBuffer.append(getLexeme());
+						  continue string; }
 | eof					{ throw error("Unterminated string literal"); }
 | orelse				{ stringBuffer.append(getLexeme());
 						  continue string;
@@ -195,10 +198,12 @@ private { int } rule action =
  * Matches character literals in Java actions
  */
 private { void } rule skipChar =
-| [^ '\\' '\''] "'"	{ return; }
+| (notnl # ['\\' '\'']) "'"	
+					{ return; }
 | '\\' octal "'"	{ return; }
 | '\\' _ "'"		{ return; }
 // Don't jeopardize everything for a syntax error in a Java action
+| nl				{ newline(); return; }
 | ""				{ return; }
 
 // Java footer
