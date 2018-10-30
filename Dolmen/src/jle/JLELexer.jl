@@ -81,9 +81,11 @@ public { Token } rule main =
 | slcomment		{ continue main; }
 | '"'			{ Position stringStart = getLexemeStart();
 				  stringBuffer.setLength(0);
-				  string();
+				  int eline = string();
 				  startLoc = stringStart;
-				  Token res = LSTRING(stringBuffer.toString());
+				  Token res = stringStart.line == eline ? 
+				 	LSTRING(stringBuffer.toString()) :
+				 	MLSTRING(stringBuffer.toString());
 				  return res;
 				}
 | '{'			{ braceDepth = 1;
@@ -98,8 +100,10 @@ public { Token } rule main =
 | '_'			{ return UNDERSCORE; }
 | ident			{ return identOrKeyword(getLexeme()); }
 | decimal		{ return INTEGER(Integer.parseInt(getLexeme())); }
-| "'" ([^ '\\'] as c) "'"
+| "'" ([^ '\r' '\n' '\\'] as c) "'"
 				{ return LCHAR(c); }
+| "'" nl
+				{ throw error("Unterminated character literal"); }
 | "'" '\\' (escaped as c) "'"
 				{ return LCHAR(forBackslash(c)); }
 | "'" '\\' (octal as code) "'"
@@ -133,12 +137,6 @@ public { Token } rule main =
 private { void } rule comment =
 | "*/"				{ return; }
 | '*'				{ continue comment; }
-| '"'				{ stringBuffer.setLength(0);
-					  string();
-					  stringBuffer.setLength(0);
-					  continue comment;
-					}
-| "'"				{ skipChar(); continue comment; }
 | eof				{ throw error("Unterminated comment"); }
 | nl				{ newline(); continue comment; }
 | orelse			{ continue comment; } 
@@ -146,8 +144,8 @@ private { void } rule comment =
 /**
  * Matches string literals, both in and outside Java actions
  */
-private { void } rule string =
-| '"'					{ return; }
+private { int } rule string =
+| '"'					{ return getLexemeEnd().line; }
 | '\\' (escaped as c)	{ stringBuffer.append(forBackslash(c));
 						  continue string;
 						}
@@ -181,7 +179,7 @@ private { int } rule action =
 			  continue action;
 			}
 | '"'		{ stringBuffer.setLength(0);
-			  string();
+			  string();		// Java string literals are single-line
 			  stringBuffer.setLength(0);
 			  continue action;
 			}

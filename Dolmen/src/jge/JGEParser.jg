@@ -19,7 +19,7 @@ import syntax.Grammar;
 token {String} IDENT
 token {Extent} ACTION
 token {Extent} ARGUMENTS
-token {String} STRING
+token {String} MLSTRING
 token EQUAL
 token LSQUARE 
 token RSQUARE
@@ -90,7 +90,7 @@ private {List<Option>} rule options(@Nullable List<Option> opts) =
 	{ List<Option> acc = opts == null ? new ArrayList<>() : opts; }
 	key = IDENT 
 	{ Located<String> lkey = withLoc(key); }
-	EQUAL value = STRING	
+	EQUAL value = MLSTRING	
 	{ Located<String> lvalue = withLoc(value); }
 	RSQUARE
 	{ acc.add(Option.of(lkey, lvalue)); }

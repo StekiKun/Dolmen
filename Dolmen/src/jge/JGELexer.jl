@@ -80,7 +80,7 @@ public {Token} rule main =
 			  stringBuffer.setLength(0);
 			  string();
 			  startLoc = start;
-			  return STRING(stringBuffer.toString());
+			  return MLSTRING(stringBuffer.toString());
 			}
 | ident		{ return identOrKeyword(getLexeme()); }
 | '['		{ return LSQUARE; }
