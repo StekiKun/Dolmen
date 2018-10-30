@@ -30,6 +30,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         public enum Kind {
             IDENT,
             LSTRING,
+            MLSTRING,
             LCHAR,
             INTEGER,
             ACTION,
@@ -105,6 +106,23 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
         }
         public static LSTRING LSTRING(String value) {
             return new LSTRING(value);
+        }
+        
+        public final static class MLSTRING extends Token {
+            public final String value;
+            
+            private MLSTRING(String value) {
+                super(Kind.MLSTRING);
+                this.value = value;
+            }
+            
+            @Override
+            public String toString() {
+                return "MLSTRING(" + value + ")";
+            }
+        }
+        public static MLSTRING MLSTRING(String value) {
+            return new MLSTRING(value);
         }
         
         public final static class LCHAR extends Token {
@@ -299,8 +317,8 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                  Located<String> lkey = withLoc(key); 
                 // EQUAL
                 eat(Token.Kind.EQUAL);
-                // value = LSTRING
-                String value = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
+                // value = string(true)
+                 String  value = string(true);
                  Located<String> lvalue = withLoc(value); 
                 // RBRACKET
                 eat(Token.Kind.RBRACKET);
@@ -311,6 +329,26 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LBRACKET);
+            }
+        }
+    }
+    
+    private  String  string(boolean multi) {
+        switch (peek().getKind()) {
+            case LSTRING: {
+                // value = LSTRING
+                String value = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
+                 return value; 
+            }
+            case MLSTRING: {
+                // value = MLSTRING
+                String value = ((Token.MLSTRING) eat(Token.Kind.MLSTRING)).value;
+                 if (multi) return value;
+	  throw parsingError("Illegal multi-line string literal");
+	
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.LSTRING, Token.Kind.MLSTRING);
             }
         }
     }
@@ -598,6 +636,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             case LCHAR:
             case LPAREN:
             case LSTRING:
+            case MLSTRING:
             case UNDERSCORE: {
                  Position start = _jl_lastTokenEnd; 
                 // reg = regular()
@@ -619,7 +658,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
 	
             }
             default: {
-                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.ORELSE, Token.Kind.UNDERSCORE);
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.ORELSE, Token.Kind.UNDERSCORE);
             }
         }
     }
@@ -707,13 +746,14 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             case LCHAR:
             case LPAREN:
             case LSTRING:
+            case MLSTRING:
             case UNDERSCORE: {
                 // r2 = seqRegular()
                  Regular  r2 = seqRegular();
                  return Regular.seq(r1, r2); 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.UNDERSCORE);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.UNDERSCORE);
             }
         }
     }
@@ -736,6 +776,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             case LCHAR:
             case LPAREN:
             case LSTRING:
+            case MLSTRING:
             case OR:
             case RPAREN:
             case SEMICOL:
@@ -770,7 +811,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                  return Regular.star(r); 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
         }
     }
@@ -823,6 +864,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             case LPAREN:
             case LSTRING:
             case MAYBE:
+            case MLSTRING:
             case OR:
             case PLUS:
             case RPAREN:
@@ -839,7 +881,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                  return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2))); 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.HASH, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.HASH, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
         }
     }
@@ -879,9 +921,10 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 eat(Token.Kind.RPAREN);
                  return reg; 
             }
-            case LSTRING: {
-                // s = LSTRING
-                String s = ((Token.LSTRING) eat(Token.Kind.LSTRING)).value;
+            case LSTRING:
+            case MLSTRING: {
+                // s = string(false)
+                 String  s = string(false);
                  return Regular.string(s); 
             }
             case UNDERSCORE: {
@@ -890,7 +933,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                  return Regular.chars(CSet.ALL_BUT_EOF); 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.UNDERSCORE);
+                throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.UNDERSCORE);
             }
         }
     }

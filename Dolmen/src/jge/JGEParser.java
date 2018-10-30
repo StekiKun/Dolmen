@@ -26,7 +26,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             IDENT,
             ACTION,
             ARGUMENTS,
-            STRING,
+            MLSTRING,
             EQUAL,
             LSQUARE,
             RSQUARE,
@@ -105,21 +105,21 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             return new ARGUMENTS(value);
         }
         
-        public final static class STRING extends Token {
+        public final static class MLSTRING extends Token {
             public final String value;
             
-            private STRING(String value) {
-                super(Kind.STRING);
+            private MLSTRING(String value) {
+                super(Kind.MLSTRING);
                 this.value = value;
             }
             
             @Override
             public String toString() {
-                return "STRING(" + value + ")";
+                return "MLSTRING(" + value + ")";
             }
         }
-        public static STRING STRING(String value) {
-            return new STRING(value);
+        public static MLSTRING MLSTRING(String value) {
+            return new MLSTRING(value);
         }
         
         private static final class Singleton extends Token {
@@ -241,8 +241,8 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                  Located<String> lkey = withLoc(key); 
                 // EQUAL
                 eat(Token.Kind.EQUAL);
-                // value = STRING
-                String value = ((Token.STRING) eat(Token.Kind.STRING)).value;
+                // value = MLSTRING
+                String value = ((Token.MLSTRING) eat(Token.Kind.MLSTRING)).value;
                  Located<String> lvalue = withLoc(value); 
                 // RSQUARE
                 eat(Token.Kind.RSQUARE);

@@ -97,7 +97,7 @@ public final class JGELexer extends codegen.LexBuffer {
 			  stringBuffer.setLength(0);
 			  string();
 			  startLoc = start;
-			  return STRING(stringBuffer.toString());
+			  return MLSTRING(stringBuffer.toString());
 			
             }
             case 7:  {
