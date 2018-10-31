@@ -82,7 +82,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         final char _jl_char = getNextChar();
         if (_jl_char <= 46) {
             switch (_jl_char) {
-            // [0x0008-0x000a0x000d0x0020]
+            // [0x0008-0x000a 0x000d 0x0020]
             case 8:
             case 9:
             case 10:
@@ -90,23 +90,23 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             case 32: {
                 return _jl_cell14();
             }
-            // 0x0028
+            // (
             case 40: {
                 return _jl_cell5();
             }
-            // 0x0029
+            // )
             case 41: {
                 return _jl_cell4();
             }
-            // 0x002a
+            // *
             case 42: {
                 return _jl_cell9();
             }
-            // 0x002b
+            // +
             case 43: {
                 return _jl_cell10();
             }
-            // 0x002c
+            // ,
             case 44: {
                 return _jl_cell6();
             }
@@ -122,11 +122,11 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             if (_jl_char <= 94) {
                 if (_jl_char <= 58) {
                     switch (_jl_char) {
-                    // 0x002f
+                    // /
                     case 47: {
                         return _jl_cell7();
                     }
-                    // 0x003a
+                    // :
                     case 58: {
                         return _jl_cell3();
                     }
@@ -137,7 +137,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
                 } else  {
                     if (_jl_char <= 64) {
                         switch (_jl_char) {
-                        // 0x003b
+                        // ;
                         case 59: {
                             return _jl_cell2();
                         }
@@ -252,7 +252,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             mark(3);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0-9A-Z\_a-z]
+            // [0-9 A-Z \_ a-z]
             case 48:
             case 49:
             case 50:
@@ -329,7 +329,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-qs-z]
+        // [0-9 A-Z \_ a-q s-z]
         case 48:
         case 49:
         case 50:
@@ -434,7 +434,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
             mark(0);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x0008-0x000a0x000d0x0020]
+            // [0x0008-0x000a 0x000d 0x0020]
             case 8:
             case 9:
             case 10:
@@ -453,7 +453,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-hj-z]
+        // [0-9 A-Z \_ a-h j-z]
         case 48:
         case 49:
         case 50:
@@ -532,7 +532,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-mo-z]
+        // [0-9 A-Z \_ a-m o-z]
         case 48:
         case 49:
         case 50:
@@ -611,7 +611,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-su-z]
+        // [0-9 A-Z \_ a-s u-z]
         case 48:
         case 49:
         case 50:
@@ -690,7 +690,7 @@ public final class StraightLineLexer extends codegen.LexBuffer {
         mark(2);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-z]
+        // [0-9 A-Z \_ a-z]
         case 48:
         case 49:
         case 50:

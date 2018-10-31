@@ -180,7 +180,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell0() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0x0008-0x00090x0020]
+        // [0x0008-0x0009 0x0020]
         case 8:
         case 9:
         case 32: {
@@ -194,11 +194,11 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         case 13: {
             return _jl_cell17();
         }
-        // 0x0022
+        // "
         case 34: {
             return _jl_cell16();
         }
-        // 0x002c
+        // ,
         case 44: {
             return _jl_cell10();
         }
@@ -222,7 +222,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         case 57: {
             return _jl_cell14();
         }
-        // 0x003a
+        // :
         case 58: {
             return _jl_cell9();
         }
@@ -254,11 +254,11 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         case 116: {
             return _jl_cell6();
         }
-        // 0x007b
+        // {
         case 123: {
             return _jl_cell12();
         }
-        // 0x007d
+        // }
         case 125: {
             return _jl_cell11();
         }
@@ -369,7 +369,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         mark(14);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002e
+        // .
         case 46: {
             return _jl_cell21();
         }
@@ -391,7 +391,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         mark(14);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002e
+        // .
         case 46: {
             return _jl_cell21();
         }
@@ -473,7 +473,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
             mark(0);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x0008-0x00090x0020]
+            // [0x0008-0x0009 0x0020]
             case 8:
             case 9:
             case 32: {
@@ -489,7 +489,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell20() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002b
+        // +
         case 43: {
             return _jl_cell25();
         }
@@ -543,7 +543,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
             mark(14);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // 0x002e
+            // .
             case 46: {
                 return _jl_cell21();
             }
@@ -578,7 +578,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell23() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002b
+        // +
         case 43: {
             return _jl_cell25();
         }
@@ -890,7 +890,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell46() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0022
+        // "
         case 34: {
             return _jl_cell48();
         }
@@ -911,7 +911,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell47() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0x00220x002f\\bfnrt]
+        // [" / \\ b f n r t]
         case 34:
         case 47:
         case 92:
@@ -945,7 +945,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
             mark(5);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x0022\\EOF]
+            // [" \\ EOF]
             case 34:
             case 92:
             case 65535: {
@@ -978,7 +978,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         mark(1);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1012,7 +1012,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell55() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1046,7 +1046,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell56() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1080,7 +1080,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     private int _jl_cell57() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:

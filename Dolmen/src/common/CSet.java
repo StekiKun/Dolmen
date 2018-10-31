@@ -90,6 +90,30 @@ public abstract class CSet implements Comparable<CSet> {
 		case '-':
 		case '_':
 			return "\\" + ch; // printable but escaped
+		// Some printable ones that are not alphanumeric
+		case '"':
+		case '\'':
+		case '/':
+		case '$':
+		case '#':
+		case ':':
+		case ';':
+		case ',':
+		case '~':
+		case '+':
+		case '*':
+		case '.':
+		case '@':
+		case '!':
+		case '?':
+		case '|':
+		case '<':
+		case '>':
+		case '(':
+		case ')':
+		case '{':
+		case '}':
+			return "" + ch;
 		case 0xFFFF:
 			return "EOF";
 		}
@@ -243,7 +267,7 @@ public abstract class CSet implements Comparable<CSet> {
 				   .append("-")
 				   .append(charToString(last, true));
 			if (next != null) {
-				next.append(buf);
+				next.append(buf.append(' '));
 			}
 			return buf;
 		}

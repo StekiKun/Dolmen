@@ -380,7 +380,7 @@ public final class JLELexer extends codegen.LexBuffer {
         final char _jl_char = getNextChar();
         if (_jl_char <= 47) {
             switch (_jl_char) {
-            // [0x00090x000c0x0020]
+            // [0x0009 0x000c 0x0020]
             case 9:
             case 12:
             case 32: {
@@ -394,35 +394,35 @@ public final class JLELexer extends codegen.LexBuffer {
             case 13: {
                 return _jl_cell27();
             }
-            // 0x0022
+            // "
             case 34: {
                 return _jl_cell19();
             }
-            // 0x0023
+            // #
             case 35: {
                 return _jl_cell29();
             }
-            // 0x0027
+            // '
             case 39: {
                 return _jl_cell13();
             }
-            // 0x0028
+            // (
             case 40: {
                 return _jl_cell5();
             }
-            // 0x0029
+            // )
             case 41: {
                 return _jl_cell4();
             }
-            // 0x002a
+            // *
             case 42: {
                 return _jl_cell8();
             }
-            // 0x002b
+            // +
             case 43: {
                 return _jl_cell6();
             }
-            // 0x002c
+            // ,
             case 44: {
                 return _jl_cell23();
             }
@@ -430,11 +430,11 @@ public final class JLELexer extends codegen.LexBuffer {
             case 45: {
                 return _jl_cell2();
             }
-            // 0x002e
+            // .
             case 46: {
                 return _jl_cell28();
             }
-            // 0x002f
+            // /
             case 47: {
                 return _jl_cell21();
             }
@@ -450,15 +450,15 @@ public final class JLELexer extends codegen.LexBuffer {
                     case 48: {
                         return _jl_cell15();
                     }
-                    // 0x003a
+                    // :
                     case 58: {
                         return _jl_cell1();
                     }
-                    // 0x003b
+                    // ;
                     case 59: {
                         return _jl_cell22();
                     }
-                    // 0x003c
+                    // <
                     case 60: {
                         return _jl_cell26();
                     }
@@ -472,15 +472,15 @@ public final class JLELexer extends codegen.LexBuffer {
                     case 61: {
                         return _jl_cell12();
                     }
-                    // 0x003e
+                    // >
                     case 62: {
                         return _jl_cell24();
                     }
-                    // 0x003f
+                    // ?
                     case 63: {
                         return _jl_cell7();
                     }
-                    // 0x0040
+                    // @
                     case 64: {
                         return _jl_cell1();
                     }
@@ -519,7 +519,7 @@ public final class JLELexer extends codegen.LexBuffer {
                         case 96: {
                             return _jl_cell1();
                         }
-                        // 0x007b
+                        // {
                         case 123: {
                             return _jl_cell18();
                         }
@@ -529,7 +529,7 @@ public final class JLELexer extends codegen.LexBuffer {
                         }
                     } else  {
                         switch (_jl_char) {
-                        // 0x007c
+                        // |
                         case 124: {
                             return _jl_cell11();
                         }
@@ -655,7 +655,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(7);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0-9A-Z\_a-z]
+            // [0-9 A-Z \_ a-z]
             case 48:
             case 49:
             case 50:
@@ -732,7 +732,7 @@ public final class JLELexer extends codegen.LexBuffer {
         mark(6);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Z\_a-z]
+        // [0-9 A-Z \_ a-z]
         case 48:
         case 49:
         case 50:
@@ -820,11 +820,11 @@ public final class JLELexer extends codegen.LexBuffer {
         mark(33);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002a
+        // *
         case 42: {
             return _jl_cell32();
         }
-        // 0x002f
+        // /
         case 47: {
             return _jl_cell31();
         }
@@ -881,7 +881,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(0);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x00090x000c0x0020]
+            // [0x0009 0x000c 0x0020]
             case 9:
             case 12:
             case 32: {
@@ -899,7 +899,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(3);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000dEOF]
+            // [0x000a 0x000d EOF]
             case 10:
             case 13:
             case 65535: {
@@ -937,7 +937,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell35() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell50();
         }
@@ -950,7 +950,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell36() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0x00200x00220x0027\\bfnrt]
+        // [0x0020 " ' \\ b f n r t]
         case 32:
         case 34:
         case 39:
@@ -989,7 +989,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell37() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell49();
         }
@@ -1004,7 +1004,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(14);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0-9A-Fa-f]
+            // [0-9 A-F a-f]
             case 48:
             case 49:
             case 50:
@@ -1043,7 +1043,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell39() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell41();
         }
@@ -1067,7 +1067,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell40() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell41();
         }
@@ -1095,7 +1095,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell42() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell41();
         }
@@ -1119,7 +1119,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell43() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell41();
         }
@@ -1132,7 +1132,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell44() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1166,7 +1166,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell45() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1200,7 +1200,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell46() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1234,7 +1234,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell47() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell48();
         }
@@ -1267,7 +1267,7 @@ public final class JLELexer extends codegen.LexBuffer {
         case 13: {
             return _jl_cell53();
         }
-        // 0x002a
+        // *
         case 42: {
             return _jl_cell55();
         }
@@ -1307,7 +1307,7 @@ public final class JLELexer extends codegen.LexBuffer {
         mark(1);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002f
+        // /
         case 47: {
             return _jl_cell57();
         }
@@ -1322,7 +1322,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(4);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0x002aEOF]
+            // [0x000a 0x000d * EOF]
             case 10:
             case 13:
             case 42:
@@ -1351,7 +1351,7 @@ public final class JLELexer extends codegen.LexBuffer {
         case 13: {
             return _jl_cell62();
         }
-        // 0x0022
+        // "
         case 34: {
             return _jl_cell64();
         }
@@ -1374,7 +1374,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(9);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0x0022\\EOF]
+            // [0x000a 0x000d " \\ EOF]
             case 10:
             case 13:
             case 34:
@@ -1415,7 +1415,7 @@ public final class JLELexer extends codegen.LexBuffer {
         mark(6);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0x00200x00220x0027\\bfnrt]
+        // [0x0020 " ' \\ b f n r t]
         case 32:
         case 34:
         case 39:
@@ -1510,7 +1510,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(4);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0-9A-Fa-f]
+            // [0-9 A-F a-f]
             case 48:
             case 49:
             case 50:
@@ -1553,7 +1553,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell70() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1587,7 +1587,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell71() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1621,7 +1621,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell72() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // [0-9A-Fa-f]
+        // [0-9 A-F a-f]
         case 48:
         case 49:
         case 50:
@@ -1692,23 +1692,23 @@ public final class JLELexer extends codegen.LexBuffer {
         case 13: {
             return _jl_cell79();
         }
-        // 0x0022
+        // "
         case 34: {
             return _jl_cell83();
         }
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell82();
         }
-        // 0x002f
+        // /
         case 47: {
             return _jl_cell81();
         }
-        // 0x007b
+        // {
         case 123: {
             return _jl_cell85();
         }
-        // 0x007d
+        // }
         case 125: {
             return _jl_cell84();
         }
@@ -1727,7 +1727,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(9);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000d0x00220x00270x002f0x007b0x007dEOF]
+            // [0x000a 0x000d " ' / { } EOF]
             case 10:
             case 13:
             case 34:
@@ -1771,11 +1771,11 @@ public final class JLELexer extends codegen.LexBuffer {
         mark(8);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x002a
+        // *
         case 42: {
             return _jl_cell87();
         }
-        // 0x002f
+        // /
         case 47: {
             return _jl_cell86();
         }
@@ -1806,7 +1806,7 @@ public final class JLELexer extends codegen.LexBuffer {
             mark(5);
             final char _jl_char = getNextChar();
             switch (_jl_char) {
-            // [0x000a0x000dEOF]
+            // [0x000a 0x000d EOF]
             case 10:
             case 13:
             case 65535: {
@@ -1835,7 +1835,7 @@ public final class JLELexer extends codegen.LexBuffer {
         case 13: {
             return _jl_cell92();
         }
-        // [0x0027EOF]
+        // [' EOF]
         case 39:
         case 65535: {
             return rewind();
@@ -1884,7 +1884,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell91() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell93();
         }
@@ -1915,7 +1915,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell94() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell100();
         }
@@ -1928,7 +1928,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell95() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell97();
         }
@@ -1952,7 +1952,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell96() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell97();
         }
@@ -1980,7 +1980,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell98() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell97();
         }
@@ -2004,7 +2004,7 @@ public final class JLELexer extends codegen.LexBuffer {
     private int _jl_cell99() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // 0x0027
+        // '
         case 39: {
             return _jl_cell97();
         }
