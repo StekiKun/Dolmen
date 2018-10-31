@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -285,7 +286,12 @@ public final class Grammar {
 					voidnterms.add(rule.name);
 			}
 			// Go through every rule and check every item
-			// used makes some sense
+			// used makes some sense, also trying to detect unused
+			// private rules and terminals
+			Set<Located<String>> unusedPrivateRules =
+				rules.values().stream().filter(rule -> !rule.visibility)
+					.map(rule -> rule.name).collect(Collectors.toSet());
+			Set<Located<String>> unusedTokens = new HashSet<>(tokens);
 			for (GrammarRule rule : rules.values()) {
 				int i = 0;
 				for (Production prod : rule.productions) {
@@ -294,6 +300,7 @@ public final class Grammar {
 						final int j = i;
 						final Located<String> name = actual.item;
 						if (actual.isTerminal()) {
+							unusedTokens.remove(name);
 							if (!tokens.contains(name))
 								reporter.add(Reports.undeclaredToken(rule, j, name));
 							// Only do the value check if the token is declared
@@ -302,6 +309,8 @@ public final class Grammar {
 								reporter.add(Reports.unvaluedTokenBound(
 									rule, j, Nulls.ok(actual.binding), name));
 						} else {
+							if (!rule.name.equals(name))
+								unusedPrivateRules.remove(name);
 							if (!nonterms.contains(name))
 								reporter.add(Reports.undeclaredNonTerminal(rule, j, name));
 							// Only do the value and args checks if the non-term is declared
@@ -322,8 +331,16 @@ public final class Grammar {
 							}
 						}
 					}
+					// Continuation or self-reference in general do not 
+					// count as use of a rule
 				}
 			}
+			
+			// Report potentially unused non-terminals and terminals
+			unusedPrivateRules.forEach(
+				rule -> reporter.add(Reports.unusedPrivateRule(rule)));
+			unusedTokens.forEach(
+				token -> reporter.add(Reports.unusedTerminal(token)));
 		}
 		
 	}
@@ -344,6 +361,16 @@ public final class Grammar {
 		static IReport duplicateRuleDeclaration(Located<String> rule) {
 			String msg = String.format("Rule \"%s\" is already declared", rule.val);
 			return IReport.of(msg, Severity.ERROR, rule);
+		}
+		
+		static IReport unusedTerminal(Located<String> token) {
+			String msg = String.format("Token \"%s\" is never used", token.val);
+			return IReport.of(msg, Severity.WARNING, token);
+		}
+
+		static IReport unusedPrivateRule(Located<String> rule) {
+			String msg = String.format("Rule \"%s\" is never used", rule.val);
+			return IReport.of(msg, Severity.WARNING, rule);
 		}
 		
 		private static String inRule(GrammarRule rule, int j) {
@@ -389,7 +416,6 @@ public final class Grammar {
 			String msg = String.format("%s bound non-terminal \"%s\" returns void",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, binding);
-		}
-		
+		}		
 	}
 }
