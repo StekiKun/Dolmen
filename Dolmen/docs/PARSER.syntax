@@ -28,7 +28,8 @@ Exactly like in Java
 
 ## Token declarations [TOKEN_DECL]
 
-token { JAVA }? ALL_UP_IDENT
+token { JAVA }? ALL_UP_IDENT+	// If more than one token, 
+								// they share the value type
 
 ## Grammar rules [RULE]
 

@@ -19,10 +19,10 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         public enum Kind {
             LBRACKET,
             RBRACKET,
-            COMMA,
-            COLON,
             LSQUARE,
             RSQUARE,
+            COMMA,
+            COLON,
             TRUE,
             FALSE,
             NULL,
@@ -88,10 +88,10 @@ public final class JSonPosParser extends codegen.BaseParser.WithPositions<JSonPo
         
         public static final Token LBRACKET = new Singleton(Kind.LBRACKET);
         public static final Token RBRACKET = new Singleton(Kind.RBRACKET);
-        public static final Token COMMA = new Singleton(Kind.COMMA);
-        public static final Token COLON = new Singleton(Kind.COLON);
         public static final Token LSQUARE = new Singleton(Kind.LSQUARE);
         public static final Token RSQUARE = new Singleton(Kind.RSQUARE);
+        public static final Token COMMA = new Singleton(Kind.COMMA);
+        public static final Token COLON = new Singleton(Kind.COLON);
         public static final Token TRUE = new Singleton(Kind.TRUE);
         public static final Token FALSE = new Singleton(Kind.FALSE);
         public static final Token NULL = new Singleton(Kind.NULL);

@@ -117,19 +117,36 @@ private {String} rule typename0 =
 |  STAR {return "*";}
 |  id = IDENT ty = typename {return id + ty;};
 
-private {List<TokenDecl>} rule tokens(@Nullable List<TokenDecl> tokens) = 
-|  {return Lists.empty();}
-|  {List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;} 
-	TOKEN tok = token_ {acc.add(tok);} tokens(acc) {return acc;};
+private { List<TokenDecl> } rule tokens(@Nullable List<TokenDecl> tokens) = 
+|  { return Lists.empty(); }
+|  { List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens; } 
+	TOKEN token_decls(acc) tokens(acc) 
+   { return acc; }
+;
 
-private {TokenDecl} rule token_ =
-// NB: all reserved Java keywords/literals are lowercase, so no clash with tokens 
-|  id = IDENT 
-	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); } 
-	{ return new TokenDecl(withLoc(id), null); }
-|  val = ACTION id = IDENT 
+private { void } rule token_decls(List<TokenDecl> tokens) =
+// NB: all reserved Java keywords/literals are lowercase, so no clash with tokens
+|  value = token_value() id = IDENT
 	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); }
-	{ return new TokenDecl(withLoc(id), val); }
+    { tokens.add(new TokenDecl(withLoc(id), value)); }
+   more_token_decls(tokens, value)
+	{ return; }
+;
+
+private { @Nullable Extent } rule token_value() =
+|	{ return null; }
+|	val = ACTION
+	{ return val; }
+;
+
+private { void } rule more_token_decls(List<TokenDecl> tokens, @Nullable Extent value) =
+// NB: all reserved Java keywords/literals are lowercase, so no clash with tokens
+|  id = IDENT
+	{ if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); }
+    { tokens.add(new TokenDecl(withLoc(id), value)); }
+   more_token_decls(tokens, value)
+    { return; }
+|	{ return; }
 ;
 
 private {List<GrammarRule>} rule rules(@Nullable List<GrammarRule> rules) = 

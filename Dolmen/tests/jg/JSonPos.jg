@@ -13,17 +13,10 @@ import common.Maps;
 import codegen.LexBuffer.Position;
 
 // The tokens of the JSON language
-token LBRACKET
-token RBRACKET
-token COMMA
-token COLON
-token LSQUARE
-token RSQUARE
-token TRUE
-token FALSE
-token NULL
-token OBJECT
-token ARRAY
+token LBRACKET RBRACKET LSQUARE RSQUARE
+token COMMA COLON
+token TRUE FALSE NULL
+token OBJECT ARRAY
 token { String } STRING
 token { double } NUMBER
 token EOF

@@ -210,7 +210,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         // imports = imports(null)
         List<Located<String>> imports = imports(null);
         // tdecls = tokens(null)
-        List<TokenDecl> tdecls = tokens(null);
+         List<TokenDecl>  tdecls = tokens(null);
         // header = ACTION
         Extent header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // rules = rules(null)
@@ -345,21 +345,20 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         }
     }
     
-    private List<TokenDecl> tokens(@Nullable List<TokenDecl> tokens) {
+    private  List<TokenDecl>  tokens(@Nullable List<TokenDecl> tokens) {
         switch (peek().getKind()) {
             case ACTION: {
-                return Lists.empty();
+                 return Lists.empty(); 
             }
             case TOKEN: {
-                List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens;
+                 List<TokenDecl> acc = tokens == null ? new ArrayList<>() : tokens; 
                 // TOKEN
                 eat(Token.Kind.TOKEN);
-                // tok = token_
-                TokenDecl tok = token_();
-                acc.add(tok);
+                // token_decls(acc)
+                token_decls(acc);
                 // tokens(acc)
                 tokens(acc);
-                return acc;
+                 return acc; 
             }
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.TOKEN);
@@ -367,24 +366,51 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         }
     }
     
-    private TokenDecl token_() {
+    private  void  token_decls(List<TokenDecl> tokens) {
+        // value = token_value()
+         @Nullable Extent  value = token_value();
+        // id = IDENT
+        String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+         if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); 
+         tokens.add(new TokenDecl(withLoc(id), value)); 
+        // more_token_decls(tokens, value)
+        more_token_decls(tokens, value);
+         return; 
+    }
+    
+    private  @Nullable Extent  token_value() {
         switch (peek().getKind()) {
             case ACTION: {
                 // val = ACTION
                 Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-                // id = IDENT
-                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
-                 if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); 
-                 return new TokenDecl(withLoc(id), val); 
+                 return val; 
+            }
+            case IDENT: {
+                 return null; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
+            }
+        }
+    }
+    
+    private  void  more_token_decls(List<TokenDecl> tokens, @Nullable Extent value) {
+        switch (peek().getKind()) {
+            case ACTION:
+            case TOKEN: {
+                 return; 
             }
             case IDENT: {
                 // id = IDENT
                 String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                  if (isLowerId(id)) throw parsingError("Token name should be all uppercase: " + id); 
-                 return new TokenDecl(withLoc(id), null); 
+                 tokens.add(new TokenDecl(withLoc(id), value)); 
+                // more_token_decls(tokens, value)
+                more_token_decls(tokens, value);
+                 return; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.TOKEN);
             }
         }
     }

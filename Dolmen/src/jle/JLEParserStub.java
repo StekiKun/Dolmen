@@ -53,7 +53,8 @@ public abstract class JLEParserStub {
 			List<IReport> conflicts = predictTable.findConflicts();
 			if (!conflicts.isEmpty()) {
 				tasks.aborted("Grammar is not LL(1)");
-				log.println(conflicts);
+				log.println();
+				conflicts.forEach(conflict -> log.println(conflict.display()));
 				return;
 			}
 			tasks.done("Grammar is LL(1)");
