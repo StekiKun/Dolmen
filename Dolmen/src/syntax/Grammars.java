@@ -491,7 +491,7 @@ public abstract class Grammars {
 					final StringBuilder message = new StringBuilder();
 					message.append("The productions for rule \"")
 						   .append(nterm).append("\" are ambiguous when looking ahead")
-						   .append(" at terminal ").append(term).append(". ");
+						   .append(" at terminal ").append(term).append(".\n");
 					message.append("The possible productions are ");
 					prods.forEach(prod -> {
 						message.append("[");
