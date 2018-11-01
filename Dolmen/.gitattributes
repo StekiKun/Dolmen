@@ -1,0 +1,17 @@
+src/jg/JGLexer.java linguist-generated=true
+src/jg/JGParserGenerated.java linguist-generated=true
+src/jl/JLLexerGenerated.java linguist-generated=true
+src/jge/JGELexer.java linguist-generated=true
+src/jge/JGEParser.java linguist-generated=true
+src/jle/JLELexer.java linguist-generated=true
+src/jle/JLEParser.java linguist-generated=true
+src/test/examples/ArithGroundLexer.java linguist-generated=true
+src/test/examples/ArithGroundParser.java linguist-generated=true
+src/test/examples/JSonLexer.java linguist-generated=true
+src/test/examples/JSonParser.java linguist-generated=true
+src/test/examples/JSonLWLexer.java linguist-generated=true
+src/test/examples/JSonLWParser.java linguist-generated=true
+src/test/examples/JSonPosLexer.java linguist-generated=true
+src/test/examples/JSonPosParser.java linguist-generated=true
+src/test/examples/StraightLineLexer.java linguist-generated=true
+src/test/examples/StraightLineParser.java linguist-generated=true
