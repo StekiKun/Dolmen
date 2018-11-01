@@ -150,6 +150,17 @@ public final class Bookkeeper {
 	}
 	
 	/**
+	 * Convenient wrapper around {@link #infos(String)} to report
+	 * on a certain number of problems found during the last completed subtask
+	 * 
+	 * @param n
+	 */
+	public void problems(int n) {
+		if (n <= 0) return;
+		infos("(" + n + " potential problem" + (n > 1 ? "s" : "") + " found)");
+	}
+	
+	/**
 	 * Aborts the current task, and thus this bookkeeper's main
 	 * task, for the given {@code reason}.
 	 * <b>No more methods can be called on the {@link Bookkeeper}

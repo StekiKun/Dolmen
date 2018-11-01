@@ -367,7 +367,7 @@ public abstract class JGParser {
 			throws IOException {
 		System.out.println(grammar);
 		System.out.println("Analysing grammar description...");
-		NTermsInfo infos = Grammars.analyseGrammar(grammar, null);
+		NTermsInfo infos = Grammars.analyseGrammar(grammar, null, null);
 		PredictionTable predictTable = Grammars.predictionTable(grammar, infos);
 		
 		File file = new File("src/jg/" + className + ".java");

@@ -208,7 +208,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         }
         // 0
         case 48: {
-            return _jl_cell13();
+            return _jl_cell12();
         }
         // [1-9]
         case 49:
@@ -220,7 +220,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         case 55:
         case 56:
         case 57: {
-            return _jl_cell14();
+            return _jl_cell13();
         }
         // :
         case 58: {
@@ -256,7 +256,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         }
         // {
         case 123: {
-            return _jl_cell12();
+            return _jl_cell14();
         }
         // }
         case 125: {
@@ -362,10 +362,6 @@ public final class JSonPosLexer extends codegen.LexBuffer {
     }
     
     private int _jl_cell12() {
-        return 2;
-    }
-    
-    private int _jl_cell13() {
         mark(14);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -387,7 +383,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell14() {
+    private int _jl_cell13() {
         mark(14);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -422,12 +418,16 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         }
     }
     
+    private int _jl_cell14() {
+        return 2;
+    }
+    
     private int _jl_cell15() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0
         case 48: {
-            return _jl_cell13();
+            return _jl_cell12();
         }
         // [1-9]
         case 49:
@@ -439,7 +439,7 @@ public final class JSonPosLexer extends codegen.LexBuffer {
         case 55:
         case 56:
         case 57: {
-            return _jl_cell14();
+            return _jl_cell13();
         }
         default:  {
             return rewind();

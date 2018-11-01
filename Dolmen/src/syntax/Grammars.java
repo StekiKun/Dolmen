@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -123,6 +124,63 @@ public abstract class Grammars {
 		}
 		
 		return new Dependencies(fwd, bwd);
+	}
+	
+	/**
+	 * Analyses the {@code grammar}'s dependencies {@code deps} to
+	 * determine non-terminals and terminals which are not really being
+	 * used in this grammar description.
+	 * <p>
+	 * For terminals, this amounts to not being used in any production,
+	 * whereas for non-terminals, it means not being used transitively
+	 * by a public non-terminal (in particular blocks of mutually
+	 * recursive private non-terminals dot not "justify" each other,
+	 * nor does continuation in a given non-terminal of course).
+	 * <p>
+	 * The problems found, if any, are reported into {@code reporter}.
+	 * 
+	 * @param grammar
+	 * @param deps
+	 * @param reporter
+	 */
+	private static void findUnusedSymbols(
+		Grammar grammar, Dependencies deps, Reporter reporter) {
+		// Start with all terminals and private non-terminals as potential suspects
+		Set<Located<String>> unusedTerms = 
+			grammar.tokenDecls.stream().map(token -> token.name).collect(Collectors.toSet());
+		Set<Located<String>> unusedPrivateRules =
+			grammar.rules.values().stream()
+				.filter(rule -> !rule.visibility)
+				.map(rule -> rule.name).collect(Collectors.toSet());
+		
+		// Crawl the grammar from public non-terminals, following dependencies
+		Stack<String> todo = new Stack<>();
+		for (GrammarRule rule : grammar.rules.values())
+			if (rule.visibility) todo.add(rule.name.val);
+		Set<String> visited = new HashSet<>();
+		
+		while (!todo.isEmpty()) {
+			final String name = todo.pop();
+			if (!visited.add(name)) continue;
+			
+			final GrammarRule rule = grammar.rule(name);
+			for (Production prod : rule.productions) {
+				for (Production.Actual actual : prod.actuals()) {
+					if (actual.isTerminal())
+						unusedTerms.remove(actual.item);
+					else 
+						unusedPrivateRules.remove(actual.item);
+				}
+				// No need to check potential continuation because
+				// self-reference does not count as usage
+			}
+			todo.addAll(deps.forward.get(name));			
+		}
+		// Report all remaining symbols 
+		unusedTerms.forEach(tok -> 
+			reporter.add(Grammar.Reports.unusedTerminal(tok)));
+		unusedPrivateRules.forEach(rule -> 
+			reporter.add(Grammar.Reports.unusedPrivateRule(rule)));
 	}
 	
 	/**
@@ -407,16 +465,21 @@ public abstract class Grammars {
 	/**
 	 * Analyze the given {@code grammar} and compute for every non-terminal
 	 * whether it is <i>nullable</i>, and the associated FIRST and FOLLOW
-	 * sets.
+	 * sets. If {@code reporter} is non-{@code null}, this also returns
+	 * potentially unused symbols discovered during the analysis of the grammar. 
 	 * 
 	 * @param grammar
 	 * @param deps_	{@code null}, or dependencies already computed for
 	 * 				the given grammar
+	 * @param reporter an instance to report problems to, or {@code null}
+	 * 				if no problem report is desired
 	 * @return the results of the analysis
 	 */
-	public static NTermsInfo 
-			analyseGrammar(Grammar grammar, @Nullable Dependencies deps_) {
+	public static NTermsInfo analyseGrammar(
+			Grammar grammar, @Nullable Dependencies deps_, @Nullable Reporter reporter) {
 		Dependencies deps = deps_ == null ? dependencies(grammar) : deps_;
+		if (reporter != null)
+			findUnusedSymbols(grammar, deps, reporter);
 		Set<String> nullable = nullable(deps, grammar);
 		Map<String, Set<String>> first = first(deps, grammar, nullable);
 		Map<String, Set<String>> follow = follow(deps, grammar, nullable, first);
@@ -552,7 +615,8 @@ public abstract class Grammars {
 			 * non-terminal and terminal. If the production is already
 			 * associated to these tokens, this does nothing. If it is
 			 * not the first production recorded for this combination, 
-			 * prints out a conflict warning message on System.err.
+			 * it adds it nonetheless and this will result in a prediction
+			 * table with conflicts.
 			 * 
 			 * @param nterm
 			 * @param term
@@ -572,9 +636,6 @@ public abstract class Grammars {
 					// trans contains term already
 					prods = Nulls.ok(trans.get(term));
 				if (prods.contains(prod)) return this;
-				if (!prods.isEmpty())
-					System.err.println("(Adding conflicting production for " + 
-										nterm + " and " + term + ")");
 				prods.add(prod);
 				return this;
 			}

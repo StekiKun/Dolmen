@@ -303,7 +303,7 @@ public final class TestAnalyseGrammar {
 	 */
 	private static void test(Grammar grammar) {
 		Dependencies deps = Grammars.dependencies(grammar);
-		NTermsInfo info = Grammars.analyseGrammar(grammar, deps);
+		NTermsInfo info = Grammars.analyseGrammar(grammar, deps, null);
 		System.out.println(" ========================== \n");
 		System.out.println(deps);
 		System.out.println(info);

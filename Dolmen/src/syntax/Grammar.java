@@ -6,7 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -246,7 +245,7 @@ public final class Grammar {
 		 * 	is not well-formed
 		 */
 		public Grammar build() {
-			sanityCheck(tokenDecls, rules);
+			sanityCheck(reporter, tokenDecls, rules);
 			if (reporter.hasErrors())
 				throw new IllFormedException(
 					"Errors were found when trying to build this grammar (aborting):\n" + reporter,
@@ -257,12 +256,13 @@ public final class Grammar {
 		
 		/**
 		 * Performs well-formedness checks on the given grammar description,
-		 * passing discovered problems to the {@link reporter}
+		 * passing discovered problems to the {@code reporter}
 		 * 
+		 * @param reporter
 		 * @param tokenDecls
 		 * @param rules
 		 */
-		private void sanityCheck(
+		private static void sanityCheck(Reporter reporter,
 			List<TokenDecl> tokenDecls, Map<String, GrammarRule> rules) {
 			// Prepare sets of declared tokens and non-terminals
 			Set<Located<String>> tokens = new HashSet<>();
@@ -286,12 +286,7 @@ public final class Grammar {
 					voidnterms.add(rule.name);
 			}
 			// Go through every rule and check every item
-			// used makes some sense, also trying to detect unused
-			// private rules and terminals
-			Set<Located<String>> unusedPrivateRules =
-				rules.values().stream().filter(rule -> !rule.visibility)
-					.map(rule -> rule.name).collect(Collectors.toSet());
-			Set<Located<String>> unusedTokens = new HashSet<>(tokens);
+			// used makes some sense
 			for (GrammarRule rule : rules.values()) {
 				int i = 0;
 				for (Production prod : rule.productions) {
@@ -300,7 +295,6 @@ public final class Grammar {
 						final int j = i;
 						final Located<String> name = actual.item;
 						if (actual.isTerminal()) {
-							unusedTokens.remove(name);
 							if (!tokens.contains(name))
 								reporter.add(Reports.undeclaredToken(rule, j, name));
 							// Only do the value check if the token is declared
@@ -309,8 +303,6 @@ public final class Grammar {
 								reporter.add(Reports.unvaluedTokenBound(
 									rule, j, Nulls.ok(actual.binding), name));
 						} else {
-							if (!rule.name.equals(name))
-								unusedPrivateRules.remove(name);
 							if (!nonterms.contains(name))
 								reporter.add(Reports.undeclaredNonTerminal(rule, j, name));
 							// Only do the value and args checks if the non-term is declared
@@ -331,27 +323,20 @@ public final class Grammar {
 							}
 						}
 					}
-					// Continuation or self-reference in general do not 
-					// count as use of a rule
 				}
 			}
-			
-			// Report potentially unused non-terminals and terminals
-			unusedPrivateRules.forEach(
-				rule -> reporter.add(Reports.unusedPrivateRule(rule)));
-			unusedTokens.forEach(
-				token -> reporter.add(Reports.unusedTerminal(token)));
 		}
 		
 	}
 	
 	/**
 	 * Static utility class to build the various problem reports
-	 * that can arise in building an instance of {@link Grammar}
+	 * that can arise in building or analyzing an instance 
+	 * of {@link Grammar}
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	private static abstract class Reports {
+	static abstract class Reports {
 
 		static IReport duplicateTokenDeclaration(Located<String> token) {
 			String msg = String.format("Token \"%s\" is already declared", token.val);

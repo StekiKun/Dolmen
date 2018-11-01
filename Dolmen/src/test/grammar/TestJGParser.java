@@ -74,7 +74,7 @@ public abstract class TestJGParser {
 		reader.close();
 		System.out.println(grammar.toString());
 		Grammars.PredictionTable predictTable =
-			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null));
+			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
 		if (!predictTable.isLL1())
 			System.out.println(predictTable.toString());
 		File file = new File("src/test/examples/" + className + ".java");

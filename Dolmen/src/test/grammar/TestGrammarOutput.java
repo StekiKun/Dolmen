@@ -30,7 +30,7 @@ public class TestGrammarOutput {
 	private static void testOutput(String className, Grammar grammar) {
 		File file = new File("src-gen/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
-			NTermsInfo infos = Grammars.analyseGrammar(grammar, null);
+			NTermsInfo infos = Grammars.analyseGrammar(grammar, null, null);
 			PredictionTable predictTable = Grammars.predictionTable(grammar, infos);
 			if (!predictTable.isLL1()) {
 				System.out.println("Cannot generate parser for non-LL(1) grammar:");

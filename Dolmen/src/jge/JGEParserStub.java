@@ -19,6 +19,7 @@ import jg.JGParserGenerated;
 import syntax.Grammar;
 import syntax.Grammars;
 import syntax.IReport;
+import syntax.Reporter;
 
 /**
  * This class is a simple entry point for the
@@ -44,9 +45,11 @@ public abstract class JGEParserStub {
 			Grammar grammar = jgParser.start();
 			tasks.done("Grammar description successfully parsed");
 			
+			Reporter reporter = new Reporter();
 			Grammars.PredictionTable predictTable =
-				Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null));
+				Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, reporter));
 			tasks.done("Analysed grammar and built prediction table");
+			tasks.problems(reporter.getReports().size());
 			List<IReport> conflicts = predictTable.findConflicts();
 			if (!conflicts.isEmpty()) {
 				tasks.aborted("Grammar is not LL(1)");
