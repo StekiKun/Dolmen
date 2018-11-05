@@ -11,7 +11,7 @@ import syntax.PExtent;
 import syntax.Located;
 import syntax.Production;
 import syntax.Option;
-import syntax.Grammar.TokenDecl;
+import syntax.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
 
@@ -31,10 +31,13 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             EQUAL,
             LSQUARE,
             RSQUARE,
+            LANGLE,
+            RANGLE,
             BAR,
             DOT,
             STAR,
             SEMICOL,
+            COMMA,
             IMPORT,
             STATIC,
             PUBLIC,
@@ -135,10 +138,13 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         public static final Token EQUAL = new Singleton(Kind.EQUAL);
         public static final Token LSQUARE = new Singleton(Kind.LSQUARE);
         public static final Token RSQUARE = new Singleton(Kind.RSQUARE);
+        public static final Token LANGLE = new Singleton(Kind.LANGLE);
+        public static final Token RANGLE = new Singleton(Kind.RANGLE);
         public static final Token BAR = new Singleton(Kind.BAR);
         public static final Token DOT = new Singleton(Kind.DOT);
         public static final Token STAR = new Singleton(Kind.STAR);
         public static final Token SEMICOL = new Singleton(Kind.SEMICOL);
+        public static final Token COMMA = new Singleton(Kind.COMMA);
         public static final Token IMPORT = new Singleton(Kind.IMPORT);
         public static final Token STATIC = new Singleton(Kind.STATIC);
         public static final Token PUBLIC = new Singleton(Kind.PUBLIC);
@@ -449,6 +455,8 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
          if (!Character.isLowerCase(name.charAt(0))) 
             throw parsingError("Rule name must start with a lower case letter: " + name); 
          Located<String> lname = withLoc(validJavaIdent(name)); 
+        // params = formal_params
+         List<Located<String>>  params = formal_params();
         // args = args
          @Nullable Extent  args = args();
         // EQUAL
@@ -476,6 +484,61 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             }
             default: {
                 throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
+            }
+        }
+    }
+    
+    private  List<Located<String>>  formal_params() {
+        switch (peek().getKind()) {
+            case ARGUMENTS:
+            case EQUAL: {
+                 return Lists.empty(); 
+            }
+            case LANGLE: {
+                // LANGLE
+                eat(Token.Kind.LANGLE);
+                // name = IDENT
+                String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); 
+                 Located<String> lname = withLoc(name);
+	  List<Located<String>> params = new ArrayList<>();
+	  params.add(lname);
+	
+                // more_formal_params(params)
+                more_formal_params(params);
+                 return params; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ARGUMENTS, Token.Kind.EQUAL, Token.Kind.LANGLE);
+            }
+        }
+    }
+    
+    private  void  more_formal_params(List<Located<String>> params) {
+        more_formal_params:
+        while (true) {
+            switch (peek().getKind()) {
+                case COMMA: {
+                    // COMMA
+                    eat(Token.Kind.COMMA);
+                    // name = IDENT
+                    String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                     if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); 
+                     Located<String> lname = withLoc(name);
+	  params.add(lname); 
+	
+                    continue more_formal_params;
+                }
+                case RANGLE: {
+                    // RANGLE
+                    eat(Token.Kind.RANGLE);
+                     return; 
+                }
+                default: {
+                    throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
+                }
             }
         }
     }

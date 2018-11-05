@@ -9,6 +9,7 @@ import syntax.Grammars;
 import syntax.Located;
 import syntax.Extent;
 import syntax.Production;
+import syntax.TokenDecl;
 import syntax.Grammars.Dependencies;
 import syntax.Grammars.NTermsInfo;
 import syntax.Grammars.PredictionTable;
@@ -21,12 +22,12 @@ import syntax.Grammars.PredictionTable;
  */
 public final class TestAnalyseGrammar {
 
-	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(Located.dummy(name), null);
+	static TokenDecl token(String name) {
+		return new TokenDecl(Located.dummy(name), null);
 	}
 	
-	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
+	static TokenDecl vtoken(String name, String valType) {
+		return new TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {

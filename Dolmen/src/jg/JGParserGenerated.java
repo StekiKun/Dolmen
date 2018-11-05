@@ -7,7 +7,7 @@ import common.Lists;
 import syntax.Extent;
 import syntax.Located;
 import syntax.Production;
-import syntax.Grammar.TokenDecl;
+import syntax.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
 

@@ -13,7 +13,7 @@ import syntax.PExtent;
 import syntax.Located;
 import syntax.Production;
 import syntax.Option;
-import syntax.Grammar.TokenDecl;
+import syntax.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammar;
 
@@ -24,10 +24,13 @@ token {String} MLSTRING
 token EQUAL
 token LSQUARE 
 token RSQUARE
+token LANGLE 
+token RANGLE
 token BAR
 token DOT
 token STAR
 token SEMICOL
+token COMMA
 token IMPORT
 token STATIC
 token PUBLIC
@@ -159,7 +162,8 @@ private {GrammarRule} rule rule_ =
 |  vis = visibility rtype = ACTION RULE name = IDENT 
 	{ if (!Character.isLowerCase(name.charAt(0))) } 
 	{    throw parsingError("Rule name must start with a lower case letter: " + name); } 
-	{ Located<String> lname = withLoc(validJavaIdent(name)); } 
+	{ Located<String> lname = withLoc(validJavaIdent(name)); }
+	params = formal_params
 	args = args EQUAL 
 	{ GrammarRule.Builder builder = new GrammarRule.Builder(vis, rtype, lname, args); } 
 	prod = production 
@@ -171,6 +175,32 @@ private {GrammarRule} rule rule_ =
 private { boolean } rule visibility = 
 |  PUBLIC { return true; }
 |  PRIVATE { return false; }
+;
+
+private { List<Located<String>> } rule formal_params =
+| LANGLE name = IDENT
+	{ if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); }
+	// Formal rule parameters do not appear in generated Java code
+	{ Located<String> lname = withLoc(name);
+	  List<Located<String>> params = new ArrayList<>();
+	  params.add(lname);
+	}
+  more_formal_params(params)
+	{ return params; }
+| 	{ return Lists.empty(); }
+;
+
+private { void } rule more_formal_params(List<Located<String>> params) =
+| RANGLE	{ return; }
+| COMMA name = IDENT
+	{ if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); }
+	// Formal rule parameters do not appear in generated Java code
+	{ Located<String> lname = withLoc(name);
+	  params.add(lname); 
+	}
+	continue
 ;
 
 private { @Nullable Extent } rule args = 

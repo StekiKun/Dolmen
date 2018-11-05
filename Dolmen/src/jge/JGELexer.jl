@@ -84,6 +84,9 @@ public {Token} rule main =
 | ident		{ return identOrKeyword(getLexeme()); }
 | '['		{ return LSQUARE; }
 | ']'		{ return RSQUARE; }
+| '<'		{ return LANGLE; }
+| '>'		{ return RANGLE; }
+| ','		{ return COMMA; }
 | ';'		{ return SEMICOL; }
 | '.'		{ return DOT; }
 | '='		{ return EQUAL; }

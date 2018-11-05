@@ -14,12 +14,11 @@ import common.Nulls;
 import syntax.IReport.Severity;
 
 /**
- * A parser description is a set of {@linkplain GrammarRule grammar rules}
- * along with arbitrary header and footer sections. The rules come
- * in no particular order, as every rule can theoretically be
- * used as an entry point to the generated parser. When only one
- * entry point really makes sense, it is conventionally the first
- * rule.
+ * A parametric parser description is a set of possibly parametric
+ * {@linkplain PGrammarRule grammar rules} along with arbitrary 
+ * header and footer sections. The rules come in no particular order, 
+ * as every rule can theoretically be used as an entry point to the 
+ * generated parser. Public rules cannot be parametric.
  * <p>
  * The rules use a set of {@linkplain #tokenDecls terminals} which
  * are provided before the header section in the source file.
@@ -31,8 +30,8 @@ import syntax.IReport.Severity;
  * 
  * @author Stéphane Lescuyer
  */
-public final class Grammar {
-	
+public final class PGrammar {
+
 	/** The configuration options specified in this grammar */
 	public final List<@NonNull Option> options;
 	/** The Java imports to be added to the generated parser */
@@ -42,7 +41,7 @@ public final class Grammar {
 	/** The extent of this parser class' header */
 	public final Extent header;
 	/** The map of all grammar rules in the parser, indexed by their name */
-	public final Map<@NonNull String, @NonNull GrammarRule> rules;
+	public final Map<@NonNull String, @NonNull PGrammarRule> rules;
 	/** The extent of this parser class' footer */
 	public final Extent footer;
 	
@@ -56,9 +55,9 @@ public final class Grammar {
 	 * @param rules
 	 * @param footer
 	 */
-	private Grammar(List<@NonNull Option> options,
+	private PGrammar(List<@NonNull Option> options,
 			List<@NonNull Located<String>> imports, List<TokenDecl> tokenDecls, 
-			Extent header, Map<String, GrammarRule> rules, Extent footer) {
+			Extent header, Map<String, PGrammarRule> rules, Extent footer) {
 		this.options = options;
 		this.imports = imports;
 		this.tokenDecls = tokenDecls;
@@ -72,8 +71,8 @@ public final class Grammar {
 	 * @return the rule with the given {@code name} in this grammar
 	 * @throws IllegalArgumentException if no such rule exists
 	 */
-	public GrammarRule rule(String name) {
-		@Nullable GrammarRule res = rules.get(name);
+	public PGrammarRule rule(String name) {
+		@Nullable PGrammarRule res = rules.get(name);
 		if (res == null)
 			throw new IllegalArgumentException("Rule " + name + " does not exist in this grammar: " + this);
 		return res;
@@ -94,7 +93,7 @@ public final class Grammar {
 	}
 	
 	/**
-	 * Exception raised by the grammar {@linkplain Grammar.Builder builder} class
+	 * Exception raised by the grammar {@linkplain PGrammar.Builder builder} class
 	 * when trying to construct an ill-formed grammar description.
 	 * <p>
 	 * The exception contains the {@linkplain #reports problems reported} during
@@ -122,12 +121,12 @@ public final class Grammar {
 	}
 	
 	/**
-	 * A builder class for {@link Grammar}, where rules can be
+	 * A builder class for {@link PGrammar}, where rules can be
 	 * added incrementally, and which takes care of collecting
 	 * problem reports along the way
 	 * 
 	 * @author Stéphane Lescuyer
-	 * @see #addRule(GrammarRule)
+	 * @see #addRule(PGrammarRule)
 	 */
 	public static final class Builder {
 		private final List<Option> options;
@@ -135,7 +134,7 @@ public final class Grammar {
 		private final List<TokenDecl> tokenDecls;
 		private final Extent header;
 		private final Extent footer;
-		private final Map<String, GrammarRule> rules;
+		private final Map<String, PGrammarRule> rules;
 		
 		/** Problems reported when building this grammar */
 		public final Reporter reporter;
@@ -180,7 +179,7 @@ public final class Grammar {
 		 * @return the new state of this builder, with the
 		 * 	given {@code rule} added to the set of rules
 		 */
-		public Builder addRule(GrammarRule rule) {
+		public Builder addRule(PGrammarRule rule) {
 			String key = rule.name.val;
 			if (rules.containsKey(key)) {
 				reporter.add(Reports.duplicateRuleDeclaration(rule.name));
@@ -195,14 +194,14 @@ public final class Grammar {
 		 * @throws IllFormedException if the described grammar
 		 * 	is not well-formed
 		 */
-		public Grammar build() {
+		public PGrammar build() {
 			sanityCheck(reporter, tokenDecls, rules);
 			if (reporter.hasErrors())
 				throw new IllFormedException(
 					"Errors were found when trying to build this grammar (aborting):\n" + reporter,
 					reporter.getReports());
 				
-			return new Grammar(options, imports, tokenDecls, header, rules, footer);
+			return new PGrammar(options, imports, tokenDecls, header, rules, footer);
 		}
 		
 		/**
@@ -214,7 +213,7 @@ public final class Grammar {
 		 * @param rules
 		 */
 		private static void sanityCheck(Reporter reporter,
-			List<TokenDecl> tokenDecls, Map<String, GrammarRule> rules) {
+			List<TokenDecl> tokenDecls, Map<String, PGrammarRule> rules) {
 			// Prepare sets of declared tokens and non-terminals
 			Set<Located<String>> tokens = new HashSet<>();
 			Set<Located<String>> valuedTokens = new HashSet<>();
@@ -230,7 +229,7 @@ public final class Grammar {
 					(r1, r2) -> { });
 			Set<Located<String>> argnterms = new HashSet<>();
 			Set<Located<String>> voidnterms = new HashSet<>();
-			for (GrammarRule rule : rules.values()) {
+			for (PGrammarRule rule : rules.values()) {
 				if (rule.args != null)
 					argnterms.add(rule.name);
 				if (rule.returnType.find().trim().equals("void"))
@@ -238,13 +237,15 @@ public final class Grammar {
 			}
 			// Go through every rule and check every item
 			// used makes some sense
-			for (GrammarRule rule : rules.values()) {
+			for (PGrammarRule rule : rules.values()) {
 				int i = 0;
-				for (Production prod : rule.productions) {
+				for (PProduction prod : rule.productions) {
 					++i;
-					for (Production.Actual actual : prod.actuals()) {
+					for (PProduction.Actual actual : prod.actuals()) {
 						final int j = i;
-						final Located<String> name = actual.item;
+						// TODO Check deeply, check non-partial application, check valued-ness, etc
+						// TODO Check holes, check parameters, etc
+						final Located<String> name = actual.item.symb;
 						if (actual.isTerminal()) {
 							if (!tokens.contains(name))
 								reporter.add(Reports.undeclaredToken(rule, j, name));
@@ -283,7 +284,7 @@ public final class Grammar {
 	/**
 	 * Static utility class to build the various problem reports
 	 * that can arise in building or analyzing an instance 
-	 * of {@link Grammar}
+	 * of {@link PGrammar}
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -309,45 +310,45 @@ public final class Grammar {
 			return IReport.of(msg, Severity.WARNING, rule);
 		}
 		
-		private static String inRule(GrammarRule rule, int j) {
+		private static String inRule(PGrammarRule rule, int j) {
 			return String.format("In rule \"%s\", production %d: ", rule.name.val, j);
 		}
 		
-		static IReport undeclaredToken(GrammarRule rule, int j, Located<String> token) {
+		static IReport undeclaredToken(PGrammarRule rule, int j, Located<String> token) {
 			String msg = String.format("%s undeclared token \"%s\"",
 				inRule(rule, j), token.val);
 			// TODO: add proposals based on hamming/levenshtein?
 			return IReport.of(msg, Severity.ERROR, token);
 		}
 		
-		static IReport unvaluedTokenBound(GrammarRule rule, int j,
+		static IReport unvaluedTokenBound(PGrammarRule rule, int j,
 			Located<String> binding, Located<String> token) {
 			String msg = String.format("%s bound token \"%s\" has no declared value",
 				inRule(rule, j), token.val);
 			return IReport.of(msg, Severity.ERROR, binding);
 		}
 
-		static IReport undeclaredNonTerminal(GrammarRule rule, int j, Located<String> nterm) {
+		static IReport undeclaredNonTerminal(PGrammarRule rule, int j, Located<String> nterm) {
 			String msg = String.format("%s undeclared non-terminal \"%s\"",
 				inRule(rule, j), nterm.val);
 			// TODO: add proposals based on hamming/levenshtein?
 			return IReport.of(msg, Severity.ERROR, nterm);
 		}
 
-		static IReport unexpectedArguments(GrammarRule rule, int j,
+		static IReport unexpectedArguments(PGrammarRule rule, int j,
 			Extent args, Located<String> nterm) {
 			String msg = String.format("%s non-terminal \"%s\" does not expect arguments",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, args);
 		}
 
-		static IReport missingArguments(GrammarRule rule, int j, Located<String> nterm) {
+		static IReport missingArguments(PGrammarRule rule, int j, Located<String> nterm) {
 			String msg = String.format("%s non-terminal \"%s\" expects arguments",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, nterm);
 		}
 
-		static IReport voidNonTerminalBound(GrammarRule rule, int j,
+		static IReport voidNonTerminalBound(PGrammarRule rule, int j,
 			Located<String> binding, Located<String> nterm) {
 			String msg = String.format("%s bound non-terminal \"%s\" returns void",
 				inRule(rule, j), nterm.val);

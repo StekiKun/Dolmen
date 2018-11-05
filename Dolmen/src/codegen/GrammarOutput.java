@@ -16,7 +16,7 @@ import common.CountingWriter;
 import common.Iterables;
 import common.Maps;
 import syntax.Grammar;
-import syntax.Grammar.TokenDecl;
+import syntax.TokenDecl;
 import syntax.GrammarRule;
 import syntax.Grammars.PredictionTable;
 import syntax.Located;
