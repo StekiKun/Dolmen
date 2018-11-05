@@ -1,10 +1,12 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+
+import syntax.Extent;
+import syntax.Located;
 
 /**
  * Describes a grammar rule for a non-terminal in a grammar
@@ -31,7 +33,7 @@ public final class GrammarRule {
 	/** The formal arguments for this rule, if any */
 	public final @Nullable Extent args;
 	/** The productions for this rule */
-	public final List<@NonNull Production> productions;
+	public final List<unparam.Production> productions;
 	
 	/**
 	 * Builds a grammar rule from the given parameters

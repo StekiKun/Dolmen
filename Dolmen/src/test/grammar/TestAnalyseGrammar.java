@@ -3,16 +3,16 @@ package test.grammar;
 import org.eclipse.jdt.annotation.NonNull;
 
 import common.Lists;
-import syntax.Grammar;
-import syntax.GrammarRule;
-import syntax.Grammars;
 import syntax.Located;
 import syntax.Extent;
-import syntax.Production;
 import syntax.TokenDecl;
-import syntax.Grammars.Dependencies;
-import syntax.Grammars.NTermsInfo;
-import syntax.Grammars.PredictionTable;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Grammars;
+import unparam.Production;
+import unparam.Grammars.Dependencies;
+import unparam.Grammars.NTermsInfo;
+import unparam.Grammars.PredictionTable;
 
 /**
  * A few manual tests of {@link Grammars#analyseGrammar}.

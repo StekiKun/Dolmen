@@ -9,9 +9,9 @@ import java.util.function.Function;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
-import syntax.Grammar;
 import syntax.IReport;
 import syntax.IReport.Severity;
+import unparam.Grammar;
 import syntax.Lexer;
 import syntax.Option;
 import syntax.Reporter;

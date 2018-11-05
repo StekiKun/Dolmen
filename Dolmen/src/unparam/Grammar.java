@@ -1,4 +1,4 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,6 +11,12 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Nulls;
+import syntax.Extent;
+import syntax.IReport;
+import syntax.Located;
+import syntax.Option;
+import syntax.Reporter;
+import syntax.TokenDecl;
 import syntax.IReport.Severity;
 
 /**
@@ -42,7 +48,7 @@ public final class Grammar {
 	/** The extent of this parser class' header */
 	public final Extent header;
 	/** The map of all grammar rules in the parser, indexed by their name */
-	public final Map<@NonNull String, @NonNull GrammarRule> rules;
+	public final Map<@NonNull String, unparam.GrammarRule> rules;
 	/** The extent of this parser class' footer */
 	public final Extent footer;
 	

@@ -15,16 +15,16 @@ import codegen.GrammarOutput;
 import common.Lists;
 import jl.JLLexerGenerated;
 import jl.JLParser;
-import syntax.Grammar;
-import syntax.GrammarRule;
-import syntax.Grammars;
-import syntax.Grammars.NTermsInfo;
-import syntax.Grammars.PredictionTable;
 import syntax.Lexer;
 import syntax.Located;
 import syntax.Extent;
-import syntax.Production;
 import syntax.TokenDecl;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Grammars;
+import unparam.Production;
+import unparam.Grammars.NTermsInfo;
+import unparam.Grammars.PredictionTable;
 
 /**
  * Some manually defined grammars, with non-dummy

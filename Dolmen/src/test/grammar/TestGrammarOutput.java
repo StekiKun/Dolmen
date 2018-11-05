@@ -6,10 +6,10 @@ import java.io.IOException;
 
 import codegen.Config;
 import codegen.GrammarOutput;
-import syntax.Grammar;
-import syntax.Grammars;
-import syntax.Grammars.NTermsInfo;
-import syntax.Grammars.PredictionTable;
+import unparam.Grammar;
+import unparam.Grammars;
+import unparam.Grammars.NTermsInfo;
+import unparam.Grammars.PredictionTable;
 
 /**
  * Tests for the generation of the parser class

@@ -15,16 +15,16 @@ import common.Constants;
 import common.CountingWriter;
 import common.Iterables;
 import common.Maps;
-import syntax.Grammar;
 import syntax.TokenDecl;
-import syntax.GrammarRule;
-import syntax.Grammars.PredictionTable;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Production;
+import unparam.Grammars.PredictionTable;
+import unparam.Production.ActionItem;
+import unparam.Production.Actual;
+import unparam.Production.Continue;
 import syntax.Located;
 import syntax.Extent;
-import syntax.Production;
-import syntax.Production.ActionItem;
-import syntax.Production.Actual;
-import syntax.Production.Continue;
 
 /**
  * This class generates a Java class that implements
@@ -249,7 +249,7 @@ public final class GrammarOutput {
 		// same case block.
 		// We know the transition table is in stable order, and we must ensure
 		// our compacted table is as well.
-		final Map<@NonNull Production, @NonNull List<@NonNull String>> prodTable =
+		final Map<unparam.Production, @NonNull List<@NonNull String>> prodTable =
 			new LinkedHashMap<>();
 		trans.forEach((term, prods) -> {
 			final Production prod = prods.get(0);

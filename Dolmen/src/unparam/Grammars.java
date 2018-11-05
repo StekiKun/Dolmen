@@ -1,4 +1,4 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,8 +16,11 @@ import org.eclipse.jdt.annotation.Nullable;
 import common.Maps;
 import common.Nulls;
 import common.Sets;
+import syntax.IReport;
+import syntax.Located;
+import syntax.Reporter;
 import syntax.IReport.Severity;
-import syntax.Production.ItemKind;
+import unparam.Production.ItemKind;
 
 /**
  * Static utilities about {@link Grammar}s

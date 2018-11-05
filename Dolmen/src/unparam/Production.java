@@ -1,4 +1,4 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,8 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import common.Hierarchy;
 import common.Iterables;
+import syntax.Extent;
+import syntax.Located;
 
 /**
  * A grammar <i>production</i> consists of 

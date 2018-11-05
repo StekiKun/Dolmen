@@ -14,10 +14,10 @@ import jge.JGELexer;
 import jge.JGEParser;
 import jl.JLLexerGenerated;
 import jl.JLParser;
-import syntax.Grammar;
-import syntax.Grammars;
 import syntax.Lexer;
 import syntax.PGrammar;
+import unparam.Grammar;
+import unparam.Grammars;
 
 /**
  * This class tests the extended grammar description parser by
@@ -97,6 +97,6 @@ public abstract class TestJGEParser {
 		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
 		generateParser("tests/jg/JSonPos.jg", "JSonPosParser");
 		
-		generateParser("tests/jg/Templates.jg", "Templates");
+//		generateParser("tests/jg/Templates.jg", "Templates");
 	}
 }
