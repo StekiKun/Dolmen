@@ -151,7 +151,8 @@ public class PExtent extends Extent {
 		if (this == DUMMY) return "PExtent DUMMY";
 		return "PExtent [filename=" + filename + ", startPos=" + startPos 
 				+ ", endPos=" + endPos + ", startLine="
-				+ startLine + ", startCol=" + startCol + "]";
+				+ startLine + ", startCol=" + startCol 
+				+ ", holes=" + holes + "]";
 	}
 
 	/**

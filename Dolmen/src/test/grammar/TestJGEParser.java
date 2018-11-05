@@ -17,6 +17,7 @@ import jl.JLParser;
 import syntax.Grammar;
 import syntax.Grammars;
 import syntax.Lexer;
+import syntax.PGrammar;
 
 /**
  * This class tests the extended grammar description parser by
@@ -65,20 +66,21 @@ public abstract class TestJGEParser {
 		FileReader reader = new FileReader(filename);
 		JGELexer lexer = new JGELexer(filename, reader);
 		JGEParser parser = of(lexer);
-		Grammar grammar = parser.start();
+		PGrammar grammar = parser.start();
 		reader.close();
 		System.out.println(grammar.toString());
-		Grammars.PredictionTable predictTable =
-			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
-		if (!predictTable.isLL1())
-			System.out.println(predictTable.toString());
-		File file = new File("src/test/examples/" + className + ".java");
-		try (FileWriter writer = new FileWriter(file, false)) {
-			Config config = Config.ofGrammar(grammar, null);
-			writer.append("package test.examples;\n");
-			GrammarOutput.output(writer, className, config, grammar, predictTable);
-		}
-		System.out.println("Generated in " + file.getAbsolutePath());
+		System.out.println("Parametric grammar parsed but not generated");
+//		Grammars.PredictionTable predictTable =
+//			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
+//		if (!predictTable.isLL1())
+//			System.out.println(predictTable.toString());
+//		File file = new File("src/test/examples/" + className + ".java");
+//		try (FileWriter writer = new FileWriter(file, false)) {
+//			Config config = Config.ofGrammar(grammar, null);
+//			writer.append("package test.examples;\n");
+//			GrammarOutput.output(writer, className, config, grammar, predictTable);
+//		}
+//		System.out.println("Generated in " + file.getAbsolutePath());
 	}
 	
 	/**
@@ -94,5 +96,7 @@ public abstract class TestJGEParser {
 		
 		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
 		generateParser("tests/jg/JSonPos.jg", "JSonPosParser");
+		
+		generateParser("tests/jg/Templates.jg", "Templates");
 	}
 }
