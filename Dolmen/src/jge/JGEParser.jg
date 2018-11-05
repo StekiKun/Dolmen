@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import common.Lists;
 import common.Java;
 import syntax.Extent;
+import syntax.PExtent;
 import syntax.Located;
 import syntax.Production;
 import syntax.Option;
@@ -17,8 +18,8 @@ import syntax.GrammarRule;
 import syntax.Grammar;
 
 token {String} IDENT
-token {Extent} ACTION
-token {Extent} ARGUMENTS
+token {PExtent} ACTION
+token {PExtent} ARGUMENTS
 token {String} MLSTRING
 token EQUAL
 token LSQUARE 

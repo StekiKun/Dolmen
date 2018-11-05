@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import common.Lists;
 import common.Java;
 import syntax.Extent;
+import syntax.PExtent;
 import syntax.Located;
 import syntax.Production;
 import syntax.Option;
@@ -72,9 +73,9 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         }
         
         public final static class ACTION extends Token {
-            public final Extent value;
+            public final PExtent value;
             
-            private ACTION(Extent value) {
+            private ACTION(PExtent value) {
                 super(Kind.ACTION);
                 this.value = value;
             }
@@ -84,14 +85,14 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 return "ACTION(" + value + ")";
             }
         }
-        public static ACTION ACTION(Extent value) {
+        public static ACTION ACTION(PExtent value) {
             return new ACTION(value);
         }
         
         public final static class ARGUMENTS extends Token {
-            public final Extent value;
+            public final PExtent value;
             
-            private ARGUMENTS(Extent value) {
+            private ARGUMENTS(PExtent value) {
                 super(Kind.ARGUMENTS);
                 this.value = value;
             }
@@ -101,7 +102,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
                 return "ARGUMENTS(" + value + ")";
             }
         }
-        public static ARGUMENTS ARGUMENTS(Extent value) {
+        public static ARGUMENTS ARGUMENTS(PExtent value) {
             return new ARGUMENTS(value);
         }
         
@@ -212,11 +213,11 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         // tdecls = tokens(null)
          List<TokenDecl>  tdecls = tokens(null);
         // header = ACTION
-        Extent header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        PExtent header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // rules = rules(null)
         List<GrammarRule> rules = rules(null);
         // footer = ACTION
-        Extent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        PExtent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // EOF
         eat(Token.Kind.EOF);
         Grammar.Builder builder = new Grammar.Builder(options, imports, header, footer);
@@ -382,7 +383,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         switch (peek().getKind()) {
             case ACTION: {
                 // val = ACTION
-                Extent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                PExtent val = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                  return val; 
             }
             case IDENT: {
@@ -440,7 +441,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         // vis = visibility
          boolean  vis = visibility();
         // rtype = ACTION
-        Extent rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        PExtent rtype = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
         // RULE
         eat(Token.Kind.RULE);
         // name = IDENT
@@ -491,7 +492,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             }
             case ARGUMENTS: {
                 // ext = ARGUMENTS
-                Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
+                PExtent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                  return ext; 
             }
             default: {
@@ -534,7 +535,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
         switch (peek().getKind()) {
             case ACTION: {
                 // ext = ACTION
-                Extent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                PExtent ext = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
                  builder.addAction(ext); 
                 // items(builder)
                 items(builder);

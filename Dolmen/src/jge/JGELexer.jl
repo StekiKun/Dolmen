@@ -3,6 +3,7 @@
  */
 import static jge.JGEParser.Token.*;
 import jge.JGEParser.Token;
+import syntax.PExtent;
 
 // JGLexer class header
 {
@@ -52,6 +53,8 @@ ident = idstart idbody*;
 escaped = ['\\' '\'' '"' 'n' 't' 'b' 'r' ' '];
 slcomment = "//" notnl*;
 
+hole = '#' (lalpha idbody* as hole_name);
+
 // Lexer rules
 public {Token} rule main =
 | ws+		{ continue main; }
@@ -61,18 +64,14 @@ public {Token} rule main =
 | '{'		{ braceDepth = 1;
               Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
-			  int endOffset = action();
-			  syntax.Extent ext = new syntax.Extent(
-			  	filename, p.offset, endOffset, p.line, p.column());
+			  PExtent ext = action(new PExtent.Builder(filename, p.offset, p.line, p.column()));
               startLoc = start;
 			  return ACTION(ext);
 			}
 | '('		{ parenDepth = 1;
               Position start = getLexemeStart();
 			  Position p = getLexemeEnd();
-			  int endOffset = arguments();
-			  syntax.Extent ext = new syntax.Extent(
-			    filename, p.offset, endOffset, p.line, p.column());
+			  PExtent ext = arguments(new PExtent.Builder(filename, p.offset, p.line, p.column()));
 			  startLoc = start;
 			  return ARGUMENTS(ext);
 			}
@@ -118,10 +117,14 @@ private {void} rule string =
 			  continue string; 
 			}
 
-private {int} rule action =
+private {PExtent} rule action{PExtent.Builder builder} =
 | '{'		{ ++braceDepth; continue action; }
 | '}'		{ --braceDepth;
-			  if (braceDepth == 0) return getLexemeStart().offset - 1;
+			  if (braceDepth == 0)
+			  	return builder.build(getLexemeStart().offset - 1);
+			  continue action;
+			}
+| hole		{ builder.addHole(getLexemeStart().offset, hole_name); 
 			  continue action;
 			}
 | '"'		{ stringBuffer.setLength(0);
@@ -137,10 +140,14 @@ private {int} rule action =
 | orelse    { continue action; }
 | _         { continue action; }
 
-private {int} rule arguments =
+private {PExtent} rule arguments{PExtent.Builder builder} =
 | '('		{ ++parenDepth; continue arguments; }
 | ')'		{ --parenDepth;
-			  if (parenDepth == 0) return getLexemeStart().offset - 1;
+			  if (parenDepth == 0)
+			  	return builder.build(getLexemeStart().offset - 1);
+			  continue arguments;
+			}
+| hole		{ builder.addHole(getLexemeStart().offset, hole_name);
 			  continue arguments;
 			}
 | '"'		{ stringBuffer.setLength(0);
@@ -150,7 +157,7 @@ private {int} rule arguments =
 			}
 | "'"		{ skipChar(); continue arguments; }
 | "/*"		{ comment(); continue arguments; }
-| slcomment { return arguments(); }
+| slcomment { continue arguments; }
 | eof		{ throw error("Unterminated arguments"); }
 | nl		{ newline(); continue arguments; }
 | orelse	{ continue arguments; }
