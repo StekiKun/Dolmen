@@ -15,7 +15,7 @@ token { String } ANY
 
 // Optional constructs
 
-private { boolean } rule boption() =
+private { boolean } rule boption<t>() =
 | t		{ return true; }
 | 		{ return false; }
 ;
@@ -70,7 +70,7 @@ private { List<#r> } rule nelist<r>() =
 ;
 
 private { List<#r> } rule separated_list<separator, r>() =
-| l = loption<separated_nelist<separator, r>>
+| l = loption<separated_nelist<separator, r>>()
 	{ return l; }
 ;
 

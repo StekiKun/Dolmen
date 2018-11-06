@@ -1,6 +1,7 @@
 package syntax;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -222,11 +223,7 @@ public final class PGrammar {
 				if (token.isValued())
 					valuedTokens.add(token.name);
 			}
-			Set<Located<String>> nonterms =
-				rules.values().stream().collect(
-					() -> new HashSet<Located<String>>(), 
-					(acc, rule) -> acc.add(rule.name),
-					(r1, r2) -> { });
+			Map<Located<String>, Integer> nonterms = new HashMap<>();
 			Set<Located<String>> argnterms = new HashSet<>();
 			Set<Located<String>> voidnterms = new HashSet<>();
 			for (PGrammarRule rule : rules.values()) {
@@ -234,51 +231,133 @@ public final class PGrammar {
 					argnterms.add(rule.name);
 				if (rule.returnType.find().trim().equals("void"))
 					voidnterms.add(rule.name);
+				nonterms.put(rule.name, rule.params.size());
 			}
 			// Go through every rule and check every item
 			// used makes some sense
 			for (PGrammarRule rule : rules.values()) {
 				int i = 0;
+				Set<String> formals = new HashSet<>();
+				rule.params.forEach(param -> formals.add(param.val));
+				
+				checkExtent(reporter, rule, -1, formals, rule.returnType);
+				checkExtent(reporter, rule, -1, formals, rule.args);
 				for (PProduction prod : rule.productions) {
 					++i;
-					for (PProduction.Actual actual : prod.actuals()) {
-						final int j = i;
-						// TODO Check deeply, check non-partial application, check valued-ness, etc
-						// TODO Check holes, check parameters, etc
-						final Located<String> name = actual.item.symb;
-						if (actual.isTerminal()) {
-							if (!tokens.contains(name))
-								reporter.add(Reports.undeclaredToken(rule, j, name));
-							// Only do the value check if the token is declared
-							else if (actual.isBound() && 
-								!valuedTokens.contains(name))
-								reporter.add(Reports.unvaluedTokenBound(
-									rule, j, Nulls.ok(actual.binding), name));
-						} else {
-							if (!nonterms.contains(name))
-								reporter.add(Reports.undeclaredNonTerminal(rule, j, name));
-							// Only do the value and args checks if the non-term is declared
-							else {
-								if (actual.args != null &&
-										!argnterms.contains(name))
-									reporter.add(Reports.unexpectedArguments(
-											rule, j, Nulls.ok(actual.args), name));
-								if (actual.args == null &&
-										argnterms.contains(name))
-									reporter.add(Reports.missingArguments(
-											rule, j, name));
-								// Not complete of course but better than nothing
-								if (actual.isBound() &&
-										voidnterms.contains(name))
-									reporter.add(Reports.voidNonTerminalBound(
-											rule, j, Nulls.ok(actual.binding), name));
-							}
+					for (PProduction.Item item : prod.items) {
+						switch (item.getKind()) {
+						case ACTION:
+							PProduction.ActionItem action = (PProduction.ActionItem) item;
+							checkExtent(reporter, rule, i, formals, action.extent);
+							break;
+						case ACTUAL:
+							PProduction.Actual actual = (PProduction.Actual) item;
+							checkExtent(reporter, rule, i, formals, actual.args);
+							checkActual(reporter, rule, i, formals,
+									tokens, valuedTokens, nonterms, argnterms, voidnterms,
+									actual, actual.item, true);
+							break;
+						case CONTINUE:
+							break;
 						}
 					}
 				}
 			}
 		}
 		
+		/**
+		 * Checks that all holes in {@code extent} refer to formal
+		 * parameters which are declared in {@code formals}, and
+		 * reports problems to {@code reporter}. If {@code extent}
+		 * is null, nothing is checked.
+		 * 
+		 * @param reporter
+		 * @param rule
+		 * @param j
+		 * @param formals
+		 * @param extent
+		 */
+		private static void checkExtent(Reporter reporter,
+				PGrammarRule rule, int j, Set<String> formals, @Nullable PExtent extent) {
+			if (extent == null) return;
+			for (PExtent.Hole hole : extent.holes) {
+				if (!formals.contains(hole.name))
+					reporter.add(Reports.undeclaredFormal(rule, j, extent, hole));
+			}
+		}
+		
+		/**
+		 * @WIP
+		 * TODO write a specific object to hold the context and perform the checks
+		 * 
+		 * @param reporter
+		 * @param rule
+		 * @param i
+		 * @param formals
+		 * @param tokens
+		 * @param valuedTokens
+		 * @param nonterms
+		 * @param argnterms
+		 * @param voidnterms
+		 * @param actual
+		 * @param aexpr
+		 * @param root
+		 */
+		private static void checkActual(Reporter reporter,
+				PGrammarRule rule, int i, Set<String> formals,
+				Set<Located<String>> tokens, Set<Located<String>> valuedTokens,
+				Map<Located<String>, Integer> nonterms, Set<Located<String>> argnterms, 
+				Set<Located<String>> voidnterms,
+				PProduction.Actual actual, PProduction.ActualExpr aexpr, boolean root) {
+			final Located<String> name = aexpr.symb;
+			if (aexpr.isTerminal()) {
+				if (!tokens.contains(name))
+					reporter.add(Reports.undeclaredToken(rule, i, name));
+				// Only do the value check if the token is declared
+				else if (root && actual.isBound() && 
+					!valuedTokens.contains(name))
+					reporter.add(Reports.unvaluedTokenBound(
+						rule, i, Nulls.ok(actual.binding), name));
+			}
+			else if (formals.contains(name.val)) {
+				// A formal is not supposed to have parameters (no higher-order)
+				if (!aexpr.params.isEmpty())
+					reporter.add(Reports.parameterizedFormal(
+						rule, i, name));
+			}
+			else {
+				// Must be a non-terminal
+				@Nullable Integer arity = nonterms.get(name);
+				if (arity == null)
+					reporter.add(Reports.undeclaredNonTerminal(rule, i, name));
+				// Only do the value and args checks if the non-term is declared
+				else {
+					// The arities map was filled for all non-terminals
+					if (aexpr.params.size() != arity)
+						reporter.add(Reports.badNumberOfParameters(
+							rule, i, name, arity));
+					if (root && actual.args != null &&
+							!argnterms.contains(name))
+						reporter.add(Reports.unexpectedArguments(
+								rule, i, Nulls.ok(actual.args), name));
+					if (root && actual.args == null &&
+							argnterms.contains(name))
+						reporter.add(Reports.missingArguments(
+								rule, i, name));
+					// Not complete of course but better than nothing
+					if (root && actual.isBound() &&
+							voidnterms.contains(name))
+						reporter.add(Reports.voidNonTerminalBound(
+								rule, i, Nulls.ok(actual.binding), name));
+				}
+			}
+			
+			// Now check the subterms if any
+			aexpr.params.forEach(sub -> 
+				checkActual(reporter, rule, i, formals,
+					tokens, valuedTokens, nonterms, argnterms, voidnterms,
+					actual, sub, false));
+		}
 	}
 	
 	/**
@@ -311,7 +390,16 @@ public final class PGrammar {
 		}
 		
 		private static String inRule(PGrammarRule rule, int j) {
-			return String.format("In rule \"%s\", production %d: ", rule.name.val, j);
+			if (j >= 0)
+				return String.format("In rule \"%s\", production %d: ", rule.name.val, j);
+			else
+				return String.format("In rule \"%s\": ", rule.name.val);
+		}
+		
+		static IReport undeclaredFormal(PGrammarRule rule, int j, PExtent extent, PExtent.Hole hole) {
+			String msg = String.format("%s undeclared formal parameter \"%s\"",
+					inRule(rule, j), hole.name);
+			return IReport.of(msg, Severity.ERROR, extent);	// TODO report on hole location
 		}
 		
 		static IReport undeclaredToken(PGrammarRule rule, int j, Located<String> token) {
@@ -353,6 +441,20 @@ public final class PGrammar {
 			String msg = String.format("%s bound non-terminal \"%s\" returns void",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, binding);
-		}		
+		}
+		
+		static IReport parameterizedFormal(PGrammarRule rule, int j, Located<String> formal) {
+			String msg = String.format("%s formal \"%s\" does not expect parameters",
+				inRule(rule, j), formal.val);
+			return IReport.of(msg, Severity.ERROR, formal);
+		}
+		
+		static IReport badNumberOfParameters(PGrammarRule rule, int j, 
+			Located<String> formal, int expected) {
+			String msg = String.format("%s non-terminal \"%s\" expects %d parameters",
+				inRule(rule, j), formal.val, expected);
+			return IReport.of(msg, Severity.ERROR, formal);
+		}
+				
 	}
 }

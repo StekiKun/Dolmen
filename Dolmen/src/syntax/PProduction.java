@@ -220,7 +220,7 @@ public final class PProduction {
 		}
 		
 		private StringBuilder append(StringBuilder buf) {
-			buf.append(symb);
+			buf.append(symb.val);
 			if (params.isEmpty()) return buf;
 			buf.append('<');
 			boolean first = true;
