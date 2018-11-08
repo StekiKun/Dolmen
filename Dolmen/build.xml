@@ -93,5 +93,6 @@
 	<target name="test_unit"
 	   description="Runs unit and random tests about CSet/Regulars/etc">
 		<java classpath="bin/" failonerror="yes" classname="test.Test"/>
+		<java classpath="bin/" failonerror="yes" classname="test.misc.TestSCC"/>
 	</target>
 </project>
