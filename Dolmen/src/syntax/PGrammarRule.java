@@ -85,6 +85,16 @@ public final class PGrammarRule {
 		buf.append(visibility ? "public " : "private ");
 		buf.append("{").append(returnType.find()).append("}");
 		buf.append(" rule ").append(name.val);
+		if (!params.isEmpty()) {
+			buf.append("<");
+			boolean first = true;
+			for (Located<String> param : params) {
+				if (first) first = false;
+				else buf.append(", ");
+				buf.append(param.val);
+			}
+			buf.append(">");
+		}
 		Extent args_ = args;
 		if (args_ != null)
 			buf.append("(").append(args_.find()).append(")");

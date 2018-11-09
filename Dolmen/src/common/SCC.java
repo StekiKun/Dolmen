@@ -299,4 +299,14 @@ public final class SCC<Node> {
 			f.accept(scc);
 		}
 	}
+	
+	@Override
+	public String toString() {
+		StringBuilder buf = new StringBuilder();
+		buf.append("Strongly-connected components: (").append(count()).append(")\n");
+		iter(scc -> {
+			buf.append(" - ").append(scc).append("\n");
+		});
+		return buf.toString();
+	}
 }
