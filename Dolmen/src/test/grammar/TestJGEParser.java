@@ -16,6 +16,8 @@ import jl.JLLexerGenerated;
 import jl.JLParser;
 import syntax.Lexer;
 import syntax.PGrammar;
+import unparam.Expansion;
+import unparam.Expansion.PGrammarNotExpandable;
 import unparam.Grammar;
 import unparam.Grammars;
 
@@ -70,6 +72,13 @@ public abstract class TestJGEParser {
 		reader.close();
 		System.out.println(grammar.toString());
 		System.out.println("Parametric grammar parsed but not generated");
+		try {
+			Expansion.checkExpandability(grammar);
+		} catch (PGrammarNotExpandable e) {
+			System.out.println(e.getMessage());
+			return;
+		}
+		
 //		Grammars.PredictionTable predictTable =
 //			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
 //		if (!predictTable.isLL1())

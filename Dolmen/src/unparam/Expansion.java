@@ -20,16 +20,55 @@ import syntax.PProduction;
 import syntax.PProduction.ActualExpr;
 
 /**
- * @WIP
+ * This class deals with the process of <i>expanding</i> a {@linkplain PGrammar 
+ * parametric grammar} into a {@linkplain Grammar ground one} by generating all
+ * ground instances of rules from (monomorphic) public entry points.
+ * <p>
+ * <h2>Checking that the grammar is finitely expandable</h2>
+ * <p>
+ * This is potentially non-terminating if the rules interact in such a way that 
+ * larger and larger instances keep being generated. The method {@link #checkExpandability(PGrammar)}
+ * checks whether the expansion of a grammar is guaranteed to terminate or not, and throws
+ * a {@link PGrammarNotExpandable} exception in the latter case. 
+ * <p>
+ * It proceeds by building the _expansion flow graph_ of the grammar, representing how the 
+ * formal parameters of a rule can contribute to effective parameters of other generic rules
+ * in the productions. Such contributions are <i>safe</i> if the the formal appears directly as 
+ * the effective parameter, or <i>dangerous</i> if it appears deep in some rule expression.
+ * <p>
+ * The {@linkplain SCC strongly-connected components} of the expansion flow graph are 
+ * then computed and the grammar is deemed safe for expansion if no SCC contains a dangerous
+ * flow edge. Indeed, when dangerous edges are only found linking different SCCs, there is
+ * no risk of an ever-growing cycle of rule instantiations occurring.
+ * <p>
+ * <i>NB: The expandability of the grammar is checked without taking into account the actual
+ * 	rules that can be reached from the grammar's entry points. In other words, a grammar is
+ *  only deemed expandable if it can be finitely expanded from <b>any</b> ground instantiation
+ *  of its rules.
+ * </i>
+ * <h2>Expanding the parametric grammar</h2>
+ * <p>
+ * ...
+ * 
  * @author Stéphane Lescuyer
  */
-@SuppressWarnings("javadoc")
 public final class Expansion {
 
+	/**
+	 * Exception thrown when {@link Expansion#checkExpandability(PGrammar)}
+	 * finds a potentially dangerous cycle preventing the expansion of a grammar.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public static final class PGrammarNotExpandable extends Exception {
 		private static final long serialVersionUID = 4186980925380975221L;
 		
+		/** The rule whose expansion may not terminate */
 		public final Located<String> rule;
+		/** 
+		 * The formal parameter of {@link #rule} which may lead
+		 * to ever-growing instantiations
+		 */
 		public final Located<String> formal;
 		
 		PGrammarNotExpandable(Formal formal) {
@@ -41,6 +80,17 @@ public final class Expansion {
 		}
 	}
 	
+	/**
+	 * A {@link Formal} represents one of the formal parameters of rules
+	 * in a parametric grammar. It is characterized by its {@link #rule},
+	 * its {@linkplain #formal name}, and its {@linkplain #formalIdx index}
+	 * amongst the rule's parameters.
+	 * <p>
+	 * Additionnally, it has a unique {@link #order} number which is used
+	 * to efficiently handle formals as nodes in {@linkplain ExpansionFlowGraph}.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class Formal {
 		private final int order;	// Ignored in equals/hashCode
 		private final Located<String> rule;
@@ -77,11 +127,26 @@ public final class Expansion {
 		}
 	}
 	
+	/**
+	 * Describes the <i>expansion flow graph</i> of some parametric grammar.
+	 * 
+	 * @see Expansion
+	 * @see #of
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class ExpansionFlowGraph implements Graph<Formal> {
 		private final PGrammar grammar;
 		
+		/**
+		 * Decorates an edge in the expansion flow graph 
+		 * 
+		 * @author Stéphane Lescuyer
+		 */
 		static final class Edge {
+			// Whether the edge is safe or not
 			private boolean safe;
+			// The location of the actual which explains this edge
 			@SuppressWarnings("unused")
 			private Located<String> site;
 			
@@ -91,10 +156,12 @@ public final class Expansion {
 			}
 		}
 		
+		// For every _parametric_ rule in the grammar, the formals
+		// which represents the rule's formal parameters, in order
 		private final Map<Located<String>, @NonNull Formal[]> formals;
+		// To every formal in the grammar, associates its successors
+		// and the associated edge descriptors
 		final Map<Formal, Map<Formal, Edge>> graph;
-		
-		// + dangerous
 		
 		private ExpansionFlowGraph(PGrammar grammar) {
 			// We will represent the graph with a successor map associating
@@ -122,6 +189,10 @@ public final class Expansion {
 			}			
 		}
 		
+		/**
+		 * @param grammar
+		 * @return the expansion flow graph for the given parametric grammar
+		 */
 		static ExpansionFlowGraph of(PGrammar grammar) {
 			return (new ExpansionFlowGraph(grammar)).compute();
 		}
@@ -163,7 +234,25 @@ public final class Expansion {
 			}
 			return this;
 		}
-		
+
+		/**
+		 * Adds the contributions to the expansion flow graph that stem from
+		 * some actual expression {@code aexpr} used in a production of a
+		 * rule whose formal parameters are given by {@code paramToFormal}.
+		 * <p>
+		 * The {@code context} in which the actual expression appears in the
+		 * production represents the path where the expression can be found
+		 * starting from some top-level actual in the production. Each step
+		 * down the term is represented by the corresponding <i>formal</i>:
+		 * if the sub-expression is in the {@code n}-th subterm of some
+		 * application of parametric rule {@code r}, this is described in
+		 * the context by the {@link Formal} representing the {@code n}-th
+		 * formal parameter of {@code r}.
+		 * 
+		 * @param paramToFormal
+		 * @param context
+		 * @param expr
+		 */
 		private void addFlowEdges(Map<String, Formal> paramToFormal,
 			Stack<Formal> context, ActualExpr expr) {
 			@Nullable Formal formal = paramToFormal.get(expr.symb.val);
@@ -256,6 +345,16 @@ public final class Expansion {
 		}
 	}
 	
+	/**
+	 * Checks that the given parametric grammar can be expanded
+	 * in a finite fashion. Note that the check does not take the
+	 * actual entry points of the grammar into account. In particular,
+	 * the grammar may fail this check because of some rules which are
+	 * declared and yet actually unused in the grammar.
+	 * 
+	 * @param grammar
+	 * @throws PGrammarNotExpandable if expanding this grammar may not terminate
+	 */
 	public static void checkExpandability(PGrammar grammar) throws PGrammarNotExpandable {
 		// Build the flow graph between formals and compute
 		// the strongly-connected components
