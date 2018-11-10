@@ -196,36 +196,64 @@ public final class PGrammar {
 		 * 	is not well-formed
 		 */
 		public PGrammar build() {
-			sanityCheck(reporter, tokenDecls, rules);
+			new Checker(reporter, tokenDecls, rules).run();
 			if (reporter.hasErrors())
 				throw new IllFormedException(
 					"Errors were found when trying to build this grammar (aborting):\n" + reporter,
 					reporter.getReports());
 				
 			return new PGrammar(options, imports, tokenDecls, header, rules, footer);
-		}
+		}		
+	}
+	
+	/**
+	 * This class is used to perform the various structural and sanity checks
+	 * on a would-be {@linkplain PGrammar parametric grammar} in {@link Builder#build()}.
+	 * <p>
+	 * Its {@link Checker#run()} method does all the checks on the given grammar
+	 * description and reports all problems in a given {@link Reporter}. The
+	 * various kinds of possible reports are gathered in {@link Reports}.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static final class Checker {
+		private final Reporter reporter;
+		private final Map<String, PGrammarRule> rules;
+		
+		private final Set<Located<String>> tokens;
+		private final Set<Located<String>> valuedTokens;
+		
+		private final Map<Located<String>, Integer> nonterms;
+		private final Set<Located<String>> argnterms;
+		private final Set<Located<String>> voidnterms;
 		
 		/**
-		 * Performs well-formedness checks on the given grammar description,
-		 * passing discovered problems to the {@code reporter}
+		 * Create a new sanity checker for the given token and rule declarations
+		 * and which will report to {@code reporter}. Call {@link #run()} to
+		 * perform the checks.
 		 * 
 		 * @param reporter
 		 * @param tokenDecls
 		 * @param rules
 		 */
-		private static void sanityCheck(Reporter reporter,
+		Checker(Reporter reporter,
 			List<TokenDecl> tokenDecls, Map<String, PGrammarRule> rules) {
-			// Prepare sets of declared tokens and non-terminals
-			Set<Located<String>> tokens = new HashSet<>();
-			Set<Located<String>> valuedTokens = new HashSet<>();
+			this.reporter = reporter;
+			this.rules = rules;
+			
+			// Prepare sets of declared tokens, finding out which ones are valued
+			this.tokens = new HashSet<>(tokenDecls.size());
+			this.valuedTokens = new HashSet<>();
 			for (TokenDecl token : tokenDecls) {
 				tokens.add(token.name);
 				if (token.isValued())
 					valuedTokens.add(token.name);
 			}
-			Map<Located<String>, Integer> nonterms = new HashMap<>();
-			Set<Located<String>> argnterms = new HashSet<>();
-			Set<Located<String>> voidnterms = new HashSet<>();
+			// Prepare sets of non-terminals, along with their arity
+			// and whether they expect args or return void
+			this.nonterms = new HashMap<>(rules.size());
+			this.argnterms = new HashSet<>();
+			this.voidnterms = new HashSet<>();
 			for (PGrammarRule rule : rules.values()) {
 				if (rule.args != null)
 					argnterms.add(rule.name);
@@ -233,6 +261,13 @@ public final class PGrammar {
 					voidnterms.add(rule.name);
 				nonterms.put(rule.name, rule.params.size());
 			}
+		}
+		
+		/**
+		 * Performs well-formedness checks on the given grammar description,
+		 * passing discovered problems to the {@link #reporter}
+		 */
+		void run() {
 			// Go through every rule and check every item
 			// used makes some sense
 			for (PGrammarRule rule : rules.values()) {
@@ -240,22 +275,20 @@ public final class PGrammar {
 				Set<String> formals = new HashSet<>();
 				rule.params.forEach(param -> formals.add(param.val));
 				
-				checkExtent(reporter, rule, -1, formals, rule.returnType);
-				checkExtent(reporter, rule, -1, formals, rule.args);
+				checkExtent(rule, -1, formals, rule.returnType);
+				checkExtent(rule, -1, formals, rule.args);
 				for (PProduction prod : rule.productions) {
 					++i;
 					for (PProduction.Item item : prod.items) {
 						switch (item.getKind()) {
 						case ACTION:
 							PProduction.ActionItem action = (PProduction.ActionItem) item;
-							checkExtent(reporter, rule, i, formals, action.extent);
+							checkExtent(rule, i, formals, action.extent);
 							break;
 						case ACTUAL:
 							PProduction.Actual actual = (PProduction.Actual) item;
-							checkExtent(reporter, rule, i, formals, actual.args);
-							checkActual(reporter, rule, i, formals,
-									tokens, valuedTokens, nonterms, argnterms, voidnterms,
-									actual, actual.item, true);
+							checkExtent(rule, i, formals, actual.args);
+							checkActual(rule, i, formals, actual, actual.item, true);
 							break;
 						case CONTINUE:
 							break;
@@ -268,16 +301,15 @@ public final class PGrammar {
 		/**
 		 * Checks that all holes in {@code extent} refer to formal
 		 * parameters which are declared in {@code formals}, and
-		 * reports problems to {@code reporter}. If {@code extent}
+		 * reports problems to {@link #reporter}. If {@code extent}
 		 * is null, nothing is checked.
 		 * 
-		 * @param reporter
 		 * @param rule
 		 * @param j
 		 * @param formals
 		 * @param extent
 		 */
-		private static void checkExtent(Reporter reporter,
+		private void checkExtent(
 				PGrammarRule rule, int j, Set<String> formals, @Nullable PExtent extent) {
 			if (extent == null) return;
 			for (PExtent.Hole hole : extent.holes) {
@@ -287,27 +319,24 @@ public final class PGrammar {
 		}
 		
 		/**
-		 * @WIP
-		 * TODO write a specific object to hold the context and perform the checks
+		 * Performs sanity checks on the structure of the actual expression {@code aexpr},
+		 * which can only refer to the formal parameters given in {@code formals} and
+		 * is part of the overall production item {@code actual}.
+		 * <p>
+		 * Parameter {@code root} specifies whether {@code aexpr} is the top-level 
+		 * expression in {@code actual} or not.
+		 * <p>
+		 * All problems found are reported in the receiver's {@link #reporter}.
 		 * 
-		 * @param reporter
 		 * @param rule
 		 * @param i
 		 * @param formals
-		 * @param tokens
-		 * @param valuedTokens
-		 * @param nonterms
-		 * @param argnterms
-		 * @param voidnterms
 		 * @param actual
 		 * @param aexpr
 		 * @param root
 		 */
-		private static void checkActual(Reporter reporter,
+		private void checkActual(
 				PGrammarRule rule, int i, Set<String> formals,
-				Set<Located<String>> tokens, Set<Located<String>> valuedTokens,
-				Map<Located<String>, Integer> nonterms, Set<Located<String>> argnterms, 
-				Set<Located<String>> voidnterms,
 				PProduction.Actual actual, PProduction.ActualExpr aexpr, boolean root) {
 			final Located<String> name = aexpr.symb;
 			if (aexpr.isTerminal()) {
@@ -354,10 +383,9 @@ public final class PGrammar {
 			
 			// Now check the subterms if any
 			aexpr.params.forEach(sub -> 
-				checkActual(reporter, rule, i, formals,
-					tokens, valuedTokens, nonterms, argnterms, voidnterms,
-					actual, sub, false));
+				checkActual(rule, i, formals, actual, sub, false));
 		}
+		
 	}
 	
 	/**
