@@ -1,6 +1,9 @@
 package unparam;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Stack;
@@ -10,14 +13,17 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Iterables;
+import common.Lists;
 import common.Nulls;
 import common.SCC;
 import common.SCC.Graph;
+import syntax.Extent;
 import syntax.Located;
 import syntax.PGrammar;
 import syntax.PGrammarRule;
 import syntax.PProduction;
 import syntax.PProduction.ActualExpr;
+import unparam.Grammar.IllFormedException;
 
 /**
  * This class deals with the process of <i>expanding</i> a {@linkplain PGrammar 
@@ -48,7 +54,7 @@ import syntax.PProduction.ActualExpr;
  * </i>
  * <h2>Expanding the parametric grammar</h2>
  * <p>
- * ...
+ * ...TODO doc
  * 
  * @author Stéphane Lescuyer
  */
@@ -129,6 +135,15 @@ public final class Expansion {
 	
 	/**
 	 * Describes the <i>expansion flow graph</i> of some parametric grammar.
+	 * <p>
+	 * The vertices of this graph are the {@linkplain Formal formals} of 
+	 * the grammar, and there is an edge from the {@code i}-th parameter
+	 * {@code ri} of some rule {@code r} to the {@code j}-th parameter 
+	 * of some rule {@code s} if there is at least one production 
+	 * item in {@code r} where {@code ri} appears in an expression
+	 * passed as the {@code j}-th subterm of {@code s}. Such an
+	 * edge is dangerous if and only if the subterm is not reduced
+	 * to {@code ri} itself.  
 	 * 
 	 * @see Expansion
 	 * @see #of
@@ -379,4 +394,232 @@ public final class Expansion {
 		return;
 	}
 	
+	/**
+	 * @param rule		the name of the non-terminal rule
+	 * @param params	can be empty, but must be ground
+	 * 
+	 * @return the generated name used to represent the <b>ground</b>
+	 * 	instance of the non-terminal {@code rule} applied to {@code params}
+	 */
+	private static String ruleName(String rule, List<ActualExpr> params) {
+		if (params.isEmpty()) return rule;
+		StringBuilder buf = new StringBuilder();
+		buf.append(rule).append('<');
+		boolean first = true;
+		for (ActualExpr ae : params) {
+			if (first) first = false;
+			else buf.append(", ");
+			buf.append(ruleName(ae.symb.val, ae.params));
+		}
+		buf.append('>');
+		return buf.toString();
+	}
+	
+	/**
+	 * This container class represents a ground instance of
+	 * some {@linkplain #nterm non-terminal} applied to some
+	 * {@linkplain #params effective parameters}. 
+	 * <p
+	 * This represents a unit of pending work during the 
+	 * expansion of a parametric grammar. The field {@link #name}
+	 * gives the actual name of the corresponding instance
+	 * in the expanded grammar.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static final class Instance {
+		final String nterm;
+		final List<ActualExpr> params;
+		final String name;
+		
+		Instance(String nterm, List<ActualExpr> params) {
+			this.nterm = nterm;
+			this.params = params;
+			this.name = ruleName(nterm, params);
+		}
+		
+		@Override
+		public String toString() {
+			return name;
+		}
+	}
+	
+	private final PGrammar pgrammar;
+
+	// Ground instantiations of rules in {@code pgrammar} which may still
+	// need to be generated
+	private final Stack<Instance> todo;
+	
+	// Ground instances of rules in {@code pgrammar} which have already
+	// been generated, mapped to their name for convenience
+	private final Map<String, GrammarRule> generatedRules;
+	
+	/**
+	 * Must only be used on a grammar which has passed {@link #checkExpandability(PGrammar)}
+	 * successfully.
+	 * 
+	 * @param pgrammar
+	 */
+	private Expansion(PGrammar pgrammar) {
+		this.pgrammar = pgrammar;
+		this.todo = new Stack<>();
+		this.generatedRules = new HashMap<>();
+	}
+	
+	/**
+	 * This performs the expansion (aka <i>monomorphization</i>) of the parametric
+	 * grammar {@code pgrammar}, which must have been {@linkplain #checkExpandability(PGrammar) 
+	 * checked} to be expandable beforehand.
+	 * <p> 
+	 * The result is a non-parametric {@link Grammar} whose public entry points 
+	 * are the same as {@code pgrammar} and must parse the same language.
+	 * 
+	 * @param pgrammar
+	 * @return the result of expanding {@code pgrammar}
+	 * 
+	 * @throws IllFormedException if the expanded grammar happens to be ill-formed
+	 */
+	public static Grammar of(PGrammar pgrammar) {
+		Expansion exp = new Expansion(pgrammar);
+		exp.realize();
+		Grammar.Builder builder = new Grammar.Builder(
+			pgrammar.options, pgrammar.imports, pgrammar.header, pgrammar.footer);
+		pgrammar.tokenDecls.forEach(builder::addToken);
+		exp.generatedRules.values().forEach(builder::addRule);
+		return builder.build();
+	}
+
+	private void realize() {
+		// Find all public rules, which must be ground, and add them to the stack
+		// of required ground instances
+		for (PGrammarRule rule : pgrammar.rules.values()) {
+			if (!rule.visibility) continue;
+			todo.add(new Instance(rule.name.val, Lists.empty()));
+		}
+		
+		// Now realize all pending instances, until there are no more.
+		// This must terminate by virtue of the expandability check
+		while (!todo.isEmpty()) {
+			Instance pending = todo.pop();
+			
+			// Check if this instantiation has already been generated
+			if (generatedRules.containsKey(pending.name)) continue;
+			
+			// Otherwise, find the parametric rule to apply and realize
+			// the instance. This may result in adding new instances to
+			// the pending stack.
+			realizeRule(pending.name, pgrammar.rule(pending.nterm), pending.params);
+		}
+	}
+	
+	/**
+	 * This generates the ground instance of {@code rule} applied to
+	 * (ground) effective parameters {@link effective}, and records
+	 * it with the given {@code ruleName}.
+	 * 
+	 * @param ruleName
+	 * @param prule
+	 * @param effective
+	 * @return the ground rule corresponding to the given instantiation problem
+	 */
+	private GrammarRule realizeRule(String ruleName, 
+			PGrammarRule prule, List<ActualExpr> effective) {
+		// This is a new instantiation that we must perform
+		Extent ruleReturn = prule.returnType;	// TODO
+		@Nullable Extent ruleArgs = prule.args; // TODO
+		Map<String, ActualExpr> pinst = new LinkedHashMap<>(effective.size());
+		for (int i = 0; i < effective.size(); ++i)
+			pinst.put(prule.params.get(i).val, effective.get(i));
+		
+		List<Production> productions = new ArrayList<>(prule.productions.size());
+		for (PProduction pprod : prule.productions)
+			productions.add(realizeProduction(pprod, pinst));
+		
+		GrammarRule rule = 
+			new GrammarRule(prule.visibility, ruleReturn, 
+				Located.like(ruleName, prule.name), ruleArgs, productions);
+		generatedRules.put(ruleName, rule);
+		return rule;
+	}
+	
+	/**
+	 * @param pprod
+	 * @param pinst
+	 * @return the ground production corresponding to the given, potentially
+	 * 	parametric, production where formal parameters are instantiated to
+	 * 	ground expressions as given by {@code pinst}
+	 */
+	private Production realizeProduction(PProduction pprod, Map<String, ActualExpr> pinst) {
+		List<Production.Item> items = new ArrayList<>(pprod.items.size());
+		for (PProduction.Item pitem : pprod.items) {
+			switch (pitem.getKind()) {
+			case ACTION:
+				PProduction.ActionItem action = (PProduction.ActionItem) pitem;
+				Extent extent = action.extent;	// TODO
+				items.add(new Production.ActionItem(extent));
+				continue;
+			case ACTUAL:
+				PProduction.Actual actual = (PProduction.Actual) pitem;
+				items.add(realizeActual(actual, pinst));
+				continue;
+			case CONTINUE:
+				PProduction.Continue cont = (PProduction.Continue) pitem;
+				items.add(new Production.Continue(cont.cont));
+				continue;
+			}
+		}
+		return new Production(items);
+	}
+
+	/**
+	 * As a side-effect, this may record a new ground instance into the stack
+	 * of pending instances, in case the given production item is the result of
+	 * applying some parametric non-terminal.
+	 * 
+	 * @param pactual
+	 * @param pinst
+	 * @return the ground production item corresponding to the given, potentially
+	 * 	parametric, actual where formal parameters are instantiated to
+	 * 	ground expressions as given by {@code pinst}
+	 */
+	private Production.Actual realizeActual(PProduction.Actual pactual, Map<String, ActualExpr> pinst) {
+		// Apply the instantiation to the actual to find a ground actual expression
+		ActualExpr instExpr = instantiateItem(pactual.item, pinst);
+		// If the resulting expression is an application, register it as a new
+		// required instance
+		String itemName;
+		if (!instExpr.isTerminal()) {
+			Instance newInstance = new Instance(instExpr.symb.val, instExpr.params);
+			if (!generatedRules.containsKey(newInstance.name))
+				todo.add(newInstance);
+			itemName = newInstance.name;
+		}
+		else
+			itemName = instExpr.symb.val;
+		
+		@Nullable Extent args = pactual.args;	// TODO
+		return new Production.Actual(pactual.binding, 
+				Located.like(itemName, pactual.item.symb), args);
+	}
+	
+	/**
+	 * @param aexpr
+	 * @param pinst
+	 * @return the result of substituting all formals following {@code pinst}
+	 * 	in the actual expression {@code aexpr}
+	 */
+	private ActualExpr instantiateItem(ActualExpr aexpr, Map<String, ActualExpr> pinst) {
+		// If the symbol is a terminal, it needs no instantiation
+		if (aexpr.isTerminal()) return aexpr;
+		// If the symbol is a formal, we replace it with its image 
+		// in the given substitution
+		@Nullable ActualExpr img = pinst.get(aexpr.symb.val);
+		if (img != null) return img;
+		// Otherwise, the symbol is a non-terminal, not necessarily parametric
+		if (aexpr.params.isEmpty()) return aexpr;
+		List<ActualExpr> params = new ArrayList<>(aexpr.params.size());
+		for (ActualExpr eparam : aexpr.params)
+			params.add(instantiateItem(eparam, pinst));
+		return new ActualExpr(aexpr.symb, params);
+	}
 }
