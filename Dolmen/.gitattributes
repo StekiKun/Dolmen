@@ -15,3 +15,4 @@ src/test/examples/JSonPosLexer.java linguist-generated=true
 src/test/examples/JSonPosParser.java linguist-generated=true
 src/test/examples/StraightLineLexer.java linguist-generated=true
 src/test/examples/StraightLineParser.java linguist-generated=true
+src/test/examples/Templates.java linguist-generated=true
