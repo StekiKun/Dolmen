@@ -16,6 +16,8 @@ import jl.JLLexerGenerated;
 import jl.JLParser;
 import syntax.Lexer;
 import syntax.PGrammar;
+import syntax.PGrammars;
+import syntax.Reporter;
 import unparam.Expansion;
 import unparam.Expansion.PGrammarNotExpandable;
 import unparam.Grammar;
@@ -72,6 +74,15 @@ public abstract class TestJGEParser {
 		PGrammar pgrammar = parser.start();
 		reader.close();
 		System.out.println(pgrammar.toString());
+		Reporter reporter = new Reporter();
+		PGrammars.findUnusedSymbols(pgrammar, PGrammars.dependencies(pgrammar.rules), reporter);
+		if (!reporter.getReports().isEmpty()) {
+			if (reporter.hasErrors()) {
+				System.err.println(reporter);
+				return;
+			}
+			System.out.println(reporter);
+		}
 
 		try {
 			Expansion.checkExpandability(pgrammar);

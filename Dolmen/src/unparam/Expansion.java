@@ -58,7 +58,14 @@ import unparam.Grammar.IllFormedException;
  * </i>
  * <h2>Expanding the parametric grammar</h2>
  * <p>
- * ...TODO doc
+ * Expanding a parametric grammar starts from the public rules of the grammar,
+ * which cannot be parametric, and works its way down to generate all the
+ * necessary ground instances that appear in production items. When generating
+ * a ground instance of some parametric rule, the various extents (arguments,
+ * return type, semantic actions in production items) must also be instantiated.
+ * Namely, the holes which act as placeholders in {@linkplain PExtent 
+ * parametric extents} are replaced with the <i>return type</i> of the effective
+ * instances or terminals that stand for the corresponding formal parameter.
  * 
  * @author Stéphane Lescuyer
  */

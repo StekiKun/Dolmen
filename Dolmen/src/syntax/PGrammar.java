@@ -409,7 +409,7 @@ public final class PGrammar {
 			String msg = String.format("Rule \"%s\" is already declared", rule.val);
 			return IReport.of(msg, Severity.ERROR, rule);
 		}
-		
+
 		static IReport unusedTerminal(Located<String> token) {
 			String msg = String.format("Token \"%s\" is never used", token.val);
 			return IReport.of(msg, Severity.WARNING, token);
@@ -418,6 +418,12 @@ public final class PGrammar {
 		static IReport unusedPrivateRule(Located<String> rule) {
 			String msg = String.format("Rule \"%s\" is never used", rule.val);
 			return IReport.of(msg, Severity.WARNING, rule);
+		}
+		
+		static IReport unusedFormal(PGrammarRule rule, int j, Located<String> formal) {
+			String msg = String.format("%s unused formal parameter \"%s\"",
+					inRule(rule, j), formal.val);
+			return IReport.of(msg, Severity.WARNING, formal);
 		}
 		
 		private static String inRule(PGrammarRule rule, int j) {
