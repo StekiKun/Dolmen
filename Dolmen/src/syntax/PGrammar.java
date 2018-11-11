@@ -275,6 +275,9 @@ public final class PGrammar {
 				Set<String> formals = new HashSet<>();
 				rule.params.forEach(param -> formals.add(param.val));
 				
+				if (rule.visibility && !formals.isEmpty())
+					reporter.add(Reports.parametricPublicRule(rule));
+				
 				checkExtent(rule, -1, formals, rule.returnType);
 				checkExtent(rule, -1, formals, rule.args);
 				for (PProduction prod : rule.productions) {
@@ -483,6 +486,10 @@ public final class PGrammar {
 				inRule(rule, j), formal.val, expected);
 			return IReport.of(msg, Severity.ERROR, formal);
 		}
-				
+			
+		static IReport parametricPublicRule(PGrammarRule rule) {
+			String msg = String.format("Public rule \"%s\" cannnot be parametric", rule.name.val);
+			return IReport.of(msg, Severity.ERROR, rule.name);
+		}
 	}
 }
