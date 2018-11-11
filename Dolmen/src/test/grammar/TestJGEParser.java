@@ -69,15 +69,29 @@ public abstract class TestJGEParser {
 		FileReader reader = new FileReader(filename);
 		JGELexer lexer = new JGELexer(filename, reader);
 		JGEParser parser = of(lexer);
-		PGrammar grammar = parser.start();
+		PGrammar pgrammar = parser.start();
 		reader.close();
-		System.out.println(grammar.toString());
-		System.out.println("Parametric grammar parsed but not generated");
+		System.out.println(pgrammar.toString());
+
 		try {
-			Expansion.checkExpandability(grammar);
-			Grammar ggrammar = Expansion.of(grammar);
+			Expansion.checkExpandability(pgrammar);
+			Grammar grammar = Expansion.of(pgrammar);
 			System.out.println("Generated ground grammar with " + 
-				ggrammar.rules.size() + " rules");
+				grammar.rules.size() + " rules");
+			System.out.println(grammar);
+			
+			Grammars.PredictionTable predictTable =
+				Grammars.predictionTable(grammar, 
+					Grammars.analyseGrammar(grammar, null, null));
+			if (!predictTable.isLL1())
+				System.out.println(predictTable.toString());
+			File file = new File("src/test/examples/" + className + ".java");
+			try (FileWriter writer = new FileWriter(file, false)) {
+				Config config = Config.ofGrammar(grammar, null);
+				writer.append("package test.examples;\n");
+				GrammarOutput.output(writer, className, config, grammar, predictTable);
+			}
+			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (PGrammarNotExpandable e) {
 			System.out.println(e.getMessage());
 			return;
@@ -85,17 +99,6 @@ public abstract class TestJGEParser {
 			System.out.println(e.getMessage());
 		}
 		
-//		Grammars.PredictionTable predictTable =
-//			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
-//		if (!predictTable.isLL1())
-//			System.out.println(predictTable.toString());
-//		File file = new File("src/test/examples/" + className + ".java");
-//		try (FileWriter writer = new FileWriter(file, false)) {
-//			Config config = Config.ofGrammar(grammar, null);
-//			writer.append("package test.examples;\n");
-//			GrammarOutput.output(writer, className, config, grammar, predictTable);
-//		}
-//		System.out.println("Generated in " + file.getAbsolutePath());
 	}
 	
 	/**

@@ -7,6 +7,7 @@
 
 import java.util.Optional;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Collections;
 
 token { String } STRING
@@ -17,12 +18,12 @@ token LPAREN RPAREN
 
 // Optional constructs
 
-private { boolean } rule boption<t>() =
+private { boolean } rule boption<t> =
 | t		{ return true; }
 | 		{ return false; }
 ;
 
-private { Optional<#t> } rule option<t>() =
+private { Optional<#t> } rule option<t> =
 | v = t		{ return Optional.of(t); }
 |			{ return Optional.empty(); }
 ;
@@ -32,28 +33,28 @@ private { #t } rule voption<t>(#t def) =
 | 			{ return def; }
 ;
 
-private { List<#t> } rule loption<t>() =
+private { List<#t> } rule loption<t> =
 | v = t		{ return Collections.singletonList(v); }
 |			{ return Collections.emptyList(); }
 ;
 
 // Delimiting constructs
 
-private { #constr } rule preceded<left, constr>() =
+private { #constr } rule preceded<left, constr> =
 | left c = constr { return c; }
 ;
 
-private { #constr } rule terminated<constr, right>() =
+private { #constr } rule terminated<constr, right> =
 | c = constr right { return c; }
 ;
 
-private { #constr } rule enclosed<left, constr, right>() =
+private { #constr } rule enclosed<left, constr, right> =
 | left c = constr right { return c; }
 ;
 
 // List constructs
 
-private { List<#r> } rule list<r>() =
+private { List<#r> } rule list<r> =
 | v = r 
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
   more_list<r>(acc) 
@@ -65,18 +66,18 @@ private { void } rule more_list<r>(List<#r> acc) =
 | v = r { acc.add(v); } continue
 ;
 
-private { List<#r> } rule nelist<r>() =
+private { List<#r> } rule nelist<r> =
 | v = r
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
   more_list<r>(acc) 
 ;
 
-private { List<#r> } rule separated_list<separator, r>() =
-| l = loption<separated_nelist<separator, r>>()
+private { List<#r> } rule separated_list<separator, r> =
+| l = loption<separated_nelist<separator, r>>
 	{ return l; }
 ;
 
-private { List<#r> } rule separated_nelist<separator, r>() =
+private { List<#r> } rule separated_nelist<separator, r> =
 | v = r
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
   more_separated_list<separator, r>(acc) 
@@ -91,7 +92,7 @@ private { void } rule more_separated_list<separator, r>(List<#r> acc) =
 // of some of the parametric rules below
 
 public { void } rule foo1() =
-| list<enclosed<LPAREN, separated_list<COMMA, STRING>, RPAREN>>()
+| list<enclosed<LPAREN, separated_list<COMMA, STRING>, RPAREN>>
 ;
 
 { }

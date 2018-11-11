@@ -485,7 +485,16 @@ public final class Expansion {
 		Grammar.Builder builder = new Grammar.Builder(
 			pgrammar.options, pgrammar.imports, pgrammar.header, pgrammar.footer);
 		pgrammar.tokenDecls.forEach(builder::addToken);
-		exp.generatedRules.values().forEach(builder::addRule);
+		// Try and preserve the original relative order between rules by adding
+		// rules in the order of the original rule they originate from
+		for (String ruleName : pgrammar.rules.keySet()) {
+			for (GrammarRule rule : exp.generatedRules.values()) {
+				if (ruleName.equals(rule.name.val)
+					|| rule.name.val.startsWith(ruleName + "<"))
+					builder.addRule(rule);
+			}
+		}
+		// exp.generatedRules.values().forEach(builder::addRule);
 		return builder.build();
 	}
 
