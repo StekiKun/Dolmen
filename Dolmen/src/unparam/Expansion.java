@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.Stack;
 import java.util.function.Consumer;
 
@@ -14,15 +15,18 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import common.Iterables;
 import common.Lists;
+import common.Maps;
 import common.Nulls;
 import common.SCC;
 import common.SCC.Graph;
 import syntax.Extent;
 import syntax.Located;
+import syntax.PExtent;
 import syntax.PGrammar;
 import syntax.PGrammarRule;
 import syntax.PProduction;
 import syntax.PProduction.ActualExpr;
+import syntax.TokenDecl;
 import unparam.Grammar.IllFormedException;
 
 /**
@@ -454,6 +458,12 @@ public final class Expansion {
 	// been generated, mapped to their name for convenience
 	private final Map<String, GrammarRule> generatedRules;
 	
+	// Cache associating some _ground_ actual expressions to an extent
+	// representing the return type (or value type for expressions reduced
+	// to terminals). The empty option is used to denote the fact that
+	// the expression is not valued.
+	private final Map<ActualExpr, Optional<Extent>> returnTypes;
+	
 	/**
 	 * Must only be used on a grammar which has passed {@link #checkExpandability(PGrammar)}
 	 * successfully.
@@ -464,6 +474,7 @@ public final class Expansion {
 		this.pgrammar = pgrammar;
 		this.todo = new Stack<>();
 		this.generatedRules = new HashMap<>();
+		this.returnTypes = new HashMap<>();
 	}
 	
 	/**
@@ -534,15 +545,18 @@ public final class Expansion {
 	private GrammarRule realizeRule(String ruleName, 
 			PGrammarRule prule, List<ActualExpr> effective) {
 		// This is a new instantiation that we must perform
-		Extent ruleReturn = prule.returnType;	// TODO
-		@Nullable Extent ruleArgs = prule.args; // TODO
+		Map<String, Extent> replacements = replacementMap(prule, effective);
+		Extent ruleReturn = prule.returnType.instantiate(replacements);
+		@Nullable PExtent pruleArgs = prule.args;
+		@Nullable Extent ruleArgs =
+			pruleArgs == null ? null : pruleArgs.instantiate(replacements);
 		Map<String, ActualExpr> pinst = new LinkedHashMap<>(effective.size());
 		for (int i = 0; i < effective.size(); ++i)
 			pinst.put(prule.params.get(i).val, effective.get(i));
 		
 		List<Production> productions = new ArrayList<>(prule.productions.size());
 		for (PProduction pprod : prule.productions)
-			productions.add(realizeProduction(pprod, pinst));
+			productions.add(realizeProduction(pprod, pinst, replacements));
 		
 		GrammarRule rule = 
 			new GrammarRule(prule.visibility, ruleReturn, 
@@ -554,22 +568,25 @@ public final class Expansion {
 	/**
 	 * @param pprod
 	 * @param pinst
+	 * @param replacements
 	 * @return the ground production corresponding to the given, potentially
 	 * 	parametric, production where formal parameters are instantiated to
-	 * 	ground expressions as given by {@code pinst}
+	 * 	ground expressions as given by {@code pinst}, and replacements for
+	 *  holes in {@link PExtent}s is given by {@code replacements}
 	 */
-	private Production realizeProduction(PProduction pprod, Map<String, ActualExpr> pinst) {
+	private Production realizeProduction(PProduction pprod, 
+			Map<String, ActualExpr> pinst, Map<String, Extent> replacements) {
 		List<Production.Item> items = new ArrayList<>(pprod.items.size());
 		for (PProduction.Item pitem : pprod.items) {
 			switch (pitem.getKind()) {
 			case ACTION:
 				PProduction.ActionItem action = (PProduction.ActionItem) pitem;
-				Extent extent = action.extent;	// TODO
+				Extent extent = action.extent.instantiate(replacements);
 				items.add(new Production.ActionItem(extent));
 				continue;
 			case ACTUAL:
 				PProduction.Actual actual = (PProduction.Actual) pitem;
-				items.add(realizeActual(actual, pinst));
+				items.add(realizeActual(actual, pinst, replacements));
 				continue;
 			case CONTINUE:
 				PProduction.Continue cont = (PProduction.Continue) pitem;
@@ -587,11 +604,14 @@ public final class Expansion {
 	 * 
 	 * @param pactual
 	 * @param pinst
+	 * @param replacements
 	 * @return the ground production item corresponding to the given, potentially
 	 * 	parametric, actual where formal parameters are instantiated to
-	 * 	ground expressions as given by {@code pinst}
+	 * 	ground expressions as given by {@code pinst}, and replacements for
+	 *  holes in {@link PExtent}s is given by {@code replacements}
 	 */
-	private Production.Actual realizeActual(PProduction.Actual pactual, Map<String, ActualExpr> pinst) {
+	private Production.Actual realizeActual(PProduction.Actual pactual, 
+			Map<String, ActualExpr> pinst, Map<String, Extent> replacements) {
 		// Apply the instantiation to the actual to find a ground actual expression
 		ActualExpr instExpr = instantiateItem(pactual.item, pinst);
 		// If the resulting expression is an application, register it as a new
@@ -606,7 +626,8 @@ public final class Expansion {
 		else
 			itemName = instExpr.symb.val;
 		
-		@Nullable Extent args = pactual.args;	// TODO
+		@Nullable PExtent pargs = pactual.args;
+		@Nullable Extent args = pargs == null ? null : pargs.instantiate(replacements);
 		return new Production.Actual(pactual.binding, 
 				Located.like(itemName, pactual.item.symb), args);
 	}
@@ -630,5 +651,73 @@ public final class Expansion {
 		for (ActualExpr eparam : aexpr.params)
 			params.add(instantiateItem(eparam, pinst));
 		return new ActualExpr(aexpr.symb, params);
+	}
+	
+
+	/**
+	 * The effective parameters in {@code effective} must be <i>ground</i>. The returned
+	 * replacement map is suitable to instantiate {@linkplain PExtent parameterized extents}
+	 * that appear in {@code prule}.
+	 * 
+	 * @param prule
+	 * @param effective
+	 * @return a map associating replacements for all formals in {@code prule} which
+	 * 	happen to represent valued expressions, when the rule is applied to the 
+	 *  <i>ground</i> effective parameters {@code effective}
+	 */
+	private Map<String, Extent> replacementMap(PGrammarRule prule, List<ActualExpr> effective) {
+		if (prule.params.size() != effective.size())
+			throw new IllegalArgumentException();
+		if (prule.params.isEmpty())
+			return Maps.empty();
+		Map<String, Extent> replacements = new HashMap<>();
+		for (int i = 0; i < prule.params.size(); ++i) {
+			@Nullable Extent ext = returnType(effective.get(i));
+			if (ext != null)
+				replacements.put(prule.params.get(i).val, ext);
+		}
+		return replacements;
+	}
+
+	/**
+	 * The actual expression {@code aexpr} must be <i>ground</i>. The returned
+	 * extent is suitable to build {@link #replacementMap(PGrammarRule, List) replacements}
+	 * for holes in parameterized extents.
+	 * 
+	 * @param aexpr
+	 * @return an extent that represents the return type associated to the
+	 * 	given expression {@code expr}, or {@code null} if this expression is
+	 *  not valued (which can for now only happens with expressions reduced
+	 *  to a non-valued terminal symbol)
+	 */
+	private @Nullable Extent returnType(ActualExpr aexpr) {
+		@Nullable Optional<Extent> cached = returnTypes.get(aexpr);
+		if (cached != null)
+			return cached.orElse(null);
+		// Compute the return type for the given ground expression 
+		// and record it in the cache
+		@Nullable Extent res;
+		String sym = aexpr.symb.val;
+		if (aexpr.isTerminal()) {
+			// The return type is either that of the token,
+			// or {@code null} if the token is not valued
+			Optional<TokenDecl> tdo = 
+				pgrammar.tokenDecls.stream().filter(td -> td.name.val.equals(sym)).findFirst();
+			if (!tdo.isPresent())
+				throw new IllegalStateException("Unknown terminal \"" + 
+						sym + "\" in actual expression " + aexpr);
+			res = tdo.get().valueType;
+		}
+		else {
+			// The expression must be ground, so the symbol must be a non-terminal
+			PGrammarRule prule = pgrammar.rule(sym);
+			// If it is an application, we must fetch the return types
+			// of the parameters first. Hoping that all formals which appear
+			// in holes are actually valued.
+			Map<String, Extent> replacements = replacementMap(prule, aexpr.params);
+			res = prule.returnType.instantiate(replacements);
+		}
+		returnTypes.put(aexpr, Optional.ofNullable(res));
+		return res;
 	}
 }

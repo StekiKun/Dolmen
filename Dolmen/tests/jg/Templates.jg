@@ -4,6 +4,7 @@
  * 
  * @author Stéphane Lescuyer
  */
+[ class_annotations = "@SuppressWarnings(\"unused\")" ]
 
 import java.util.Optional;
 import java.util.List;
@@ -33,8 +34,8 @@ private { #t } rule voption<t>(#t def) =
 | 			{ return def; }
 ;
 
-private { List<#t> } rule loption<t> =
-| v = t		{ return Collections.singletonList(v); }
+private { #t } rule loption<t> =
+| v = t		{ return v; }
 |			{ return Collections.emptyList(); }
 ;
 
@@ -57,7 +58,8 @@ private { #constr } rule enclosed<left, constr, right> =
 private { List<#r> } rule list<r> =
 | v = r 
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
-  more_list<r>(acc) 
+  more_list<r>(acc)
+  { return acc; } 
 | { return Collections.emptyList(); }
 ; 	
 
@@ -70,6 +72,7 @@ private { List<#r> } rule nelist<r> =
 | v = r
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
   more_list<r>(acc) 
+  { return acc; }
 ;
 
 private { List<#r> } rule separated_list<separator, r> =
@@ -80,7 +83,8 @@ private { List<#r> } rule separated_list<separator, r> =
 private { List<#r> } rule separated_nelist<separator, r> =
 | v = r
   { List<#r> acc = new ArrayList<>(); acc.add(v); }
-  more_separated_list<separator, r>(acc) 
+  more_separated_list<separator, r>(acc)
+  { return acc; } 
 ;
 
 private { void } rule more_separated_list<separator, r>(List<#r> acc) =

@@ -2,6 +2,7 @@ package syntax;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jdt.annotation.Nullable;
 
@@ -256,5 +257,40 @@ public class PExtent extends Extent {
 						endPos + " is not large enough for hole " + holes.get(holes.size() - 1));
 			return new PExtent(filename, startPos, endPos, startLine, startCol, holes);
 		}
+	}
+	
+	/**
+	 * <i>NB: Except in the special case where the receiver had no holes
+	 * 	the returned {@link Extent} will be inlined, i.e. information about
+	 *  the original location in the source will be lost.
+	 *  TODO This should be temporary as it should be possible to keep a
+	 *  tree of the original locations that led to a composite extent.
+	 * </i>
+	 *
+	 * @param replacements
+	 * @return an extent representing the contents of this extent where
+	 * 	all the {@link Hole holes} are replaced to extents according
+	 *  to the replacement map {@code replacements}
+	 * @throws IllegalArgumentException if the {@code replacements} map
+	 * 	does not cover all the possible holes in the receiver 
+	 */
+	public Extent instantiate(Map<String, Extent> replacements) {
+		if (holes.isEmpty())
+			return new Extent(filename, startPos, endPos, startLine, startCol);
+
+		String raw = find();
+		StringBuilder buf = new StringBuilder();
+		int offset = 0;
+		for (Hole hole : holes) {
+			buf.append(raw, offset, hole.offset);
+			@Nullable Extent replacement = replacements.get(hole.name);
+			if (replacement == null)
+				throw new IllegalArgumentException("Incomplete substitution: no replacement for hole " + hole);
+			buf.append(replacement.find());
+			offset = hole.endOffset() + 1;
+		}
+		if (offset < raw.length())
+			buf.append(raw, offset, raw.length());
+		return Extent.inlined(buf.toString());
 	}
 }
