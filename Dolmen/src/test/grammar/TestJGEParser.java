@@ -19,6 +19,7 @@ import syntax.PGrammar;
 import unparam.Expansion;
 import unparam.Expansion.PGrammarNotExpandable;
 import unparam.Grammar;
+import unparam.Grammar.IllFormedException;
 import unparam.Grammars;
 
 /**
@@ -74,9 +75,14 @@ public abstract class TestJGEParser {
 		System.out.println("Parametric grammar parsed but not generated");
 		try {
 			Expansion.checkExpandability(grammar);
+			Grammar ggrammar = Expansion.of(grammar);
+			System.out.println("Generated ground grammar with " + 
+				ggrammar.rules.size() + " rules");
 		} catch (PGrammarNotExpandable e) {
 			System.out.println(e.getMessage());
 			return;
+		} catch (IllFormedException e) {
+			System.out.println(e.getMessage());
 		}
 		
 //		Grammars.PredictionTable predictTable =
