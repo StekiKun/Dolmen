@@ -1,22 +1,25 @@
 package syntax;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
+import common.Lists;
+import common.Maps;
 import common.Nulls;
-import syntax.Located;
-import syntax.PGrammar;
-import syntax.PGrammarRule;
-import syntax.PProduction;
+import common.SCC;
 import syntax.PProduction.ActualExpr;
-import syntax.Reporter;
 
 /**
  * Static utilities about {@link PGrammar}s
@@ -36,7 +39,7 @@ public abstract class PGrammars {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	public static final class Dependencies {
+	public static final class Dependencies implements SCC.Graph<String> {
 		/**
 		 * The forward dependencies associate to each non-terminal
 		 * the set of non-terminals which appear in the right-hand
@@ -71,6 +74,40 @@ public abstract class PGrammars {
 				buf.append("\n  ").append(nterm).append(" -> ").append(s));
 			buf.append("\n}");
 			return buf.toString();
+		}
+
+		@Override
+		public int size() {
+			return forward.size();
+		}
+
+		private @Nullable Map<String, Integer> indexing = null;
+		
+		@Override
+		public int index(String n) {
+			@Nullable Map<String, Integer> indices = indexing;
+			if (indices == null) {
+				int idx = 0;
+				indices = new HashMap<>();
+				for (String sym : forward.keySet())
+					indices.put(sym, idx++);
+				indexing = indices;
+			}
+			@Nullable Integer res = indices.get(n);
+			if (res == null) throw new NoSuchElementException();
+			return res;
+		}
+
+		@Override
+		public void successors(String n, Consumer<String> f) {
+			@Nullable Set<String> succs = forward.get(n);
+			if (succs == null) throw new NoSuchElementException();
+			succs.forEach(f);
+		}
+
+		@Override
+		public void iter(Consumer<String> f) {
+			forward.keySet().forEach(f);
 		}
 	}
 	
@@ -223,4 +260,202 @@ public abstract class PGrammars {
 			removeUsedSymbols(formals, sexpr, unusedTerms, unusedPrivateRules);
 	}
 
+	@SuppressWarnings("javadoc")
+	public static enum Sort {
+		ALL(false, false),
+		VALUED(true, false),
+		ARGS(false, true),
+		ARGS_VALUED(true, true);
+		
+		public final boolean requiresValue;
+		public final boolean requiresArgs;
+		
+		private Sort(boolean requiresValue, boolean requiresArgs) {
+			this.requiresValue = requiresValue;
+			this.requiresArgs = requiresArgs;
+		}
+		
+		static Sort of(boolean requiresValue, boolean requiresArgs) {
+			if (requiresValue)
+				return requiresArgs ? ARGS_VALUED : VALUED;
+			return requiresArgs ? ARGS : ALL;
+		}
+
+		static final Sort unify(Sort s1, Sort s2) {
+			if (s1 == s2) return s1;
+			if (s1 == ARGS_VALUED) return s1;
+			if (s2 == ARGS_VALUED) return s2;
+			if (s1 == ALL) return s2;
+			if (s2 == ALL) return s1;
+			// At that point, s1 and s2 are different
+			// and belong to {VALUED, ARGS}
+			return ARGS_VALUED;
+		}
+	}
+	
+	@SuppressWarnings("javadoc")
+	public static Map<String, List<Sort>> analyseGrammar(
+		PGrammar grammar, Dependencies dependencies, Reporter reporter) {
+		
+		Map<String, List<Sort>> sorts =
+			new SortInference(grammar, dependencies).compute();
+		for (Map.Entry<String, List<Sort>> ruleSorts : sorts.entrySet()) {
+			String ruleName = ruleSorts.getKey();
+			PGrammarRule rule = grammar.rule(ruleName);
+			if (rule.params.isEmpty()) continue;
+			System.out.print("Rule " + ruleName + ": ");
+			for (int i = 0; i < rule.params.size(); ++i) {
+				if (i > 0) System.out.print(", ");
+				System.out.print(rule.params.get(i).val
+						+ " ∈ " + ruleSorts.getValue().get(i));
+			}
+			System.out.println("");
+		}
+		
+		@SuppressWarnings("unused")
+		Set<String> valuedTokens = grammar.tokenDecls.stream()
+				.filter(td -> td.valueType != null)
+				.map(td -> td.name.val)
+				.collect(Collectors.toSet());
+
+		return sorts;
+	}
+	
+	private static final class SortInference {
+		private final PGrammar grammar;
+		private final Dependencies dependencies;
+		
+		private final Map<String, List<Sort>> sorts;
+		
+		SortInference(PGrammar grammar, Dependencies dependencies) {
+			this.grammar = grammar;
+			this.dependencies = dependencies;
+			this.sorts = new LinkedHashMap<>();
+		}
+		
+		Map<String, List<Sort>> compute() {
+			SCC<String> sccs = SCC.of(dependencies);
+			sccs.iter(this::handleSCC);
+			return sorts;
+		}
+		
+		void handleSCC(List<String> scc) {
+			// Simple case of an SCC reduced to one rule
+			if (scc.size() == 1) {
+				String ruleName = scc.get(0);
+				sorts.put(ruleName, handleRule(grammar.rule(ruleName)));
+				return;
+			}
+			// Block of mutually recursive rules
+			List<PGrammarRule> rules = Lists.transform(scc, grammar::rule);
+			handleMutualRules(rules);
+		}
+		
+		void handleMutualRules(List<PGrammarRule> rules) {
+			// For every rule, initialize a result in the sorts array
+			// so that mutually recursive occurrences can be resolved
+			List<Map<String, Sort>> mutParamSorts = new ArrayList<>();
+			for (PGrammarRule rule : rules) {
+				if (rule.params.isEmpty()) {
+					mutParamSorts.add(Maps.empty());
+					continue;
+				}
+				// Initialize sorts for all formal parameters
+				Map<String, Sort> paramSorts = new LinkedHashMap<>();
+				for (Located<String> param : rule.params)
+					paramSorts.put(param.val, Sort.ALL);
+				mutParamSorts.add(paramSorts);
+				sorts.put(rule.name.val, new ArrayList<>(paramSorts.values()));
+			}
+
+			// Now this is a bit of a silly strategy but let's handle
+			// all rules every iteration, and iterate as long as one of the
+			// rule's sorts changes.
+			boolean changed = false;
+			do {
+				int idx = 0;
+				for (PGrammarRule rule : rules) {
+					if (rule.params.isEmpty()) continue;
+					List<Sort> previous = sorts.get(rule.name.val);
+					List<Sort> newer = handleRule0(rule, mutParamSorts.get(idx++));
+					if (!newer.equals(previous)) {
+						changed = true;
+						sorts.replace(rule.name.val, newer);
+					}
+				}
+			} while (changed);
+			
+			// At this point, the sorts are stable for the whole block
+			// and the results are already stored in [sorts]. We are done.
+		}
+
+		List<Sort> handleRule(PGrammarRule rule) {
+			if (rule.params.isEmpty()) return Lists.empty();
+			// Initialize sorts for all formal parameters
+			Map<String, Sort> paramSorts = new LinkedHashMap<>();
+			for (Located<String> param : rule.params)
+				paramSorts.put(param.val, Sort.ALL);
+			sorts.put(rule.name.val, new ArrayList<>(paramSorts.values()));
+			// Handle the rule
+			return handleRule0(rule, paramSorts);
+		}
+
+		List<Sort> handleRule0(PGrammarRule rule, Map<String, Sort> paramSorts) {
+			// Handle return type and arguments
+			handleExtent(paramSorts, rule.returnType);
+			handleExtent(paramSorts, rule.args);
+			// Handle productions
+			for (PProduction prod : rule.productions) {
+				for (PProduction.Item item : prod.items) {
+					switch (item.getKind()) {
+					case ACTION:
+						handleExtent(paramSorts, ((PProduction.ActionItem) item).extent);
+						break;
+					case ACTUAL: {
+						PProduction.Actual actual = (PProduction.Actual) item;
+						handleActual(paramSorts, actual.item,
+							Sort.of(actual.isBound(), actual.args != null));
+						break;
+					}
+					case CONTINUE:
+						// Continuation do not change the sort
+						break;
+					}
+				}
+			}
+
+			// Return the array giving the sort for each formal parameter of the rule
+			return new ArrayList<>(paramSorts.values());
+		}
+		
+		void handleExtent(Map<String, Sort> paramSorts, @Nullable PExtent extent) {
+			if (extent == null) return;
+			for (PExtent.Hole hole : extent.holes)
+				paramSorts.merge(hole.name, Sort.VALUED, Sort::unify);
+		}
+		
+		void handleActual(Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
+			if (aexpr.isTerminal()) return;
+			String sym = aexpr.symb.val;
+			// If the expression is reduced to a formal parameter, record its local sort
+			if (paramSorts.containsKey(sym)) {
+				paramSorts.merge(sym, sort, Sort::unify);
+				return;
+			}
+			if (aexpr.params.isEmpty()) return;
+			// If the expression is a non-terminal application, descend recursively
+			// in all subterms, applying the sort which is already known for that
+			// non-terminal (we know we have seen it before by virtue of the fact
+			// that SCCs are visited in reverse topological order, and because
+			// partial results for the rules in the current SCC have been introduced
+			// in [sorts] to handle recursion/mutual recursion.
+			@Nullable List<Sort> ntsorts = sorts.get(sym);
+			if (ntsorts == null)
+				throw new IllegalStateException("Non-terminal " + sym + " was not visited yet");
+			for (int i = 0; i < aexpr.params.size(); ++i)
+				handleActual(paramSorts, aexpr.params.get(i), ntsorts.get(i));
+			return;
+		}
+	}
+	
 }

@@ -75,7 +75,9 @@ public abstract class TestJGEParser {
 		reader.close();
 		System.out.println(pgrammar.toString());
 		Reporter reporter = new Reporter();
-		PGrammars.findUnusedSymbols(pgrammar, PGrammars.dependencies(pgrammar.rules), reporter);
+		PGrammars.Dependencies deps = PGrammars.dependencies(pgrammar.rules);
+		PGrammars.findUnusedSymbols(pgrammar, deps, reporter);
+		PGrammars.analyseGrammar(pgrammar, deps, reporter);
 		if (!reporter.getReports().isEmpty()) {
 			if (reporter.hasErrors()) {
 				System.err.println(reporter);
