@@ -293,31 +293,35 @@ public abstract class PGrammars {
 		}
 	}
 	
-	@SuppressWarnings("javadoc")
+
+	private static final boolean debug = true;
+	
 	public static Map<String, List<Sort>> analyseGrammar(
 		PGrammar grammar, Dependencies dependencies, Reporter reporter) {
 		
+		// First, infer the sort of all formal parameters based
+		// on how they are used in their rules
 		Map<String, List<Sort>> sorts =
 			new SortInference(grammar, dependencies).compute();
-		for (Map.Entry<String, List<Sort>> ruleSorts : sorts.entrySet()) {
-			String ruleName = ruleSorts.getKey();
-			PGrammarRule rule = grammar.rule(ruleName);
-			if (rule.params.isEmpty()) continue;
-			System.out.print("Rule " + ruleName + ": ");
-			for (int i = 0; i < rule.params.size(); ++i) {
-				if (i > 0) System.out.print(", ");
-				System.out.print(rule.params.get(i).val
-						+ " ∈ " + ruleSorts.getValue().get(i));
+
+		if (debug) {
+			for (Map.Entry<String, List<Sort>> ruleSorts : sorts.entrySet()) {
+				String ruleName = ruleSorts.getKey();
+				PGrammarRule rule = grammar.rule(ruleName);
+				if (rule.params.isEmpty()) continue;
+				System.out.print("Rule " + ruleName + ": ");
+				for (int i = 0; i < rule.params.size(); ++i) {
+					if (i > 0) System.out.print(", ");
+					System.out.print(rule.params.get(i).val
+							+ " ∈ " + ruleSorts.getValue().get(i));
+				}
+				System.out.println("");
 			}
-			System.out.println("");
 		}
 		
-		@SuppressWarnings("unused")
-		Set<String> valuedTokens = grammar.tokenDecls.stream()
-				.filter(td -> td.valueType != null)
-				.map(td -> td.name.val)
-				.collect(Collectors.toSet());
-
+		// Then check all rule applications against these sorts
+		new SortChecker(grammar, sorts, reporter).check();
+		
 		return sorts;
 	}
 	
@@ -455,6 +459,117 @@ public abstract class PGrammars {
 			for (int i = 0; i < aexpr.params.size(); ++i)
 				handleActual(paramSorts, aexpr.params.get(i), ntsorts.get(i));
 			return;
+		}
+	}
+	
+	private static final class SortChecker {
+		private final PGrammar grammar;
+		private final Map<String, List<Sort>> sorts;
+		private final Reporter reporter;
+		
+		private final Set<Located<String>> valuedTokens;
+		private final Set<Located<String>> argsNTerms;
+		private final Set<Located<String>> voidNTerms;
+		
+		private PGrammarRule currentRule;
+		private int prodIdx;
+		
+		SortChecker(PGrammar grammar, Map<String, List<Sort>> sorts, Reporter reporter) {
+			this.grammar = grammar;
+			this.sorts = sorts;
+			this.reporter = reporter;
+			
+			// Fetch the set of tokens which are valued, the
+			// sets of non-terminals which expect arguments and
+			// the sets of non-terminals which return void
+			this.valuedTokens = grammar.tokenDecls.stream()
+					.filter(td -> td.valueType != null)
+					.map(td -> td.name)
+					.collect(Collectors.toSet());
+			this.argsNTerms = new HashSet<>();
+			this.voidNTerms = new HashSet<>();
+			for (PGrammarRule rule : grammar.rules.values()) {
+				if (rule.args != null)
+					argsNTerms.add(rule.name);
+				if (rule.returnType.find().trim().equals("void"))
+					voidNTerms.add(rule.name);
+			}
+			
+			this.currentRule = grammar.rules.values().stream().findFirst().get();
+			this.prodIdx = 0;
+		}
+
+		void check() {
+			// Go through the rules' productions and check that
+			// all parametric rules applications are done in a way
+			// that is consistent with the expected sorts.
+			// NB: inconsistencies in valuedness and arguments on
+			// top-level non-terminals and tokens have been reported
+			// at the grammar creation.
+			for (PGrammarRule rule : grammar.rules.values()) {
+				currentRule = rule;
+				prodIdx = 0;
+				// [sorts] contains sort information for all parametric rules
+				List<Sort> formalSorts = 
+					sorts.getOrDefault(rule.name.val, Lists.empty());
+				Map<String, Sort> formals = new HashMap<>();
+				for (int i = 0; i < rule.params.size(); ++i)
+					formals.put(rule.params.get(i).val, formalSorts.get(i));
+				
+				for (PProduction prod : rule.productions) {
+					++prodIdx;
+					for (PProduction.Actual actual : prod.actuals())
+						checkActualExpr(formals, actual.item);
+				}
+			}
+		}
+		
+		private void checkActualExpr(Map<String, Sort> formals, ActualExpr aexpr) {
+			if (aexpr.params.isEmpty()) return;
+			// Fetch the applied symbol and the sorts of its formal parameters
+			Located<String> sym = aexpr.symb;
+			// [sorts] contains sort information for all parametric rules
+			List<Sort> symSorts = Nulls.ok(sorts.get(sym.val));
+			// For all effective parameters, check that the head symbol is
+			// compatible with the expected sort
+			for (int i = 0; i < symSorts.size(); ++i) {
+				Sort expectedSort = symSorts.get(i);
+				ActualExpr effective = aexpr.params.get(i);
+				final Sort foundSort;
+				if (effective.isTerminal()) {
+					foundSort = Sort.of(valuedTokens.contains(effective.symb), false);
+				}
+				else if (formals.containsKey(effective.symb.val)) {
+					foundSort = Nulls.ok(formals.get(effective.symb.val));
+				}
+				else {
+					foundSort = Sort.of(!voidNTerms.contains(effective.symb),
+										argsNTerms.contains(effective.symb));
+				}
+				// Whether the rule expects a valued parameter and is fed
+				// a non-valued effective parameter 
+				if (expectedSort.requiresValue && !foundSort.requiresValue) {
+					reporter.add(PGrammar.Reports.voidSymbolPassedAsValued(
+						currentRule, prodIdx, 
+						effective.symb, sym, grammar.rule(sym.val).params.get(i).val));
+				}
+				// Whether the rule expects a parameter w/ args and is fed
+				// a no-arg effective parameter.
+				if (expectedSort.requiresArgs && !foundSort.requiresArgs) {
+					reporter.add(PGrammar.Reports.noargSymbolPassed(
+							currentRule, prodIdx, 
+							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));					
+				}
+				// Whether the rule expects a parameter w/out args and is fed
+				// an effective parameter with arguments
+				else if (!expectedSort.requiresArgs && foundSort.requiresArgs) {
+					reporter.add(PGrammar.Reports.argSymbolPassed(
+							currentRule, prodIdx, 
+							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));										
+				}
+				// Don't forget to check the subexpression recursively
+				checkActualExpr(formals, effective);
+			}
 		}
 	}
 	

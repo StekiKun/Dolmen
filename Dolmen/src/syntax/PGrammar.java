@@ -426,7 +426,7 @@ public final class PGrammar {
 			return IReport.of(msg, Severity.WARNING, formal);
 		}
 		
-		private static String inRule(PGrammarRule rule, int j) {
+		static String inRule(PGrammarRule rule, int j) {
 			if (j >= 0)
 				return String.format("In rule \"%s\", production %d: ", rule.name.val, j);
 			else
@@ -472,12 +472,43 @@ public final class PGrammar {
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, nterm);
 		}
+		
+		static IReport noargSymbolPassed(PGrammarRule rule, int j,
+			Located<String> symbol, Located<String> nterm, String formal) {
+			boolean term = Character.isUpperCase(symbol.val.charAt(0));
+			String msg = String.format("%s formal parameter \"%s\" of non-terminal \"%s\""
+					+ " must accept arguments, but %s\"%s\" %s",
+				inRule(rule, j), formal, nterm.val, 
+				term ? "" : "non-terminal ", symbol.val,
+				term ? "is a token" : "does not expect arguments");
+			return IReport.of(msg, Severity.ERROR, symbol);
+		}
+		
+		static IReport argSymbolPassed(PGrammarRule rule, int j,
+			Located<String> symbol, Located<String> nterm, String formal) {
+			String msg = String.format("%s formal parameter \"%s\" of non-terminal \"%s\""
+					+ " does not accept arguments, but non-terminal \"%s\" is declared "
+					+ "with arguments",
+				inRule(rule, j), formal, nterm.val, symbol.val);
+			return IReport.of(msg, Severity.ERROR, symbol);
+		}
 
 		static IReport voidNonTerminalBound(PGrammarRule rule, int j,
 			Located<String> binding, Located<String> nterm) {
 			String msg = String.format("%s bound non-terminal \"%s\" returns void",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, binding);
+		}
+
+		static IReport voidSymbolPassedAsValued(PGrammarRule rule, int j,
+			Located<String> symbol, Located<String> nterm, String formal) {
+			boolean term = Character.isUpperCase(symbol.val.charAt(0));
+			String msg = String.format("%s formal parameter \"%s\" of non-terminal \"%s\""
+					+ " expects valued expression but %s \"%s\" %s",
+				inRule(rule, j), formal, nterm.val, 
+				term ? "token" : "non-terminal", symbol.val,
+				term ? "has no declared value" : "returns void");
+			return IReport.of(msg, Severity.ERROR, symbol);
 		}
 		
 		static IReport parameterizedFormal(PGrammarRule rule, int j, Located<String> formal) {

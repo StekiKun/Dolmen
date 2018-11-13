@@ -20,7 +20,7 @@ token LPAREN RPAREN
 // Optional constructs
 
 private { boolean } rule boption<t> =
-| t		{ return true; }
+| t()	{ return true; }
 | 		{ return false; }
 ;
 
@@ -37,6 +37,10 @@ private { #t } rule voption<t>(#t def) =
 private { #t } rule loption<t> =
 | v = t		{ return v; }
 |			{ return Collections.emptyList(); }
+;
+
+private { void } rule ignore<t> =
+| t		{ return; }
 ;
 
 // Delimiting constructs
@@ -97,6 +101,11 @@ private { void } rule more_separated_list<separator, r>(List<#r> acc) =
 
 public { void } rule foo1() =
 | list<enclosed<LPAREN, separated_list<COMMA, STRING>, RPAREN>>
+| boption<COMMA>			// <- no-arg token used in an arg sort
+| boption<list<STRING>>		// <- no-arg non-terminal used in an arg sort
+| separated_nelist<foo1, STRING>	// <- arg non-terminal used in a no-arg sort
+| loption<LPAREN>  // <- unvalued token used in a valued sort
+| loption<ignore<STRING>> // <- void non-terminal used in a valued sort
 ;
 
 { }
