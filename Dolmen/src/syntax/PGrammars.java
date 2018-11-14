@@ -261,6 +261,20 @@ public abstract class PGrammars {
 	}
 
 	/**
+	 * Enumeration representing the different constraints which can exist
+	 * on the arguments of a symbol in a grammar: arguments can either
+	 * be mandatory, forbidden, or there may be no constraint at all.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	@SuppressWarnings("javadoc")
+	public static enum Args {
+		MANDATORY, 
+		FORBIDDEN, 
+		ANY
+	}
+	
+	/**
 	 * This enumeration describes the various sorts which can characterize
 	 * the kind of terminals or non-terminals (or more generally actual
 	 * expressions) that can stand for some formal parameter in a parametric
@@ -270,36 +284,50 @@ public abstract class PGrammars {
 	 */
 	public static enum Sort {
 		/** Sort which describes formals which can stand for any expression */
-		ALL(false, false),
+		ALL(false, Args.ANY),
+		/** 
+		 * Sort which describes formals which only stand for expressions that
+		 * do not expect arguments, i.e. tokens or applications of non-terminals
+		 * which were declared without arguments
+		 */
+		NO_ARGS(false, Args.FORBIDDEN),
 		/** 
 		 * Sort which describes formals which only stand for valued expressions,
 		 * i.e. valued tokens or applications of non-terminals which do not
-		 * simply return {@code void} 
+		 * simply return {@code void} and expect no arguments
 		 */
-		VALUED(true, false),
+		VALUED(true, Args.ANY),
 		/** 
 		 * Sort which describes formals which only stand for expressions that
 		 * expect arguments, i.e. applications of non-terminals which were
 		 * declared with arguments 
 		 */
-		ARGS(false, true),
+		ARGS(false, Args.MANDATORY),
+		/** 
+		 * Sort which describes formals which only stand for valued expressions that
+		 * expect arguments, i.e. applications of non-terminals which do not
+		 * simply return {@code void} and were declared with arguments
+		 */
+		NO_ARGS_VALUED(true, Args.FORBIDDEN),
 		/** 
 		 * Sort which describes formals which only stand for valued expressions
-		 * that expect arguments, i.e. applications of non-temrinals which were
+		 * that expect arguments, i.e. applications of non-terminals which were
 		 * declared with arguments and do not simply return {@code void}
 		 */
-		ARGS_VALUED(true, true);
+		ARGS_VALUED(true, Args.MANDATORY);
 		
 		/**
 		 * Whether this sort requires valued expressions
 		 */
 		public final boolean requiresValue;
 		/**
-		 * Whether this sort requires expressions that expect arguments
+		 * Whether this sort requires expressions that expect arguments or
+		 * expressions that expect no arguments, or whether everything is
+		 * allowed
 		 */
-		public final boolean requiresArgs;
+		public final Args requiresArgs;
 		
-		private Sort(boolean requiresValue, boolean requiresArgs) {
+		private Sort(boolean requiresValue, Args requiresArgs) {
 			this.requiresValue = requiresValue;
 			this.requiresArgs = requiresArgs;
 		}
@@ -309,27 +337,44 @@ public abstract class PGrammars {
 		 * @param requiresArgs
 		 * @return the sort constant representing the given constraints
 		 */
-		static Sort of(boolean requiresValue, boolean requiresArgs) {
-			if (requiresValue)
-				return requiresArgs ? ARGS_VALUED : VALUED;
-			return requiresArgs ? ARGS : ALL;
+		static Sort of(boolean requiresValue, Args requiresArgs) {
+			switch (requiresArgs) {
+			case ANY:
+				return requiresValue ? VALUED : ALL;
+			case FORBIDDEN:
+				return requiresValue ? NO_ARGS_VALUED : NO_ARGS;
+			case MANDATORY:
+				return requiresValue ? ARGS_VALUED : ARGS;
+			}
+			throw new IllegalStateException("Unknown Args kind: " + requiresArgs);
 		}
 
 		/**
 		 * @param s1
 		 * @param s2
 		 * @return the sort representing the intersection
-		 * 	of the constraints given by {@code s1} and {@code s2}
+		 * 	of the constraints given by {@code s1} and {@code s2},
+		 *  or {@code null} if the sorts are incompatible
 		 */
-		static final Sort unify(Sort s1, Sort s2) {
+		static final @Nullable Sort unify(Sort s1, Sort s2) {
 			if (s1 == s2) return s1;
-			if (s1 == ARGS_VALUED) return s1;
-			if (s2 == ARGS_VALUED) return s2;
 			if (s1 == ALL) return s2;
 			if (s2 == ALL) return s1;
-			// At that point, s1 and s2 are different
-			// and belong to {VALUED, ARGS}
-			return ARGS_VALUED;
+			boolean valued = s1.requiresValue && s2.requiresValue;
+			Args args = s1.requiresArgs;
+			switch (s2.requiresArgs) {
+			case ANY:
+				break;
+			case FORBIDDEN:
+				if (args == Args.MANDATORY) return null;
+				args = Args.FORBIDDEN;
+				break;
+			case MANDATORY:
+				if (args == Args.FORBIDDEN) return null;
+				args = Args.MANDATORY;
+				break;
+			}
+			return of(valued, args);
 		}
 	}
 	
@@ -361,7 +406,7 @@ public abstract class PGrammars {
 		// First, infer the sort of all formal parameters based
 		// on how they are used in their rules
 		Map<String, List<Sort>> sorts =
-			new SortInference(grammar, dependencies).compute();
+			new SortInference(grammar, dependencies, reporter).compute();
 
 		if (debug) {
 			for (Map.Entry<String, List<Sort>> ruleSorts : sorts.entrySet()) {
@@ -389,6 +434,9 @@ public abstract class PGrammars {
 	 * the productions across some parametric grammar in order
 	 * to infer an adequate {@link Sort} for each formal representing
 	 * the kind of actual expressions that it can accept safely.
+	 * <p>
+	 * When incompatible constraints are encountered on some formal
+	 * parameter, the issue is reported in a configured {@link Reporter}.
 	 * 
 	 * @see #compute()
 	 * @author Stéphane Lescuyer
@@ -396,20 +444,30 @@ public abstract class PGrammars {
 	private static final class SortInference {
 		private final PGrammar grammar;
 		private final Dependencies dependencies;
+		private final Reporter reporter;
 		
 		private final Map<String, List<Sort>> sorts;
-		
+
+		// The rule being sorted
+		private PGrammarRule currentRule;
+		// The 1-based index of the production being inspected
+		private int prodIdx;
+
 		/**
 		 * Initialize the sort inference on the given grammar, based
 		 * on the {@linkplain Dependencies dependencies} for the grammar
 		 * 
 		 * @param grammar
 		 * @param dependencies
+		 * @param reporter
 		 */
-		SortInference(PGrammar grammar, Dependencies dependencies) {
+		SortInference(PGrammar grammar, Dependencies dependencies, Reporter reporter) {
 			this.grammar = grammar;
 			this.dependencies = dependencies;
+			this.reporter = reporter;
 			this.sorts = new LinkedHashMap<>();
+			this.currentRule = grammar.rules.values().stream().findFirst().get();
+			this.prodIdx = 0;
 		}
 		
 		/**
@@ -475,6 +533,7 @@ public abstract class PGrammars {
 				int idx = 0;
 				for (PGrammarRule rule : rules) {
 					if (rule.params.isEmpty()) continue;
+					currentRule = rule;
 					List<Sort> previous = sorts.get(rule.name.val);
 					List<Sort> newer = handleRule0(rule, mutParamSorts.get(idx++));
 					if (!newer.equals(previous)) {
@@ -490,6 +549,7 @@ public abstract class PGrammars {
 
 		private List<Sort> handleRule(PGrammarRule rule) {
 			if (rule.params.isEmpty()) return Lists.empty();
+			currentRule = rule;
 			// Initialize sorts for all formal parameters
 			Map<String, Sort> paramSorts = new LinkedHashMap<>();
 			for (Located<String> param : rule.params)
@@ -504,7 +564,9 @@ public abstract class PGrammars {
 			handleExtent(paramSorts, rule.returnType);
 			handleExtent(paramSorts, rule.args);
 			// Handle productions
+			prodIdx = 0;
 			for (PProduction prod : rule.productions) {
+				++prodIdx;
 				for (PProduction.Item item : prod.items) {
 					switch (item.getKind()) {
 					case ACTION:
@@ -513,7 +575,8 @@ public abstract class PGrammars {
 					case ACTUAL: {
 						PProduction.Actual actual = (PProduction.Actual) item;
 						handleActual(paramSorts, actual.item,
-							Sort.of(actual.isBound(), actual.args != null));
+							Sort.of(actual.isBound(),
+								actual.args == null ? Args.FORBIDDEN : Args.MANDATORY));
 						break;
 					}
 					case CONTINUE:
@@ -530,7 +593,9 @@ public abstract class PGrammars {
 		private void handleExtent(Map<String, Sort> paramSorts, @Nullable PExtent extent) {
 			if (extent == null) return;
 			for (PExtent.Hole hole : extent.holes)
-				paramSorts.merge(hole.name, Sort.VALUED, Sort::unify);
+				paramSorts.merge(hole.name, Sort.VALUED, (s1, s2) ->
+					// Unification with Sort.VALUED always succeeds
+					Nulls.ok(Sort.unify(s1, s2)));
 		}
 		
 		private void handleActual(Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
@@ -538,7 +603,14 @@ public abstract class PGrammars {
 			String sym = aexpr.symb.val;
 			// If the expression is reduced to a formal parameter, record its local sort
 			if (paramSorts.containsKey(sym)) {
-				paramSorts.merge(sym, sort, Sort::unify);
+				paramSorts.merge(sym, sort, (s1, s2) -> {
+					@Nullable Sort s = Sort.unify(s1, s2);
+					if (s != null) return s;
+					// The two sorts are not compatible, report the issue
+					reporter.add(PGrammar.Reports.incompatibleSorts(
+							currentRule, prodIdx, aexpr.symb, s1, s2));
+					return s1; // arbitrary
+				});
 				return;
 			}
 			if (aexpr.params.isEmpty()) return;
@@ -631,8 +703,12 @@ public abstract class PGrammars {
 				
 				for (PProduction prod : rule.productions) {
 					++prodIdx;
-					for (PProduction.Actual actual : prod.actuals())
+					for (PProduction.Actual actual : prod.actuals()) {
 						checkActualExpr(formals, actual.item);
+						// Perform an extra check for incompatible use of
+						// formals with and without arguments
+
+					}
 				}
 			}
 		}
@@ -650,14 +726,15 @@ public abstract class PGrammars {
 				ActualExpr effective = aexpr.params.get(i);
 				final Sort foundSort;
 				if (effective.isTerminal()) {
-					foundSort = Sort.of(valuedTokens.contains(effective.symb), false);
+					foundSort = Sort.of(valuedTokens.contains(effective.symb), Args.FORBIDDEN);
 				}
 				else if (formals.containsKey(effective.symb.val)) {
 					foundSort = Nulls.ok(formals.get(effective.symb.val));
 				}
 				else {
 					foundSort = Sort.of(!voidNTerms.contains(effective.symb),
-										argsNTerms.contains(effective.symb));
+										argsNTerms.contains(effective.symb) ?
+											Args.MANDATORY : Args.FORBIDDEN);
 				}
 				// Whether the rule expects a valued parameter and is fed
 				// a non-valued effective parameter 
@@ -668,14 +745,16 @@ public abstract class PGrammars {
 				}
 				// Whether the rule expects a parameter w/ args and is fed
 				// a no-arg effective parameter.
-				if (expectedSort.requiresArgs && !foundSort.requiresArgs) {
+				if (expectedSort.requiresArgs == Args.MANDATORY 
+						&& foundSort.requiresArgs == Args.FORBIDDEN) {
 					reporter.add(PGrammar.Reports.noargSymbolPassed(
 							currentRule, prodIdx, 
 							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));					
 				}
 				// Whether the rule expects a parameter w/out args and is fed
 				// an effective parameter with arguments
-				else if (!expectedSort.requiresArgs && foundSort.requiresArgs) {
+				else if (expectedSort.requiresArgs == Args.FORBIDDEN 
+						&& foundSort.requiresArgs == Args.MANDATORY) {
 					reporter.add(PGrammar.Reports.argSymbolPassed(
 							currentRule, prodIdx, 
 							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));										

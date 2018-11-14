@@ -13,6 +13,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import common.Nulls;
 import syntax.IReport.Severity;
+import syntax.PGrammars.Args;
 
 /**
  * A parametric parser description is a set of possibly parametric
@@ -509,6 +510,16 @@ public final class PGrammar {
 				term ? "token" : "non-terminal", symbol.val,
 				term ? "has no declared value" : "returns void");
 			return IReport.of(msg, Severity.ERROR, symbol);
+		}
+		
+		static IReport incompatibleSorts(PGrammarRule rule, int j,
+			Located<String> formal, PGrammars.Sort found, PGrammars.Sort expected) {
+			String msg = String.format("%s formal parameter \"%s\" used here %s arguments, " 
+					+ "but it was already used %s arguments in this rule",
+				inRule(rule, j), formal.val, 
+				expected.requiresArgs == Args.MANDATORY ? "with" : "without",
+				found.requiresArgs == Args.MANDATORY ? "with" : "without");
+			return IReport.of(msg, Severity.ERROR, formal);
 		}
 		
 		static IReport parameterizedFormal(PGrammarRule rule, int j, Located<String> formal) {
