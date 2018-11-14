@@ -260,14 +260,43 @@ public abstract class PGrammars {
 			removeUsedSymbols(formals, sexpr, unusedTerms, unusedPrivateRules);
 	}
 
-	@SuppressWarnings("javadoc")
+	/**
+	 * This enumeration describes the various sorts which can characterize
+	 * the kind of terminals or non-terminals (or more generally actual
+	 * expressions) that can stand for some formal parameter in a parametric
+	 * grammar.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	public static enum Sort {
+		/** Sort which describes formals which can stand for any expression */
 		ALL(false, false),
+		/** 
+		 * Sort which describes formals which only stand for valued expressions,
+		 * i.e. valued tokens or applications of non-terminals which do not
+		 * simply return {@code void} 
+		 */
 		VALUED(true, false),
+		/** 
+		 * Sort which describes formals which only stand for expressions that
+		 * expect arguments, i.e. applications of non-terminals which were
+		 * declared with arguments 
+		 */
 		ARGS(false, true),
+		/** 
+		 * Sort which describes formals which only stand for valued expressions
+		 * that expect arguments, i.e. applications of non-temrinals which were
+		 * declared with arguments and do not simply return {@code void}
+		 */
 		ARGS_VALUED(true, true);
 		
+		/**
+		 * Whether this sort requires valued expressions
+		 */
 		public final boolean requiresValue;
+		/**
+		 * Whether this sort requires expressions that expect arguments
+		 */
 		public final boolean requiresArgs;
 		
 		private Sort(boolean requiresValue, boolean requiresArgs) {
@@ -275,12 +304,23 @@ public abstract class PGrammars {
 			this.requiresArgs = requiresArgs;
 		}
 		
+		/**
+		 * @param requiresValue
+		 * @param requiresArgs
+		 * @return the sort constant representing the given constraints
+		 */
 		static Sort of(boolean requiresValue, boolean requiresArgs) {
 			if (requiresValue)
 				return requiresArgs ? ARGS_VALUED : VALUED;
 			return requiresArgs ? ARGS : ALL;
 		}
 
+		/**
+		 * @param s1
+		 * @param s2
+		 * @return the sort representing the intersection
+		 * 	of the constraints given by {@code s1} and {@code s2}
+		 */
 		static final Sort unify(Sort s1, Sort s2) {
 			if (s1 == s2) return s1;
 			if (s1 == ARGS_VALUED) return s1;
@@ -293,11 +333,30 @@ public abstract class PGrammars {
 		}
 	}
 	
-
 	private static final boolean debug = true;
 	
+	/**
+	 * This analyses various rule applications in the parametric
+	 * grammar {@code grammar} by inferring {@linkplain Sort sorts}
+	 * for all the rules' formal parameters and checking that
+	 * effective parameters in all applications are abiding by
+	 * the constraints expressed by the sorts. 
+	 * <p>
+	 * All problems found are reported in {@code reporter}.
+	 * 
+	 * @param grammar
+	 * @param dependencies_	the {@linkplain Dependencies dependencies}
+	 * 		between non-terminals in {@code grammar}, or {@code null}
+	 * 		if the dependencies should be computed by the method
+	 * @param reporter
+	 * @return the map associating every non-terminal in {@code grammar}
+	 * 	(even non-parametric ones) to the list of sorts that have been
+	 * 	inferred for its formal parameters
+	 */
 	public static Map<String, List<Sort>> analyseGrammar(
-		PGrammar grammar, Dependencies dependencies, Reporter reporter) {
+		PGrammar grammar, @Nullable Dependencies dependencies_, Reporter reporter) {
+		Dependencies dependencies = dependencies_ == null ?
+			dependencies(grammar.rules) : dependencies_;
 		
 		// First, infer the sort of all formal parameters based
 		// on how they are used in their rules
@@ -325,25 +384,61 @@ public abstract class PGrammars {
 		return sorts;
 	}
 	
+	/**
+	 * This class analyses the way formal parameters are used in
+	 * the productions across some parametric grammar in order
+	 * to infer an adequate {@link Sort} for each formal representing
+	 * the kind of actual expressions that it can accept safely.
+	 * 
+	 * @see #compute()
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class SortInference {
 		private final PGrammar grammar;
 		private final Dependencies dependencies;
 		
 		private final Map<String, List<Sort>> sorts;
 		
+		/**
+		 * Initialize the sort inference on the given grammar, based
+		 * on the {@linkplain Dependencies dependencies} for the grammar
+		 * 
+		 * @param grammar
+		 * @param dependencies
+		 */
 		SortInference(PGrammar grammar, Dependencies dependencies) {
 			this.grammar = grammar;
 			this.dependencies = dependencies;
 			this.sorts = new LinkedHashMap<>();
 		}
 		
+		/**
+		 * Performs the whole sort inference for all rules and formals
+		 * in the underlying grammar.
+		 * <i>
+		 *  The returned map contains all non-terminals, even
+		 * 	the rules that are non-parametric.
+		 * </i>
+		 * 
+		 * @return for each rule, the list of sorts of the rule's formals
+		 * 	in the same order as they are declared
+		 */
 		Map<String, List<Sort>> compute() {
 			SCC<String> sccs = SCC.of(dependencies);
 			sccs.iter(this::handleSCC);
 			return sorts;
 		}
 		
-		void handleSCC(List<String> scc) {
+		/**
+		 * Sort inference for the non-terminals in {@code scc},
+		 * which form a strongly-connected component of the grammar.
+		 * <p>
+		 * Other non-terminals on which this SCC depends must already
+		 * have been analyzed.
+		 * 
+		 * @param scc
+		 */
+		private void handleSCC(List<String> scc) {
 			// Simple case of an SCC reduced to one rule
 			if (scc.size() == 1) {
 				String ruleName = scc.get(0);
@@ -355,7 +450,7 @@ public abstract class PGrammars {
 			handleMutualRules(rules);
 		}
 		
-		void handleMutualRules(List<PGrammarRule> rules) {
+		private void handleMutualRules(List<PGrammarRule> rules) {
 			// For every rule, initialize a result in the sorts array
 			// so that mutually recursive occurrences can be resolved
 			List<Map<String, Sort>> mutParamSorts = new ArrayList<>();
@@ -393,7 +488,7 @@ public abstract class PGrammars {
 			// and the results are already stored in [sorts]. We are done.
 		}
 
-		List<Sort> handleRule(PGrammarRule rule) {
+		private List<Sort> handleRule(PGrammarRule rule) {
 			if (rule.params.isEmpty()) return Lists.empty();
 			// Initialize sorts for all formal parameters
 			Map<String, Sort> paramSorts = new LinkedHashMap<>();
@@ -404,7 +499,7 @@ public abstract class PGrammars {
 			return handleRule0(rule, paramSorts);
 		}
 
-		List<Sort> handleRule0(PGrammarRule rule, Map<String, Sort> paramSorts) {
+		private List<Sort> handleRule0(PGrammarRule rule, Map<String, Sort> paramSorts) {
 			// Handle return type and arguments
 			handleExtent(paramSorts, rule.returnType);
 			handleExtent(paramSorts, rule.args);
@@ -432,13 +527,13 @@ public abstract class PGrammars {
 			return new ArrayList<>(paramSorts.values());
 		}
 		
-		void handleExtent(Map<String, Sort> paramSorts, @Nullable PExtent extent) {
+		private void handleExtent(Map<String, Sort> paramSorts, @Nullable PExtent extent) {
 			if (extent == null) return;
 			for (PExtent.Hole hole : extent.holes)
 				paramSorts.merge(hole.name, Sort.VALUED, Sort::unify);
 		}
 		
-		void handleActual(Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
+		private void handleActual(Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
 			if (aexpr.isTerminal()) return;
 			String sym = aexpr.symb.val;
 			// If the expression is reduced to a formal parameter, record its local sort
@@ -462,16 +557,30 @@ public abstract class PGrammars {
 		}
 	}
 	
+	/**
+	 * This class is used to inspect a parametric grammar and report all
+	 * invalid rule applications based on the {@linkplain SortInference sorts inferred}
+	 * for the various formal parameters in the grammar.
+	 * 
+	 * @see SortChecker#check()
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
 	private static final class SortChecker {
 		private final PGrammar grammar;
 		private final Map<String, List<Sort>> sorts;
 		private final Reporter reporter;
 		
+		// Tokens which are declared with a value type
 		private final Set<Located<String>> valuedTokens;
+		// Non-terminals which are declared with arguments
 		private final Set<Located<String>> argsNTerms;
+		// Non-terminals which only return 'void'
 		private final Set<Located<String>> voidNTerms;
 		
+		// The rule being checked
 		private PGrammarRule currentRule;
+		// The 1-based index of the production being checked
 		private int prodIdx;
 		
 		SortChecker(PGrammar grammar, Map<String, List<Sort>> sorts, Reporter reporter) {
@@ -499,6 +608,10 @@ public abstract class PGrammars {
 			this.prodIdx = 0;
 		}
 
+		/**
+		 * Checks the underlying grammar based on the inferred sort map
+		 * and reports all issues in the underlying {@link Reporter}
+		 */
 		void check() {
 			// Go through the rules' productions and check that
 			// all parametric rules applications are done in a way
