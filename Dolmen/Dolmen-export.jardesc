@@ -14,14 +14,15 @@
         <javaElement handleIdentifier="=Dolmen/src&lt;codegen"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jle"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;syntax"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>
         <file path="/Dolmen/.project"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jg"/>
         <file path="/Dolmen/Manifest.txt"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;unparam"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jl"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;jge"/>
         <file path="/Dolmen/.classpath"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>
     </selectedElements>
 </jardesc>
