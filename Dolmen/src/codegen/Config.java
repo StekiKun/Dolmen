@@ -14,6 +14,7 @@ import syntax.IReport.Severity;
 import unparam.Grammar;
 import syntax.Lexer;
 import syntax.Option;
+import syntax.PGrammar;
 import syntax.Reporter;
 
 /**
@@ -238,7 +239,19 @@ public final class Config {
 
 		return new Config(indexedOptions);
 	}
-	
+
+	/**
+	 * Same as {@link #ofOptions(Relevance, List, Reporter) 
+	 * 	ofOptions(Relevance.PARSER, grammar.options, reporter)}.
+	 * 
+	 * @param grammar
+	 * @param reporter
+	 * @return the configuration that is implied from the options
+	 * 	in {@code grammar}
+	 */
+	public static Config ofPGrammar(PGrammar grammar, @Nullable Reporter reporter) {
+		return ofOptions(Relevance.PARSER, grammar.options, reporter);
+	}
 	/**
 	 * Same as {@link #ofOptions(Relevance, List, Reporter) 
 	 * 	ofOptions(Relevance.PARSER, grammar.options, reporter)}.

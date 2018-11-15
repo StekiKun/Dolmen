@@ -176,6 +176,7 @@ public final class Bookkeeper {
 			out.print(' ');
 		out.print("╧  ");
 		out.print(reason);
+		out.println();
 		this.aborted = true;
 	}
 	
