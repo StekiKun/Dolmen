@@ -1,6 +1,8 @@
 package unparam;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -20,6 +22,8 @@ import common.Nulls;
 import common.SCC;
 import common.SCC.Graph;
 import syntax.Extent;
+import syntax.IReport;
+import syntax.IReport.Severity;
 import syntax.Located;
 import syntax.PExtent;
 import syntax.PGrammar;
@@ -88,12 +92,61 @@ public final class Expansion {
 		 */
 		public final Located<String> formal;
 		
-		PGrammarNotExpandable(Formal formal) {
+		/**
+		 * The expression patterns which show a potential growing
+		 * expansion cycle, starting at {@link #formal}
+		 */
+		final List<ActualExpr> patterns;
+		/**
+		 * The locations in production items where the {@link #patterns}
+		 * can be found
+		 */
+		final List<Located<String>> sites;
+		/**
+		 * The rules where the productions in {@link #sites} can be found
+		 */
+		final List<Located<String>> rules;
+		
+		PGrammarNotExpandable(Formal formal, List<ActualExpr> patterns, 
+				List<Located<String>> sites, List<Located<String>> rules) {
 			super(String.format(
 				"The parametric rule %s cannot be expanded because its parameter %s"
 				+ " could grow infinitely.", formal.rule.val, formal.formal.val));
 			this.rule = formal.rule;
 			this.formal = formal.formal;
+			this.patterns = patterns;
+			this.sites = sites;
+			this.rules = rules;
+		}
+		
+		/**
+		 * @return a report explaining why the checked grammar 
+		 * 	could not be expanded
+		 */
+		public IReport getReport() {
+			StringBuilder msg = new StringBuilder();
+			msg.append(this.getMessage());
+			// Now show the expansion cycle
+			msg.append("\n").append("A possible growing expansion cycle is:\n");
+			for (int i = 0; i < patterns.size(); ++i) {
+				if (i > 0)
+					msg.append(" ---> ");
+				else
+					msg.append("      ");
+				msg.append(patterns.get(i));
+				if (i > 0) {
+					Located<String> site = sites.get(i);
+					msg.append(" [in rule ")
+						.append(rules.get(i).val)
+						.append(", line ").append(site.start.line)
+						.append(", characters ")
+						.append(site.start.column()).append("-")
+						.append(site.start.column() + site.length())
+						.append("]");
+				}
+				msg.append("\n");
+			}
+			return IReport.of(msg.toString(), Severity.ERROR, formal);
 		}
 	}
 	
@@ -165,7 +218,11 @@ public final class Expansion {
 		private final PGrammar grammar;
 		
 		/**
-		 * Decorates an edge in the expansion flow graph 
+		 * Decorates an edge in the expansion flow graph.
+		 * <p>
+		 * The {@code safe} flag is used for the expandability check,
+		 * whereas information is used to produce a user-friendly
+		 * explanation in case of infinite expansion. 
 		 * 
 		 * @author Stéphane Lescuyer
 		 */
@@ -173,12 +230,18 @@ public final class Expansion {
 			// Whether the edge is safe or not
 			private boolean safe;
 			// The location of the actual which explains this edge
-			@SuppressWarnings("unused")
 			private Located<String> site;
+			// The rule which contains the actual explaining this edge
+			private Located<String> rule;
+			// The actual expression context which explains this edge,
+			// listed from bottom to top
+			private List<Formal> context;
 			
-			Edge(boolean safe, Located<String> site) {
+			Edge(boolean safe, Located<String> site, Located<String> rule, List<Formal> context) {
 				this.safe = safe;
 				this.site = site;
+				this.rule = rule;
+				this.context = context;
 			}
 		}
 		
@@ -226,7 +289,7 @@ public final class Expansion {
 		private @NonNull Formal[] formals(Located<String> rule) {
 			@NonNull Formal @Nullable [] ruleFormals = formals.get(rule);
 			if (ruleFormals == null)
-				throw new IllegalStateException();
+				throw new IllegalStateException("No formals found for rule \"" + rule.val + "\"");
 			return ruleFormals;
 		}
 		
@@ -255,7 +318,7 @@ public final class Expansion {
 					ActualExpr aexpr = actual.item;
 					if (aexpr.params.isEmpty()) continue;
 					context.clear();
-					addFlowEdges(paramToFormal, context, aexpr);
+					addFlowEdges(rule.name, paramToFormal, context, aexpr);
 				}
 			}
 			return this;
@@ -264,7 +327,8 @@ public final class Expansion {
 		/**
 		 * Adds the contributions to the expansion flow graph that stem from
 		 * some actual expression {@code aexpr} used in a production of a
-		 * rule whose formal parameters are given by {@code paramToFormal}.
+		 * rule {@code rule} whose formal parameters are given by 
+		 * {@code paramToFormal}.
 		 * <p>
 		 * The {@code context} in which the actual expression appears in the
 		 * production represents the path where the expression can be found
@@ -275,12 +339,14 @@ public final class Expansion {
 		 * the context by the {@link Formal} representing the {@code n}-th
 		 * formal parameter of {@code r}.
 		 * 
+		 * @param rule
 		 * @param paramToFormal
 		 * @param context
 		 * @param expr
 		 */
-		private void addFlowEdges(Map<String, Formal> paramToFormal,
+		private void addFlowEdges(Located<String> rule, Map<String, Formal> paramToFormal,
 			Stack<Formal> context, ActualExpr expr) {
+			if (expr.isTerminal()) return;
 			@Nullable Formal formal = paramToFormal.get(expr.symb.val);
 			if (formal != null) {
 				// There is an expansion flow from [formal] to every formal
@@ -293,14 +359,16 @@ public final class Expansion {
 				if (succs == null)
 					throw new IllegalStateException();
 				Formal target;
-				for (int i = 0; i < context.size(); ++i) {
+				ArrayList<Formal> ectxt = new ArrayList<>();
+				for (int i = context.size() - 1; i >= 0; --i) {
 					target = context.get(i);
 					boolean safe = i == context.size() - 1;
+					ectxt.add(target);
 					
 					@Nullable Edge edge = succs.get(target);
 					if (edge == null) {
 						// New edge
-						edge = new Edge(safe, expr.symb);
+						edge = new Edge(safe, expr.symb, rule, new ArrayList<>(ectxt));
 						succs.put(target, edge);
 					}
 					else {
@@ -325,7 +393,7 @@ public final class Expansion {
 			int pidx = 0;
 			for (ActualExpr sexpr : expr.params) {
 				context.push(symFormals[pidx++]);
-				addFlowEdges(paramToFormal, context, sexpr);
+				addFlowEdges(rule, paramToFormal, context, sexpr);
 				context.pop();
 			}
 		}
@@ -342,6 +410,56 @@ public final class Expansion {
 				});
 			});
 			return buf.toString();
+		}
+		
+		/**
+		 * Looks for a shortest cycle between {@code src} and {@code dst}
+		 * in the graph starting by the edge {@code thru}. The strongly
+		 * connnected component of {@code src} and {@code dst} must be
+		 * known and passed in {@code scc}.
+		 * 
+		 * @param scc	the common SCC to {@code src} and {@code dst}
+		 * @param src	the source node of edge {@code thru}
+		 * @param thru	the edge from which to look for a cycle
+		 * @param dst	the destination node of edge {@code thru}
+		 * @return the list of edges that form a cycle from {@code src}
+		 * 	to {@code src} starting with {@code thru}
+		 * @throws NoSuchElementException if there is no such cycle
+		 * 	which should not happen if both {@code src} and {@code dst}
+		 * 	are indeed in the same {@code scc}
+		 */
+		List<Edge> getShortestCycle(List<Formal> scc, Formal src, Edge thru, Formal dst) {
+			// In case the cycle is a reflexive edge, return right away
+			if (src == dst) return Lists.singleton(thru);
+			// Otherwise, we will work with a FIFO to try and find one of the
+			// shortest cycles from [dst] back to [src]
+			Deque<List<Edge>> paths = new ArrayDeque<>();
+			Deque<Formal> nodes = new ArrayDeque<>();
+			paths.add(new ArrayList<>(Lists.singleton(thru)));
+			nodes.add(dst);
+			while (!paths.isEmpty()) {
+				List<Edge> path = paths.removeFirst();
+				Formal node = nodes.removeFirst();				
+				@Nullable Map<Formal, Edge> succs = graph.get(node);
+				if (succs == null) throw new IllegalStateException();
+				for (Map.Entry<Formal, Edge> entry : succs.entrySet()) {
+					Formal succ = entry.getKey();
+					Edge edge = entry.getValue();
+					if (succ == src) {
+						// We found the cycle, return right away
+						path.add(edge);
+						return path;
+					}
+					// else insert it in our queues if it is part
+					// of the scc
+					if (!scc.contains(succ)) continue;
+					List<Edge> cpath = new ArrayList<>(path);
+					cpath.add(edge);
+					paths.addLast(cpath);
+					nodes.addLast(succ);
+				}
+			}
+			throw new NoSuchElementException();
 		}
 		
 		// Implementation of the Graph<Integer> interface
@@ -398,12 +516,66 @@ public final class Expansion {
 				Formal tgt = esucc.getKey();
 				if (sccs.representative(src) != sccs.representative(tgt)) continue;
 				// We have found a dangerous cycle, the grammar is not expandable
-				// Let's describe the potential cycle completely
-				throw new PGrammarNotExpandable(src);
+				// Let's describe the potential cycle completely by looking for a way
+				// back from [tgt] to [src] (we know there is one)
+				List<ExpansionFlowGraph.Edge> cycle =
+					graph.getShortestCycle(sccs.scc(src), src, esucc.getValue(), tgt);
+				// Build a sequence of expression patterns which represent how
+				// this cycle will lead to infinitely growing expansion
+				ActualExpr focus = new ActualExpr(src.formal, Lists.empty());
+				List<ActualExpr> patterns = new ArrayList<>(cycle.size() + 1);
+				List<Located<String>> rules = new ArrayList<>(cycle.size() + 1);
+				List<Located<String>> sites = new ArrayList<>(cycle.size() + 1);
+				// Initialize with source, and then visit every edge in the cycle
+				patterns.add(patternFromContext(grammar, Lists.singleton(src), focus));
+				sites.add(src.formal);
+				rules.add(src.rule);
+				for (ExpansionFlowGraph.Edge edge : cycle) {
+					ActualExpr pattern = patternFromContext(grammar, edge.context, focus);
+					patterns.add(pattern);
+					sites.add(edge.site);
+					focus = pattern.params.get(edge.context.get(0).formalIdx);
+					rules.add(edge.rule);
+				}
+				
+				throw new PGrammarNotExpandable(src, patterns, sites, rules);
 			}
 		}
 		return;
 	}
+
+	/**
+	 * 
+	 * @param grammar
+	 * @param context
+	 * @param focus
+	 * @return the expression pattern representing {@code focus} in
+	 * 	the context {@code context}, with missing parts of the 
+	 *  expression filled with wildcards
+	 */
+	private static ActualExpr patternFromContext(PGrammar grammar, 
+			List<Formal> context, ActualExpr focus) {
+		ActualExpr res = focus;
+		for (Formal formal : context) {
+			PGrammarRule rule = grammar.rule(formal.rule.val);
+			final int sz = rule.params.size();
+			// Special case when no wildcards required
+			if (sz == 1) {
+				res = new ActualExpr(formal.rule, Lists.singleton(res));
+				continue;
+			}
+			// Otherwise, build a dummy list of parameters full
+			// of wildcards except in the spot of the interesting formal
+			List<ActualExpr> params = new ArrayList<>(sz);
+			for (int i = 0; i < sz; ++i) {
+				params.add(i == formal.formalIdx ? res : WILDCARD);
+			}
+			res = new ActualExpr(formal.rule, params);
+		}
+		return res;
+	}
+	private static final ActualExpr WILDCARD = 
+			new ActualExpr(Located.dummy("_"), Lists.empty());
 	
 	/**
 	 * @param rule		the name of the non-terminal rule

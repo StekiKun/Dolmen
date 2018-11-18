@@ -106,7 +106,7 @@ public abstract class TestJGEParser {
 			}
 			System.out.println("Generated in " + file.getAbsolutePath());
 		} catch (PGrammarNotExpandable e) {
-			System.out.println(e.getMessage());
+			System.out.println(e.getReport().display());
 			return;
 		} catch (IllFormedException e) {
 			System.out.println(e.getMessage());
