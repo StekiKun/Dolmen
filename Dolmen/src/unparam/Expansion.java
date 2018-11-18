@@ -19,6 +19,7 @@ import common.Iterables;
 import common.Lists;
 import common.Maps;
 import common.Nulls;
+import common.PList;
 import common.SCC;
 import common.SCC.Graph;
 import syntax.Extent;
@@ -235,9 +236,9 @@ public final class Expansion {
 			private Located<String> rule;
 			// The actual expression context which explains this edge,
 			// listed from bottom to top
-			private List<Formal> context;
+			private PList<Formal> context;
 			
-			Edge(boolean safe, Located<String> site, Located<String> rule, List<Formal> context) {
+			Edge(boolean safe, Located<String> site, Located<String> rule, PList<Formal> context) {
 				this.safe = safe;
 				this.site = site;
 				this.rule = rule;
@@ -359,16 +360,16 @@ public final class Expansion {
 				if (succs == null)
 					throw new IllegalStateException();
 				Formal target;
-				ArrayList<Formal> ectxt = new ArrayList<>();
+				PList<Formal> ectxt = PList.empty();
 				for (int i = context.size() - 1; i >= 0; --i) {
 					target = context.get(i);
 					boolean safe = i == context.size() - 1;
-					ectxt.add(target);
+					ectxt = PList.cons(target, ectxt);
 					
 					@Nullable Edge edge = succs.get(target);
 					if (edge == null) {
 						// New edge
-						edge = new Edge(safe, expr.symb, rule, new ArrayList<>(ectxt));
+						edge = new Edge(safe, expr.symb, rule, ectxt);
 						succs.put(target, edge);
 					}
 					else {
@@ -428,17 +429,18 @@ public final class Expansion {
 		 * 	which should not happen if both {@code src} and {@code dst}
 		 * 	are indeed in the same {@code scc}
 		 */
-		List<Edge> getShortestCycle(List<Formal> scc, Formal src, Edge thru, Formal dst) {
+		PList<Edge> getShortestCycle(List<Formal> scc, Formal src, Edge thru, Formal dst) {
 			// In case the cycle is a reflexive edge, return right away
-			if (src == dst) return Lists.singleton(thru);
+			if (src == dst) return PList.singleton(thru);
 			// Otherwise, we will work with a FIFO to try and find one of the
-			// shortest cycles from [dst] back to [src]
-			Deque<List<Edge>> paths = new ArrayDeque<>();
+			// shortest cycles from [dst] back to [src]. The paths in [paths]
+			// are stored in reverse order.
+			Deque<PList<Edge>> paths = new ArrayDeque<>();
 			Deque<Formal> nodes = new ArrayDeque<>();
-			paths.add(new ArrayList<>(Lists.singleton(thru)));
+			paths.add(PList.singleton(thru));
 			nodes.add(dst);
 			while (!paths.isEmpty()) {
-				List<Edge> path = paths.removeFirst();
+				PList<Edge> path = paths.removeFirst();
 				Formal node = nodes.removeFirst();				
 				@Nullable Map<Formal, Edge> succs = graph.get(node);
 				if (succs == null) throw new IllegalStateException();
@@ -447,15 +449,12 @@ public final class Expansion {
 					Edge edge = entry.getValue();
 					if (succ == src) {
 						// We found the cycle, return right away
-						path.add(edge);
-						return path;
+						return PList.rev(PList.cons(edge,  path));
 					}
 					// else insert it in our queues if it is part
 					// of the scc
 					if (!scc.contains(succ)) continue;
-					List<Edge> cpath = new ArrayList<>(path);
-					cpath.add(edge);
-					paths.addLast(cpath);
+					paths.addLast(PList.cons(edge, path));
 					nodes.addLast(succ);
 				}
 			}
@@ -518,23 +517,23 @@ public final class Expansion {
 				// We have found a dangerous cycle, the grammar is not expandable
 				// Let's describe the potential cycle completely by looking for a way
 				// back from [tgt] to [src] (we know there is one)
-				List<ExpansionFlowGraph.Edge> cycle =
+				PList<ExpansionFlowGraph.Edge> cycle =
 					graph.getShortestCycle(sccs.scc(src), src, esucc.getValue(), tgt);
 				// Build a sequence of expression patterns which represent how
 				// this cycle will lead to infinitely growing expansion
 				ActualExpr focus = new ActualExpr(src.formal, Lists.empty());
-				List<ActualExpr> patterns = new ArrayList<>(cycle.size() + 1);
-				List<Located<String>> rules = new ArrayList<>(cycle.size() + 1);
-				List<Located<String>> sites = new ArrayList<>(cycle.size() + 1);
+				List<ActualExpr> patterns = new ArrayList<>(cycle.length() + 1);
+				List<Located<String>> rules = new ArrayList<>(cycle.length() + 1);
+				List<Located<String>> sites = new ArrayList<>(cycle.length() + 1);
 				// Initialize with source, and then visit every edge in the cycle
-				patterns.add(patternFromContext(grammar, Lists.singleton(src), focus));
+				patterns.add(patternFromContext(grammar, PList.singleton(src), focus));
 				sites.add(src.formal);
 				rules.add(src.rule);
 				for (ExpansionFlowGraph.Edge edge : cycle) {
 					ActualExpr pattern = patternFromContext(grammar, edge.context, focus);
 					patterns.add(pattern);
 					sites.add(edge.site);
-					focus = pattern.params.get(edge.context.get(0).formalIdx);
+					focus = pattern.params.get(edge.context.hd().formalIdx);
 					rules.add(edge.rule);
 				}
 				
@@ -554,7 +553,7 @@ public final class Expansion {
 	 *  expression filled with wildcards
 	 */
 	private static ActualExpr patternFromContext(PGrammar grammar, 
-			List<Formal> context, ActualExpr focus) {
+			PList<Formal> context, ActualExpr focus) {
 		ActualExpr res = focus;
 		for (Formal formal : context) {
 			PGrammarRule rule = grammar.rule(formal.rule.val);
