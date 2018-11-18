@@ -528,8 +528,9 @@ public abstract class PGrammars {
 			// Now this is a bit of a silly strategy but let's handle
 			// all rules every iteration, and iterate as long as one of the
 			// rule's sorts changes.
-			boolean changed = false;
+			boolean changed;
 			do {
+				changed = false;
 				int idx = 0;
 				for (PGrammarRule rule : rules) {
 					if (rule.params.isEmpty()) continue;
