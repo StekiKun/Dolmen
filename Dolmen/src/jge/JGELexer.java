@@ -245,7 +245,8 @@ public final class JGELexer extends codegen.LexBuffer {
             }
             case 2:  {
                 final String hole_name = getSubLexeme(startPos + 1, curPos);
-                 builder.addHole(getLexemeStart().offset, hole_name); 
+                 Position p = getLexemeStart();
+			  builder.addHole(p.offset, hole_name, p.line, p.column()); 
 			  continue action;
 			
             }
@@ -307,7 +308,8 @@ public final class JGELexer extends codegen.LexBuffer {
             }
             case 2:  {
                 final String hole_name = getSubLexeme(startPos + 1, curPos);
-                 builder.addHole(getLexemeStart().offset, hole_name);
+                 Position p = getLexemeStart();
+			  builder.addHole(p.offset, hole_name, p.line, p.column()); 
 			  continue arguments;
 			
             }

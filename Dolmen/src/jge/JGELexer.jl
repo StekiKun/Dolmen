@@ -127,7 +127,8 @@ private {PExtent} rule action{PExtent.Builder builder} =
 			  	return builder.build(getLexemeStart().offset - 1);
 			  continue action;
 			}
-| hole		{ builder.addHole(getLexemeStart().offset, hole_name); 
+| hole		{ Position p = getLexemeStart();
+			  builder.addHole(p.offset, hole_name, p.line, p.column()); 
 			  continue action;
 			}
 | '"'		{ stringBuffer.setLength(0);
@@ -150,7 +151,8 @@ private {PExtent} rule arguments{PExtent.Builder builder} =
 			  	return builder.build(getLexemeStart().offset - 1);
 			  continue arguments;
 			}
-| hole		{ builder.addHole(getLexemeStart().offset, hole_name);
+| hole		{ Position p = getLexemeStart();
+			  builder.addHole(p.offset, hole_name, p.line, p.column()); 
 			  continue arguments;
 			}
 | '"'		{ stringBuffer.setLength(0);

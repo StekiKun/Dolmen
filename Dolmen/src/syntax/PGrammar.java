@@ -437,7 +437,7 @@ public final class PGrammar {
 		static IReport undeclaredFormal(PGrammarRule rule, int j, PExtent extent, PExtent.Hole hole) {
 			String msg = String.format("%s undeclared formal parameter \"%s\"",
 					inRule(rule, j), hole.name);
-			return IReport.of(msg, Severity.ERROR, extent);	// TODO report on hole location
+			return IReport.of(msg, Severity.ERROR, extent, hole);
 		}
 		
 		static IReport undeclaredToken(PGrammarRule rule, int j, Located<String> token) {

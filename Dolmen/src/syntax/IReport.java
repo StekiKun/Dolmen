@@ -1,5 +1,7 @@
 package syntax;
 
+import syntax.PExtent.Hole;
+
 /**
  * Common interface for reports of problems found during 
  * the generation of lexical analyzers or parsers
@@ -100,6 +102,16 @@ public interface IReport {
 			this.line = extent.startLine;
 			this.column = extent.startCol;
 		}
+
+		private Impl(String message, Severity severity, Extent extent, Hole hole) {
+			this.message = message;
+			this.severity = severity;
+			this.filename = extent.filename;
+			this.startPos = extent.startPos + hole.offset;
+			this.endPos = extent.startPos + hole.endOffset() + 1; // holes are inclusives
+			this.line = hole.startLine;
+			this.column = hole.startCol;
+		}
 		
 		private Impl(String message, Severity severity, Located<?> loc) {
 			this.message = message;
@@ -156,6 +168,18 @@ public interface IReport {
 	 */
 	public static IReport of(String message, Severity severity, Extent extent) {
 		return new Impl(message, severity, extent);
+	}
+
+	/**
+	 * @param message
+	 * @param severity
+	 * @param extent
+	 * @param hole
+	 * @return a report with the given message and severity, whose location
+	 * 	is the one of {@code hole} in {@code extent}
+	 */
+	public static IReport of(String message, Severity severity, Extent extent, Hole hole) {
+		return new Impl(message, severity, extent, hole);
 	}
 	
 	/**

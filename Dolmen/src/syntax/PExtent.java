@@ -31,8 +31,13 @@ public class PExtent extends Extent {
 	/**
 	 * A {@link Hole} represents a special part of an {@link PExtent extent}
 	 * which is bound to some {@link #name} and can be instantiated later
-	 * on. A hole is characterized by its {@link #offset} relative to 
-	 * its extent's {@linkplain Extent#startPos starting offset}.
+	 * on.
+	 * <p>
+	 * A hole is characterized by its {@link #offset} relative to 
+	 * its extent's {@linkplain Extent#startPos starting offset}. It also
+	 * holds {@linkplain #startLine line} and {@linkplain #startCol column}
+	 * information so that it is possible to report problems on a specific
+	 * hole.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -49,14 +54,30 @@ public class PExtent extends Extent {
 		public final String name;
 		
 		/**
+		 * The line where the hole starts (1-based)
+		 */
+		public final int startLine;
+		
+		/**
+		 * The column where the hole starts, i.e. the offset
+		 * of the starting character from the beginning of the line
+		 * (0-based)
+		 */
+		public final int startCol;
+		
+		/**
 		 * Returns a new hole from the given parameters
 		 * 
 		 * @param offset
 		 * @param name
+		 * @param startLine
+		 * @param startCol
 		 */
-		public Hole(int offset, String name) {
+		public Hole(int offset, String name, int startLine, int startCol) {
 			this.offset = offset;
 			this.name = name;
+			this.startLine = startLine;
+			this.startCol = startCol;
 		}
 		
 		/**
@@ -226,11 +247,13 @@ public class PExtent extends Extent {
 		 * 
 		 * @param sourcePos
 		 * @param name
+		 * @param startLine
+		 * @param startCol
 		 * @return this builder
 		 */
-		public Builder addHole(int sourcePos, String name) {
+		public Builder addHole(int sourcePos, String name, int startLine, int startCol) {
 			int offset = sourcePos - startPos;
-			Hole hole = new Hole(offset, name);
+			Hole hole = new Hole(offset, name, startLine, startCol);
 			if (sourcePos < curPos) {
 				if (holes.isEmpty())
 					throw new IllegalArgumentException("Cannot add hole " + hole + " before start of extent");
