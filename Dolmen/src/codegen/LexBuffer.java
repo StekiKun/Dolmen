@@ -30,9 +30,9 @@ public class LexBuffer {
 	 * {@link LexBuffer} uses {@link Position} to register the positions in 
 	 * the current input of the last lexeme start and the current position (which
 	 * happens to be the last lexeme <i>end</i> when in a semantic action).
-	 * {@link LexBuffer} do not manage line numbers by themselves, only absolute
+	 * {@link LexBuffer}s do not manage line numbers by themselves, only absolute
 	 * character offsets, so that updating {@link #line} and {@link #bol} is
-	 * the responsiblity of the lexer's semantic actions.
+	 * the responsibility of the lexer's semantic actions.
 	 * See {@link LexBuffer#newline()}.
 	 * <p>
 	 * Instances of this class are <i>immutable</i> so the lexer must create
