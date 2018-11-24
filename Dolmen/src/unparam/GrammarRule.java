@@ -5,7 +5,7 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.Nullable;
 
-import syntax.Extent;
+import syntax.CExtent;
 import syntax.Located;
 
 /**
@@ -27,11 +27,11 @@ public final class GrammarRule {
 	/** Whether this grammar rule is public or not */
 	public final boolean visibility;
 	/** This rule's return type */
-	public final Extent returnType;
+	public final CExtent returnType;
 	/** The name of this rule */
 	public final Located<String> name;
 	/** The formal arguments for this rule, if any */
-	public final @Nullable Extent args;
+	public final @Nullable CExtent args;
 	/** The productions for this rule */
 	public final List<unparam.Production> productions;
 	
@@ -43,8 +43,8 @@ public final class GrammarRule {
 	 * @param args
 	 * @param productions
 	 */
-	public GrammarRule(boolean visibility, Extent returnType,
-			Located<String> name, @Nullable Extent args, List<Production> productions) {
+	public GrammarRule(boolean visibility, CExtent returnType,
+			Located<String> name, @Nullable CExtent args, List<Production> productions) {
 		if (!Character.isLowerCase(name.val.charAt(0)))
 			throw new IllegalArgumentException("Rule name should start with a lower case");
 		this.visibility = visibility;
@@ -67,7 +67,7 @@ public final class GrammarRule {
 		buf.append(visibility ? "public " : "private ");
 		buf.append("{").append(returnType.find()).append("}");
 		buf.append(" rule ").append(name.val);
-		Extent args_ = args;
+		@Nullable CExtent args_ = args;
 		if (args_ != null)
 			buf.append("(").append(args_.find()).append(")");
 		buf.append(" = ");
@@ -93,9 +93,9 @@ public final class GrammarRule {
 	 */
 	public static final class Builder {
 		private final boolean visibility;
-		private final Extent returnType;
+		private final CExtent returnType;
 		private final Located<String> name;
-		private final @Nullable Extent args;
+		private final @Nullable CExtent args;
 		private final List<Production> productions;
 		
 		/**
@@ -105,8 +105,8 @@ public final class GrammarRule {
 		 * @param name
 		 * @param args
 		 */
-		public Builder(boolean visibility, Extent returnType,
-			Located<String> name, @Nullable Extent args) {
+		public Builder(boolean visibility, CExtent returnType,
+			Located<String> name, @Nullable CExtent args) {
 			this.visibility = visibility;
 			this.returnType = returnType;
 			this.name = name;

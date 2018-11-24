@@ -145,6 +145,15 @@ public class PExtent extends Extent {
 	}
 	
 	/**
+	 * A copy constructor for parameterized extents
+	 * 
+	 * @param ext
+	 */
+	public PExtent(PExtent ext) {
+		this(ext.filename, ext.startPos, ext.endPos, ext.startLine, ext.startCol, ext.holes);
+	}
+	
+	/**
 	 * A <i>dummy</i> extent for convenience, with no holes
 	 */
 	public static final PExtent DUMMY =
@@ -315,5 +324,37 @@ public class PExtent extends Extent {
 		if (offset < raw.length())
 			buf.append(raw, offset, raw.length());
 		return Extent.inlined(buf.toString());
+	}
+	
+	/**
+	 * <i>NB: Except in the special case where the receiver had no holes
+	 * 	the returned {@link Extent} will be inlined, i.e. information about
+	 *  the original location in the source will be lost.
+	 *  TODO This should be temporary as it should be possible to keep a
+	 *  tree of the original locations that led to a composite extent.
+	 * </i>
+	 *
+	 * @param replacements
+	 * @return an extent representing the contents of this extent where
+	 * 	all the {@link Hole holes} are replaced to extents according
+	 *  to the replacement map {@code replacements}
+	 * @throws IllegalArgumentException if the {@code replacements} map
+	 * 	does not cover all the possible holes in the receiver 
+	 */
+	public CExtent compose(Map<String, CExtent> replacements) {
+		if (holes.isEmpty())
+			return CExtent.of(this, Lists.empty());
+
+		List<CExtent> children = new ArrayList<>(holes.size());
+		@SuppressWarnings("unused")
+		int offset = 0;
+		for (Hole hole : holes) {
+			@Nullable CExtent replacement = replacements.get(hole.name);
+			if (replacement == null)
+				throw new IllegalArgumentException("Incomplete substitution: no replacement for hole " + hole);
+			children.add(replacement);
+			offset = hole.endOffset() + 1;
+		}
+		return CExtent.of(this, children);
 	}
 }

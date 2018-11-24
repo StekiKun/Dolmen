@@ -6,7 +6,8 @@ import syntax.PExtent.Hole;
  * Common interface for reports of problems found during 
  * the generation of lexical analyzers or parsers
  * 
- * @see #of(String, Severity, Extent)
+ * @see #of(String, Severity, CExtent)
+ * @see #of(String, Severity, PExtent, PExtent.Hole)
  * @see #of(String, Severity, Located)
  * 
  * @author Stéphane Lescuyer
@@ -93,17 +94,17 @@ public interface IReport {
 		private final int column;
 		private final Severity severity;
 		
-		private Impl(String message, Severity severity, Extent extent) {
+		private Impl(String message, Severity severity, CExtent extent) {
 			this.message = message;
 			this.severity = severity;
-			this.filename = extent.filename;
-			this.startPos = extent.startPos;
-			this.endPos = extent.endPos + 1;	// extent are inclusives
-			this.line = extent.startLine;
-			this.column = extent.startCol;
+			this.filename = extent.filename();
+			this.startPos = extent.startPos();
+			this.endPos = extent.endPos() + 1;	// extent are inclusives
+			this.line = extent.startLine();
+			this.column = extent.startCol();
 		}
 
-		private Impl(String message, Severity severity, Extent extent, Hole hole) {
+		private Impl(String message, Severity severity, PExtent extent, Hole hole) {
 			this.message = message;
 			this.severity = severity;
 			this.filename = extent.filename;
@@ -166,7 +167,7 @@ public interface IReport {
 	 * @return a report with the given message and severity, whose location
 	 * 	is the one of {@code extent}
 	 */
-	public static IReport of(String message, Severity severity, Extent extent) {
+	public static IReport of(String message, Severity severity, CExtent extent) {
 		return new Impl(message, severity, extent);
 	}
 
@@ -178,7 +179,7 @@ public interface IReport {
 	 * @return a report with the given message and severity, whose location
 	 * 	is the one of {@code hole} in {@code extent}
 	 */
-	public static IReport of(String message, Severity severity, Extent extent, Hole hole) {
+	public static IReport of(String message, Severity severity, PExtent extent, Hole hole) {
 		return new Impl(message, severity, extent, hole);
 	}
 	

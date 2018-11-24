@@ -22,6 +22,7 @@ import common.Nulls;
 import common.PList;
 import common.SCC;
 import common.SCC.Graph;
+import syntax.CExtent;
 import syntax.Extent;
 import syntax.IReport;
 import syntax.IReport.Severity;
@@ -636,11 +637,11 @@ public final class Expansion {
 	// been generated, mapped to their name for convenience
 	private final Map<String, GrammarRule> generatedRules;
 	
-	// Cache associating some _ground_ actual expressions to an extent
+	// Cache associating some _ground_ actual expressions to a composite extent
 	// representing the return type (or value type for expressions reduced
 	// to terminals). The empty option is used to denote the fact that
 	// the expression is not valued.
-	private final Map<ActualExpr, Optional<Extent>> returnTypes;
+	private final Map<ActualExpr, Optional<CExtent>> returnTypes;
 	
 	/**
 	 * Must only be used on a grammar which has passed {@link #checkExpandability(PGrammar)}
@@ -723,11 +724,11 @@ public final class Expansion {
 	private GrammarRule realizeRule(String ruleName, 
 			PGrammarRule prule, List<ActualExpr> effective) {
 		// This is a new instantiation that we must perform
-		Map<String, Extent> replacements = replacementMap(prule, effective);
-		Extent ruleReturn = prule.returnType.instantiate(replacements);
+		Map<String, CExtent> replacements = replacementMap(prule, effective);
+		CExtent ruleReturn = prule.returnType.compose(replacements);
 		@Nullable PExtent pruleArgs = prule.args;
-		@Nullable Extent ruleArgs =
-			pruleArgs == null ? null : pruleArgs.instantiate(replacements);
+		@Nullable CExtent ruleArgs =
+			pruleArgs == null ? null : pruleArgs.compose(replacements);
 		Map<String, ActualExpr> pinst = new LinkedHashMap<>(effective.size());
 		for (int i = 0; i < effective.size(); ++i)
 			pinst.put(prule.params.get(i).val, effective.get(i));
@@ -753,13 +754,13 @@ public final class Expansion {
 	 *  holes in {@link PExtent}s is given by {@code replacements}
 	 */
 	private Production realizeProduction(PProduction pprod, 
-			Map<String, ActualExpr> pinst, Map<String, Extent> replacements) {
+			Map<String, ActualExpr> pinst, Map<String, CExtent> replacements) {
 		List<Production.Item> items = new ArrayList<>(pprod.items.size());
 		for (PProduction.Item pitem : pprod.items) {
 			switch (pitem.getKind()) {
 			case ACTION:
 				PProduction.ActionItem action = (PProduction.ActionItem) pitem;
-				Extent extent = action.extent.instantiate(replacements);
+				CExtent extent = action.extent.compose(replacements);
 				items.add(new Production.ActionItem(extent));
 				continue;
 			case ACTUAL:
@@ -789,7 +790,7 @@ public final class Expansion {
 	 *  holes in {@link PExtent}s is given by {@code replacements}
 	 */
 	private Production.Actual realizeActual(PProduction.Actual pactual, 
-			Map<String, ActualExpr> pinst, Map<String, Extent> replacements) {
+			Map<String, ActualExpr> pinst, Map<String, CExtent> replacements) {
 		// Apply the instantiation to the actual to find a ground actual expression
 		ActualExpr instExpr = instantiateItem(pactual.item, pinst);
 		// If the resulting expression is an application, register it as a new
@@ -805,7 +806,7 @@ public final class Expansion {
 			itemName = instExpr.symb.val;
 		
 		@Nullable PExtent pargs = pactual.args;
-		@Nullable Extent args = pargs == null ? null : pargs.instantiate(replacements);
+		@Nullable CExtent args = pargs == null ? null : pargs.compose(replacements);
 		return new Production.Actual(pactual.binding, 
 				Located.like(itemName, pactual.item.symb), args);
 	}
@@ -843,14 +844,14 @@ public final class Expansion {
 	 * 	happen to represent valued expressions, when the rule is applied to the 
 	 *  <i>ground</i> effective parameters {@code effective}
 	 */
-	private Map<String, Extent> replacementMap(PGrammarRule prule, List<ActualExpr> effective) {
+	private Map<String, CExtent> replacementMap(PGrammarRule prule, List<ActualExpr> effective) {
 		if (prule.params.size() != effective.size())
 			throw new IllegalArgumentException();
 		if (prule.params.isEmpty())
 			return Maps.empty();
-		Map<String, Extent> replacements = new HashMap<>();
+		Map<String, CExtent> replacements = new HashMap<>();
 		for (int i = 0; i < prule.params.size(); ++i) {
-			@Nullable Extent ext = returnType(effective.get(i));
+			@Nullable CExtent ext = returnType(effective.get(i));
 			if (ext != null)
 				replacements.put(prule.params.get(i).val, ext);
 		}
@@ -863,18 +864,18 @@ public final class Expansion {
 	 * for holes in parameterized extents.
 	 * 
 	 * @param aexpr
-	 * @return an extent that represents the return type associated to the
+	 * @return a composite extent that represents the return type associated to the
 	 * 	given expression {@code expr}, or {@code null} if this expression is
 	 *  not valued (which can for now only happens with expressions reduced
 	 *  to a non-valued terminal symbol)
 	 */
-	private @Nullable Extent returnType(ActualExpr aexpr) {
-		@Nullable Optional<Extent> cached = returnTypes.get(aexpr);
+	private @Nullable CExtent returnType(ActualExpr aexpr) {
+		@Nullable Optional<CExtent> cached = returnTypes.get(aexpr);
 		if (cached != null)
-			return cached.orElse(null);
+			return cached.isPresent() ? cached.get() : null;
 		// Compute the return type for the given ground expression 
 		// and record it in the cache
-		@Nullable Extent res;
+		@Nullable CExtent res;
 		String sym = aexpr.symb.val;
 		if (aexpr.isTerminal()) {
 			// The return type is either that of the token,
@@ -884,7 +885,11 @@ public final class Expansion {
 			if (!tdo.isPresent())
 				throw new IllegalStateException("Unknown terminal \"" + 
 						sym + "\" in actual expression " + aexpr);
-			res = tdo.get().valueType;
+			@Nullable Extent valueType = tdo.get().valueType;
+			if (valueType == null)
+				res = null;
+			else
+				res = valueType;
 		}
 		else {
 			// The expression must be ground, so the symbol must be a non-terminal
@@ -892,8 +897,8 @@ public final class Expansion {
 			// If it is an application, we must fetch the return types
 			// of the parameters first. Hoping that all formals which appear
 			// in holes are actually valued.
-			Map<String, Extent> replacements = replacementMap(prule, aexpr.params);
-			res = prule.returnType.instantiate(replacements);
+			Map<String, CExtent> replacements = replacementMap(prule, aexpr.params);
+			res = prule.returnType.compose(replacements);
 		}
 		returnTypes.put(aexpr, Optional.ofNullable(res));
 		return res;

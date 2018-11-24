@@ -25,6 +25,7 @@ import unparam.Production.ActionItem;
 import unparam.Production.Actual;
 import unparam.Production.Continue;
 import syntax.Located;
+import syntax.CExtent;
 import syntax.Extent;
 
 /**
@@ -195,7 +196,7 @@ public final class GrammarOutput {
 		}
 		else {
 			buf.emit(ruleName(name)).emit("(");
-			@Nullable Extent args = actual.args;
+			@Nullable CExtent args = actual.args;
 			if (args != null)
 				buf.emitTracked(args);
 			buf.emit(");");

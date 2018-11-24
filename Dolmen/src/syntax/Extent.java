@@ -12,7 +12,7 @@ import org.eclipse.jdt.annotation.Nullable;
  * 
  * @author Stéphane Lescuyer
  */
-public class Extent {
+public class Extent extends CExtent {
 
 	/**
 	 * The absolute filename where this extent should be interpreted
@@ -63,11 +63,42 @@ public class Extent {
 	public static final Extent DUMMY =
 		new Extent("", -1, -1, -1, -1);
 
+	@Override
+	public String filename() {
+		return filename;
+	}
+	
+	@Override
+	public int startPos() {
+		return startPos;
+	}
+
+	@Override
+	public int endPos() {
+		return endPos;
+	}
+	
+	@Override
+	public int startLine() {
+		return startLine;
+	}
+	
+	@Override
+	public int startCol() {
+		return startCol;
+	}
+	
 	/**
 	 * @return the length, in characters, of the described extent
 	 */
+	@Override
 	public int length() {
 		return endPos - startPos + 1;
+	}
+	
+	@Override
+	public int realLength() {
+		return length();
 	}
 
 	@Override
@@ -106,6 +137,7 @@ public class Extent {
 	/**
 	 * @return the string portion described by this extent
 	 */
+	@Override
 	public String find() {
 		if (this == DUMMY) return "";
 

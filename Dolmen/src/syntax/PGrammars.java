@@ -378,7 +378,7 @@ public abstract class PGrammars {
 		}
 	}
 	
-	private static final boolean debug = true;
+	private static final boolean debug = false;
 	
 	/**
 	 * This analyses various rule applications in the parametric
@@ -410,7 +410,7 @@ public abstract class PGrammars {
 
 		if (debug) {
 			for (Map.Entry<String, List<Sort>> ruleSorts : sorts.entrySet()) {
-				String ruleName = ruleSorts.getKey();
+				@NonNull String ruleName = ruleSorts.getKey();
 				PGrammarRule rule = grammar.rule(ruleName);
 				if (rule.params.isEmpty()) continue;
 				System.out.print("Rule " + ruleName + ": ");

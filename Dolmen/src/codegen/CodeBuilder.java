@@ -5,7 +5,7 @@ import java.io.IOException;
 import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.LexBuffer.Position;
-import syntax.Extent;
+import syntax.CExtent;
 
 /**
  * An instance of this utility class manages a string
@@ -233,8 +233,8 @@ public final class CodeBuilder {
 	 * <li> {@link #getSourceMapping()}
 	 * <li> {@link #startTrackedRange(Position)}
 	 * <li> {@link #endTrackedRange()}
-	 * <li> {@link #emitTracked(Extent)}
-	 * <li> {@link #emitTrackedIf(boolean, Extent)}
+	 * <li> {@link #emitTracked(CExtent)}
+	 * <li> {@link #emitTrackedIf(boolean, CExtent)}
 	 * </ul>
 	 * <p>
 	 * The tracked regions will refer to their positions in the
@@ -335,11 +335,11 @@ public final class CodeBuilder {
 	 * @throws IllegalArgumentException if tracking has
 	 * 	not been enabled with {@link #withTracker(String, int)}
 	 */
-	public CodeBuilder emitTracked(Extent extent) {
+	public CodeBuilder emitTracked(CExtent extent) {
 		getSourceMapping();
 		
-		startTrackedRange(new LexBuffer.Position(extent.filename,
-			extent.startPos, extent.startLine, extent.startPos - extent.startCol));
+		startTrackedRange(new LexBuffer.Position(extent.filename(),
+			extent.startPos(), extent.startLine(), extent.startPos() - extent.startCol()));
 		emit(extent.find());
 		endTrackedRange();
 		
@@ -347,14 +347,14 @@ public final class CodeBuilder {
 	}
 	
 	/**
-	 * Same as {@link #emitTracked(Extent)} but is only
+	 * Same as {@link #emitTracked(CExtent)} but is only
 	 * performed if the given condition holds. Convenient
 	 * for conditional output based on preferences/debug/etc.
 	 * 
 	 * @param cond
 	 * @param extent
 	 */
-	public CodeBuilder emitTrackedIf(boolean cond, Extent extent) {
+	public CodeBuilder emitTrackedIf(boolean cond, CExtent extent) {
 		if (!cond) return this;
 		return emitTracked(extent);
 	}

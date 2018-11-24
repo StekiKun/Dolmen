@@ -11,6 +11,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Nulls;
+import syntax.CExtent;
 import syntax.Extent;
 import syntax.IReport;
 import syntax.Located;
@@ -341,7 +342,7 @@ public final class Grammar {
 		}
 
 		static IReport unexpectedArguments(GrammarRule rule, int j,
-			Extent args, Located<String> nterm) {
+			CExtent args, Located<String> nterm) {
 			String msg = String.format("%s non-terminal \"%s\" does not expect arguments",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, args);
