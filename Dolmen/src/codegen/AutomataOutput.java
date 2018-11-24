@@ -418,7 +418,7 @@ public final class AutomataOutput {
 	private void genClass(String name) {
 		aut.imports.forEach(imp -> 
 			buf.startTrackedRange(imp.start)
-				.emit(imp.val).endTrackedRange()
+				.emit(imp.val).endTrackedRange(null)
 				.newline());
 		buf.newline();
 		buf.emitln("/**")

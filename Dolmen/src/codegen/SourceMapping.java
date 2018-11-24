@@ -2,12 +2,19 @@ package codegen;
 
 import java.util.LinkedList;
 import java.util.ListIterator;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
+import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.LexBuffer.Position;
+import common.Maps;
+import syntax.CExtent;
 import syntax.Extent;
+import syntax.PExtent;
+import syntax.PExtent.Hole;
+import unparam.Expansion;
 
 /**
  * This class stores a <i>mapping</i> from range of positions
@@ -48,17 +55,33 @@ public final class SourceMapping {
 		 */
 		public final Position origin;
 		
-		Mapping(int offset, int length, Position origin) {
+		/**
+		 * The composite extent describing the origin of
+		 * the region in source, or {@code null} if the
+		 * source region was just an exact reproduction
+		 * of the mapped range
+		 */
+		private final @Nullable CExtent extent;
+		
+		Mapping(int offset, int length, Position origin, 
+				@Nullable CExtent extent) {
 			this.offset = offset;
 			this.length = length;
 			this.origin = origin;
+			this.extent = extent;
+			if (extent != null && extent.startPos() != origin.offset)
+				throw new IllegalArgumentException("Mismatched offsets: origin=" + origin.offset
+					+ ", extent=" + extent.startPos());
+			if (extent != null && extent.realLength() != length)
+				throw new IllegalArgumentException("Mismatched lengths: mapping=" + length 
+					+ ", extent=" + extent.realLength());
 		}
 		
 		@Override
 		public String toString() {
 			return String.format(
-				"[Range at %d, length %d: %s]",
-				offset, length, origin);
+				"[Range at %d, length %d%s: %s]",
+				offset, length, extent == null ? "" : ", composite", origin);
 		}
 		
 		/**
@@ -88,6 +111,20 @@ public final class SourceMapping {
 		 */
 		boolean maps(int toffset, int tlength) {
 			return (toffset >= offset && toffset + tlength <= offset + length);
+		}
+		
+		Origin findOrigin(int toffset, int tlength) {
+			if (!maps(toffset, tlength))
+				throw new IllegalArgumentException();
+			// If there is no instantiation, the origin is straightforward
+			@Nullable CExtent extent_ = extent; 
+			if (extent_ == null)
+				return new Origin(
+					toffset - offset + origin.offset, length, Maps.empty());
+			// Otherwise, we try and find the innermost extent (composite or not)
+			// containing the whole range. It exists because at worst it is 
+			// {@code extent} itself.
+			return extent_.findOrigin(toffset - offset, tlength);
 		}
 	}
 	
@@ -144,14 +181,21 @@ public final class SourceMapping {
 	 * Adds a new mapping to {@code this}, describing that
 	 * the range starting at position {@code offset} and spanning
 	 * {@code length} bytes corresponds to the range of the same
-	 * length at position {@code origin} in the original source
+	 * length at position {@code origin} in the original source.
+	 * <p>
+	 * If the mapped region stems from expanding and instantiating
+	 * the source region, the structure of the instantiation is
+	 * given by {@code extent}. Otherwise {@code extent} must be 
+	 * {@code null}.
 	 * 
 	 * @param offset
 	 * @param length
 	 * @param origin
+	 * @param extent
 	 */
-	public void add(int offset, int length, Position origin) {
-		insert(new Mapping(offset, length, origin));
+	public void add(int offset, int length, 
+			Position origin, @Nullable CExtent extent) {
+		insert(new Mapping(offset, length, origin, extent));
 	}
 	
 	@Override
@@ -164,26 +208,6 @@ public final class SourceMapping {
 	}
 	
 	/**
-	 * Tries to map the region described by {@code offset}
-	 * and {@code length} to the original source via the
-	 * mappings known in this instance
-	 * 
-	 * @param offset
-	 * @param length
-	 * @return the offset in the original source where
-	 * 	the desired range can be found, or -1 if the described
-	 * 	range is not entirely mapped
-	 */
-	public int map(int offset, int length) {
-		for (Mapping m : mappings) {
-			if (m.maps(offset, length)) {
-				return offset - m.offset + m.origin.offset;
-			}
-		}
-		return -1;	// no match
-	}
-	
-	/**
 	 * Iterates on all known mappings and 
 	 * applies {@code consumer} on each one
 	 * 
@@ -191,5 +215,81 @@ public final class SourceMapping {
 	 */
 	public void forEach(Consumer<? super Mapping> consumer) {
 		mappings.forEach(consumer);
+	}
+	
+	/**
+	 * An instance of this class describes the origin of some region
+	 * of generated code in terms of the source region from which it
+	 * originated. In its simpler form, both regions have the same 
+	 * {@link #length} and same contents, and the origin is characterized
+	 * by its {@link #offset} in the source file.
+	 * <p>
+	 * It is also possible that the generated code be the result of
+	 * {@link Expansion} and {@linkplain PExtent#instantiate instantiation}
+	 * of placeholders in parameterized semantic actions. In that case,
+	 * the source region may contain placeholders and be of a different
+	 * length than the mapped region. In that case the textual replacements
+	 * to perform to obtain the contents of the region in generated code
+	 * is given by {@link #replacements}.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	public final static class Origin {
+		/** The starting offset of the source region */
+		public final int offset;
+		/** The length of the source region */
+		public final int length;
+		
+		/**
+		 * The textual replacements for potential <i>holes</i> in the source region
+		 */
+		public final Map<String, String> replacements;
+		
+		/**
+		 * Constructs an origin description from the given parameters
+		 * @param offset	offset of the origin in source file (0-based)
+		 * @param length	length of the origin in source file
+		 * @param replacements	textual replacements for holes
+		 */
+		public Origin(int offset, int length, Map<String, String> replacements) {
+			this.offset = offset;
+			this.length = length;
+			this.replacements = replacements;
+		}
+		
+		@Override
+		public String toString() {
+			String res = String.format("[%d, %d+%d]", offset, offset, length);
+			if (replacements.isEmpty()) return res;
+			res += "{ with " + replacements.toString() + "}";
+			return res;
+		}
+	}
+	
+	/**
+	 * Tries to map the region described by {@code offset}
+	 * and {@code length} to the original source via the
+	 * mappings known in this instance.
+	 * <p>
+	 * The returned origin does not necessarily match the
+	 * given region's contents exactly, as the latter may
+	 * be the result of instantiating {@linkplain Hole holes}
+	 * in semantic actions.
+	 * 
+	 * @see Origin
+	 * 
+	 * @param offset
+	 * @param length
+	 * @return the {@linkplain Origin origin} in source where
+	 * 	the desired range stemmed from, or {@code null} if
+	 *  the described range is not entirely mapped in any of
+	 *  these source mappings
+	 */
+	public @Nullable Origin map(int offset, int length) {
+		for (Mapping m : mappings) {
+			if (m.maps(offset, length))
+				return m.findOrigin(offset, length);
+		}
+		return null;	// no match
 	}
 }

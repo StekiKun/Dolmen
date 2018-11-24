@@ -1,6 +1,13 @@
 package syntax;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
+
+import org.eclipse.jdt.annotation.Nullable;
+
+import codegen.SourceMapping.Origin;
+import common.Maps;
 
 /**
  * @WIP
@@ -63,6 +70,23 @@ public abstract class CExtent {
 	public abstract String find();
 	
 	/**
+	 * Finding the origin in a composite extent amounts to finding
+	 * the innermost extent, composite or not, whose instantiation
+	 * covers the given region.
+	 * 
+	 * @param offset	<b>relative</b> offset from the start of this extent
+	 * @param length
+	 * @return the origin of the region described by the relative 
+	 *  {@code offset} and {@code length}
+	 * 
+	 * @see Origin
+	 * @throws IllegalArgumentException if this extent does
+	 * 	not cover the whole region described by {@code offset} 
+	 *  and {@code length}
+	 */
+	public abstract Origin findOrigin(int offset, int length);
+	
+	/**
 	 * @param extent
 	 * @param children	the replacements for {@code extent}'s {@link PExtent#holes}, in order
 	 * @return a composite extent representing the instantiation of
@@ -74,14 +98,22 @@ public abstract class CExtent {
 	}
 	
 	/**
-	 * TODO
+	 * An actual <i>composite</i> extent made of a parameterized
+	 * extent {@link #extent} and the list of composite extents
+	 * {@link #children} that must replace the holes in {@link #extent}.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
 	private static final class Composite extends CExtent {
-		
+		// The parameterized extent which was instantiated
 		private final PExtent extent;
+		// The extents that were substituted in place of 
+		// {@code extent}'s holes, in order
 		private final List<CExtent> children;
+		
+		// Cached version of this composite's extent actual 
+		// final contents, with the holes in {@code extent}
+		// substituted for the contents in {@code children}
 		private final String realization;
 	
 		Composite(PExtent extent, List<CExtent> children) {
@@ -150,6 +182,92 @@ public abstract class CExtent {
 			if (offset < raw.length())
 				buf.append(raw, offset, raw.length());
 			return buf.toString();
+		}
+		
+		@Override
+		public Origin findOrigin(int offset, int length) {
+			final int end = offset + length;
+			if (end > realLength())
+				throw new IllegalArgumentException();
+			if (extent.holes.isEmpty())
+				return new Origin(offset + startPos(), length, Maps.empty());
+			int lastPOffset = 0;
+			int realOffset = 0;
+			int idx = 0;
+			find_tighter: {
+				for (PExtent.Hole hole : extent.holes) {
+					final int gap = hole.offset - lastPOffset;
+					final int nextPOffset = hole.endOffset() + 1;
+					final int realHoleOffset = realOffset + gap;
+					final int nextRealOffset = realHoleOffset + hole.length();
+					// Is the region in the gap to the next hole? If so,
+					// we know this extent is the innermost one
+					if (offset >= realOffset && end <= realOffset + gap)
+						break find_tighter;
+					// Is the region in the hole? If so, we can look 
+					// recursively in the replacement for the hole
+					if (offset >= realHoleOffset && end < nextRealOffset) {
+						CExtent child = children.get(idx);
+						return child.findOrigin(offset - realHoleOffset, length);
+					}
+					// If the region starts before the next gap, we can
+					// stop looking
+					if (offset < nextRealOffset) 
+						break find_tighter;
+					
+					lastPOffset = nextPOffset;
+					realOffset = nextRealOffset;
+					++idx;
+				}
+				// Our last chance is the final gap, we should be in it or
+				// we would have aborted earlier on.
+				if (!(offset >= realOffset && end <= realLength()))
+					throw new IllegalStateException();
+			}
+			// If we end up here, this extent is the innermost one
+			// containing the whole region
+			return new Origin(offset + startPos(), length, textualReplacements());
+		}
+		
+		/**
+		 * @return a map that binds every hole name in {@link #extent}
+		 * 	to the actual textual contents that should replace it
+		 *  according to {@link #children}
+		 */
+		private Map<String, String> textualReplacements() {
+			LinkedHashMap<String, String> res = new LinkedHashMap<>();
+			int idx = 0;
+			for (PExtent.Hole hole : extent.holes) {
+				res.put(hole.name, children.get(idx).find());
+				idx++;
+			}
+			return res;
+		}
+		
+		@Override
+		public int hashCode() {
+			int result = extent.hashCode();
+			result = 31 * result + children.hashCode();
+			return result;
+		}
+		
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) return true;
+			if (!(o instanceof Composite)) return false;
+			Composite comp = (Composite) o;
+			if (!extent.equals(comp.extent)) return false;
+			if (!children.equals(comp.children)) return false;
+			return true;
+		}
+		
+		@Override
+		public String toString() {
+			return "CExtent [filename=" + filename() + ", startPos=" + startPos() 
+					+ ", endPos=" + endPos() + ", startLine="
+					+ startLine() + ", startCol=" + startCol() 
+					+ ", holes=" + extent.holes 
+					+ ", chilren=" + children + "]";
 		}
 	}
 }

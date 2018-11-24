@@ -6,6 +6,7 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.LexBuffer.Position;
 import syntax.CExtent;
+import syntax.Extent;
 
 /**
  * An instance of this utility class manages a string
@@ -232,7 +233,7 @@ public final class CodeBuilder {
 	 * <ul>
 	 * <li> {@link #getSourceMapping()}
 	 * <li> {@link #startTrackedRange(Position)}
-	 * <li> {@link #endTrackedRange()}
+	 * <li> {@link #endTrackedRange(CExtent)}
 	 * <li> {@link #emitTracked(CExtent)}
 	 * <li> {@link #emitTrackedIf(boolean, CExtent)}
 	 * </ul>
@@ -278,10 +279,10 @@ public final class CodeBuilder {
 	 * <p>
 	 * <b>Only one region can be tracked at any given time.</b>
 	 * Successive calls to {@link #startTrackedRange(Position)} 
-	 * without any calls to {@link #endTrackedRange()} will be
+	 * without any calls to {@link #endTrackedRange(CExtent)} will be
 	 * ignored.
 	 * 
-	 * @see #endTrackedRange()
+	 * @see #endTrackedRange(CExtent)
 	 * @param pos
 	 * @throws IllegalArgumentException if tracking has
 	 * 	not been enabled with {@link #withTracker(String, int)}
@@ -306,10 +307,14 @@ public final class CodeBuilder {
 	 * <p>
 	 * <i>If no region was being tracked, this call is ignored.</i>
 	 * 
+	 * @param extent	if non-{@code null}, describes how the emitted
+	 * 					contents were obtained by instantiating placeholders
+	 * 					in the corresponding source region
+	 * 
 	 * @throws IllegalArgumentException if tracking has
 	 * 	not been enabled with {@link #withTracker(String, int)}
 	 */
-	public CodeBuilder endTrackedRange() {
+	public CodeBuilder endTrackedRange(@Nullable CExtent extent) {
 		SourceMapping smap_ = getSourceMapping();
 		@Nullable Position lastTracked_ = lastTracked;
 		if (lastTracked_ == null) {
@@ -317,7 +322,7 @@ public final class CodeBuilder {
 			return this;
 		}
 		smap_.add(lastTrackedOffset - trackingBase,
-					buf.length() - lastTrackedOffset, lastTracked_);
+					buf.length() - lastTrackedOffset, lastTracked_, extent);
 		lastTrackedOffset = -1;
 		lastTracked = null;
 		return this;
@@ -341,7 +346,8 @@ public final class CodeBuilder {
 		startTrackedRange(new LexBuffer.Position(extent.filename(),
 			extent.startPos(), extent.startLine(), extent.startPos() - extent.startCol()));
 		emit(extent.find());
-		endTrackedRange();
+		// No need to record a simple linear extent
+		endTrackedRange(extent instanceof Extent ? null : extent);
 		
 		return this;
 	}

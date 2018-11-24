@@ -5,6 +5,9 @@ import java.io.IOException;
 
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.SourceMapping.Origin;
+import common.Maps;
+
 /**
  * Instances of this class describe ranges of characters
  * in files, and are used to link parsed entities with
@@ -151,6 +154,14 @@ public class Extent extends CExtent {
 		} catch (IOException e) {
 			return "<Could not open file " + filename + ">";
 		}
+	}
+	
+	@Override
+	public Origin findOrigin(int offset, int length) {
+		if (this == DUMMY) throw new IllegalArgumentException();
+		if (offset + length > length())
+			throw new IllegalArgumentException();
+		return new Origin(offset + startPos, length, Maps.empty());
 	}
 	
 	private static final class Inlined extends Extent {

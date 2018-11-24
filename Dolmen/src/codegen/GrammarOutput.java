@@ -362,7 +362,7 @@ public final class GrammarOutput {
 	protected void genParser(String name) {
 		grammar.imports.forEach(imp -> 
 		buf.startTrackedRange(imp.start)
-			.emit(imp.val).endTrackedRange()
+			.emit(imp.val).endTrackedRange(null)
 			.newline());
 		buf.newline();
 		buf.emitln("/**")
