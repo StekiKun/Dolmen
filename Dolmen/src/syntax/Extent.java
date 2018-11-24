@@ -12,6 +12,11 @@ import common.Maps;
  * Instances of this class describe ranges of characters
  * in files, and are used to link parsed entities with
  * their concrete representation in the original sources.
+ * <p>
+ * They represent a degenerate form of {@linkplain CExtent
+ * composite extents} where no placeholder replacement
+ * is required and the extent stands for the contents of
+ * a simple character region of a file.
  * 
  * @author Stéphane Lescuyer
  */

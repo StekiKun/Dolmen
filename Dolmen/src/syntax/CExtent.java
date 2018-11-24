@@ -8,10 +8,25 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import codegen.SourceMapping.Origin;
 import common.Maps;
+import unparam.Expansion;
+import unparam.Grammar;
 
 /**
- * @WIP
- * Composite extents
+ * Instances of this class describe ranges of characters
+ * in files, and are used to link parsed entities with
+ * their concrete representation in the original sources.
+ * <p>
+ * These are called <i>extents</i> and in their general form,
+ * they can be constructed by the instantiation of 
+ * {@linkplain PExtent parameterized extents} where holes
+ * have been replaced with extents taken from other parts
+ * of the file, or from other files even. Such extents
+ * are called <i>composite</i> and arise during the
+ * {@linkplain Expansion expansion} phase from a
+ * {@linkplain PGrammar parametric grammar} into a
+ * {@linkplain Grammar ground grammar}.
+ * 
+ * @see Extent	a non-composite implementation of {@link CExtent}
  * 
  * @author Stéphane Lescuyer
  */
@@ -191,42 +206,50 @@ public abstract class CExtent {
 				throw new IllegalArgumentException();
 			if (extent.holes.isEmpty())
 				return new Origin(offset + startPos(), length, Maps.empty());
+			boolean inGap = false;
 			int lastPOffset = 0;
 			int realOffset = 0;
 			int idx = 0;
+			int shift = 0;
 			find_tighter: {
 				for (PExtent.Hole hole : extent.holes) {
 					final int gap = hole.offset - lastPOffset;
 					final int nextPOffset = hole.endOffset() + 1;
 					final int realHoleOffset = realOffset + gap;
-					final int nextRealOffset = realHoleOffset + hole.length();
+					final CExtent child = children.get(idx);
+					final int nextRealOffset = realHoleOffset + child.realLength();
 					// Is the region in the gap to the next hole? If so,
 					// we know this extent is the innermost one
-					if (offset >= realOffset && end <= realOffset + gap)
+					if (offset >= realOffset && end <= realOffset + gap) {
+						inGap = true;
 						break find_tighter;
+					}
 					// Is the region in the hole? If so, we can look 
-					// recursively in the replacement for the hole
+					// recursively in the replacement for the hole/
 					if (offset >= realHoleOffset && end < nextRealOffset) {
-						CExtent child = children.get(idx);
 						return child.findOrigin(offset - realHoleOffset, length);
 					}
 					// If the region starts before the next gap, we can
 					// stop looking
-					if (offset < nextRealOffset) 
+					if (offset < nextRealOffset)
 						break find_tighter;
 					
 					lastPOffset = nextPOffset;
 					realOffset = nextRealOffset;
+					shift += (child.realLength() - hole.length());
 					++idx;
 				}
 				// Our last chance is the final gap, we should be in it or
 				// we would have aborted earlier on.
 				if (!(offset >= realOffset && end <= realLength()))
 					throw new IllegalStateException();
+				inGap = true;
 			}
 			// If we end up here, this extent is the innermost one
-			// containing the whole region
-			return new Origin(offset + startPos(), length, textualReplacements());
+			// containing the whole region. The replacements are only
+			// needed if we were not in a gap.
+			return new Origin(offset - shift + startPos(), length,
+					inGap ? Maps.empty() : textualReplacements());
 		}
 		
 		/**

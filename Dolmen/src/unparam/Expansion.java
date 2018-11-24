@@ -488,6 +488,8 @@ public final class Expansion {
 			graph.keySet().forEach(f);
 		}
 	}
+
+	private static final boolean debug = false;
 	
 	/**
 	 * Checks that the given parametric grammar can be expanded
@@ -504,8 +506,10 @@ public final class Expansion {
 		// the strongly-connected components
 		ExpansionFlowGraph graph = ExpansionFlowGraph.of(grammar);
 		SCC<Formal> sccs = SCC.of(graph);
-		System.out.print(graph);
-		System.out.print(sccs);
+		if (debug) {
+			System.out.print(graph);
+			System.out.print(sccs);
+		}
 		// The expansion is guaranteed to terminate if no dangerous
 		// flow edge is internal to some SCC
 		for (Map.Entry<Formal, Map<Formal, ExpansionFlowGraph.Edge>> e : 
