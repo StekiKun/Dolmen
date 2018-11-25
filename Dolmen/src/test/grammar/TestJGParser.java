@@ -19,9 +19,9 @@ import jg.JGLexer;
 import jg.JGParserGenerated;
 import jl.JLLexerGenerated;
 import jl.JLParser;
-import syntax.Grammar;
-import syntax.Grammars;
 import syntax.Lexer;
+import unparam.Grammar;
+import unparam.Grammars;
 
 /**
  * This class tests the simple grammar description parser by

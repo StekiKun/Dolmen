@@ -1,4 +1,4 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,6 +8,8 @@ import org.eclipse.jdt.annotation.Nullable;
 
 import common.Hierarchy;
 import common.Iterables;
+import syntax.CExtent;
+import syntax.Located;
 
 /**
  * A grammar <i>production</i> consists of 
@@ -77,13 +79,13 @@ public final class Production {
 	public static final class ActionItem extends Item {
 		
 		/** The in-source extent for this semantic action */
-		public final Extent extent;
+		public final CExtent extent;
 		
 		/**
 		 * Builds a semantic action item from the given extent
 		 * @param extent
 		 */
-		public ActionItem(Extent extent) {
+		public ActionItem(CExtent extent) {
 			this.extent = extent;
 		}
 		
@@ -166,7 +168,7 @@ public final class Production {
 		 * Arguments only make sense if {@link #item} is
 		 * a non-terminal.
 		 */
-		public final @Nullable Extent args;
+		public final @Nullable CExtent args;
 		
 		/**
 		 * Builds a production item based on the given parameters
@@ -175,7 +177,7 @@ public final class Production {
 		 * @param args
 		 */
 		public Actual(@Nullable Located<String> binding,
-				Located<String> item, @Nullable Extent args) {
+				Located<String> item, @Nullable CExtent args) {
 			this.binding = binding;
 			this.item = item;
 			this.args = args;
@@ -209,7 +211,7 @@ public final class Production {
 			if (bind != null)
 				buf.append(bind.val).append(" = ");
 			buf.append(item.val);
-			@Nullable Extent args_ = args;
+			@Nullable CExtent args_ = args;
 			if (args_ != null)
 				buf.append("(").append(args_.find()).append(")");
 			
@@ -300,7 +302,7 @@ public final class Production {
 		 * Adds a semantic action item
 		 * @param extent
 		 */
-		public Builder addAction(Extent extent) {
+		public Builder addAction(CExtent extent) {
 			items.add(new ActionItem(extent));
 			return this;
 		}

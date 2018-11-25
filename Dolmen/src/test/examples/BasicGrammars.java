@@ -15,15 +15,16 @@ import codegen.GrammarOutput;
 import common.Lists;
 import jl.JLLexerGenerated;
 import jl.JLParser;
-import syntax.Grammar;
-import syntax.GrammarRule;
-import syntax.Grammars;
-import syntax.Grammars.NTermsInfo;
-import syntax.Grammars.PredictionTable;
 import syntax.Lexer;
 import syntax.Located;
 import syntax.Extent;
-import syntax.Production;
+import syntax.TokenDecl;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Grammars;
+import unparam.Production;
+import unparam.Grammars.NTermsInfo;
+import unparam.Grammars.PredictionTable;
 
 /**
  * Some manually defined grammars, with non-dummy
@@ -37,12 +38,12 @@ public abstract class BasicGrammars {
 		// Static utility only
 	}
 
-	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(Located.dummy(name), null);
+	static TokenDecl token(String name) {
+		return new TokenDecl(Located.dummy(name), null);
 	}
 	
-	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
+	static TokenDecl vtoken(String name, String valType) {
+		return new TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {

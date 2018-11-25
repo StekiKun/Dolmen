@@ -5,14 +5,22 @@ import java.io.IOException;
 
 import org.eclipse.jdt.annotation.Nullable;
 
+import codegen.SourceMapping.Origin;
+import common.Maps;
+
 /**
  * Instances of this class describe ranges of characters
  * in files, and are used to link parsed entities with
  * their concrete representation in the original sources.
+ * <p>
+ * They represent a degenerate form of {@linkplain CExtent
+ * composite extents} where no placeholder replacement
+ * is required and the extent stands for the contents of
+ * a simple character region of a file.
  * 
  * @author Stéphane Lescuyer
  */
-public class Extent {
+public class Extent extends CExtent {
 
 	/**
 	 * The absolute filename where this extent should be interpreted
@@ -63,11 +71,42 @@ public class Extent {
 	public static final Extent DUMMY =
 		new Extent("", -1, -1, -1, -1);
 
+	@Override
+	public String filename() {
+		return filename;
+	}
+	
+	@Override
+	public int startPos() {
+		return startPos;
+	}
+
+	@Override
+	public int endPos() {
+		return endPos;
+	}
+	
+	@Override
+	public int startLine() {
+		return startLine;
+	}
+	
+	@Override
+	public int startCol() {
+		return startCol;
+	}
+	
 	/**
 	 * @return the length, in characters, of the described extent
 	 */
+	@Override
 	public int length() {
 		return endPos - startPos + 1;
+	}
+	
+	@Override
+	public int realLength() {
+		return length();
 	}
 
 	@Override
@@ -106,6 +145,7 @@ public class Extent {
 	/**
 	 * @return the string portion described by this extent
 	 */
+	@Override
 	public String find() {
 		if (this == DUMMY) return "";
 
@@ -119,6 +159,14 @@ public class Extent {
 		} catch (IOException e) {
 			return "<Could not open file " + filename + ">";
 		}
+	}
+	
+	@Override
+	public Origin findOrigin(int offset, int length) {
+		if (this == DUMMY) throw new IllegalArgumentException();
+		if (offset + length > length())
+			throw new IllegalArgumentException();
+		return new Origin(offset + startPos, length, Maps.empty());
 	}
 	
 	private static final class Inlined extends Extent {

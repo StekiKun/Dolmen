@@ -447,7 +447,7 @@ private { Regular } rule atomicRegular() =
 			    { return Regular.string(s); }
 | id = IDENT	{ @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
 				  if (reg == null)
-				  	throw parsingError("Undefined regular expression " + reg);
+				  	throw parsingError("Undefined regular expression " + id);
 				  return reg;
 				}
 | cs = charClass()

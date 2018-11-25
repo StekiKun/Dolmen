@@ -3,6 +3,7 @@ package codegen;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -15,16 +16,17 @@ import common.Constants;
 import common.CountingWriter;
 import common.Iterables;
 import common.Maps;
-import syntax.Grammar;
-import syntax.Grammar.TokenDecl;
-import syntax.GrammarRule;
-import syntax.Grammars.PredictionTable;
+import syntax.TokenDecl;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Production;
+import unparam.Grammars.PredictionTable;
+import unparam.Production.ActionItem;
+import unparam.Production.Actual;
+import unparam.Production.Continue;
 import syntax.Located;
+import syntax.CExtent;
 import syntax.Extent;
-import syntax.Production;
-import syntax.Production.ActionItem;
-import syntax.Production.Actual;
-import syntax.Production.Continue;
 
 /**
  * This class generates a Java class that implements
@@ -65,9 +67,32 @@ public final class GrammarOutput {
 		this.predict = predict;
 		this.buf = new CodeBuilder(0);
 	}
-	
-	private static String ruleName(String ruleName) {
-		return ruleName;
+
+	private Map<String, String> ruleNameCache = new HashMap<>();
+
+	private String ruleName(String ruleName) {
+		// Names which do not encode applications of parametric rules need no escaping
+		if (!ruleName.contains("<")) return ruleName;
+		// Look in the cache for this particular rule
+		@Nullable String cached = ruleNameCache.get(ruleName);
+		if (cached != null) return cached;
+		// Escape the following special characters introduced in names by the
+		// expansion mechanism: '<', '>', ',' and ' '
+		StringBuilder buf = new StringBuilder(ruleName.length());
+		for (int i = 0; i < ruleName.length(); ++i) {
+			char ci = ruleName.charAt(i);
+			char newci = ci;
+			switch (ci) {
+			case '<': newci = 'ˎ'; break;
+			case '>': newci = 'ˏ'; break;
+			case ',': newci = 'ˌ'; break;
+			case ' ': continue;
+			}
+			buf.append(newci);
+		}
+		String jRuleName = buf.toString();
+		ruleNameCache.put(ruleName, jRuleName);
+		return jRuleName;
 	}
 	
 	private void genAnnotations(String annotations) {
@@ -171,7 +196,7 @@ public final class GrammarOutput {
 		}
 		else {
 			buf.emit(ruleName(name)).emit("(");
-			@Nullable Extent args = actual.args;
+			@Nullable CExtent args = actual.args;
 			if (args != null)
 				buf.emitTracked(args);
 			buf.emit(");");
@@ -249,7 +274,7 @@ public final class GrammarOutput {
 		// same case block.
 		// We know the transition table is in stable order, and we must ensure
 		// our compacted table is as well.
-		final Map<@NonNull Production, @NonNull List<@NonNull String>> prodTable =
+		final Map<unparam.Production, @NonNull List<@NonNull String>> prodTable =
 			new LinkedHashMap<>();
 		trans.forEach((term, prods) -> {
 			final Production prod = prods.get(0);
@@ -337,7 +362,7 @@ public final class GrammarOutput {
 	protected void genParser(String name) {
 		grammar.imports.forEach(imp -> 
 		buf.startTrackedRange(imp.start)
-			.emit(imp.val).endTrackedRange()
+			.emit(imp.val).endTrackedRange(null)
 			.newline());
 		buf.newline();
 		buf.emitln("/**")

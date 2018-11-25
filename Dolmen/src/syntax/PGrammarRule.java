@@ -7,12 +7,26 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 /**
- * Describes a grammar rule for a non-terminal in a grammar
- * description. The rule can be {@linkplain #visibility public or private}
- * which will impact the visibility of the corresponding generated
- * method, it specifies the {@linkplain #returnType return type} of the
+ * Describes a (potentially parametric) grammar rule for a 
+ * non-terminal in a parametric grammar description. The rule 
+ * can be {@linkplain #visibility public or private} which will 
+ * impact the visibility of the corresponding generated method, 
+ * it specifies the  {@linkplain #returnType return type} of the
  * associated semantic actions and can have some
  * {@linkplain #args formal arguments}.
+ * <p>
+ * The rule can be ground or be parameterized by a number of
+ * formal {@linkplain #params parameters}. A parameterized rule
+ * represents a generic rule from which ground rules can be obtained
+ * by simply instantiating the formal parameters with terminals or
+ * (instantiated) non-terminals of the grammar. A rule's parameter
+ * can be used in its production items, as a regular symbol of the
+ * grammar, and also as {@linkplain PExtent.Hole holes} in semantic
+ * actions where they stand for the return type associated to the
+ * formal parameter.
+ * <b>Public rules cannot be parametric as public rules act as 
+ * 	monomorphic entry points allowing the monomorphization of a
+ *  parametric grammar.</b>
  * <p>
  * The relative order of {@linkplain #productions productions} for this
  * grammar rule is the one from the original source but is not
@@ -20,36 +34,42 @@ import org.eclipse.jdt.annotation.Nullable;
  * 
  * @author Stéphane Lescuyer
  */
-public final class GrammarRule {
+public final class PGrammarRule {
 
 	/** Whether this grammar rule is public or not */
 	public final boolean visibility;
 	/** This rule's return type */
-	public final Extent returnType;
+	public final PExtent returnType;
 	/** The name of this rule */
 	public final Located<String> name;
+	/** The generic parameters of the rule */
+	public final List<Located<String>> params;
 	/** The formal arguments for this rule, if any */
-	public final @Nullable Extent args;
+	public final @Nullable PExtent args;
 	/** The productions for this rule */
-	public final List<@NonNull Production> productions;
+	public final List<@NonNull PProduction> productions;
 	
 	/**
 	 * Builds a grammar rule from the given parameters
 	 * @param visibility
 	 * @param returnType
 	 * @param name
+	 * @param params
 	 * @param args
 	 * @param productions
 	 */
-	public GrammarRule(boolean visibility, Extent returnType,
-			Located<String> name, @Nullable Extent args, List<Production> productions) {
+	public PGrammarRule(boolean visibility, PExtent returnType,
+			Located<String> name, List<Located<String>> params, 
+			@Nullable PExtent args, List<PProduction> productions) {
 		if (!Character.isLowerCase(name.val.charAt(0)))
 			throw new IllegalArgumentException("Rule name should start with a lower case");
 		this.visibility = visibility;
 		this.returnType = returnType;
 		this.name = name;
+		this.params = params;
 		this.args = args;
-		assert (!productions.isEmpty());
+		if (productions.isEmpty())
+			throw new IllegalArgumentException("Rule should have at least one production");
 		this.productions = productions;
 	}
 	
@@ -65,6 +85,16 @@ public final class GrammarRule {
 		buf.append(visibility ? "public " : "private ");
 		buf.append("{").append(returnType.find()).append("}");
 		buf.append(" rule ").append(name.val);
+		if (!params.isEmpty()) {
+			buf.append("<");
+			boolean first = true;
+			for (Located<String> param : params) {
+				if (first) first = false;
+				else buf.append(", ");
+				buf.append(param.val);
+			}
+			buf.append(">");
+		}
 		Extent args_ = args;
 		if (args_ != null)
 			buf.append("(").append(args_.find()).append(")");
@@ -84,17 +114,18 @@ public final class GrammarRule {
 	}
 	
 	/**
-	 * A builder class for {@linkplain GrammarRule grammar rules}, 
+	 * A builder class for {@linkplain PGrammarRule grammar rules}, 
 	 * where productions can be added incrementally
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class Builder {
 		private final boolean visibility;
-		private final Extent returnType;
+		private final PExtent returnType;
 		private final Located<String> name;
-		private final @Nullable Extent args;
-		private final List<Production> productions;
+		private final List<Located<String>> params;
+		private final @Nullable PExtent args;
+		private final List<PProduction> productions;
 		
 		/**
 		 * Returns a fresh builder with the given parameters
@@ -103,11 +134,13 @@ public final class GrammarRule {
 		 * @param name
 		 * @param args
 		 */
-		public Builder(boolean visibility, Extent returnType,
-			Located<String> name, @Nullable Extent args) {
+		public Builder(boolean visibility, PExtent returnType,
+			Located<String> name, List<Located<String>> params, 
+			@Nullable PExtent args) {
 			this.visibility = visibility;
 			this.returnType = returnType;
 			this.name = name;
+			this.params = params;
 			this.args = args;
 			this.productions = new ArrayList<>();
 		}
@@ -117,7 +150,7 @@ public final class GrammarRule {
 		 * @param prod
 		 * @return the new state of the builder
 		 */
-		public Builder addProduction(Production prod) {
+		public Builder addProduction(PProduction prod) {
 			this.productions.add(prod);
 			return this;
 		}
@@ -125,9 +158,9 @@ public final class GrammarRule {
 		/**
 		 * @return the grammar rule from this builder
 		 */
-		public GrammarRule build() {
-			return new GrammarRule(visibility, returnType, 
-				name, args, productions);
+		public PGrammarRule build() {
+			return new PGrammarRule(visibility, returnType, 
+				name, params, args, productions);
 		}
 	}
 }

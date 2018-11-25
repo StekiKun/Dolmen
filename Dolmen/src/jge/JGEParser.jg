@@ -9,24 +9,30 @@ import java.util.ArrayList;
 import common.Lists;
 import common.Java;
 import syntax.Extent;
+import syntax.PExtent;
 import syntax.Located;
-import syntax.Production;
+import syntax.PProduction;
+import syntax.PProduction.Actual;
+import syntax.PProduction.ActualExpr;
 import syntax.Option;
-import syntax.Grammar.TokenDecl;
-import syntax.GrammarRule;
-import syntax.Grammar;
+import syntax.TokenDecl;
+import syntax.PGrammarRule;
+import syntax.PGrammar;
 
 token {String} IDENT
-token {Extent} ACTION
-token {Extent} ARGUMENTS
+token {PExtent} ACTION
+token {PExtent} ARGUMENTS
 token {String} MLSTRING
 token EQUAL
 token LSQUARE 
 token RSQUARE
+token LANGLE 
+token RANGLE
 token BAR
 token DOT
 token STAR
 token SEMICOL
+token COMMA
 token IMPORT
 token STATIC
 token PUBLIC
@@ -43,12 +49,12 @@ token EOF
         return name.chars().anyMatch(ch -> Character.isLowerCase(ch));
     }
 
-    private Production.Actual actual(@Nullable Located<String> binding,
-            Located<String> ident, @Nullable Extent args) {
-        if (args != null && Character.isUpperCase(ident.val.charAt(0)))
-            throw new ParsingException(ident.start, ident.length(),
-                "Terminal " + ident.val + " does not expect arguments.");
-        return new Production.Actual(binding, ident, args);
+    private Actual actual(@Nullable Located<String> binding,
+            ActualExpr aexpr, @Nullable PExtent args) {
+          if (args != null && aexpr.isTerminal())
+		    throw new ParsingException(aexpr.symb.start, aexpr.symb.length(),
+                "Terminal " + aexpr.symb.val + " does not expect arguments.");
+        return new Actual(binding, aexpr, args);
     }
 
     /**
@@ -71,14 +77,14 @@ token EOF
     }
 }
 
-public {Grammar} rule start = 
+public {PGrammar} rule start = 
 |   options = options(null)
     imports = imports(null) 
 	tdecls = tokens(null) 
 	header = ACTION 
 	rules = rules(null) 
 	footer = ACTION EOF 
-	{Grammar.Builder builder = new Grammar.Builder(options, imports, header, footer);} 
+	{PGrammar.Builder builder = new PGrammar.Builder(options, imports, header, footer);} 
 	{tdecls.forEach(tdecl -> builder.addToken(tdecl));} 
 	{rules.forEach(rule -> builder.addRule(rule));} 
 	{return builder.build();};
@@ -149,18 +155,19 @@ private { void } rule more_token_decls(List<TokenDecl> tokens, @Nullable Extent 
 |	{ return; }
 ;
 
-private {List<GrammarRule>} rule rules(@Nullable List<GrammarRule> rules) = 
+private {List<PGrammarRule>} rule rules(@Nullable List<PGrammarRule> rules) = 
 |  {return Lists.empty();}
-|  r = rule_ { List<GrammarRule> acc = rules == null ? new ArrayList<>() : rules; } 
+|  r = rule_ { List<PGrammarRule> acc = rules == null ? new ArrayList<>() : rules; } 
 	{ acc.add(r); } rules(acc) {return acc;};
 
-private {GrammarRule} rule rule_ = 
+private {PGrammarRule} rule rule_ = 
 |  vis = visibility rtype = ACTION RULE name = IDENT 
 	{ if (!Character.isLowerCase(name.charAt(0))) } 
 	{    throw parsingError("Rule name must start with a lower case letter: " + name); } 
-	{ Located<String> lname = withLoc(validJavaIdent(name)); } 
+	{ Located<String> lname = withLoc(validJavaIdent(name)); }
+	params = formal_params
 	args = args EQUAL 
-	{ GrammarRule.Builder builder = new GrammarRule.Builder(vis, rtype, lname, args); } 
+	{ PGrammarRule.Builder builder = new PGrammarRule.Builder(vis, rtype, lname, params, args); } 
 	prod = production 
 	{ builder.addProduction(prod); } 
 	productions(builder) 
@@ -172,29 +179,55 @@ private { boolean } rule visibility =
 |  PRIVATE { return false; }
 ;
 
-private { @Nullable Extent } rule args = 
+private { List<Located<String>> } rule formal_params =
+| LANGLE name = IDENT
+	{ if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); }
+	// Formal rule parameters do not appear in generated Java code
+	{ Located<String> lname = withLoc(name);
+	  List<Located<String>> params = new ArrayList<>();
+	  params.add(lname);
+	}
+  more_formal_params(params)
+	{ return params; }
+| 	{ return Lists.empty(); }
+;
+
+private { void } rule more_formal_params(List<Located<String>> params) =
+| RANGLE	{ return; }
+| COMMA name = IDENT
+	{ if (!Character.isLowerCase(name.charAt(0)))
+		throw parsingError("Rule parameter must start with a lower case letter: " + name); }
+	// Formal rule parameters do not appear in generated Java code
+	{ Located<String> lname = withLoc(name);
+	  params.add(lname); 
+	}
+	continue
+;
+
+private { @Nullable PExtent } rule args = 
 |  { return null; }
 |  ext = ARGUMENTS { return ext; }
 ;
 
-private {void} rule productions(GrammarRule.Builder builder) = 
+private {void} rule productions(PGrammarRule.Builder builder) = 
 |   SEMICOL { return; }
 |   prod = production { builder.addProduction(prod); } 
 	productions(builder) { return; }
 ;
 
-private { Production } rule production = 
-|   BAR  { Production.Builder builder = new Production.Builder(); } 
+private { PProduction } rule production = 
+|   BAR  { PProduction.Builder builder = new PProduction.Builder(); } 
 	items(builder) { return builder.build(); }
 ;
 
-private { void } rule items(Production.Builder builder) = 
+private { void } rule items(PProduction.Builder builder) = 
 |	{ return ;}
 |   ext = ACTION { builder.addAction(ext); } items(builder) { return; }
 |   id = IDENT actual = actual(withLoc(id)) { builder.addActual(actual); } 
 	items(builder) { return; }
 |	CONTINUE 
-	{ builder.addItem(new Production.Continue(withLoc("continue"))); }
+	{ builder.addItem(new PProduction.Continue(withLoc("continue"))); }
 	// A dummy rule to provide a specific error message
 	forbid_more_items() 
 	{ return; }
@@ -206,11 +239,32 @@ private { void } rule forbid_more_items() =
 |	{ invalidContinuation(); } IDENT  { return; /* dead code */ }
 ;
 
-private { Production.Actual } rule actual(Located<String> id) =
-|  args = args { return actual(null, id, args); }
-|  { validJavaIdent(id.val); }
+private { Actual } rule actual(Located<String> id) =
+|   aexpr = actual_expr(id) args = args 
+	{ return actual(null, aexpr, args); }
+|   { validJavaIdent(id.val); }
 	EQUAL name = IDENT { Located<String> lname = withLoc(name); }
-	args = args { return actual(id, lname, args); }
+	aexpr = actual_expr(lname)
+	args = args { return actual(id, aexpr, args); }
+;
+
+private { ActualExpr } rule actual_expr(Located<String> id) =
+|	{ return new ActualExpr(id, Lists.empty()); }
+|	LANGLE 
+	sym = IDENT param = actual_expr(withLoc(sym))
+	{ List<ActualExpr> params = new ArrayList<>();
+	  params.add(param);
+	}
+	actual_exprs(params)
+	{ return new ActualExpr(id, params); }
+;
+
+private { void } rule actual_exprs(List<ActualExpr> params) =
+|	RANGLE		{ return; }
+|	COMMA sym = IDENT param = actual_expr(withLoc(sym))
+	{ params.add(param); }
+	actual_exprs(params)
+	{ return; }
 ;
 
 {   /**

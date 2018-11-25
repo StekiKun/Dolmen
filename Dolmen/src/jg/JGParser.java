@@ -13,13 +13,14 @@ import codegen.Config;
 import codegen.GrammarOutput;
 import common.Lists;
 import syntax.Extent;
-import syntax.Grammar;
-import syntax.GrammarRule;
-import syntax.Grammars;
-import syntax.Grammars.NTermsInfo;
-import syntax.Grammars.PredictionTable;
 import syntax.Located;
-import syntax.Production;
+import syntax.TokenDecl;
+import unparam.Grammar;
+import unparam.GrammarRule;
+import unparam.Grammars;
+import unparam.Production;
+import unparam.Grammars.NTermsInfo;
+import unparam.Grammars.PredictionTable;
 
 /**
  * This class defines an instance of {@link Grammar}
@@ -38,12 +39,12 @@ public abstract class JGParser {
 		// Static utility only
 	}
 
-	static Grammar.TokenDecl token(String name) {
-		return new Grammar.TokenDecl(Located.dummy(name), null);
+	static TokenDecl token(String name) {
+		return new TokenDecl(Located.dummy(name), null);
 	}
 	
-	static Grammar.TokenDecl vtoken(String name, String valType) {
-		return new Grammar.TokenDecl(Located.dummy(name), Extent.inlined(valType));
+	static TokenDecl vtoken(String name, String valType) {
+		return new TokenDecl(Located.dummy(name), Extent.inlined(valType));
 	}
 	
 	static Production.Actual actual(String s) {
@@ -138,8 +139,8 @@ public abstract class JGParser {
 			"import org.eclipse.jdt.annotation.NonNull;",
 			"import java.util.List;", "import java.util.ArrayList;",
 			"import common.Lists;", "import syntax.Extent;", "import syntax.Located;",
-			"import syntax.Production;", "import syntax.Grammar.TokenDecl;",
-			"import syntax.GrammarRule;", "import syntax.Grammar;"
+			"import unparam.Production;", "import syntax.TokenDecl;",
+			"import unparam.GrammarRule;", "import unparam.Grammar;"
 			);
 	private static final String header =
 			"/**\n" +

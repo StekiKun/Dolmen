@@ -898,7 +898,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
                 String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
                  @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
 				  if (reg == null)
-				  	throw parsingError("Undefined regular expression " + reg);
+				  	throw parsingError("Undefined regular expression " + id);
 				  return reg;
 				
             }

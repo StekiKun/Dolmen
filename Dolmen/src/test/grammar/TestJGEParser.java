@@ -14,9 +14,15 @@ import jge.JGELexer;
 import jge.JGEParser;
 import jl.JLLexerGenerated;
 import jl.JLParser;
-import syntax.Grammar;
-import syntax.Grammars;
 import syntax.Lexer;
+import syntax.PGrammar;
+import syntax.PGrammars;
+import syntax.Reporter;
+import unparam.Expansion;
+import unparam.Expansion.PGrammarNotExpandable;
+import unparam.Grammar;
+import unparam.Grammar.IllFormedException;
+import unparam.Grammars;
 
 /**
  * This class tests the extended grammar description parser by
@@ -65,20 +71,47 @@ public abstract class TestJGEParser {
 		FileReader reader = new FileReader(filename);
 		JGELexer lexer = new JGELexer(filename, reader);
 		JGEParser parser = of(lexer);
-		Grammar grammar = parser.start();
+		PGrammar pgrammar = parser.start();
 		reader.close();
-		System.out.println(grammar.toString());
-		Grammars.PredictionTable predictTable =
-			Grammars.predictionTable(grammar, Grammars.analyseGrammar(grammar, null, null));
-		if (!predictTable.isLL1())
-			System.out.println(predictTable.toString());
-		File file = new File("src/test/examples/" + className + ".java");
-		try (FileWriter writer = new FileWriter(file, false)) {
-			Config config = Config.ofGrammar(grammar, null);
-			writer.append("package test.examples;\n");
-			GrammarOutput.output(writer, className, config, grammar, predictTable);
+		System.out.println(pgrammar.toString());
+		Reporter reporter = new Reporter();
+		PGrammars.Dependencies deps = PGrammars.dependencies(pgrammar.rules);
+		PGrammars.findUnusedSymbols(pgrammar, deps, reporter);
+		PGrammars.analyseGrammar(pgrammar, deps, reporter);
+		if (!reporter.getReports().isEmpty()) {
+			if (reporter.hasErrors()) {
+				System.err.println(reporter);
+				return;
+			}
+			System.out.println(reporter);
 		}
-		System.out.println("Generated in " + file.getAbsolutePath());
+
+		try {
+			Expansion.checkExpandability(pgrammar);
+			Grammar grammar = Expansion.of(pgrammar);
+			System.out.println("Generated ground grammar with " + 
+				grammar.rules.size() + " rules");
+			System.out.println(grammar);
+			
+			Grammars.PredictionTable predictTable =
+				Grammars.predictionTable(grammar, 
+					Grammars.analyseGrammar(grammar, null, null));
+			if (!predictTable.isLL1())
+				System.out.println(predictTable.toString());
+			File file = new File("src/test/examples/" + className + ".java");
+			try (FileWriter writer = new FileWriter(file, false)) {
+				Config config = Config.ofGrammar(grammar, null);
+				writer.append("package test.examples;\n");
+				GrammarOutput.output(writer, className, config, grammar, predictTable);
+			}
+			System.out.println("Generated in " + file.getAbsolutePath());
+		} catch (PGrammarNotExpandable e) {
+			System.out.println(e.getReport().display());
+			return;
+		} catch (IllFormedException e) {
+			System.out.println(e.getMessage());
+		}
+		
 	}
 	
 	/**
@@ -94,5 +127,7 @@ public abstract class TestJGEParser {
 		
 		generateLexer("tests/jl/JSonPos.jl", "JSonPosLexer");
 		generateParser("tests/jg/JSonPos.jg", "JSonPosParser");
+		
+		generateParser("tests/jg/Templates.jg", "Templates");
 	}
 }

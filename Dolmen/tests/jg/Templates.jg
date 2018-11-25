@@ -1,0 +1,134 @@
+/**
+ * Some standard grammar constructs, which can be reused
+ * thanks to to parametricity in Dolmen parsing rules
+ * 
+ * @author Stéphane Lescuyer
+ */
+[ class_annotations = "@SuppressWarnings(\"unused\")" ]
+
+import java.util.Optional;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
+
+token { String } STRING
+token COMMA
+token LPAREN RPAREN
+
+{ }
+
+// Optional constructs
+
+private { boolean } rule boption<t> =
+| t()	{ return true; }
+| 		{ return false; }
+;
+
+private { Optional<#t> } rule option<t> =
+| v = t		{ return Optional.of(t); }
+|			{ return Optional.empty(); }
+;
+
+private { #t } rule voption<t>(#t def) =
+| v = t		{ return v; }
+| 			{ return def; }
+;
+
+private { #t } rule loption<t> =
+| v = t		{ return v; }
+|			{ return Collections.emptyList(); }
+;
+
+private { void } rule ignore<t> =
+| t		{ return; }
+;
+
+// Delimiting constructs
+
+private { #constr } rule preceded<left, constr> =
+| left c = constr left { return c; }
+// formal used without args after being used with args
+// | left() c = constr left { return c; }
+;
+
+private { #constr } rule terminated<constr, right> =
+| c = constr right { return c; }
+;
+
+private { #constr } rule enclosed<left, constr, right> =
+| left c = constr right { return c; }
+;
+
+// List constructs
+
+private { List<#r> } rule list<r> =
+| v = r 
+  { List<#r> acc = new ArrayList<>(); acc.add(v); }
+  more_list<r>(acc)
+  { return acc; } 
+| { return Collections.emptyList(); }
+; 	
+
+private { void } rule more_list<r>(List<#r> acc) =
+| { return; }
+| v = r { acc.add(v); } continue
+;
+
+private { List<#r> } rule nelist<r> =
+| v = r
+  { List<#r> acc = new ArrayList<>(); acc.add(v); }
+  more_list<r>(acc) 
+  { return acc; }
+;
+
+private { List<#r> } rule separated_list<separator, r> =
+| l = loption<separated_nelist<separator, r>>
+	{ return l; }
+// expansion issue with direct growing cycle
+//| separated_list<separator, loption<r>> { return null; }
+;
+
+private { List<#r> } rule separated_nelist<separator, r> =
+| v = r
+  { List<#r> acc = new ArrayList<>(); acc.add(v); }
+  more_separated_list<separator, r>(acc)
+  { return acc; } 
+;
+
+private { void } rule more_separated_list<separator, r>(List<#r> acc) =
+| { return; }
+| separator v = r { acc.add(v); } continue
+// formal used with args after being used without args
+// | boption<separator> option<separator> { }
+;
+
+// Some public entry points to force the expansion
+// of some of the parametric rules below
+
+public { void } rule foo1() =
+| list<enclosed<LPAREN, separated_list<COMMA, STRING>, RPAREN>>
+//| boption<COMMA>			// <- no-arg token used in an arg sort
+//| boption<list<STRING>>		// <- no-arg non-terminal used in an arg sort
+//| separated_nelist<foo1, STRING>	// <- arg non-terminal used in a no-arg sort
+//| loption<LPAREN>  // <- unvalued token used in a valued sort
+//| loption<ignore<STRING>> // <- void non-terminal used in a valued sort
+;
+
+// The following blocks produces an infinitely growing expansion via 3 rules
+// It can be used to test cycle detection and report
+//private { void } rule t<a, b> =
+//| u<list<a>>
+//| v<a, list<b>>
+//;
+//
+//private { void } rule u<a> =
+//| v<option<a>, a> t<STRING, STRING>
+//;
+//
+//private { void } rule v<a, b> =
+//| v<b, a>
+//| t<a, b>
+//| u<list<STRING>>
+//;
+
+{ }

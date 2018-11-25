@@ -6,7 +6,7 @@ import java.io.IOException;
 
 import codegen.Config;
 import codegen.TokensOutput;
-import syntax.Grammar;
+import unparam.Grammar;
 
 /**
  * Tests for the generation of the tokens class

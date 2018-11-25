@@ -1,4 +1,4 @@
-package syntax;
+package unparam;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -11,10 +11,17 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 
 import common.Nulls;
+import syntax.CExtent;
+import syntax.Extent;
+import syntax.IReport;
+import syntax.Located;
+import syntax.Option;
+import syntax.Reporter;
+import syntax.TokenDecl;
 import syntax.IReport.Severity;
 
 /**
- * A lexer description is a set of {@linkplain GrammarRule grammar rules}
+ * A parser description is a set of {@linkplain GrammarRule grammar rules}
  * along with arbitrary header and footer sections. The rules come
  * in no particular order, as every rule can theoretically be
  * used as an entry point to the generated parser. When only one
@@ -32,55 +39,6 @@ import syntax.IReport.Severity;
  * @author Stéphane Lescuyer
  */
 public final class Grammar {
-
-	/**
-	 * A token declaration describes the token
-	 * {@linkplain #name name}, which is the name
-	 * used in grammar rules to denote that terminal,
-	 * and the potential {@linkplain #valueType value type}
-	 * associated to these tokens.
-	 * 
-	 * @author Stéphane Lescuyer
-	 */
-	public static final class TokenDecl {
-		/** The name of this token */
-		public final Located<String> name;
-		/**
-		 * If non-null, the extent of the type of Java values
-		 * associated to this token at run-time
-		 */
-		public final @Nullable Extent valueType;
-		
-		/**
-		 * Builds the token declaration with the given
-		 * name and value type
-		 * @param name
-		 * @param valueType
-		 */
-		public TokenDecl(Located<String> name, @Nullable Extent valueType) {
-			if (name.val.chars().anyMatch(ch -> Character.isLowerCase(ch)))
-				throw new IllegalArgumentException("Token name should not contain lower case");
-
-			this.name = name;
-			this.valueType = valueType;
-		}
-		
-		/**
-		 * @return {@code true} iff tokens of this type bear
-		 * 	a semantic value at run-time
-		 */
-		public boolean isValued() {
-			return valueType != null;
-		}
-		
-		@Override
-		public String toString() {
-			@Nullable Extent valueType_ = valueType;
-			return "token " +
-					(valueType_ == null ? "" : "{" + valueType_.find() + "} ") +
-					name.val;
-		}
-	}
 	
 	/** The configuration options specified in this grammar */
 	public final List<@NonNull Option> options;
@@ -91,7 +49,7 @@ public final class Grammar {
 	/** The extent of this parser class' header */
 	public final Extent header;
 	/** The map of all grammar rules in the parser, indexed by their name */
-	public final Map<@NonNull String, @NonNull GrammarRule> rules;
+	public final Map<@NonNull String, unparam.GrammarRule> rules;
 	/** The extent of this parser class' footer */
 	public final Extent footer;
 	
@@ -384,7 +342,7 @@ public final class Grammar {
 		}
 
 		static IReport unexpectedArguments(GrammarRule rule, int j,
-			Extent args, Located<String> nterm) {
+			CExtent args, Located<String> nterm) {
 			String msg = String.format("%s non-terminal \"%s\" does not expect arguments",
 				inRule(rule, j), nterm.val);
 			return IReport.of(msg, Severity.ERROR, args);

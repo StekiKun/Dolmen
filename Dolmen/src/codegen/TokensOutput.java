@@ -6,7 +6,7 @@ import java.util.List;
 
 import org.eclipse.jdt.annotation.NonNull;
 
-import syntax.Grammar.TokenDecl;
+import syntax.TokenDecl;
 import syntax.Extent;
 
 /**

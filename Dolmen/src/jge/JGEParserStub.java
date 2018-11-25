@@ -16,10 +16,10 @@ import common.Bookkeeper;
 import common.CountingWriter;
 import jg.JGLexer;
 import jg.JGParserGenerated;
-import syntax.Grammar;
-import syntax.Grammars;
 import syntax.IReport;
 import syntax.Reporter;
+import unparam.Grammar;
+import unparam.Grammars;
 
 /**
  * This class is a simple entry point for the
