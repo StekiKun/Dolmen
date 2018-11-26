@@ -104,12 +104,13 @@ public abstract class CExtent {
 	/**
 	 * @param extent
 	 * @param children	the replacements for {@code extent}'s {@link PExtent#holes}, in order
+	 * @param ruleName	the ground rule which produced this composite extent
 	 * @return a composite extent representing the instantiation of
 	 * 	the parameterized extent {@code extent} with the composite
 	 *  extents given in {@code children}
 	 */
-	public static CExtent of(PExtent extent, List<CExtent> children) {
-		return new Composite(extent, children);
+	public static CExtent of(PExtent extent, List<CExtent> children, String ruleName) {
+		return new Composite(extent, children, ruleName);
 	}
 	
 	/**
@@ -125,15 +126,19 @@ public abstract class CExtent {
 		// The extents that were substituted in place of 
 		// {@code extent}'s holes, in order
 		private final List<CExtent> children;
+		// The (ground) rule whose generation produced 
+		// this composite extent
+		private final String ruleName;
 		
 		// Cached version of this composite's extent actual 
 		// final contents, with the holes in {@code extent}
 		// substituted for the contents in {@code children}
 		private final String realization;
 	
-		Composite(PExtent extent, List<CExtent> children) {
+		Composite(PExtent extent, List<CExtent> children, String ruleName) {
 			this.extent = extent;
 			this.children = children;
+			this.ruleName = ruleName;
 			if (extent.holes.size() != children.size())
 				throw new IllegalArgumentException(
 						"Size mismatch between extent holes (" + extent.holes.size() +
@@ -205,7 +210,7 @@ public abstract class CExtent {
 			if (end > realLength())
 				throw new IllegalArgumentException();
 			if (extent.holes.isEmpty())
-				return new Origin(offset + startPos(), length, Maps.empty());
+				return new Origin(offset + startPos(), length, ruleName, Maps.empty());
 			boolean inGap = false;
 			int lastPOffset = 0;
 			int realOffset = 0;
@@ -249,7 +254,7 @@ public abstract class CExtent {
 			// containing the whole region. The replacements are only
 			// needed if we were not in a gap.
 			return new Origin(offset - shift + startPos(), length,
-					inGap ? Maps.empty() : textualReplacements());
+					ruleName, inGap ? Maps.empty() : textualReplacements());
 		}
 		
 		/**

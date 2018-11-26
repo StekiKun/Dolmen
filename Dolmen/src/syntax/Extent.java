@@ -166,7 +166,7 @@ public class Extent extends CExtent {
 		if (this == DUMMY) throw new IllegalArgumentException();
 		if (offset + length > length())
 			throw new IllegalArgumentException();
-		return new Origin(offset + startPos, length, Maps.empty());
+		return new Origin(offset + startPos, length, null, Maps.empty());
 	}
 	
 	private static final class Inlined extends Extent {

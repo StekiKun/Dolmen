@@ -715,6 +715,9 @@ public final class Expansion {
 		}
 	}
 	
+	// The name of the ground rule being realized
+	private String ruleName = "<no rule set yet>";
+	
 	/**
 	 * This generates the ground instance of {@code rule} applied to
 	 * (ground) effective parameters {@link effective}, and records
@@ -728,18 +731,21 @@ public final class Expansion {
 	private GrammarRule realizeRule(String ruleName, 
 			PGrammarRule prule, List<ActualExpr> effective) {
 		// This is a new instantiation that we must perform
+		this.ruleName = ruleName;
 		Map<String, CExtent> replacements = replacementMap(prule, effective);
-		CExtent ruleReturn = prule.returnType.compose(replacements);
+		CExtent ruleReturn = prule.returnType.compose(ruleName, replacements);
 		@Nullable PExtent pruleArgs = prule.args;
 		@Nullable CExtent ruleArgs =
-			pruleArgs == null ? null : pruleArgs.compose(replacements);
+			pruleArgs == null ? 
+				null : pruleArgs.compose(ruleName, replacements);
 		Map<String, ActualExpr> pinst = new LinkedHashMap<>(effective.size());
 		for (int i = 0; i < effective.size(); ++i)
 			pinst.put(prule.params.get(i).val, effective.get(i));
 		
 		List<Production> productions = new ArrayList<>(prule.productions.size());
 		for (PProduction pprod : prule.productions)
-			productions.add(realizeProduction(pprod, pinst, replacements));
+			productions.add(
+				realizeProduction(pprod, pinst, replacements));
 		
 		GrammarRule rule = 
 			new GrammarRule(prule.visibility, ruleReturn, 
@@ -764,7 +770,7 @@ public final class Expansion {
 			switch (pitem.getKind()) {
 			case ACTION:
 				PProduction.ActionItem action = (PProduction.ActionItem) pitem;
-				CExtent extent = action.extent.compose(replacements);
+				CExtent extent = action.extent.compose(ruleName, replacements);
 				items.add(new Production.ActionItem(extent));
 				continue;
 			case ACTUAL:
@@ -810,7 +816,8 @@ public final class Expansion {
 			itemName = instExpr.symb.val;
 		
 		@Nullable PExtent pargs = pactual.args;
-		@Nullable CExtent args = pargs == null ? null : pargs.compose(replacements);
+		@Nullable CExtent args = 
+			pargs == null ? null : pargs.compose(ruleName, replacements);
 		return new Production.Actual(pactual.binding, 
 				Located.like(itemName, pactual.item.symb), args);
 	}
@@ -902,7 +909,7 @@ public final class Expansion {
 			// of the parameters first. Hoping that all formals which appear
 			// in holes are actually valued.
 			Map<String, CExtent> replacements = replacementMap(prule, aexpr.params);
-			res = prule.returnType.compose(replacements);
+			res = prule.returnType.compose(ruleName, replacements);
 		}
 		returnTypes.put(aexpr, Optional.ofNullable(res));
 		return res;

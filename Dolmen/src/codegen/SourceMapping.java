@@ -120,7 +120,7 @@ public final class SourceMapping {
 			@Nullable CExtent extent_ = extent; 
 			if (extent_ == null)
 				return new Origin(
-					toffset - offset + origin.offset, length, Maps.empty());
+					toffset - offset + origin.offset, length, null, Maps.empty());
 			// Otherwise, we try and find the innermost extent (composite or not)
 			// containing the whole range. It exists because at worst it is 
 			// {@code extent} itself.
@@ -230,7 +230,8 @@ public final class SourceMapping {
 	 * the source region may contain placeholders and be of a different
 	 * length than the mapped region. In that case the textual replacements
 	 * to perform to obtain the contents of the region in generated code
-	 * is given by {@link #replacements}.
+	 * is given by {@link #replacements}. The rule in the ground grammar
+	 * which produced these instantiated actions is given in {@link #ruleName}.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -240,6 +241,11 @@ public final class SourceMapping {
 		/** The length of the source region */
 		public final int length;
 		
+		/** 
+		 * The name of the (possibly instantiated) rule which 
+		 * encloses this origin, if any, or {@code null} otherwise
+		 */
+		public final @Nullable String ruleName;
 		/**
 		 * The textual replacements for potential <i>holes</i> in the source region
 		 */
@@ -249,11 +255,14 @@ public final class SourceMapping {
 		 * Constructs an origin description from the given parameters
 		 * @param offset	offset of the origin in source file (0-based)
 		 * @param length	length of the origin in source file
+		 * @param ruleName	name of the (ground) rule which encloses this origin
 		 * @param replacements	textual replacements for holes
 		 */
-		public Origin(int offset, int length, Map<String, String> replacements) {
+		public Origin(int offset, int length, 
+				@Nullable String ruleName, Map<String, String> replacements) {
 			this.offset = offset;
 			this.length = length;
+			this.ruleName = ruleName;
 			this.replacements = replacements;
 		}
 		

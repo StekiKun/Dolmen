@@ -334,6 +334,7 @@ public class PExtent extends Extent {
 	 *  tree of the original locations that led to a composite extent.
 	 * </i>
 	 *
+	 * @param ruleName	the ground rule which triggered this instantiation
 	 * @param replacements
 	 * @return an extent representing the contents of this extent where
 	 * 	all the {@link Hole holes} are replaced to extents according
@@ -341,9 +342,9 @@ public class PExtent extends Extent {
 	 * @throws IllegalArgumentException if the {@code replacements} map
 	 * 	does not cover all the possible holes in the receiver 
 	 */
-	public CExtent compose(Map<String, CExtent> replacements) {
+	public CExtent compose(String ruleName, Map<String, CExtent> replacements) {
 		if (holes.isEmpty())
-			return CExtent.of(this, Lists.empty());
+			return CExtent.of(this, Lists.empty(), ruleName);
 
 		List<CExtent> children = new ArrayList<>(holes.size());
 		@SuppressWarnings("unused")
@@ -355,6 +356,6 @@ public class PExtent extends Extent {
 			children.add(replacement);
 			offset = hole.endOffset() + 1;
 		}
-		return CExtent.of(this, children);
+		return CExtent.of(this, children, ruleName);
 	}
 }
