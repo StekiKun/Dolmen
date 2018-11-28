@@ -1,8 +1,10 @@
 package codegen;
 
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.ListIterator;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -120,7 +122,7 @@ public final class SourceMapping {
 			@Nullable CExtent extent_ = extent; 
 			if (extent_ == null)
 				return new Origin(
-					toffset - offset + origin.offset, length, null, Maps.empty());
+					toffset - offset + origin.offset, tlength, null, Maps.empty());
 			// Otherwise, we try and find the innermost extent (composite or not)
 			// containing the whole range. It exists because at worst it is 
 			// {@code extent} itself.
@@ -267,12 +269,46 @@ public final class SourceMapping {
 		}
 		
 		@Override
+		public int hashCode() {
+			int res = offset;
+			res = 31 * res + length;
+			res = 31 * res + Objects.hashCode(ruleName);
+			// Ignoring replacements, they must be implied by ruleName
+			return res;
+		}
+		
+		@Override
+		public boolean equals(@Nullable Object o) {
+			if (this == o) return true;
+			if (!(o instanceof Origin)) return false;
+			Origin origin = (Origin) o;
+			if (offset != origin.offset) return false;
+			if (length != origin.length) return false;
+			if (!Objects.equals(ruleName, origin.ruleName)) return false;
+			return true;
+		}
+		
+		@Override
 		public String toString() {
 			String res = String.format("[%d, %d+%d]", offset, offset, length);
 			if (replacements.isEmpty()) return res;
 			res += "{ with " + replacements.toString() + "}";
 			return res;
 		}
+		
+		/**
+		 * A comparator to sort origins by offsets. Origins
+		 * at the same offsets are sorted by length.
+		 */
+		public final static Comparator<Origin> SORTER =
+			new Comparator<Origin>() {
+				@Override
+				public int compare(Origin o1, Origin o2) {
+					int c = o1.offset - o2.offset;
+					if (c != 0) return c;
+					return o1.length - o2.length;
+				}
+			};
 	}
 	
 	/**
