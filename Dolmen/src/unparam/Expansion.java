@@ -535,10 +535,11 @@ public final class Expansion {
 				sites.add(src.formal);
 				rules.add(src.rule);
 				for (ExpansionFlowGraph.Edge edge : cycle) {
-					ActualExpr pattern = patternFromContext(grammar, edge.context, focus);
+					PList<Formal> ctxt = PList.rev(edge.context);
+					ActualExpr pattern = patternFromContext(grammar, ctxt, focus);
 					patterns.add(pattern);
 					sites.add(edge.site);
-					focus = pattern.params.get(edge.context.hd().formalIdx);
+					focus = pattern.params.get(ctxt.hd().formalIdx);
 					rules.add(edge.rule);
 				}
 				
