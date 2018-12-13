@@ -389,6 +389,7 @@ public final class Expansion {
 			// Look for occurrences in subexpressions. These occurrences are
 			// in a context that is extended by the formal corresponding to
 			// the relative place of the subexpression.
+			if (expr.params.isEmpty()) return;
 			@NonNull Formal[] symFormals = formals(expr.symb);
 			if (symFormals.length != expr.params.size())
 				throw new IllegalStateException();
