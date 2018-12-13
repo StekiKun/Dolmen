@@ -64,7 +64,7 @@ public final class JLEParser extends codegen.BaseParser<JLEParser.Token> {
             END;
         }
         
-        private Token(Kind kind)  {
+        Token(Kind kind)  {
             this.kind = kind;
         }
         private final Kind kind;

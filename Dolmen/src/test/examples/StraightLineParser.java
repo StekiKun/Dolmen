@@ -24,7 +24,7 @@ public final class StraightLineParser extends codegen.BaseParser<StraightLinePar
             EOF;
         }
         
-        private Token(Kind kind)  {
+        Token(Kind kind)  {
             this.kind = kind;
         }
         private final Kind kind;

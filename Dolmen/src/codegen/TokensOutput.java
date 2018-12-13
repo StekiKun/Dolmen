@@ -82,7 +82,7 @@ public final class TokensOutput {
 	}
 	
 	private void genMethods() {
-		buf.emit("private ").emit(className).emit("(Kind kind) ").openBlock();
+		buf.emit(className).emit("(Kind kind) ").openBlock();
 		buf.emit("this.kind = kind;");
 		buf.closeBlock();
 		buf.emitln("private final Kind kind;");

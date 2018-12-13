@@ -38,7 +38,7 @@ public final class JGParserGenerated extends codegen.BaseParser<JGParserGenerate
             EOF;
         }
         
-        private Token(Kind kind)  {
+        Token(Kind kind)  {
             this.kind = kind;
         }
         private final Kind kind;

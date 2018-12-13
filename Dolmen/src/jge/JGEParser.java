@@ -50,7 +50,7 @@ public final class JGEParser extends codegen.BaseParser<JGEParser.Token> {
             EOF;
         }
         
-        private Token(Kind kind)  {
+        Token(Kind kind)  {
             this.kind = kind;
         }
         private final Kind kind;

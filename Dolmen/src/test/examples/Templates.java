@@ -20,7 +20,7 @@ public final class Templates extends codegen.BaseParser<Templates.Token> {
             RPAREN;
         }
         
-        private Token(Kind kind)  {
+        Token(Kind kind)  {
             this.kind = kind;
         }
         private final Kind kind;
