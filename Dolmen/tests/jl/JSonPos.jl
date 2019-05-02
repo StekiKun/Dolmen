@@ -1,5 +1,5 @@
-import static test.examples.JSonPosParser.Token.*;
-import test.examples.JSonPosParser.Token;
+import static org.stekikun.dolmen.test.examples.JSonPosParser.Token.*;
+import org.stekikun.dolmen.test.examples.JSonPosParser.Token;
 
 // Lexical analyzer for non-standard JSON values
 //

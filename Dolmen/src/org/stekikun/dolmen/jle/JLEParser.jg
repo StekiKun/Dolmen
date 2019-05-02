@@ -1,0 +1,501 @@
+/**
+ * Parser description for extended Dolmen lexers (.jl)
+ *
+ * @author Stéphane Lescuyer
+ */
+
+import org.eclipse.jdt.annotation.Nullable;
+import org.eclipse.jdt.annotation.NonNull;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.LinkedHashMap;
+import org.stekikun.dolmen.common.CSet;
+import org.stekikun.dolmen.common.Lists;
+import org.stekikun.dolmen.common.Maps;
+import org.stekikun.dolmen.common.Java;
+import org.stekikun.dolmen.codegen.LexBuffer.Position;
+import org.stekikun.dolmen.syntax.Extent;
+import org.stekikun.dolmen.syntax.Located;
+import org.stekikun.dolmen.syntax.Regular;
+import org.stekikun.dolmen.syntax.Regular.Characters;
+import org.stekikun.dolmen.syntax.Regulars;
+import org.stekikun.dolmen.syntax.Lexer;
+import org.stekikun.dolmen.syntax.Option;
+
+// The tokens of the lexer description language
+
+token {String} IDENT
+token {String} LSTRING	// Single-line string literals
+token {String} MLSTRING // Multi-line string literals
+token {char} LCHAR
+token {int} INTEGER
+token {Extent} ACTION
+token RULE
+token SHORTEST
+token EOF
+token AS
+token ORELSE
+token IMPORT
+token STATIC
+token PUBLIC
+token PRIVATE
+token UNDERSCORE
+token EQUAL
+token OR
+token LBRACKET
+token RBRACKET
+token STAR
+token MAYBE
+token PLUS
+token LPAREN
+token RPAREN
+token CARET
+token DASH
+token HASH
+token DOT
+token LANGLE
+token RANGLE
+token COMMA
+token SEMICOL
+token END
+
+// Java header
+{
+	private final Map<Located<String>, Regular> definitions = new LinkedHashMap<>();
+
+	/**
+	 * @param reg
+	 * @return the character set that this regexp corresponds to
+	 * 	and throws a parsing error if {@code reg} does not correspond
+	 *  to a character set
+	 */
+	private CSet asCSet(Regular reg) {
+		switch (reg.getKind()) {
+		case EPSILON:
+		case EOF:
+		case ALTERNATE:
+		case SEQUENCE:
+		case REPETITION:
+		case BINDING:
+			throw parsingError("Regular expression " + reg + " is not a character set.");
+		case CHARACTERS: {
+			final Characters characters = (Characters) reg;
+			return characters.chars;
+		}
+		}
+		throw new IllegalStateException();
+	}
+
+    /**
+     * @param t
+     * @return the given value wrapped with the location of the last
+     * 	consumed token
+     */
+    private <@NonNull T> Located<T> withLoc(T t) {
+	     return Located.of(t, _jl_lastTokenStart, _jl_lastTokenEnd);
+    }
+    
+    private String validJavaIdent(String id) {
+    	if (Java.keywordSet.contains(id))
+    		throw parsingError("Invalid name: reserved Java identifier");
+    	return id;
+    }
+}
+
+// The parsing rules
+
+/**
+ * lexer := option* import* ACTION definition* entry+ ACTION END
+ */
+public { Lexer } rule lexer =
+|	options = options(null)
+	imports = imports(null) 
+	header = ACTION
+	definitions()
+	entries = entries()
+	footer = ACTION
+	END
+	{
+		Lexer.Builder builder =
+			new Lexer.Builder(options, imports, header, definitions, footer);
+		for (Lexer.Entry entry : entries)
+			builder.addEntry(entry);
+		return builder.build();
+	}
+;
+
+private { List<Option> } rule options(@Nullable List<Option> opts) =
+| 	
+	{ return opts == null ? Lists.empty() : opts; }
+|   LBRACKET
+	{ List<Option> acc = opts == null ? new ArrayList<>() : opts; }
+	key = IDENT 
+	{ Located<String> lkey = withLoc(key); }
+	EQUAL value = string(true)
+	{ Located<String> lvalue = withLoc(value); }
+	RBRACKET
+	{ acc.add(Option.of(lkey, lvalue)); }
+	options(acc)
+	{ return acc; }
+;
+
+private { String } rule string(boolean multi) =
+|	value = LSTRING	
+	{ return value; }
+|	value = MLSTRING
+	{ if (multi) return value;
+	  throw parsingError("Illegal multi-line string literal");
+	} 
+;
+
+private { List<Located<String>> } rule imports(@Nullable List<Located<String>> imports) =
+|	{ return imports == null ? Lists.empty() : imports; }
+|	IMPORT
+	{
+		List<Located<String>> acc = imports == null ? new ArrayList<>() : imports; 
+		Position posStart = _jl_lastTokenStart;
+	  	StringBuilder buf = new StringBuilder();
+	  	buf.append("import ");
+	}
+	import_(buf)
+	{
+		Located<String> imp = Located.of(buf.toString(), posStart, _jl_lastTokenEnd);
+		acc.add(imp);
+	}
+	imports(acc)
+	{ return acc; }
+;
+
+/**
+   import := IMPORT STATIC? typename SEMICOL
+   
+   typename := IDENT
+             | IDENT DOT typename
+             | IDENT DOT STAR
+ */
+
+private { void } rule import_(StringBuilder buf) =
+|	STATIC
+	{ buf.append("static "); }
+	typename(buf)
+	SEMICOL
+	{ buf.append(";"); return; }
+|	typename(buf)
+	SEMICOL
+	{ buf.append(";"); return; }
+;
+
+private { void } rule typename(StringBuilder buf) =
+|	id = IDENT
+	{ buf.append(id); }
+	maybe_more_typename(buf)
+	{ return; }
+;
+
+private { void } rule maybe_more_typename(StringBuilder buf) =
+|	{ return; }
+|	DOT
+	{ buf.append('.'); }
+	more_typename(buf)
+	{ return; }
+;
+
+private { void } rule more_typename(StringBuilder buf) =
+|	STAR 
+	{ buf.append('*'); return; }
+| 	typename(buf)
+	{ return; }
+;
+
+/**
+ * definition := IDENT EQUAL regular SEMICOL
+ */
+
+private { void } rule definitions() =
+|	{ return; }
+|	id = IDENT
+	{ Located<String> lid = withLoc(id); }
+	EQUAL
+	reg = regular()
+	SEMICOL
+	{ definitions.put(lid, reg); }
+	definitions()
+	{ return; }
+;
+
+/**
+ * entry := visibility ACTION RULE IDENT ACTION?
+ *			  EQUAL SHORTEST? clause+
+ * visibility := PUBLIC | PRIVATE
+ */
+
+private { List<Lexer.Entry> } rule entries() =
+|	entry = entry()
+	{ List<Lexer.Entry> acc = new ArrayList<>();
+	  acc.add(entry);
+	}
+	more_entries(acc)
+	{ return acc; }
+;
+
+private { void } rule more_entries(List<Lexer.Entry> acc) =
+|	{ return; }
+|	entry = entry()
+	{ acc.add(entry); }
+	more_entries(acc)
+	{ return; }
+;
+
+private { Lexer.Entry } rule entry() =	
+|	vis = visibility()
+	returnType = ACTION
+	RULE
+	name = IDENT
+	{ Located<String> lname = Located.of(validJavaIdent(name),
+		_jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
+	}
+	args = args()
+	EQUAL
+	shortest = shortest()
+	clauses = clauses()
+	{ return new Lexer.Entry(vis, lname, returnType, shortest,
+							args, clauses);
+	}
+;
+
+private { boolean } rule visibility() =
+|	PUBLIC	{ return true; }
+|	PRIVATE { return false; }
+;
+
+private { @Nullable Extent } rule args() =
+|					{ return null; }
+|	args = ACTION	{ return args; }
+;
+
+private { boolean } rule shortest() =
+|					{ return false; }
+|	SHORTEST		{ return true; }
+;
+
+/**
+ * clause := OR regular ACTION
+ 	       | OR orelse ACTION
+ */
+
+private { List<Lexer.Clause> } rule clauses() =
+|	{ List<Lexer.Clause> clauses = new ArrayList<>(); }
+	clause(clauses)
+	more_clauses(clauses)
+	{ return clauses; }
+;
+
+private { void } rule more_clauses(List<Lexer.Clause> acc) =
+|	{ return; }
+|	clause(acc)
+	more_clauses(acc)
+	{ return; }
+;
+
+private { void } rule clause(List<Lexer.Clause> acc) =
+|	OR	lreg = regular_orelse(acc)  action = ACTION
+	{
+		acc.add(new Lexer.Clause(lreg, action));
+	}
+;
+
+private { Located<Regular> } rule regular_orelse(List<Lexer.Clause> acc) =
+|	ORELSE 
+	{
+		// Deal with the special default clause by finding
+		// all possible first characters matched by other clauses
+		CSet possible = CSet.EMPTY;
+		for (Lexer.Clause cl : acc)
+			possible = CSet.union(possible, Regulars.first(cl.regular.val));
+		CSet others = CSet.complement(possible);
+		Regular reg = Regular.plus(Regular.chars(others));	
+		return withLoc(reg);	// location of 'orelse'
+	}
+|	{ Position start = _jl_lastTokenEnd; }
+	reg = regular()
+	{ return Located.of(reg, start, _jl_lastTokenEnd); }
+;
+
+/**
+ * regular :=
+ * | regular AS IDENT			(allows r as bla as foo)
+ * | altRegular
+ * 
+ * altRegular :=
+ * | seqRegular OR altRegular
+ * | seqRegular
+ * 
+ * seqRegular :=
+ * | postfixRegular seqRegular	(FIRST(seqRegular) = FIRST(atomicRegular) = 
+ * | postfixRegular                UNDERSCORE EOF LCHAR LSTRING IDENT LBRACKET LPAREN)
+ * 
+ * postfixRegular :=
+ * | diffRegular STAR
+ * | diffRegular PLUS
+ * | diffRegular MAYBE
+ * | diffRegular LANGLE INTEGER repetitions
+ * | diffRegular
+ * 
+ * Repetitions :=
+ * | RANGLE
+ * | COMMA INTEGER RANGLE
+ * 
+ * diffRegular :=
+ * | atomicRegular HASH atomicRegular	(only if char sets)
+ * | atomicRegular	 
+ * 
+ * atomicRegular :=
+ * 	 UNDERSCORE
+ * | EOF
+ * | LCHAR
+ * | LSTRING
+ * | IDENT
+ * | LBRACKET charClass RBRACKET
+ * | LPAREN regular RPAREN
+ */
+ 
+private { Regular } rule regular() =
+| r = altRegular() reg = regular_op(r)
+	{ return reg; }
+;
+
+private { Regular } rule regular_op(Regular r) =
+|	{ return r; }
+| AS id = IDENT 
+	{ Located<String> lid = withLoc(validJavaIdent(id)); }
+  reg = regular_op(Regular.binding(r, lid))
+  	{ return reg; }
+;
+
+private { Regular } rule altRegular() =
+| r = seqRegular() reg = altRegular_op(r)
+	{ return reg; }
+;
+
+private { Regular } rule altRegular_op(Regular r1) =
+| 	{ return r1; }
+| OR r2 = altRegular()
+	{ return Regular.or(r1, r2); }
+;
+
+private { Regular } rule seqRegular() =
+| r = postfixRegular() reg = seqRegular_op(r)
+	{ return reg; }
+;
+
+private { Regular } rule seqRegular_op(Regular r1) =
+|	{ return r1; }
+| r2 = seqRegular()
+	{ return Regular.seq(r1, r2); }
+;
+
+private { Regular } rule postfixRegular() =
+| r = diffRegular() reg = postfixRegular_op(r)
+	{ return reg; }
+;
+
+private { Regular } rule postfixRegular_op(Regular r) =
+| STAR		{ return Regular.star(r); }
+| PLUS		{ return Regular.plus(r); }
+| MAYBE		{ return Regular.or(Regular.EPSILON, r); }
+| LANGLE min = INTEGER
+			{ if (min < 0)
+				throw parsingError("Invalid repetition count " + min);
+			}
+  reg = repetitions(r, min)
+  			{ return reg; }
+|			{ return r; }
+; 
+
+private { Regular } rule repetitions(Regular r, int min) =
+| RANGLE		
+	{ return Regular.repeat(r, min); }
+| COMMA max = INTEGER
+	{ if (max < 0)
+		throw parsingError("Invalid repetition count " + max);
+	  if (max < min)
+	  	throw parsingError("Maximum repetition " + max 
+	  		+ " is strictly smaller than minimum " + min);
+	}
+ 	RANGLE
+	{ return Regular.repeat(r, min, max); }
+;
+
+private { Regular } rule diffRegular() =
+| r1 = atomicRegular()
+  reg = diffRegular_HASH(r1)
+  { return reg; }
+;
+
+private { Regular } rule diffRegular_HASH(Regular r1) =
+|	{ return r1; }
+| 	HASH r2 = atomicRegular()
+	{ return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2))); }
+;
+
+private { Regular } rule atomicRegular() =
+| UNDERSCORE	{ return Regular.chars(CSet.ALL_BUT_EOF); }
+| EOF			{ return Regular.chars(CSet.EOF); }
+| ch = LCHAR	{ return Regular.chars(CSet.singleton(ch)); }
+| s = string(false)	
+			    { return Regular.string(s); }
+| id = IDENT	{ @Nullable Regular reg = Maps.get(definitions, Located.dummy(id));
+				  if (reg == null)
+				  	throw parsingError("Undefined regular expression " + id);
+				  return reg;
+				}
+| cs = charClass()
+				{ return Regular.chars(cs); }
+| LPAREN reg = regular() RPAREN
+				{ return reg; }
+;
+
+/**
+ * charClass := LBRACKET charSet RBRACKET
+ *
+ * charSet := CARET charSetPositive
+ *   		  | charSetPositive
+ * 
+ * charSetPositive := LCHAR DASH LCHAR
+ *	                | LCHAR
+ *	                | charSetPositive charSetPositive
+ */ 	        			  
+
+private { CSet } rule charClass() =
+| LBRACKET c = charSet() RBRACKET
+	{ return c; }
+;
+
+private { CSet } rule charSet() =
+| CARET	c = charSetPositive()
+	{ return CSet.complement(c); }
+| c = charSetPositive()
+	{ return c; }
+;
+
+private { CSet } rule charSetPositive() =
+| 	ch = LCHAR cs = charSetInterval(ch)
+	res = more_charSetPositive(cs)
+	{ return res; }
+;
+
+private { CSet } rule charSetInterval(char first) =
+|	DASH last = LCHAR
+	{ return CSet.interval(first, last); }
+|	{ return CSet.singleton(first); }
+;
+
+private { CSet } rule more_charSetPositive(CSet acc) =
+|	{ return acc; }
+|	cs = charSetPositive()
+	{ return CSet.union(acc, cs); }
+;
+
+// Java footer
+{ }

@@ -1,5 +1,5 @@
-import test.examples.ArithGroundParser.Token;
-import static test.examples.ArithGroundParser.Token.*;
+import org.stekikun.dolmen.test.examples.ArithGroundParser.Token;
+import static org.stekikun.dolmen.test.examples.ArithGroundParser.Token.*;
 { }
 
 digit = ['0'-'9'];

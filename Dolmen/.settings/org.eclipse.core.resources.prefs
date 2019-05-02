@@ -1,4 +1,4 @@
 eclipse.preferences.version=1
-encoding//src/common/CSet.java=UTF-8
-encoding//src/syntax/Regular.java=UTF-8
+encoding//src/org/stekikun/dolmen/common/CSet.java=UTF-8
+encoding//src/org/stekikun/dolmen/syntax/Regular.java=UTF-8
 encoding/<project>=UTF-8

@@ -1,5 +1,5 @@
-import static test.examples.JSonParser.Token.*;
-import test.examples.JSonParser.Token;
+import static org.stekikun.dolmen.test.examples.JSonParser.Token.*;
+import org.stekikun.dolmen.test.examples.JSonParser.Token;
 
 {
 	private final StringBuilder buf = new StringBuilder();

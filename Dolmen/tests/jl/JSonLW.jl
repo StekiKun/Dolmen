@@ -1,5 +1,5 @@
-import static test.examples.JSonLWParser.Token.*;
-import test.examples.JSonLWParser.Token;
+import static org.stekikun.dolmen.test.examples.JSonLWParser.Token.*;
+import org.stekikun.dolmen.test.examples.JSonLWParser.Token;
 
 {
 	private final StringBuilder buf = new StringBuilder();
