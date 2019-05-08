@@ -447,11 +447,6 @@ public abstract class PGrammars {
 		
 		private final Map<String, List<Sort>> sorts;
 
-		// The rule being sorted
-		private PGrammarRule currentRule;
-		// The 1-based index of the production being inspected
-		private int prodIdx;
-
 		/**
 		 * Initialize the sort inference on the given grammar, based
 		 * on the {@linkplain Dependencies dependencies} for the grammar
@@ -465,8 +460,6 @@ public abstract class PGrammars {
 			this.dependencies = dependencies;
 			this.reporter = reporter;
 			this.sorts = new LinkedHashMap<>();
-			this.currentRule = grammar.rules.values().stream().findFirst().get();
-			this.prodIdx = 0;
 		}
 		
 		/**
@@ -533,7 +526,6 @@ public abstract class PGrammars {
 				int idx = 0;
 				for (PGrammarRule rule : rules) {
 					if (rule.params.isEmpty()) continue;
-					currentRule = rule;
 					List<Sort> previous = sorts.get(rule.name.val);
 					List<Sort> newer = handleRule0(rule, mutParamSorts.get(idx++));
 					if (!newer.equals(previous)) {
@@ -549,7 +541,6 @@ public abstract class PGrammars {
 
 		private List<Sort> handleRule(PGrammarRule rule) {
 			if (rule.params.isEmpty()) return Lists.empty();
-			currentRule = rule;
 			// Initialize sorts for all formal parameters
 			Map<String, Sort> paramSorts = new LinkedHashMap<>();
 			for (Located<String> param : rule.params)
@@ -564,7 +555,7 @@ public abstract class PGrammars {
 			handleExtent(paramSorts, rule.returnType);
 			handleExtent(paramSorts, rule.args);
 			// Handle productions
-			prodIdx = 0;
+			int prodIdx = 0;
 			for (PProduction prod : rule.productions) {
 				++prodIdx;
 				for (PProduction.Item item : prod.items) {
@@ -574,7 +565,7 @@ public abstract class PGrammars {
 						break;
 					case ACTUAL: {
 						PProduction.Actual actual = (PProduction.Actual) item;
-						handleActual(paramSorts, actual.item,
+						handleActual(rule, prodIdx, paramSorts, actual.item,
 							Sort.of(actual.isBound(),
 								actual.args == null ? Args.FORBIDDEN : Args.MANDATORY));
 						break;
@@ -598,7 +589,8 @@ public abstract class PGrammars {
 					Nulls.ok(Sort.unify(s1, s2)));
 		}
 		
-		private void handleActual(Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
+		private void handleActual(PGrammarRule rule, int prodIdx, 
+				Map<String, Sort> paramSorts, ActualExpr aexpr, Sort sort) {
 			if (aexpr.isTerminal()) return;
 			String sym = aexpr.symb.val;
 			// If the expression is reduced to a formal parameter, record its local sort
@@ -608,7 +600,7 @@ public abstract class PGrammars {
 					if (s != null) return s;
 					// The two sorts are not compatible, report the issue
 					reporter.add(PGrammar.Reports.incompatibleSorts(
-							currentRule, prodIdx, aexpr.symb, s1, s2));
+							rule, prodIdx, aexpr.symb, s1, s2));
 					return s1; // arbitrary
 				});
 				return;
@@ -624,7 +616,7 @@ public abstract class PGrammars {
 			if (ntsorts == null)
 				throw new IllegalStateException("Non-terminal " + sym + " was not visited yet");
 			for (int i = 0; i < aexpr.params.size(); ++i)
-				handleActual(paramSorts, aexpr.params.get(i), ntsorts.get(i));
+				handleActual(rule, prodIdx, paramSorts, aexpr.params.get(i), ntsorts.get(i));
 			return;
 		}
 	}
@@ -650,11 +642,6 @@ public abstract class PGrammars {
 		// Non-terminals which only return 'void'
 		private final Set<Located<String>> voidNTerms;
 		
-		// The rule being checked
-		private PGrammarRule currentRule;
-		// The 1-based index of the production being checked
-		private int prodIdx;
-		
 		SortChecker(PGrammar grammar, Map<String, List<Sort>> sorts, Reporter reporter) {
 			this.grammar = grammar;
 			this.sorts = sorts;
@@ -675,9 +662,6 @@ public abstract class PGrammars {
 				if (rule.returnType.find().trim().equals("void"))
 					voidNTerms.add(rule.name);
 			}
-			
-			this.currentRule = grammar.rules.values().stream().findFirst().get();
-			this.prodIdx = 0;
 		}
 
 		/**
@@ -692,8 +676,7 @@ public abstract class PGrammars {
 			// top-level non-terminals and tokens have been reported
 			// at the grammar creation.
 			for (PGrammarRule rule : grammar.rules.values()) {
-				currentRule = rule;
-				prodIdx = 0;
+				int prodIdx = 0;
 				// [sorts] contains sort information for all parametric rules
 				List<Sort> formalSorts = 
 					sorts.getOrDefault(rule.name.val, Lists.empty());
@@ -704,7 +687,7 @@ public abstract class PGrammars {
 				for (PProduction prod : rule.productions) {
 					++prodIdx;
 					for (PProduction.Actual actual : prod.actuals()) {
-						checkActualExpr(formals, actual.item);
+						checkActualExpr(rule, prodIdx, formals, actual.item);
 						// Perform an extra check for incompatible use of
 						// formals with and without arguments
 
@@ -713,7 +696,8 @@ public abstract class PGrammars {
 			}
 		}
 		
-		private void checkActualExpr(Map<String, Sort> formals, ActualExpr aexpr) {
+		private void checkActualExpr(PGrammarRule rule, int prodIdx,
+				Map<String, Sort> formals, ActualExpr aexpr) {
 			if (aexpr.params.isEmpty()) return;
 			// Fetch the applied symbol and the sorts of its formal parameters
 			Located<String> sym = aexpr.symb;
@@ -740,7 +724,7 @@ public abstract class PGrammars {
 				// a non-valued effective parameter 
 				if (expectedSort.requiresValue && !foundSort.requiresValue) {
 					reporter.add(PGrammar.Reports.voidSymbolPassedAsValued(
-						currentRule, prodIdx, 
+						rule, prodIdx,
 						effective.symb, sym, grammar.rule(sym.val).params.get(i).val));
 				}
 				// Whether the rule expects a parameter w/ args and is fed
@@ -748,7 +732,7 @@ public abstract class PGrammars {
 				if (expectedSort.requiresArgs == Args.MANDATORY 
 						&& foundSort.requiresArgs == Args.FORBIDDEN) {
 					reporter.add(PGrammar.Reports.noargSymbolPassed(
-							currentRule, prodIdx, 
+							rule, prodIdx, 
 							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));					
 				}
 				// Whether the rule expects a parameter w/out args and is fed
@@ -756,11 +740,11 @@ public abstract class PGrammars {
 				else if (expectedSort.requiresArgs == Args.FORBIDDEN 
 						&& foundSort.requiresArgs == Args.MANDATORY) {
 					reporter.add(PGrammar.Reports.argSymbolPassed(
-							currentRule, prodIdx, 
+							rule, prodIdx, 
 							effective.symb, sym, grammar.rule(sym.val).params.get(i).val));										
 				}
 				// Don't forget to check the subexpression recursively
-				checkActualExpr(formals, effective);
+				checkActualExpr(rule, prodIdx, formals, effective);
 			}
 		}
 	}

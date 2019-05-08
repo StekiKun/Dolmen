@@ -129,5 +129,7 @@ public abstract class TestJGEParser {
 		generateParser("tests/jg/JSonPos.jg", "JSonPosParser");
 		
 		generateParser("tests/jg/Templates.jg", "Templates");
+
+		generateParser("tests/jg/NoRule.jg", "NoRule");
 	}
 }
