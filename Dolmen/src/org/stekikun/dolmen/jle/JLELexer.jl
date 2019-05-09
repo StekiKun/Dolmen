@@ -4,8 +4,11 @@
  * @author Stéphane Lescuyer
  */
 
+import java.util.Stack;
+
 import static org.stekikun.dolmen.jle.JLEParser.Token.*;
 import org.stekikun.dolmen.jle.JLEParser.Token;
+import org.stekikun.dolmen.syntax.Extent;
 
 // Java header
 {
@@ -41,6 +44,18 @@ import org.stekikun.dolmen.jle.JLEParser.Token;
         else if (id.equals("private")) return PRIVATE;
         else return IDENT(id);
     }
+    
+    // We override the default behaviour of #error(String) to conveniently
+    // report errors at the beginning of a saved position instead of the current
+    // lexeme start.
+    
+    private Stack<Position> errLocs = new Stack<>();
+    
+    @Override
+    protected LexicalError error(String msg) {
+    	Position err = errLocs.isEmpty() ? getLexemeStart() : errLocs.peek();
+    	return new LexicalError(err, msg);
+    } 
 }
 
 // Whitespace and newline
@@ -68,7 +83,7 @@ octal = odigit | odigit odigit | ['0'-'3'] odigit odigit;
 hexdigit = digit | ['a'-'f' 'A'-'F'];
 
 // Escape sequences
-escaped = ['\\' '\'' '"' 'n' 't' 'b' 'f' 'r' ' '];
+escaped = ['\\' '\'' '"' 'n' 't' 'b' 'f' 'r'];
 
 /**
  * The lexer rules
@@ -80,37 +95,38 @@ public { Token } rule main =
 | "/*"			{ comment(); continue main; }
 | slcomment		{ continue main; }
 | '"'			{ Position stringStart = getLexemeStart();
+				  errLocs.push(stringStart);
 				  stringBuffer.setLength(0);
-				  int eline = string();
+				  int eline = string(true);
 				  startLoc = stringStart;
 				  Token res = stringStart.line == eline ? 
 				 	LSTRING(stringBuffer.toString()) :
 				 	MLSTRING(stringBuffer.toString());
+				  errLocs.pop();
 				  return res;
 				}
 | '{'			{ braceDepth = 1;
 				  Position start = getLexemeStart();
+				  errLocs.push(start);
 				  Position p = getLexemeEnd();
 				  int endOffset = action();
-				  org.stekikun.dolmen.syntax.Extent ext = new org.stekikun.dolmen.syntax.Extent(
+				  Extent ext = new Extent(
 				  	filename, p.offset, endOffset, p.line, p.column());
 				  startLoc = start;
+				  errLocs.pop();
 				  return ACTION(ext);
 				}
 | '_'			{ return UNDERSCORE; }
 | ident			{ return identOrKeyword(getLexeme()); }
 | decimal		{ return INTEGER(Integer.parseInt(getLexeme())); }
-| "'" ([^ '\r' '\n' '\\'] as c) "'"
-				{ return LCHAR(c); }
-| "'" nl
-				{ throw error("Unterminated character literal"); }
-| "'" '\\' (escaped as c) "'"
-				{ return LCHAR(forBackslash(c)); }
-| "'" '\\' (octal as code) "'"
-				{ return LCHAR(fromOctalCode(code)); }
-| "'" '\\' 'u'+ (hexdigit<4> as code) "'"
-				{ return LCHAR(fromHexCode(code)); }
-| "'" '\\' 'u'+ { throw error("Invalid Unicode escape sequence"); }
+| "'"			{ Position start = getLexemeStart();
+				  errLocs.push(start);
+				  char c = character();
+				  characterClose();
+				  startLoc = start;
+				  errLocs.pop();
+				  return LCHAR(c);
+				 }
 | '='			{ return EQUAL; }
 | '|'			{ return OR; }
 | '['			{ return LBRACKET; }
@@ -129,7 +145,7 @@ public { Token } rule main =
 | ','			{ return COMMA; }
 | ';'			{ return SEMICOL; }
 | eof			{ return END; }
-| _				{ throw error("Unfinished token"); }
+| _ as c		{ throw error("Unexpected character: " + c); }
 
 /**
  * Matches multi-line comments, both in and outside Java actions
@@ -143,31 +159,70 @@ private { void } rule comment =
 
 /**
  * Matches string literals, both in and outside Java actions
+ *
+ * Parameter [multi] describes whether multi-line string literals
+ * are allowed in the calling context. This is used to forbid line
+ * terminators in literals in Java actions and allow them elsewhere.
  */
-private { int } rule string =
+private { int } rule string{boolean multi} =
 | '"'					{ return getLexemeEnd().line; }
-| '\\' (escaped as c)	{ stringBuffer.append(forBackslash(c));
+| '\\'					{ errLocs.push(getLexemeStart());
+						  char c = escapeSequence();
+						  stringBuffer.append(c);
+						  errLocs.pop();
 						  continue string;
 						}
-| '\\' (octal as code)	{ stringBuffer.append(fromOctalCode(code));
-						  continue string;
-						}
-| '\\' 'u'+ (hexdigit<4> as code)
-						{ stringBuffer.append(fromHexCode(code));
-						  continue string;
-						}
-| '\\' 'u'+				{ throw error("Invalid Unicode escape sequence"); }
-| '\\' (_ as c)			{ stringBuffer.append('\\').append(c);
-						  continue string;
-						}
-| '\\'					{ throw error("Unterminated escape sequence in string literal"); }
-| nl					{ newline(); 
+| nl					{ if (!multi)
+							throw error("String literal in Java action not properly closed");
+						  newline();
 						  stringBuffer.append(getLexeme());
 						  continue string; }
 | eof					{ throw error("Unterminated string literal"); }
 | orelse				{ stringBuffer.append(getLexeme());
 						  continue string;
 						}
+
+/**
+ * Matches the contents of a character literal, both in and outside Java actions
+ */
+private { char } rule character =
+| "'"			{ throw error("Invalid character literal"); }
+| ([^ '\r' '\n' '\\'] as c)
+				{ return c; }
+| '\\'			{ errLocs.push(getLexemeStart());
+				  char c = escapeSequence();
+				  errLocs.pop();
+				  return c;
+				}
+| (nl | eof)
+				{ throw error("Unterminated character literal"); }
+
+/**
+ * Matches the closing quote of a character literal, both in and outside Java actions
+ *
+ * This separate rule is necessary to be able to factor character escape sequences
+ * between string and character literals.
+ */
+private { void } rule characterClose =
+| "'"			{ return; }
+| (_ | eof)	{ throw error("Unterminated character literal"); }
+
+/**
+ * Matches a character escape sequence, both in character and string literals
+ *
+ * Parameter [start] is the position of the escaping '\\' character and is used
+ * for better error reporting. 
+ */
+private { char } rule escapeSequence =
+| escaped as c	{ return forBackslash(c); }
+| octal as code { return fromOctalCode(code); }
+| 'u'+ (hexdigit<4> as code)
+				{ return fromHexCode(code); }
+| 'u'+			{ throw error("Invalid Unicode escape sequence: " +
+					"expected four hexadecimal digits after \\" + getLexeme()); }
+| _				{ throw error("Invalid escape sequence: " + 
+					"only \\\\, \\\', \\\", \\n, \\t, \\b, \\f, \\r are supported"); } 
+| eof			{ throw error("Unterminated escape sequence"); }
 
 /**
  * Matches Java actions
@@ -178,31 +233,25 @@ private { int } rule action =
 			  if (braceDepth == 0) return getLexemeStart().offset - 1;
 			  continue action;
 			}
-| '"'		{ stringBuffer.setLength(0);
-			  string();		// Java string literals are single-line
+| '"'		{ errLocs.push(getLexemeStart());
+		      stringBuffer.setLength(0);
+			  string(false);		// Java string literals are single-line
 			  stringBuffer.setLength(0);
+			  errLocs.pop();
 			  continue action;
 			}
-| '\''		{ skipChar(); continue action; }
+| '\''		{ errLocs.push(getLexemeStart());
+			  character();
+			  characterClose();
+			  errLocs.pop();
+			  continue action;
+			}
 | "/*"		{ comment(); continue action; }
 | slcomment { continue action; }
 | eof		{ throw error("Unterminated action"); }
 | nl		{ newline(); continue action; }
-// Cannot do char-by-char without tail-call elimination
 | '/' 		{ continue action; }
 | orelse	{ continue action; }
-
-/**
- * Matches character literals in Java actions
- */
-private { void } rule skipChar =
-| (notnl # ['\\' '\'']) "'"	
-					{ return; }
-| '\\' octal "'"	{ return; }
-| '\\' _ "'"		{ return; }
-// Don't jeopardize everything for a syntax error in a Java action
-| nl				{ newline(); return; }
-| ""				{ return; }
 
 // Java footer
 { }
