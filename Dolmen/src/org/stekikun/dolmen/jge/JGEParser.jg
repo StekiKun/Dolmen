@@ -6,6 +6,7 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.eclipse.jdt.annotation.NonNull;
 import java.util.List;
 import java.util.ArrayList;
+import org.stekikun.dolmen.codegen.LexBuffer;
 import org.stekikun.dolmen.common.Lists;
 import org.stekikun.dolmen.common.Java;
 import org.stekikun.dolmen.syntax.Extent;
@@ -72,6 +73,13 @@ token EOF
     	return id;
     }
     
+    private ParsingException expectedError(String msg) {
+    	// Fetch the position of the peeked token
+		LexBuffer.Position start = _jl_lexbuf.getLexemeStart();
+		int length = _jl_lexbuf.getLexemeEnd().offset - start.offset;
+    	return new ParsingException(start, length, msg);
+    }
+    
     private void invalidContinuation() {
     	throw parsingError("Continuation must appear last in a production rule");
     }
@@ -81,9 +89,10 @@ public {PGrammar} rule start =
 |   options = options(null)
     imports = imports(null) 
 	tdecls = tokens(null) 
-	header = ACTION 
+	header = ACTION
 	rules = rules(null) 
-	footer = ACTION EOF 
+	footer = actionOrErr("footer")
+	EOF 
 	{PGrammar.Builder builder = new PGrammar.Builder(options, imports, header, footer);} 
 	{tdecls.forEach(tdecl -> builder.addToken(tdecl));} 
 	{rules.forEach(rule -> builder.addRule(rule));} 
@@ -161,7 +170,7 @@ private {List<PGrammarRule>} rule rules(@Nullable List<PGrammarRule> rules) =
 	{ acc.add(r); } rules(acc) {return acc;};
 
 private {PGrammarRule} rule rule_ = 
-|  vis = visibility rtype = ACTION RULE name = IDENT 
+|  vis = visibility rtype = actionOrErr("rule's return type") ruleOrErr name = IDENT 
 	{ if (!Character.isLowerCase(name.charAt(0))) } 
 	{    throw parsingError("Rule name must start with a lower case letter: " + name); } 
 	{ Located<String> lname = withLoc(validJavaIdent(name)); }
@@ -210,10 +219,13 @@ private { @Nullable PExtent } rule args =
 |  ext = ARGUMENTS { return ext; }
 ;
 
-private {void} rule productions(PGrammarRule.Builder builder) = 
+private {void} rule productions(PGrammarRule.Builder builder) =
 |   SEMICOL { return; }
 |   prod = production { builder.addProduction(prod); } 
 	productions(builder) { return; }
+// Additional rules to provide more helpful error messages
+|	visibility		{ throw expectedError("Unexpected start of rule. Have you forgotten a semicolon?"); } 
+|	EOF				{ throw expectedError("Unexpected end of file. Have you forgotten a semicolon?"); } 
 ;
 
 private { PProduction } rule production = 
@@ -265,6 +277,21 @@ private { void } rule actual_exprs(List<ActualExpr> params) =
 	{ params.add(param); }
 	actual_exprs(params)
 	{ return; }
+;
+
+/**
+ * Convenient wrappers to customize error messages
+ * for some frequent syntax mistakes
+ */
+
+private { PExtent } rule actionOrErr(String msg) =
+|	a = ACTION	{ return a; }
+|				{ throw expectedError("Expected Java action here. Did you forget the " + msg + "?"); }
+;
+
+private { void } rule ruleOrErr =
+|	RULE		{ return; }
+|				{ throw expectedError("Expected 'rule' keyword here"); }
 ;
 
 {   /**

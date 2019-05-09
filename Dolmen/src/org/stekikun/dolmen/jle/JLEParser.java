@@ -256,6 +256,13 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     		throw parsingError("Invalid name: reserved Java identifier");
     	return id;
     }
+    
+    private ParsingException expectedError(String msg) {
+    	// Fetch the position of the peeked token
+		Position start = _jl_lexbuf.getLexemeStart();
+		int length = _jl_lexbuf.getLexemeEnd().offset - start.offset;
+    	return new ParsingException(start, length, msg);
+    }
 
     /**
      * Builds a new parser based on the given lexical buffer
@@ -283,14 +290,14 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
          List<Option>  options = options(null);
         // imports = imports(null)
          List<Located<String>>  imports = imports(null);
-        // header = ACTION
-        Extent header = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        // header = actionOrErr("header")
+         Extent  header = actionOrErr("header");
         // definitions()
         definitions();
         // entries = entries()
          List<Lexer.Entry>  entries = entries();
-        // footer = ACTION
-        Extent footer = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+        // footer = actionOrErr("footer")
+         Extent  footer = actionOrErr("footer");
         // END
         eat(Token.Kind.END);
         
@@ -305,7 +312,10 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     private  List<Option>  options(@Nullable List<Option> opts) {
         switch (peek().getKind()) {
             case ACTION:
-            case IMPORT: {
+            case IDENT:
+            case IMPORT:
+            case PRIVATE:
+            case PUBLIC: {
                  return opts == null ? Lists.empty() : opts; 
             }
             case LBRACKET: {
@@ -328,7 +338,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  return acc; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LBRACKET);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.IMPORT, Token.Kind.LBRACKET, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
@@ -355,7 +365,10 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     
     private  List<Located<String>>  imports(@Nullable List<Located<String>> imports) {
         switch (peek().getKind()) {
-            case ACTION: {
+            case ACTION:
+            case IDENT:
+            case PRIVATE:
+            case PUBLIC: {
                  return imports == null ? Lists.empty() : imports; 
             }
             case IMPORT: {
@@ -378,7 +391,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  return acc; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.IMPORT, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
@@ -494,7 +507,8 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     
     private  void  more_entries(List<Lexer.Entry> acc) {
         switch (peek().getKind()) {
-            case ACTION: {
+            case ACTION:
+            case END: {
                  return; 
             }
             case PRIVATE:
@@ -507,7 +521,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  return; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
@@ -515,10 +529,10 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     private  Lexer.Entry  entry() {
         // vis = visibility()
          boolean  vis = visibility();
-        // returnType = ACTION
-        Extent returnType = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
-        // RULE
-        eat(Token.Kind.RULE);
+        // returnType = actionOrErr("entry's return type")
+         Extent  returnType = actionOrErr("entry's return type");
+        // ruleOrErr()
+        ruleOrErr();
         // name = IDENT
         String name = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
          Located<String> lname = Located.of(validJavaIdent(name),
@@ -599,6 +613,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
     private  void  more_clauses(List<Lexer.Clause> acc) {
         switch (peek().getKind()) {
             case ACTION:
+            case END:
             case PRIVATE:
             case PUBLIC: {
                  return; 
@@ -611,7 +626,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  return; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.OR, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.OR, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
         }
     }
@@ -1009,6 +1024,42 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             }
             default: {
                 throw tokenError(peek(), Token.Kind.LCHAR, Token.Kind.RBRACKET);
+            }
+        }
+    }
+    
+    private  Extent  actionOrErr(String msg) {
+        switch (peek().getKind()) {
+            case ACTION: {
+                // a = ACTION
+                Extent a = ((Token.ACTION) eat(Token.Kind.ACTION)).value;
+                 return a; 
+            }
+            case END:
+            case IDENT:
+            case PRIVATE:
+            case PUBLIC:
+            case RULE: {
+                 throw expectedError("Expected Java action here. Did you forget the " + msg + "?"); 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.RULE);
+            }
+        }
+    }
+    
+    private  void  ruleOrErr() {
+        switch (peek().getKind()) {
+            case IDENT: {
+                 throw expectedError("Expected 'rule' keyword here"); 
+            }
+            case RULE: {
+                // RULE
+                eat(Token.Kind.RULE);
+                 return; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.RULE);
             }
         }
     }

@@ -101,6 +101,13 @@ token END
     		throw parsingError("Invalid name: reserved Java identifier");
     	return id;
     }
+    
+    private ParsingException expectedError(String msg) {
+    	// Fetch the position of the peeked token
+		Position start = _jl_lexbuf.getLexemeStart();
+		int length = _jl_lexbuf.getLexemeEnd().offset - start.offset;
+    	return new ParsingException(start, length, msg);
+    }
 }
 
 // The parsing rules
@@ -111,10 +118,10 @@ token END
 public { Lexer } rule lexer =
 |	options = options(null)
 	imports = imports(null) 
-	header = ACTION
+	header = actionOrErr("header")
 	definitions()
 	entries = entries()
-	footer = ACTION
+	footer = actionOrErr("footer")
 	END
 	{
 		Lexer.Builder builder =
@@ -249,8 +256,8 @@ private { void } rule more_entries(List<Lexer.Entry> acc) =
 
 private { Lexer.Entry } rule entry() =	
 |	vis = visibility()
-	returnType = ACTION
-	RULE
+	returnType = actionOrErr("entry's return type")
+	ruleOrErr()
 	name = IDENT
 	{ Located<String> lname = Located.of(validJavaIdent(name),
 		_jl_lexbuf.getLexemeStart(), _jl_lexbuf.getLexemeEnd());
@@ -495,6 +502,21 @@ private { CSet } rule more_charSetPositive(CSet acc) =
 |	{ return acc; }
 |	cs = charSetPositive()
 	{ return CSet.union(acc, cs); }
+;
+
+/**
+ * Convenient wrappers to customize error messages
+ * for some frequent syntax mistakes
+ */
+
+private { Extent } rule actionOrErr(String msg) =
+|	a = ACTION	{ return a; }
+|				{ throw expectedError("Expected Java action here. Did you forget the " + msg + "?"); }
+;
+
+private { void } rule ruleOrErr() =
+|	RULE		{ return; }
+|				{ throw expectedError("Expected 'rule' keyword here"); }
 ;
 
 // Java footer
