@@ -968,7 +968,7 @@ public class Determinize {
 		// Job done! We can return the full deterministic automata
 		Automata aut = new Automata(tlexer.imports, tlexer.header, tlexer.footer, 
 			automataEntries, checkedCells);
-		aut.findProblems(lexer).forEach(r -> System.out.println(r.display()));
+		// aut.findProblems(lexer).forEach(r -> System.out.println(r.display()));
 		
 		return aut;
 	}
