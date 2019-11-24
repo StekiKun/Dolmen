@@ -60,6 +60,19 @@ public final class Dolmen {
 		});
 	
 	/**
+	 * Appends the problems in {@code reports} to the given file {@code out}.
+	 * 
+	 * @param reporter
+	 * @param out
+	 * @throws IOException
+	 */
+	private static void report(List<? extends IReport> reports, FileWriter out) throws IOException {
+		if (reports.isEmpty()) return;
+		for (IReport report : reports)
+			out.append(report.display()).append("\n");
+	}
+	
+	/**
 	 * Generates a lexical analyzer from the file {@code input}, which should
 	 * be a Dolmen lexer description. The generated lexical analyzer will be
 	 * a compilation unit with name {@code className} and shall be stored in
@@ -68,13 +81,17 @@ public final class Dolmen {
 	 * @param args			command-line arguments
 	 * @param input			input lexer description
 	 * @param output		where the lexical analyzer shall be written
+	 * @param reportsFile   where the problems will be reported
 	 * @param className		the class name of the generated lexical analyzer
 	 */
-	private static void generateLexer(Args args, File input, File output, String className) {
-		PrintStream log = args.getFlag(Item.QUIET) ? nullStream : System.out; 
+	private static void generateLexer(Args args,
+			File input, File output, File reportsFile, String className) {
+		PrintStream log = args.getFlag(Item.QUIET) ? nullStream : System.out;
 		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling lexer description " + input);
 
-		try (FileReader reader = new FileReader(input)) {
+		try (FileReader reader = new FileReader(input);
+			 FileWriter reports = new FileWriter(reportsFile))
+		{
 			JLELexer jlLexer = new JLELexer(input.getPath(), reader);
 			try {
 				JLEParser jlParser = new JLEParser(jlLexer, JLELexer::main);
@@ -84,6 +101,7 @@ public final class Dolmen {
 				Reporter configReporter = new Reporter();
 				Config config = Config.ofLexer(lexer, configReporter);
 				tasks.problems(configReporter.getReports().size());
+				report(configReporter.getReports(), reports);
 				
 				Automata aut = Determinize.lexer(lexer, true);
 				tasks.done("Compiled lexer description to automata");
@@ -92,6 +110,7 @@ public final class Dolmen {
 				
 				List<IReport> autReports = aut.findProblems(lexer);
 				tasks.problems(autReports.size());
+				report(autReports, reports);
 				
 				try (Writer writer = 
 						new CountingWriter(new FileWriter(output, false))) {
@@ -135,13 +154,17 @@ public final class Dolmen {
 	 * @param args			command-line arguments
 	 * @param input			input parser description
 	 * @param output		where the syntactic analyzer shall be written
+	 * @param reportsFile   where the problems will be reported
 	 * @param className		the class name of the generated syntactic analyzer
 	 */
-	private static void generateParser(Args args, File input, File output, String className) {
+	private static void generateParser(Args args,
+			File input, File output, File reportsFile, String className) {
 		PrintStream log = args.getFlag(Item.QUIET) ? nullStream : System.out; 
 		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling grammar description " + input);
 		
-		try (FileReader reader = new FileReader(input)) {
+		try (FileReader reader = new FileReader(input);
+			 FileWriter reports = new FileWriter(reportsFile))
+		{
 			JGELexer jgLexer = new JGELexer(input.getPath(), reader);
 			JGEParser jgParser = new JGEParser(jgLexer, JGELexer::main);
 			try {
@@ -151,6 +174,7 @@ public final class Dolmen {
 				Reporter configReporter = new Reporter();
 				Config config = Config.ofPGrammar(pgrammar, configReporter);
 				tasks.problems(configReporter.getReports().size());
+				report(configReporter.getReports(), reports);
 				
 				tasks.enter("Grammar expansion");
 				Reporter pdepsReporter = new Reporter();
@@ -158,12 +182,13 @@ public final class Dolmen {
 				PGrammars.findUnusedSymbols(pgrammar, deps, pdepsReporter);
 				PGrammars.analyseGrammar(pgrammar, deps, pdepsReporter);
 				tasks.done("Analysed parametric rules");
-				tasks.problems(pdepsReporter.getReports().size());;
+				tasks.problems(pdepsReporter.getReports().size());
 				if (pdepsReporter.hasErrors()) {
 					tasks.aborted("Inconsistent use of parametric rules");
 					System.out.println(pdepsReporter);
 					return;
 				}
+				report(pdepsReporter.getReports(), reports);
 	
 				Expansion.checkExpandability(pgrammar);
 				tasks.done("Expandability check successful");
@@ -178,6 +203,7 @@ public final class Dolmen {
 						Grammars.analyseGrammar(grammar, null, depsReporter));
 				tasks.done("Analysed expanded grammar and built prediction table");
 				tasks.problems(depsReporter.getReports().size());
+				report(depsReporter.getReports(), reports);
 				List<IReport> conflicts = predictTable.findConflicts();
 				if (!conflicts.isEmpty()) {
 					tasks.aborted("Expanded grammar is not LL(1)");
@@ -296,12 +322,20 @@ public final class Dolmen {
 			System.out.println("Cannot write to output file " +  genFile);
 			return;
 		}
+		
+		// Determine the file used for the problem reports
+		File reportsFile;
+		String reportsName = args.getString(Item.REPORTS);
+		if (reportsName.isEmpty())
+			reportsFile = new File(filename + ".reports");
+		else
+			reportsFile = new File(reportsName);
 
 		// Call the lexer or parser generation, as adequate
 		if (lexer)
-			generateLexer(args, file, genFile, className);
+			generateLexer(args, file, genFile, reportsFile, className);
 		else
-			generateParser(args, file, genFile, className);
+			generateParser(args, file, genFile, reportsFile, className);
 	}
 	
 	/**

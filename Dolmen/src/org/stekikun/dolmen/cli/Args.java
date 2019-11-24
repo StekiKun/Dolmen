@@ -165,13 +165,16 @@ public final class Args {
 		PARSER('g', "grammar", Type.FLAG, Value.NO,
 			"generate a parser from the source file",
 			false, NONE, Collections.singleton(LEXER)),
-		OUTPUT('o', "output", Type.STRING, Value.mkString(""),
+		OUTPUT('o', "output", Type.STRING, Value.mkString("."),
 			"output directory for the generated class (by default, the working directory)"),
 		CLASS('c', "class", Type.STRING, Value.mkString(""),
 			"name of the generated class (by default, the name of the source file)"),
 		PACKAGE('p', "package", Type.STRING, Value.mkString(""),
 			"name of the package for the generated class (required)",
-			true, NONE, NONE);
+			true, NONE, NONE),
+		REPORTS('r', "reports", Type.STRING, Value.mkString(""),
+			"file where potential problems should be reported (by default, the source file + '.reports')",
+			false, NONE, NONE);
 		
 		Item(@Nullable Character shortName, String longName, Type type,
 			Value deflt, @Nullable String description,
