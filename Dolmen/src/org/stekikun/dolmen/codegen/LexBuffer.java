@@ -163,15 +163,18 @@ public class LexBuffer {
     private int bufLimit;
     
     /** Absolute position of the start of the buffer */
+    @DolmenInternal 
     protected int absPos;
 
     /** Whether end-of-file was reached in {@link #reader} */
     private boolean eofReached;
     
     /** Buffer input position of the token start */
+    @DolmenInternal 
     protected int startPos;
     
     /** Current buffer input position */
+    @DolmenInternal 
     protected int curPos;
     
     /** Last action remembered */
@@ -181,6 +184,7 @@ public class LexBuffer {
     private int lastPos;
     
     /** Memory cells */
+    @DolmenInternal 
     protected int memory[];
     
     /** Position of the last token start */
@@ -252,6 +256,7 @@ public class LexBuffer {
      * @return the next character in buffer,
      * 	with the special value 0xFFFF used to denote end-of-input
      */
+    @DolmenInternal 
     protected final char getNextChar() {
     	// If there aren't any more valid characters in the buffer
     	if (curPos >= bufLimit) {
@@ -277,6 +282,7 @@ public class LexBuffer {
     /**
      * Starts the matching of a new token
      */
+    @DolmenInternal 
     protected final void startToken() {
     	startPos = curPos;
     	lastPos = curPos;
@@ -288,6 +294,7 @@ public class LexBuffer {
      * state encountered
      * @param action	associated semantic action index
      */
+    @DolmenInternal 
     protected final void mark(int action) {
     	lastAction = action;
     	lastPos = curPos;
@@ -298,6 +305,7 @@ public class LexBuffer {
      * state encountered
      * @return the recorded semantic action
      */
+    @DolmenInternal 
     protected final int rewind() {
     	curPos = lastPos;
     	return lastAction;
@@ -306,6 +314,7 @@ public class LexBuffer {
     /**
      * Ends the matching of the current token
      */
+    @DolmenInternal 
     protected final void endToken() {
     	startLoc = curLoc;
     	curLoc = new Position(startLoc.filename,
@@ -408,6 +417,7 @@ public class LexBuffer {
      * @return the substring between positions {@code pos}
      *  and {@code end} (exclusive) in the token buffer
      */
+    @DolmenInternal 
     protected final String getSubLexeme(int start, int end) {
     	return new String(tokenBuf, start, end - start);
     }
@@ -418,6 +428,7 @@ public class LexBuffer {
      * @return the (optional) substring between positions {@code pos} 
      *  and {@code end} (exclusive) in the token buffer
      */
+    @DolmenInternal 
 	protected final Optional<String> getSubLexemeOpt(int start, int end) {
     	if (start < 0)
     		return Optional.empty();
@@ -429,6 +440,7 @@ public class LexBuffer {
      * @return the character at position {@code pos}
      * 	in the token buffer
      */
+    @DolmenInternal 
     protected final char getSubLexemeChar(int pos) {
     	return tokenBuf[pos];
     }
@@ -438,6 +450,7 @@ public class LexBuffer {
      * @return the (optional) character at position {@code pos}
      * 	in the token buffer
      */
+    @DolmenInternal 
     protected final Optional<Character> getSubLexemeOptChar(int pos) {
     	if (pos < 0)
     		return Optional.empty();

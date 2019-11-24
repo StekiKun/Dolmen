@@ -111,29 +111,33 @@ public abstract class BaseParser<Token> {
     }
 	
 	/** The underlying lexing buffer */
-	protected final LexBuffer _jl_lexbuf;
+    @DolmenInternal(read=true)
+    protected final LexBuffer _jl_lexbuf;
 	
 	/** The actual tokenizer */
-	private final Supplier<@NonNull Token> _jl_tokens;
+    private final Supplier<@NonNull Token> _jl_tokens;
 	
 	/** 
 	 * The last token read and not yet consumed, or {@code null}
 	 * if the next token must be fetched from {@link #_jl_tokens}
 	 */
-	protected @Nullable Token _jl_nextToken;
+    @DolmenInternal
+    protected @Nullable Token _jl_nextToken;
 
 	/**
 	 * The start position of the last token that was consumed by
 	 * the parser, or the start-of-input position if no token
 	 * was consumed yet
 	 */
-	protected LexBuffer.Position _jl_lastTokenStart;
+    @DolmenInternal(read=true)
+    protected LexBuffer.Position _jl_lastTokenStart;
 
 	/**
 	 * The end position of the last token that was consumed by
 	 * the parser, or the start-of-input position if no token
 	 * was consumed yet
 	 */
+    @DolmenInternal(read=true)
 	protected LexBuffer.Position _jl_lastTokenEnd;
 	
 	/**
@@ -164,6 +168,7 @@ public abstract class BaseParser<Token> {
 	/**
 	 * @return the next token to consume, without consuming it
 	 */
+    @DolmenInternal
 	protected final @NonNull Token peek() {
 		if (_jl_nextToken != null) return _jl_nextToken;
 		_jl_nextToken = _jl_tokens.get();
@@ -173,6 +178,7 @@ public abstract class BaseParser<Token> {
 	/**
 	 * Consumes the next token and returns it
 	 */
+    @DolmenInternal
 	protected final Token eat() {
 		Token t = peek(); _jl_nextToken = null;
 		_jl_lastTokenStart = _jl_lexbuf.getLexemeStart();
@@ -272,6 +278,7 @@ public abstract class BaseParser<Token> {
 		 * of {@code ruleSize} production items (i.e. terminals or non-terminals)
 		 * @param ruleSize
 		 */
+		@DolmenInternal
 		protected final void enter(int ruleSize) {	// ruleSize is not strictly necessary
 			_jl_locationStack.push(new ArrayList<Range>(ruleSize));
 			if (!withDebug) return;
@@ -292,6 +299,7 @@ public abstract class BaseParser<Token> {
 		 * @param name	the name to which this terminal is bound in
 		 * 		the rule, or {@code null} if it is not bound
 		 */
+		@DolmenInternal
 		protected final void shift(@Nullable String name) {
 			LexBuffer.Position start = _jl_lexbuf.getLexemeStart();
 			LexBuffer.Position end = _jl_lexbuf.getLexemeEnd();
@@ -315,6 +323,7 @@ public abstract class BaseParser<Token> {
 		 * @param name the name to which this non-terminal is bound in
 		 * 	the rule, or {@code null} if it is not bound
 		 */
+		@DolmenInternal
 		protected final void leave(@Nullable String name) {
 			LexBuffer.Position start = getStartPos();
 			LexBuffer.Position end = getEndPos();
@@ -336,6 +345,7 @@ public abstract class BaseParser<Token> {
 		 * are shifted. This is used to preserve tail-recursion when
 		 * reentering rules from production items via continuations.
 		 */
+		@DolmenInternal
 		protected final void rewind() {
 			_jl_locationStack.peek().clear();
 			if (!withDebug) return;
