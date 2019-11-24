@@ -80,9 +80,8 @@ public final class JSonLWLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             case 11:  {
                  
-              Position stringStart = getLexemeStart();
-			  buf.setLength(0); string();
-			  startLoc = stringStart;
+              buf.setLength(0);
+              saveStart(this::string);
 			  return STRING(buf.toString());
 			
             }

@@ -2,6 +2,7 @@ package org.stekikun.dolmen.codegen;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -378,6 +379,30 @@ public class LexBuffer {
     }
     
     /**
+     * @return the length of the last matched lexeme
+     */
+    public final int getLexemeLength() {
+    	return curPos - startPos;
+    }
+    
+    /**
+     * When successful, this is equivalent to {@code getLexeme().charAt(idx)},
+     * but will be more efficient in general.
+     * 
+     * @param idx
+     * @return the character at index {@code idx} in the last
+     * 	matched lexeme
+     * @throws LexicalError when {@code idx} is negative or not less
+     * 	than the {@link #getLexemeLength() length} of the lexeme
+     */
+    public final char getLexemeChar(int idx) {
+    	if (idx < 0 || idx >= getLexemeLength())
+			throw error("Invalid index  " + idx 
+						+ " in lexeme of length " + getLexemeLength());
+    	return tokenBuf[startPos + idx];
+    }
+    
+    /**
      * @param start
      * @param end
      * @return the substring between positions {@code pos}
@@ -420,16 +445,6 @@ public class LexBuffer {
     }
     
     /**
-     * Updates the current position to account for a line change.
-     * Is not called automatically by the lexer, but can be used
-     * in semantic actions when matching a newline character.
-     */
-    protected final void newline() {
-    	Position pos = curLoc;
-    	curLoc = new Position(pos.filename, pos.offset, pos.line + 1, pos.offset);
-    }
-    
-    /**
      * Convenience helper which returns a {@link LexicalError}
      * located at the current lexeme start.
      * <p>
@@ -445,4 +460,117 @@ public class LexBuffer {
     protected LexicalError error(String msg) {
     	return new LexicalError(getLexemeStart(), msg);
     }
+
+    /**
+     * Updates the current position to account for a line change.
+     * Is not called automatically by the lexer, but can be used
+     * in semantic actions when matching a newline character.
+     */
+    protected final void newline() {
+    	Position pos = curLoc;
+    	curLoc = new Position(pos.filename, pos.offset, pos.line + 1, pos.offset);
+    }
+    
+    /**
+     * Same as {@link #savePosition}{@code (supplier, getLexemeStart())}.
+     * <p>
+     * This is exactly equivalent to the following code:
+     * <pre>
+     *   Position saved = getLexemeStart();
+     *   T res = supplier.get();	// Calling the routine
+     *   startLoc = saved;		// Restoring the start position
+     * </pre>
+     * <p>
+     * 
+     * @param supplier	a routine to run 
+     * @return the value returned by running the given {@code supplier}
+     * 
+     * @see #savePosition(Supplier, Position)
+     * @see #getLexemeStart()
+     */
+	protected final <T> T saveStart(Supplier<T> supplier) {
+		return savePosition(supplier, getLexemeStart());
+	}
+	
+    /**
+     * This method runs the given {@code supplier} routine but takes
+     * care to restore the current token start position to the 
+     * position given as the {@code saved} parameter.
+     * <p>
+     * This is exactly equivalent to the following code:
+     * <pre>
+     *   T res = supplier.get();	// Calling the routine
+     *   startLoc = saved;		// Restoring the start position
+     * </pre>
+     * This is useful in semantic actions which have only recognized
+     * part of a syntactic construct (typically a complex literal opening
+     * delimiter, such as the opening double-quote of a literal string)
+     * and which call other rules of the lexer recursively
+     * in order to finish analyzing the current construct. In such
+     * cases, one may want to return the final resulting token as if
+     * its span covered the whole range from the opening construct.
+     * Calling nested rules inside a lambda passed to this method
+     * is a way to achieve this.
+     * 
+     * @param supplier	a routine to run
+     * @param saved		the starting position to save 
+     * @return the value returned by running the given {@code supplier}
+     * 
+     * @see #saveStart(Supplier)
+     */	
+	protected final <T> T savePosition(Supplier<T> supplier, Position saved) {
+		T res = supplier.get();
+		startLoc = saved;
+		return res;
+	}
+
+    /**
+     * Same as {@link #savePosition}{@code (runnable, getLexemeStart())}.
+     * <p>
+     * This is exactly equivalent to the following code:
+     * <pre>
+     *   Position saved = getLexemeStart();
+     *   supplier.run();	// Calling the routine
+     *   startLoc = saved;		// Restoring the start position
+     * </pre>
+     * <p>
+     * 
+     * @param runnable 	a routine to run 
+     * 
+     * @see #savePosition(Runnable, Position)
+     * @see #getLexemeStart()
+     */
+	protected final void saveStart(Runnable runnable) {
+		savePosition(runnable, getLexemeStart());
+	}
+	
+    /**
+     * This method runs the given {@code runnable} but takes
+     * care to restore the current token start position to the 
+     * position given as the {@code saved} parameter.
+     * <p>
+     * This is exactly equivalent to the following code:
+     * <pre>
+     *   supplier.run();	// Calling the routine
+     *   startLoc = saved;		// Restoring the start position
+     * </pre>
+     * This is useful in semantic actions which have only recognized
+     * part of a syntactic construct (typically a complex literal opening
+     * delimiter, such as the opening double-quote of a literal string)
+     * and which call other rules of the lexer recursively
+     * in order to finish analyzing the current construct. In such
+     * cases, one may want to return the final resulting token as if
+     * its span covered the whole range from the opening construct.
+     * Calling nested rules inside a lambda passed to this method
+     * is a way to achieve this.
+     * 
+     * @param runnable 	a routine to run
+     * @param saved		the starting position to save 
+     * 
+     * @see #saveStart(Runnable)
+     */	
+	protected final void savePosition(Runnable runnable, Position saved) {
+		runnable.run();
+		startLoc = saved;
+	}
 }
