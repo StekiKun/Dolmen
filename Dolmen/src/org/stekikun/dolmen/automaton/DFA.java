@@ -3,6 +3,7 @@ package org.stekikun.dolmen.automaton;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -338,8 +339,15 @@ public class DFA {
 			@Nullable Set<Set<NFA.Event>> x = Maps.get(env1, te.tag);
 			if (x == null)
 				env1.put(te.tag, Sets.singleton(te.transitions));
-			else
+			else {
+				// More than one set of transitions per tag is rather rare, so 
+				// we allocate real sets lazily, and keep them sorted for determinism
+				if (!(x instanceof LinkedHashSet)) {
+					x = new LinkedHashSet<>(x);
+					env1.put(te.tag, x);
+				}
 				x.add(te.transitions);
+			}
 		});
 		// Then pack them together and return the corresponding set
 		Set<TEquiv> res = new HashSet<>();

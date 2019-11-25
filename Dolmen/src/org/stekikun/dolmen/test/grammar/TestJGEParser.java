@@ -12,17 +12,17 @@ import org.stekikun.dolmen.codegen.Config;
 import org.stekikun.dolmen.codegen.GrammarOutput;
 import org.stekikun.dolmen.jge.JGELexer;
 import org.stekikun.dolmen.jge.JGEParser;
-import org.stekikun.dolmen.jl.JLLexerGenerated;
-import org.stekikun.dolmen.jl.JLParser;
+import org.stekikun.dolmen.jle.JLELexer;
+import org.stekikun.dolmen.jle.JLEParser;
 import org.stekikun.dolmen.syntax.Lexer;
 import org.stekikun.dolmen.syntax.PGrammar;
 import org.stekikun.dolmen.syntax.PGrammars;
 import org.stekikun.dolmen.syntax.Reporter;
 import org.stekikun.dolmen.unparam.Expansion;
-import org.stekikun.dolmen.unparam.Grammar;
-import org.stekikun.dolmen.unparam.Grammars;
 import org.stekikun.dolmen.unparam.Expansion.PGrammarNotExpandable;
+import org.stekikun.dolmen.unparam.Grammar;
 import org.stekikun.dolmen.unparam.Grammar.IllFormedException;
+import org.stekikun.dolmen.unparam.Grammars;
 
 /**
  * This class tests the extended grammar description parser by
@@ -53,16 +53,16 @@ public abstract class TestJGEParser {
 	static void generateLexer(String filename, String className) throws IOException {
 		System.out.println("Parsing lexer description " + filename + "...");
 		FileReader reader = new FileReader(filename);
-		JLLexerGenerated lexer = new JLLexerGenerated(filename, reader);
-		JLParser parser = new JLParser(lexer, JLLexerGenerated::main);
-		Lexer lexerDef = parser.parseLexer();
+		JLELexer lexer = new JLELexer(filename, reader);
+		JLEParser parser = new JLEParser(lexer, JLELexer::main);
+		Lexer lexerDef = parser.lexer();
 		reader.close();
 		System.out.println("Computing automata...");
 		Automata aut = Determinize.lexer(lexerDef, true);
 		File file = new File("src/org/stekikun/dolmen/test/examples/" + className + ".java");
 		try (FileWriter writer = new FileWriter(file, false)) {
 			writer.append("package org.stekikun.dolmen.test.examples;\n");
-			AutomataOutput.outputDefault(writer, className, aut);
+			AutomataOutput.output(writer, className, Config.ofLexer(lexerDef, null), aut);
 		}
 		System.out.println("Generated in " + file.getAbsolutePath());
 	}
@@ -131,5 +131,7 @@ public abstract class TestJGEParser {
 		generateParser("tests/jg/Templates.jg", "Templates");
 
 		generateParser("tests/jg/NoRule.jg", "NoRule");
+		
+		generateLexer("tests/jl/Alphabet.jl", "Alphabet");
 	}
 }

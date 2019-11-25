@@ -2,6 +2,7 @@ package org.stekikun.dolmen.codegen;
 
 import java.io.IOException;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Supplier;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -115,11 +116,61 @@ public class LexBuffer {
          */
         public LexicalError(@Nullable Position pos, @Nullable String msg) {
             super(msg + (pos == null ? "" : 
-            	String.format(" (at line %d, column %d)", pos.line, pos.column())));
+            	String.format(" (%s, at line %d, column %d)", pos.filename, pos.line, pos.column())));
             this.pos = pos;
         }
     }
 
+	/**
+	 * A container class describing the lexer state with respect to some input
+	 * stream. It is used to save the lexing context when temporary moving to some
+	 * new input stream, and contains everything required to be able to later
+	 * restart lexing from the position where it was interrupted.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static final class Input {
+	    /**
+	     * The name of the input, for locations 
+	     * (for error reports only, need not be an actual filename) 
+	     */
+		final String filename;
+
+		/** The character stream to read from this input */
+		final java.io.Reader reader;
+
+		/** The character buffer associated to this input */
+		final char[] tokenBuf;
+
+	    /** 
+	     * The extent of valid chars in {@link #tokenBuf},
+	     * i.e. the index of the first non-valid character 
+	     */
+		final int bufLimit;
+
+		/** Absolute position of the start of the buffer */
+		final int absPos;
+
+		/** Whether end-of-file was reached in {@link #reader} */
+		final boolean eofReached;
+
+		/** Current buffer input position */
+		final int curPos;
+
+		/** Current token position */
+		protected Position curLoc;
+
+		Input(LexBuffer lexbuf) {
+			this.filename = lexbuf.filename;
+			this.reader = lexbuf.reader;
+			this.tokenBuf = lexbuf.tokenBuf;
+			this.bufLimit = lexbuf.bufLimit;
+			this.absPos = lexbuf.absPos;
+			this.eofReached = lexbuf.eofReached;
+			this.curPos = lexbuf.curPos;
+			this.curLoc = lexbuf.curLoc;
+		}
+	}
 	
     /**
      * Constructs a new lexer buffer based on the given character stream
@@ -129,6 +180,8 @@ public class LexBuffer {
     public LexBuffer(@Nullable String filename, java.io.@Nullable Reader reader) {
     	if (filename == null || reader == null)
     		throw new IllegalArgumentException();
+		// Same as #init(filename, reader), but calling #init will anger
+		// the compiler with respect to final or non-nullable fields.
     	this.filename = filename;
     	this.reader = reader;
     	this.tokenBuf = new char[1024];
@@ -144,14 +197,43 @@ public class LexBuffer {
     	this.curLoc = startLoc;
     }
 
+	/**
+	 * Resets this lexer buffer to read from the start of the given 
+	 * input source
+	 * 
+	 * @param filename		name describing the input
+	 * @param reader		input character stream
+	 */
+	private void init(String filename, java.io.Reader reader) {
+		this.filename = filename;
+		this.reader = reader;
+		this.tokenBuf = new char[1024];
+		this.bufLimit = 0;
+		this.absPos = 0;
+		this.eofReached = false;
+		this.startPos = 0;
+		this.curPos = 0;
+		this.lastAction = -1;
+		this.lastPos = 0;
+		this.memory = new int[0];
+		this.startLoc = new Position(filename);
+		this.curLoc = startLoc;
+	}
+
+	/**
+	 * A lazily-allocated stack of {@link Input} objects 
+	 * remembering input streams which have been interrupted
+	 */
+	private @Nullable Stack<Input> inputs = null;
+
     /**
      * The name of the input, for locations 
      * (for error reports only, need not be an actual filename) 
      */
-    protected final String filename;
+    protected String filename;
     
     /** The character stream to feed the lexer */
-    private final java.io.Reader reader;
+    private java.io.Reader reader;
     
     /** The local character buffer */
     private char[] tokenBuf;
@@ -364,6 +446,101 @@ public class LexBuffer {
     	curPos -= i;
     	return i;
     }
+    
+	/**
+	 * This changes the input stream used by this lexer buffer to the
+	 * new source described by {@code filename} and {@code reader}.
+	 * <p>
+	 * In contrast to {@link #pushInput(String, java.io.Reader)}, this
+	 * does not allow resuming the analysis of the former stream once
+	 * the new one is complete.	This takes care of closing the input
+	 * stream which was in use until that point.
+	 * 
+	 * @param filename
+	 * @param reader
+	 */
+	protected final void changeInput(String filename, java.io.Reader reader) {
+		if (filename == null || reader == null)
+			throw new IllegalArgumentException();
+		try {
+			this.reader.close();
+		} catch (IOException e) {
+			throw new IllegalStateException("Cannot close input stream: " + e.getMessage());
+		}
+		init(filename, reader);
+	}
+	
+	/**
+	 * This pushes the current input stream to the internal input stack
+	 * and resets the lexer to read from the given {@code reader}.
+	 * Subsequent tokens will consume characters from the new stream.
+	 * <p>
+	 * The syntactic analysis of the former input stream can be resumed
+	 * in the exact same position by a subsequent call to {@link #popInput()}. 
+	 * 
+	 * @param filename		name of the new input source
+	 * @param reader		new input character stream
+	 */
+	protected final void pushInput(String filename, java.io.Reader reader) {
+		if (filename == null || reader == null)
+			throw new IllegalArgumentException();
+		// Push the state of the current input to the input stack
+		Stack<Input> linputs = inputs;
+		if (linputs == null) {
+			linputs = new Stack<>();
+			inputs = linputs;
+		}
+		linputs.add(new Input(this));
+		// Reinitialize the current lexer to use the new input
+		init(filename, reader);
+	}
+	
+	/**
+	 * @return {@code true} if and only if there is more input
+	 * 	to fall back to once the current input stream is over,
+	 * 	i.e. if {@link #popInput} will succeed
+	 */
+	protected final boolean hasMoreInput() {
+		return (inputs != null && !inputs.isEmpty());
+	}
+	
+	/**
+	 * This fetches the input stream which is at the stop of the input
+	 * stack. After this call, the lexer will continue reading from that
+	 * input in the exact spot where it was interrupted by a call
+	 * to {@link #pushInput(String, java.io.Reader)}.
+	 * <p>
+	 * This takes care of closing the input stream which was in use
+	 * until that point.
+	 * 
+	 * @see #hasMoreInput()
+	 * 
+	 * @throws IllegalArgumentException when the input stack is empty
+	 */
+	protected final void popInput() {
+		Stack<Input> linputs = inputs;
+		if (linputs == null || linputs.isEmpty())
+			throw new IllegalArgumentException("No more input streams available");
+		try {
+			this.reader.close();
+		} catch (IOException e) {
+			throw new IllegalStateException("Cannot close input stream: " + e.getMessage());
+		}
+		Input input = linputs.pop();
+		this.filename = input.filename;
+		this.reader = input.reader;
+		this.tokenBuf = input.tokenBuf;
+		this.bufLimit = input.bufLimit;
+		this.absPos = input.absPos;
+		this.eofReached = input.eofReached;
+		this.startPos = input.curPos;
+		this.curPos = input.curPos;
+		this.lastAction = -1;
+		this.lastPos = 0;
+		this.memory = new int[0];
+		this.startLoc = input.curLoc;
+		this.curLoc = input.curLoc;
+	}
     
     /**
      * @return the substring between the last started token

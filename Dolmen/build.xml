@@ -83,6 +83,7 @@
 		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestJGParser"/>
 		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestJGEParser"/>
 		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestPositions"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestIncludes"/>
 	</target>
 
 	<target name="test_dolmen" depends="test_lexers,test_grammars"
