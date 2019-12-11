@@ -69,7 +69,7 @@ public final class Dolmen {
 	private static void report(List<? extends IReport> reports, FileWriter out) throws IOException {
 		if (reports.isEmpty()) return;
 		for (IReport report : reports)
-			out.append(report.display()).append("\n");
+			out.append(report.display()).append("\n\n");
 	}
 	
 	/**
