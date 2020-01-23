@@ -12,6 +12,7 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
         <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.common"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.debug"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.cli"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.jge"/>
         <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.automaton"/>

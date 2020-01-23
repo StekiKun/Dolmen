@@ -7,12 +7,12 @@ import java.lang.annotation.Target;
 
 /**
  * This annotation is used to decorate fields and methods from
- * Dolmen classes which are extended in Dolmen-generated code
- * but which should probably not be called by user-defined code
+ * Dolmen classes which are accessed or extended in Dolmen-generated
+ * code but which should probably not be called by user-defined code
  * (i.e. semantic actions, prelude or postlude).
  * <p>
- * These methods are declared as {@code protected} instead of
- * {@code private} because they must be used/accessed by
+ * These methods or fields are declared as {@code protected} instead
+ * of {@code private} because they must be used/accessed by
  * generated code in sub-classes, but users accessing them
  * do this at the risk of breaking the inner mechanisms of
  * their generated lexer/parser.
