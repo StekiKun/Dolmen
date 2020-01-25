@@ -972,25 +972,44 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  CSet  c = charSetPositive();
                  return CSet.complement(c); 
             }
+            case IDENT:
             case LCHAR: {
                 // c = charSetPositive()
                  CSet  c = charSetPositive();
                  return c; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.CARET, Token.Kind.LCHAR);
+                throw tokenError(peek(), Token.Kind.CARET, Token.Kind.IDENT, Token.Kind.LCHAR);
             }
         }
     }
     
     private  CSet  charSetPositive() {
-        // ch = LCHAR
-        char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
-        // cs = charSetInterval(ch)
-         CSet  cs = charSetInterval(ch);
-        // res = more_charSetPositive(cs)
-         CSet  res = more_charSetPositive(cs);
-         return res; 
+        switch (peek().getKind()) {
+            case IDENT: {
+                // id = IDENT
+                String id = ((Token.IDENT) eat(Token.Kind.IDENT)).value;
+                 @Nullable Regular r = Maps.get(definitions, Located.dummy(id));
+	  if (r == null) 
+	  	throw parsingError("Undefined regular expression " + id);
+	
+                // res = more_charSetPositive(asCSet(r))
+                 CSet  res = more_charSetPositive(asCSet(r));
+                 return res; 
+            }
+            case LCHAR: {
+                // ch = LCHAR
+                char ch = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
+                // cs = charSetInterval(ch)
+                 CSet  cs = charSetInterval(ch);
+                // res = more_charSetPositive(cs)
+                 CSet  res = more_charSetPositive(cs);
+                 return res; 
+            }
+            default: {
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.LCHAR);
+            }
+        }
     }
     
     private  CSet  charSetInterval(char first) {
@@ -1002,18 +1021,20 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 char last = ((Token.LCHAR) eat(Token.Kind.LCHAR)).value;
                  return CSet.interval(first, last); 
             }
+            case IDENT:
             case LCHAR:
             case RBRACKET: {
                  return CSet.singleton(first); 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.DASH, Token.Kind.LCHAR, Token.Kind.RBRACKET);
+                throw tokenError(peek(), Token.Kind.DASH, Token.Kind.IDENT, Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
         }
     }
     
     private  CSet  more_charSetPositive(CSet acc) {
         switch (peek().getKind()) {
+            case IDENT:
             case LCHAR: {
                 // cs = charSetPositive()
                  CSet  cs = charSetPositive();
@@ -1023,7 +1044,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  return acc; 
             }
             default: {
-                throw tokenError(peek(), Token.Kind.LCHAR, Token.Kind.RBRACKET);
+                throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
         }
     }

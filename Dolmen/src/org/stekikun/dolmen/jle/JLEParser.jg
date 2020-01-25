@@ -471,6 +471,7 @@ private { Regular } rule atomicRegular() =
  * 
  * charSetPositive := LCHAR DASH LCHAR
  *	                | LCHAR
+ *                  | IDENT
  *	                | charSetPositive charSetPositive
  */ 	        			  
 
@@ -489,6 +490,13 @@ private { CSet } rule charSet() =
 private { CSet } rule charSetPositive() =
 | 	ch = LCHAR cs = charSetInterval(ch)
 	res = more_charSetPositive(cs)
+	{ return res; }
+| 	id = IDENT	
+	{ @Nullable Regular r = Maps.get(definitions, Located.dummy(id));
+	  if (r == null) 
+	  	throw parsingError("Undefined regular expression " + id);
+	}
+	res = more_charSetPositive(asCSet(r))
 	{ return res; }
 ;
 
