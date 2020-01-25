@@ -91,7 +91,7 @@ public final class Tokenizer {
 	 * @param <L>	the type of {@link LexBuffer} that this instance handles
 	 * @param <T>	the type of tokens returned by the lexer's main entry
 	 */
-	public interface LexerInterface<L extends LexBuffer, T> {
+	public static interface LexerInterface<L extends LexBuffer, T> {
 		/**
 		 * @param inputName
 		 * @param reader
