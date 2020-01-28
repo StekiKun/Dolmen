@@ -91,13 +91,26 @@ public final class CodeBuilder {
 	}
 	
 	/**
-	 * Appends the given code, which should not
-	 * contain newline characters
+	 * Appends the given characters, which should not
+	 * contain newline characters unless indentation
+	 * of the given piece of code is not required
 	 * 
 	 * @param code
 	 */
-	public CodeBuilder emit(String code) {
+	public CodeBuilder emit(CharSequence code) {
 		buf.append(code);
+		return this;
+	}
+
+	/**
+	 * Appends the given character, which should not
+	 * be a newline characters unless indentation
+	 * is not required
+	 * 
+	 * @param c
+	 */
+	public CodeBuilder emit(char c) {
+		buf.append(c);
 		return this;
 	}
 	

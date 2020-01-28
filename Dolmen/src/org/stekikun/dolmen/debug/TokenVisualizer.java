@@ -191,6 +191,11 @@ public final class TokenVisualizer {
 		abstract int end();
 		
 		/**
+		 * @return the user-friendly description of this location 
+		 */
+		abstract String description();
+		
+		/**
 		 * @param loc
 		 * @return {@code true} if and only if this location
 		 * 	intersects with {@code loc}
@@ -231,6 +236,15 @@ public final class TokenVisualizer {
 		int end() {
 			return end.offset;
 		}
+		
+		@Override
+		String description() {
+			StringBuilder buf = new StringBuilder(Objects.toString(token));
+			buf.append("\n");
+			buf.append("(at line ").append(start.line)
+				.append(", column ").append(start.column()).append(")");
+			return buf.toString();
+		}
 	}
 	
 	/**
@@ -259,6 +273,11 @@ public final class TokenVisualizer {
 		@Override
 		int end() {
 			return start.offset + 1;
+		}
+		
+		@Override
+		String description() {
+			return "Lexical error: " + e.getMessage();
 		}
 	}
 
@@ -361,8 +380,8 @@ public final class TokenVisualizer {
 				// 	recording a special location for overlaps
 				throw new IllegalStateException("Encountered non-monotonic location after "
 					+ locations.get(locations.size() - 1).end() + ": either positions were "
-					+ " badly tampered with in the lexer's semantic actions, or the lexer implements "
-					+ " some form of #line or #include directives. The token visualizer "
+					+ " badly tampered with in the lexer's semantic actions, or the lexer "
+					+ " switches input streams along the way. The token visualizer "
 					+ " does not support such features.");
 			}
 			locations.add(loc);
@@ -420,18 +439,69 @@ public final class TokenVisualizer {
 		}
 	}
 	
-	private static String contents(Reader input) throws IOException {
+	/**
+	 * A container class to record the contents to tokenize, as well
+	 * as the total number of lines in the contents.
+	 * <p>
+	 * By convention, an empty string will have one line.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static final class Contents {
+		final String contents;
+		final int lines;
+		
+		Contents(String contents, int lines) {
+			this.contents = contents;
+			this.lines = lines;
+		}
+		
+		@Override
+		public String toString() {
+			return "[" + lines + " lines]\n" + contents;
+		}
+	}
+	
+	/**
+	 * Reads the totality of {@code input} and return its contents.
+	 * 
+	 * @param input
+	 * @return the description of input's contents
+	 * @throws IOException
+	 */
+	private static Contents contents(Reader input) throws IOException {
 		StringBuilder buf = new StringBuilder();
+		int lines = 1;
 		int c;
-		while ((c = input.read()) != -1)
+		read:
+		while ((c = input.read()) != -1) {
 			buf.append((char) c);
-		return buf.toString();
+			if (c == '\r') {
+				++lines;
+				// try and eat a line feed as well, beware
+				// there might be several carriage returns in a row
+				while (true) {
+					c = input.read();
+					if (c == -1) break read;
+					buf.append((char) c);
+					if (c != '\r') continue read;
+					++lines;
+				}
+			}
+			else if (c == '\n') {
+				++lines;
+			}
+		}
+		return new Contents(buf.toString(), lines);
 	}
 	
 	private static void save(Writer output, String contents) throws IOException {
 		output.append(contents);
 		output.flush();
 	}
+
+	// Convenient wrappers built on top of CodeBuilder to output
+	// a CSS style description
 	
 	private static void startClass(CodeBuilder buf, String className) {
 		buf.emit(className).emit(" {").incrIndent().newline();
@@ -459,6 +529,15 @@ public final class TokenVisualizer {
 		closeClass(buf);
 	}
 	
+	/**
+	 * Outputs the {@code <style>} node for a standalone HTML page
+	 * displaying the result of a tokenization. It contains generic
+	 * styles as well as highlighting styles for every token style
+	 * encountered in {@code acc}.
+	 * 
+	 * @param buf	the code builder to output to
+	 * @param acc
+	 */
 	private static <L extends LexBuffer, T, Cat>
 	void emitStyle(CodeBuilder buf, Acc<L, T, Cat> acc) {
 		buf.emit("<style>").incrIndent().newline();
@@ -479,6 +558,10 @@ public final class TokenVisualizer {
 			"margin-left", "20px",
 			"margin-right", "20px",
 			"border", "2px solid black");
+		// bol class
+		cssClass(buf, ".bol",
+			"color", "gray",
+			"margin-right", "5px");
 		// tok class
 		cssClass(buf, ".tok",
 			"visibility", "hidden",
@@ -500,6 +583,7 @@ public final class TokenVisualizer {
 			"position", "absolute",
 			"top", "100%",
 			"left", "0%",
+			"text-align", "left",
 			"margin-left", "5px",
 			"border-width", "5px",
 			"border-style", "solid",
@@ -530,6 +614,7 @@ public final class TokenVisualizer {
 		cssClass(buf, allTokens.toString(),
 			"display", "inline-block",
 			"position", "relative",
+			"vertical-align", "top",
 			"border-width", "1px",
 			"border-style", "solid",
 			"border-radius", "4px");
@@ -538,56 +623,189 @@ public final class TokenVisualizer {
 		buf.emit("</style>").newline();
 	}
 	
-	private static String htmlEscape(String s) {
-		StringBuilder buf = new StringBuilder();
-		for (int i = 0; i < s.length(); ++i) {
-			char c = s.charAt(i);
-			switch (c) {
-			case '<':
-				buf.append("&lt;");
-				break;
-			case '>':
-				buf.append("&gt;");
-				break;
-			case '&':
-				buf.append("&amp;");
-				break;
-			case '\'':
-				buf.append("&#39;");
-				break;
-			case '"':
-				buf.append("&quot;");
-				break;
-			default:
-				buf.append(c);
+	/**
+	 * A helper class which outputs unconstrained text to an HTML output,
+	 * taking care of escaping HTML special characters, and also handling
+	 * line counting/displaying when in tokenized output.
+	 * <p>
+	 * The implementation strives to avoid copies of sub-strings between
+	 * the original input and the code builder, and works in a single-pass.
+	 * 
+	 * @author Stéphane Lescuyer
+	 */
+	private static final class HtmlEscaper {
+		// The complete input which was tokenized
+		private final String input;
+		// The maximum number of digits to represent the lines in {@code input}.
+		// This is needed to right-justify line numbers in the input view.
+		private final int digits;
+		
+		// The code builde to output to
+		private final CodeBuilder buf;
+		// The current input line being displayed
+		private int curLine;
+		
+		/**
+		 * Initializes a fresh HTML escape for the given contents.
+		 * <b>Must be called right after the internal {@code <input>}
+		 *  HTML node has been entered, as the first thing it does
+		 *  is print the first line number.
+		 * <b>
+		 * 
+		 * @param contents
+		 * @param buf
+		 */
+		HtmlEscaper(Contents contents, CodeBuilder buf) {
+			this.input = contents.contents;
+			// 1 -> 1 .. 9 -> 1, 10 -> 2 ...
+			this.digits = (int) (Math.floor(Math.log10(contents.lines) + 1));
+			this.curLine = 1;
+			this.buf = buf;
+			this.bol();
+		}
+		
+		/**
+		 * Called when encountering a line break in tokenized output
+		 */
+		private void eol() {
+			++curLine;
+		}
+		
+		/**
+		 * Called when starting a new line in decorating tokenized output
+		 */
+		private void bol() {
+			buf.emit("<span class=\"bol\">");
+			String d = Integer.toString(curLine);
+			int pad = digits - d.length();
+			for (int i = 0; i < pad; ++i)
+				buf.emit(' ');
+			buf.emit(d);
+			buf.emit(" </span>");
+		}
+
+		/**
+		 * Outputs the given character sequence to the HTML output, taking care
+		 * of escaping special characters. If {@code count} is {@code true},
+		 * line breaks will increment the internal line counter; additionally,
+		 * if {@code decorate} is {@code true}, line breaks will be followed
+		 * with a line count display. In particular, {@code decorate} will be
+		 * ignored if {@code count} is {@code false}.
+		 * 
+		 * @param seq		the sequence to escape and output
+		 * @param decorate  whether line numbers should be displayed (requires {@code count})
+		 * @param count		whether line breaks increment the line counter
+		 */
+		private void htmlEscape(CharSequence seq, boolean decorate, boolean count) {
+			final int l = seq.length();
+			for (int i = 0; i < l; ++i) {
+				char c = seq.charAt(i);
+				switch (c) {
+				case '<':
+					buf.emit("&lt;");
+					break;
+				case '>':
+					buf.emit("&gt;");
+					break;
+				case '&':
+					buf.emit("&amp;");
+					break;
+				case '\'':
+					buf.emit("&#39;");
+					break;
+				case '"':
+					buf.emit("&quot;");
+					break;
+				case '\r':
+					buf.emit(c);
+					// try and eat the companion LF if any
+					if (i + 1 < l && seq.charAt(i + 1) == '\n') {
+						buf.emit('\n');
+						++i;
+					}
+					if (count) {
+						eol();
+						if (decorate) bol();
+					}
+					break;
+				case '\n':
+					// previous character could not be a CR
+					buf.emit(c);
+					if (count) {
+						eol();
+						if (decorate) bol();
+					}
+					break;
+				default:
+					buf.emit(c);
+				}
 			}
 		}
-		return buf.toString();
-	}	
 
-	private static void untagged(CodeBuilder buf,
-		String inputContents, int from, int to) {
-		buf.emit(htmlEscape(inputContents.substring(from, to)));
+		/**
+		 * Outputs part of the tokenized output which is not part
+		 * of any {@code <div>} token.
+		 * 
+		 * @param from
+		 * @param to
+		 */
+		void untagged(int from, int to) {
+			htmlEscape(input.subSequence(from, to), true, true);
+		}
+		
+		/**
+		 * Outputs part of the tokenized output which is part of
+		 * some {@code <div>} token. Line numbers will not be displayed
+		 * for internal line breaks inside this sequence.
+		 * 
+		 * @param from
+		 * @param to
+		 */
+		void tagged(int from, int to) {
+			htmlEscape(input.subSequence(from, to), false, true);
+		}
+		
+		/**
+		 * Outputs some string which does not belong to tokenized output.
+		 * It does require line counting, nor line count display. 
+		 * 
+		 * @param s
+		 */
+		void escape(String s) {
+			htmlEscape(s, false, false);
+		}
 	}
 	
+
+	/**
+	 * Emits the body of a standalone HTML page displaying the tokenization
+	 * results described in {@code acc}. The various recorded {@link Location}s
+	 * are highlighted depending on their associated token.
+	 * 
+	 * @param buf
+	 * @param inputName
+	 * @param inputContents
+	 * @param acc
+	 */
 	private static <L extends LexBuffer, T, Cat>
 	void emitBody(CodeBuilder buf,
-		String inputName, String inputContents, Acc<L, T, Cat> acc) {
+		String inputName, Contents inputContents, Acc<L, T, Cat> acc) {
 		buf.emit("<body>").incrIndent().newline();
 		buf.emit("<h2>").emit("Result of lexical analysis for file ")
 			.emit(inputName).emitln("</h2>");
 		
 		buf.emit("<div class=\"input\">");
 		buf.emit("\n"); // no indent on purpose
+		HtmlEscaper escaper = new HtmlEscaper(inputContents, buf);
 		int curOffset = 0;
 		for (Location<T> loc_ : acc.locations) {
-			untagged(buf, inputContents, curOffset, loc_.start.offset);
+			escaper.untagged(curOffset, loc_.start.offset);
 			if (loc_ instanceof LexError<?>) {
 				LexError<?> loc = (LexError<?>) loc_;
 				buf.emit("<div class=\"tokenerr\">");
-				buf.emit(htmlEscape(inputContents.substring(loc.start.offset, loc.end())));
+				escaper.tagged(loc.start.offset, loc.end());
 				buf.emit("<span class=\"tok\">");
-				buf.emit("Lexical error: " + loc.e.getMessage());
+				escaper.escape(loc.description());
 				buf.emit("</span></div>");
 			}
 			else if (loc_ instanceof Token<?>) {
@@ -596,9 +814,9 @@ public final class TokenVisualizer {
 				// acc.tokenTypes should contain all the categories of the encountered tokens
 				int tty = Nulls.ok(acc.tokenTypes.get(acc.lexer.category(tok)));
 				buf.emit("<div class=\"token" + tty + "\">");
-				buf.emit(htmlEscape(inputContents.substring(loc.start.offset, loc.end())));
+				escaper.tagged(loc.start.offset, loc.end());
 				buf.emit("<span class=\"tok\">");
-				buf.emit(htmlEscape(Objects.toString(tok)));
+				escaper.escape(loc.description());
 				buf.emit("</span></div>");
 			}
 			else {
@@ -606,7 +824,7 @@ public final class TokenVisualizer {
 			}
 			curOffset = loc_.end();
 		}
-		untagged(buf, inputContents, curOffset, inputContents.length());
+		escaper.untagged(curOffset, inputContents.contents.length());
 		buf.newline().emit("</div>");
 		
 		buf.decrIndent().newline().emit("</body>");
@@ -628,9 +846,9 @@ public final class TokenVisualizer {
 	void visualize(LexerInterface<L, T, Cat> lexer,
 		String inputName, Reader input, Writer output) throws IOException {
 		
-		String inputContents = contents(input);
+		Contents inputContents = contents(input);
 		
-		StringReader replay = new StringReader(inputContents);
+		StringReader replay = new StringReader(inputContents.contents);
 		L lexbuf = lexer.makeLexer(inputName, replay);
 		Acc<L, T, Cat> acc = new Acc<>(lexbuf, lexer);
 		acc.run();
