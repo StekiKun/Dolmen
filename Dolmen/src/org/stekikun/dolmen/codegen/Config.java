@@ -47,7 +47,7 @@ public final class Config {
 	 * description, a parser description, or both.
 	 * <p>
 	 * Relevance values form a semi-lattice with {@link #BOTH}
-	 * as a bottom element for the {@link #includes(Relevance)}
+	 * as a bottom element for the {@link Config.Relevance#includes(Config.Relevance)}
 	 * relation.
 	 * 
 	 * @author Stéphane Lescuyer

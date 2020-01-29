@@ -303,7 +303,7 @@ public final class Lexer {
 	 * problem reports along the way
 	 * 
 	 * @author Stéphane Lescuyer
-	 * @see #addEntry(Entry)
+	 * @see Lexer.Builder#addEntry(Lexer.Entry)
 	 */
 	public static final class Builder {
 		private final List<Option> options;

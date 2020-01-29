@@ -244,7 +244,7 @@ public final class CodeBuilder {
 	 * take advantage of region tracking can be used:
 	 * <ul>
 	 * <li> {@link #getSourceMapping()}
-	 * <li> {@link #startTrackedRange(Position)}
+	 * <li> {@link #startTrackedRange(LexBuffer.Position)}
 	 * <li> {@link #endTrackedRange(CExtent)}
 	 * <li> {@link #emitTracked(CExtent)}
 	 * <li> {@link #emitTrackedIf(boolean, CExtent)}
@@ -290,7 +290,7 @@ public final class CodeBuilder {
 	 * in the source file.
 	 * <p>
 	 * <b>Only one region can be tracked at any given time.</b>
-	 * Successive calls to {@link #startTrackedRange(Position)} 
+	 * Successive calls to {@link #startTrackedRange(LexBuffer.Position)} 
 	 * without any calls to {@link #endTrackedRange(CExtent)} will be
 	 * ignored.
 	 * 
@@ -314,7 +314,7 @@ public final class CodeBuilder {
 	/**
 	 * Closes the currently tracked region and maps it to
 	 * the source position given in the corresponding call
-	 * to {@link #startTrackedRange(Position)}. It will now
+	 * to {@link #startTrackedRange(LexBuffer.Position)}. It will now
 	 * be registered into the {@link #getSourceMapping() source mappings}.
 	 * <p>
 	 * <i>If no region was being tracked, this call is ignored.</i>

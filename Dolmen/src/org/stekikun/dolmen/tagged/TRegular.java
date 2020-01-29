@@ -277,7 +277,7 @@ public abstract class TRegular {
 	 * @param action
 	 * @return the regular expression consisting of the
 	 * 	tag described by the given parameters
-	 * @see TagInfo#TagInfo(String, boolean, int)
+	 * @see TagInfo
 	 */
 	public static Tag tag(String id, boolean start, int action) {
 		return new Tag(new TagInfo(id, start, action));

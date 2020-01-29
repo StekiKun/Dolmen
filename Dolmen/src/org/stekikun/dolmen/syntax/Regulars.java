@@ -375,7 +375,7 @@ public abstract class Regulars {
 	public static final class MatchResult {
 		/** 
 		 * Contains all bound substrings which were
-		 * matched by {@linking Regular.Binding} regexps
+		 * matched by {@link Regular.Binding} regexps
 		 */
 		public final Map<String, String> bindings;
 		/**

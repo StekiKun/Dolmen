@@ -32,7 +32,7 @@ import org.stekikun.dolmen.unparam.Grammar;
 public abstract class CExtent {
 
 	/**
-	 * @retrn the absolute filename where this extent should be interpreted
+	 * @return the absolute filename where this extent should be interpreted
 	 */
 	public abstract String filename();
 	

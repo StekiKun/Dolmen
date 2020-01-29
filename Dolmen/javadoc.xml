@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project default="javadoc">
+    <target name="javadoc">
+        <javadoc access="protected" author="true" classpath="org.eclipse.jdt.annotation_2.0.100.v20150311-1658.jar" destdir="../docs/javadoc/" doctitle="Dolmen Runtime Javadoc" nodeprecated="false" nodeprecatedlist="false" noindex="false" nonavbar="false" notree="false" packagenames="org.stekikun.dolmen.common,org.stekikun.dolmen.debug,org.stekikun.dolmen.cli,org.stekikun.dolmen.automaton,org.stekikun.dolmen.syntax,org.stekikun.dolmen.tagged,org.stekikun.dolmen.codegen,org.stekikun.dolmen.unparam" source="1.8" sourcepath="src-gen:src" splitindex="true" use="true" version="true">
+            <link href="https://docs.oracle.com/javase/8/docs/api/"/>
+        </javadoc>
+    </target>
+</project>

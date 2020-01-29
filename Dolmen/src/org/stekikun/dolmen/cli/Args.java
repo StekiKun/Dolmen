@@ -14,7 +14,7 @@ import org.stekikun.dolmen.common.Prompt;
 
 /**
  * This class describes the various command-line arguments that can be
- * used with the Dolmen CLI as an {@link Item enumeration}. This enumerations
+ * used with the Dolmen CLI as an {@link Args.Item enumeration}. This enumerations
  * drives a generic command-line {@link #parse(String[]) parsing} implementation
  * which is used by the CLI in {@link Dolmen}.
  * 
@@ -28,7 +28,7 @@ public final class Args {
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
-	static enum Type {
+	public static enum Type {
 		/** A flag option, expecting no value: it is either present, or absent */
 		FLAG,
 		/** A numeric option, expecting an integer value */
@@ -38,7 +38,7 @@ public final class Args {
 	}
 	
 	/**
-	 * Common variant type holding values associated to various {@link Type types}
+	 * Common variant type holding values associated to various {@link Args.Type types}
 	 * of command-line options.
 	 * <p>
 	 * Values can be produced using the various static factories associated to
@@ -328,7 +328,7 @@ public final class Args {
 	
 	/**
 	 * Parses the given array of command-line arguments {@code args} according
-	 * to the various available options described in {@link Item}.
+	 * to the various available options described in {@link Args.Item}.
 	 * <p>
 	 * The expected format of the command-line arguments is as follows:
 	 * <ul>

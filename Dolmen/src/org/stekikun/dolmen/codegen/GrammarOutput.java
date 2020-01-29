@@ -21,6 +21,7 @@ import org.stekikun.dolmen.syntax.Located;
 import org.stekikun.dolmen.syntax.TokenDecl;
 import org.stekikun.dolmen.unparam.Grammar;
 import org.stekikun.dolmen.unparam.GrammarRule;
+import org.stekikun.dolmen.unparam.Grammars;
 import org.stekikun.dolmen.unparam.Production;
 import org.stekikun.dolmen.unparam.Grammars.PredictionTable;
 import org.stekikun.dolmen.unparam.Production.ActionItem;
@@ -40,7 +41,7 @@ import org.stekikun.dolmen.unparam.Production.Continue;
  * grammar.
  * 
  * @see TokensOutput
- * @see #output(Writer, String, Config, Grammar, PredictionTable)
+ * @see #output(Writer, String, Config, Grammar, Grammars.PredictionTable)
  * 
  * @author Stéphane Lescuyer
  */
@@ -430,7 +431,7 @@ public final class GrammarOutput {
 	}
 	
 	/**
-	 * Same as {@link #output(Writer, String, Config, Grammar, PredictionTable)}
+	 * Same as {@link #output(Writer, String, Config, Grammar, Grammars.PredictionTable)}
 	 * with the default configuration {@link Config#DEFAULT}.
 	 * 
 	 * @param writer
