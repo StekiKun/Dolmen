@@ -1,0 +1,8 @@
+org.stekikun.dolmen.automaton
+org.stekikun.dolmen.cli
+org.stekikun.dolmen.codegen
+org.stekikun.dolmen.common
+org.stekikun.dolmen.debug
+org.stekikun.dolmen.syntax
+org.stekikun.dolmen.tagged
+org.stekikun.dolmen.unparam
