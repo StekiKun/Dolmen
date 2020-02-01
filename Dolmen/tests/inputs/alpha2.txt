@@ -1,0 +1,12 @@
+FOXTROT
+GOLF
+HOTEL
+INDIA
+JULIETT
+KILO
+LIMA
+#include tests/inputs/alpha3.txt
+SIERRA
+TANGO
+UNIFORM
+VICTOR

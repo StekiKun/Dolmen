@@ -1,5 +1,5 @@
-import test.examples.StraightLineParser.Token;
-import static test.examples.StraightLineParser.Token.*;
+import org.stekikun.dolmen.test.examples.StraightLineParser.Token;
+import static org.stekikun.dolmen.test.examples.StraightLineParser.Token.*;
 { }
 
 digit = ['0'-'9'];

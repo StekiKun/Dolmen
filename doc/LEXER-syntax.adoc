@@ -1,0 +1,329 @@
+include::config.adoc[]
+// :toc:
+// :toclevels: 4
+
+[#Lexers_Syntax_Ref]
+= Dolmen Lexers: Syntax Reference
+
+In this section we present the complete syntax reference for Dolmen
+lexer descriptions. We start with the lexical structure of Dolmen
+lexers before describing the actual grammar of the language.
+
+== Lexical conventions
+
+The following lexical conventions explain how the raw characters in a
+Dolmen lexer description are split into the lexical elements that are then
+used as terminals of the grammar.
+
+White space::
+
+  The five following characters are considered as white space: _space_
+  `(0x20)`, _horizontal tab_ `(0x09)`, _line feed_ `(0x0A)`, _form
+  feed_ `(0x0C)` and _carriage return_ `(0x0D)`. The line feed and
+  carriage return characters are called _line terminators_. White
+  space does not produce lexical elements but can serve as separator
+  between other lexical elements.
+
+Comments::
+
+  Comments follow the same rules as in the Java language. They can be
+  either end-of-line comments `// ...` extending up to a line
+  terminator, or traditional multi-line comments `+/* ... */+`. Comments
+  cannot be _nested_, which means in particular that neither `//` nor
+  `/*` are interpreted inside a traditional multi-line comment. As
+  with white space, comments do not produce lexical elements but can
+  serve as separators between other lexical elements.
+
+[[JLIDENT]]Identifiers (`IDENT`)::
+
+  Identifiers are formed by non empty-sequences of _letters_ (a
+  lowercase letter from `a` to `z`, an uppercase letter from `A` to
+  `Z`, or the underscore character `+_+`) and _digits_ (from `0` to
+  `9`), and *must* start with a letter. For instance, `id`, `+_FOO+`
+  or `+_x32_y+` are valid identifiers. Some otherwise valid sequences
+  of letters are reserved as <<JLKeywords,_keywords_>> and cannot be
+  used as identifiers.
+
+[[LNAT]]Literal integers (`LNAT`)::
+
+  A literal integer is either `0` or any non-zero digit followed by a
+  number of digits between `0` and `9`. Its value is interpreted as a
+  decimal integer. Any such sequence of digits which produces a value
+  that does not fit in a 32-bit *signed* integer results in a lexical
+  error.
+
+[[LCHAR]]Character literals (`LCHAR`)::
+  A character literal is expressed as a simple character or an _escape
+  sequence_ between single quotes `'...'`. A simple character can be
+  any character other than `'`, `\` and line terminators. An escape
+  sequence can be any of the following:
+  * an octal character code between `\000` and `\377`, representing the
+    character with the given octal ASCII code;
+  * an escape sequence amongst `\\`, `\'`, `\"`, `\r` (0x0D),
+    `\n` (0x0A), `\b` (0x08), `\t` (0x09) and `\f` (0x0C);
+  * a Unicode character code between `\u0000` and `\uFFFF`, representing
+    the corresponding UTF-16 _code unit_; just like in Java, there can be
+    any positive number of `u` characters before the actual hexadecimal
+    code.
+====
+For instance, possible character literals are `'g'`, `'$'`, `+'\''+`,
+`'\047'` or `'\uuu0027'`. The last three happen to all represent the
+same character.
+====
+
+[[JLLSTRING]][[JLMLSTRING]]String literals (`LSTRING`, `MLSTRING`)::
+
+  A string literal is expressed as a sequence of simple characters and
+  escape sequences between double quotes `"..."`. A simple character
+  is any character other than `"` and `\`. An escape sequence is
+  exactly as described for <<LCHAR,_character literals_>>. +
+  Unlike in Java, line terminators may be allowed inside string
+  literals, representing their own value. Nonetheless, single-line
+  string literals and multi-line string literals will produce
+  different lexical elements (resp. `LSTRING` and `MLSTRING`) which
+  can then be distinguished in the grammar. Indeed, multi-line string
+  literals are only syntactically valid as <<JLOption,option values>>,
+  and their usage elsewhere will result in a syntax error during the
+  parsing phase.
+
+WARNING: Characters and escape sequences in a string literal are
+  interpreted greedily in the order in which they appear, and
+  therefore a `\` character will only be understood as the start of an
+  escape sequence if the number of other backslash `\` that
+  *contiguously* precede it is even (which includes zero). +
+  Therefore, the string literal `+"\\u006E"+` is interpreted as an
+  escaped backslash followed by `"u006E"`.
+
+TIP: As in Java, Unicode code points outside the Basic Multilingual
+  Plane cannot be represented with a single character or escape
+  sequence; one must use two code points (a
+  https://docs.oracle.com/javase/tutorial/i18n/text/supplementaryChars.html[_surrogate
+  pair_]) instead. For instance, the Unicode code point `U+1D11E`,
+  which is the symbol for the musical G clef &#119070;, can be
+  obtained with two Unicode escape sequences `\uD834\uDD1E`.
+
+[[JLACTION]]Java actions (`ACTION`):: 
+
+  Java actions are lexical elements which represent verbatim excerpts
+  of Java code. They are used as part of the semantic actions
+  associated to a lexer entry's <<Clause,clauses>>, to express the
+  Java return type and arguments of a <<Entry,lexer entry>>, and also
+  for the top-level header and footer of the generated lexical
+  analyzer. +
+  A Java action is a block of _well-delimited_ Java code between curly
+  braces: `{ ...well-delimited Java code... }`. A snippet of Java code
+  is well-delimited if every character literal, string literal,
+  instruction block, method, class or comment that it contains is
+  correctly closed and balanced. This essentially ensures that Dolmen
+  is able to correctly and safely identify the closing `}` which
+  delimits the end of the Java action.
+
+.Example (Comments)
+====
+The following snippet:
+[source,jl]
+----
+{ // TODO Later }
+----
+is not a valid Java action because the internal end-of-line comment
+is not closed inside the action. In fact the closing `}` is understood
+as being part of the Java snippet and thus part of the comment (as 
+revealed by the syntax highlighting). Adding
+a line break makes this a valid Java action:
+[source,jl]
+----
+{ // TODO Later
+}
+----
+====
+
+.Example (Literals)
+====
+The following snippet:
+[source,jl]
+----
+{ System.out.printf("In action \"Foo\"); }
+----
+is not a valid Java action because the internal String literal
+is not properly closed inside the action. Closing the literal
+makes this a valid Java action:
+[source,jl]
+----
+{ System.out.printf("In action \"Foo\""); }
+
+----
+====
+
+TIP: Dolmen's companion https://dolmenplugin.stekikun.org[Eclipse plug-in] offers
+     editors with syntax highlighting, including relevant syntax highlighting
+     inside Java actions. It is obvious in the examples above that decent Java-aware
+     syntax highlighting goes a long way in helping one avoid silly typos
+     and syntactic mistakes inside Java actions.
+
+WARNING: Dolmen's lexical conventions for white space, comments and
+         literals follow those used in the Java programming
+         language. In particular, Dolmen will follow the same rules
+         when encountering character or string literals inside and
+         outside Java actions. There is a subtle but important
+         difference between Dolmen and Java though:
+         https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.3[unlike
+         Java], Dolmen does not unescape Unicode sequences in a
+         _preliminary_ pass but during the main lexical translation
+         instead. Therefore, if one uses a Unicode escape code to
+         stand for a line terminator, a delimiter or a character in an
+         escape sequence, it is possible to write valid Java code that
+         is not a valid Java action, or the other way around. +
+         Consider for instance the Java literal `+"Hello\u0022+`: this
+         is a valid Java string because `\u0022` is first replaced by
+         the double quote character `"`, but as far as Dolmen is
+         concerned this is an incomplete string literal whose first
+         six characters were `Hello"`. Another example is `+"\u005C"+`
+         which is a valid Dolmen string representing the single
+         character `\`, and is understood by Java as being an
+         incomplete string literal whose first character is `"`. +
+         
+
+[[JLKeywords]]Keywords::
+  
+  The following lower-case identifiers are reserved keywords of the
+  language: +
+  `as`, `eof`, `import`, `orelse`, `private`, `public`,
+  `rule`, `shortest`, `static`.
+
+Operators and punctuation::
+
+  The following symbols serve as operators or punctuation symbols in
+  Dolmen lexer descriptions: +
+  `=`, `|`, `[`, `]`, `*`, `?`, `+`, `(`,
+  `)`, `^`, `-`, `#`, `.`, `<`, `>`, `,`, `;`.
+
+Any input sequence which does not match any of the categories above
+will result in a lexical error.
+
+== Grammar of Dolmen Lexers
+
+:bnf-listing: verbatim,quotes,macros
+
+We give the complete grammar for Dolmen lexer descriptions below. The
+terminals of the grammar are the lexical elements described _infra_,
+and keywords, punctuation and operator symbols are displayed in
+*boldface*.  The main symbol is <<Lexer,Lexer>> and we use traditional
+https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form[BNF syntax] to
+present the grammar's rules, augmented with the usual repetition
+operators `?` (at most one), `+` (at least one) and `+*+` (any number
+of repetitions).
+
+
+[listing, subs="{bnf-listing}"]
+--
+[[Lexer]]Lexer :=
+  <<JLOption,Option>>*
+  <<JLImport,Import>>*
+  <<JLACTION,ACTION>>        // header
+  <<Definition>>*
+  <<Entry>>+
+  <<JLACTION,ACTION>>        // footer
+--
+
+=== Options, Imports and Auxiliary Definitions
+
+[listing, subs="{bnf-listing}"]
+--
+[[JLOption]]Option :=
+| *[* <<JLIDENT,IDENT>> *=* <<JLLSTRING,MLSTRING>> *]*
+| *[* <<JLIDENT,IDENT>> *=* <<JLMLSTRING,MLSTRING>> *]*
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[JLImport]]Import :=
+  *import* (*static*)? <<JLTypename,Typename>> *;*
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[JLTypename]]Typename :=
+| <<JLIDENT,IDENT>>
+| <<JLIDENT,IDENT>> *.* <<JLTypename,Typename>>
+| <<JLIDENT,IDENT>> *.* ***
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[Definition]]Definition :=
+  <<JLIDENT,IDENT>> *=* <<Regular>> *;*
+--
+
+=== Lexer Entries
+
+[listing, subs="{bnf-listing}"]
+--
+[[Entry]]Entry :=
+  (*public* | *private*)
+  <<JLACTION,ACTION>>            // entry's return type
+  *rule* <<JLIDENT,IDENT>>
+  (<<JLACTION,ACTION>>)?         // entry's optional arguments
+  *=* (*shortest*)?        // whether shortest-match or longest-match rule is used
+  <<Clause>>+
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[Clause]]Clause :=
+| *|* <<Regular>> <<JLACTION,ACTION>>
+| *|* *orelse*  <<JLACTION,ACTION>>
+--
+
+=== Regular Expressions
+
+[listing, subs="{bnf-listing}"]
+--
+[[Regular]]Regular :=
+| <<Regular>> *as* <<JLIDENT,IDENT>>    // *as* is left-associative
+| <<AltRegular>>
+
+[[AltRegular]]AltRegular :=
+| <<SeqRegular>> *|* <<AltRegular>>        // choice
+| <<SeqRegular>>
+
+[[SeqRegular]]SeqRegular :=
+| <<PostfixRegular>> <<SeqRegular>>      // concatenation
+| <<PostfixRegular>>
+
+[[PostfixRegular]]PostfixRegular :=
+| <<DiffRegular>> ***                    // zero, one or more occurrences
+| <<DiffRegular>> *+*                    // at least one occurrence
+| <<DiffRegular>> *?*                    // at most one occurrence
+| <<DiffRegular>> *<* <<LNAT>> *>*           // fixed # of occurrences
+| <<DiffRegular>> *<* <<LNAT>> *,* <<LNAT>> *>*  // min. and max. # of occurrences
+| <<DiffRegular>>
+
+[[DiffRegular]]DiffRegular :=
+| <<AtomicRegular>> *#* <<AtomicRegular>>  // only with char classes
+| <<AtomicRegular>>
+
+[[AtomicRegular]]AtomicRegular :=
+| *_*                           // all characters except *eof*
+| *eof*                         // end-of-input
+| <<LCHAR>>                     // a single character
+| <<JLLSTRING,LSTRING>>                     // an exact sequence of characters
+| <<JLIDENT,IDENT>>                       // defined regular expression
+| <<CharClass>>                 // a character class
+| *(* <<Regular>> *)*
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[CharClass]]CharClass :=
+  *[* <<CharSet>> *]*
+
+[[CharSet]]CharSet :=
+| *^* <<CharSetPositive>>         // complement character set
+| <<CharSetPositive>>
+
+[[CharSetPositive]]CharSetPositive :=
+| <<LCHAR>>                     // a single character
+| <<LCHAR>> *-* <<LCHAR>>           // a range of characters (inclusive)
+| <<JLIDENT,IDENT>>                       // defined character set
+| <<CharSetPositive>> <<CharSetPositive>> // union of character sets
+--

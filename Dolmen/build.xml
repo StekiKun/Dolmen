@@ -13,55 +13,55 @@
 
 	<target name="jllexer">
 		<echo>Dolmen: compiling Lexer lexical analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jl.JLLexer">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jl.JLLexer">
 		</java>
 	</target>
 
 	<target name="jglexer" depends="jllexer">
 		<echo>Dolmen: compiling Grammar lexical analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jg.JGLexerStub">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jg.JGLexerStub">
 		</java>
 	</target>
 
 	<target name="jgparser" depends="jllexer,jglexer">
 		<echo>Dolmen: compiling Grammar syntax analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jg.JGParser">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jg.JGParser">
 		</java>
 	</target>
 
 	<target name="jlelexer" depends="jllexer">
 		<echo>Dolmen: compiling extended Lexer lexical analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jle.JLELexerStub">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jle.JLELexerStub">
 		</java>
 	</target>
 
 	<target name="jleparser" depends="jllexer,jglexer,jgparser,jlelexer">
 		<echo>Dolmen: compiling extended Lexer syntax analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jle.JLEParserStub">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jle.JLEParserStub">
 		</java>
 	</target>
 
 	<target name="jgelexer" depends="jleparser">
 		<echo>Dolmen: compiling extended Grammar lexical analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jge.JGELexerStub">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jge.JGELexerStub">
 		</java>
 	</target>
 
 	<target name="jgeparser" depends="jllexer,jglexer,jgparser,jgelexer">
 		<echo>Dolmen: compiling extended Grammar syntax analyzer...</echo>
-		<java classpath="bin/" failonerror="yes" classname="jge.JGEParserStub">
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.jge.JGEParserStub">
 		</java>
 	</target>
 
 	<!-- Cleaning generated files (not the test ones) -->
 	<target name="clean" description="Cleans the generated lexers and parsers">
-		<delete file="src/jl/JLLexerGenerated.java"/>
-		<delete file="src/jg/JGLexer.java"/>
-		<delete file="src/jg/JGParserGenerated.java"/>
-		<delete file="src/jge/JGELexer.java"/>
-		<delete file="src/jge/JGEParser.java"/>
-		<delete file="src/jle/JLELexer.java"/>
-		<delete file="src/jle/JLEParser.java"/>
+		<delete file="src/org/stekikun/dolmen/jl/JLLexerGenerated.java"/>
+		<delete file="src/org/stekikun/dolmen/jg/JGLexer.java"/>
+		<delete file="src/org/stekikun/dolmen/jg/JGParserGenerated.java"/>
+		<delete file="src/org/stekikun/dolmen/jge/JGELexer.java"/>
+		<delete file="src/org/stekikun/dolmen/jge/JGEParser.java"/>
+		<delete file="src/org/stekikun/dolmen/jle/JLELexer.java"/>
+		<delete file="src/org/stekikun/dolmen/jle/JLEParser.java"/>
 	</target>
 
 	<!-- Various test targets -->
@@ -69,20 +69,21 @@
 	<target name="test_lexers" depends="jllexer"
 	   description="Runs the tests about lexical analyzer generation">
 		<echo>Dolmen tests: running lexical analyzers tests...</echo>
-		<java classpath="bin/" failonerror="yes" classname="test.examples.BasicLexers"/>
-		<java classpath="bin/" failonerror="yes" classname="test.examples.AdvancedLexers"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.examples.BasicLexers"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.examples.AdvancedLexers"/>
 	</target>
 
 	<target name="test_grammars" depends="dolmen"
        description="Runs the tests about syntactic analyzers generation">
 		<echo>Dolmen tests: running syntactic analyzers tests...</echo>
-		<java classpath="bin/" failonerror="yes" classname="test.examples.BasicGrammars"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestAnalyseGrammar"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestTokensOutput"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestGrammarOutput"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestJGParser"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestJGEParser"/>
-		<java classpath="bin/" failonerror="yes" classname="test.grammar.TestPositions"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.examples.BasicGrammars"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestAnalyseGrammar"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestTokensOutput"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestGrammarOutput"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestJGParser"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestJGEParser"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestPositions"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.grammar.TestIncludes"/>
 	</target>
 
 	<target name="test_dolmen" depends="test_lexers,test_grammars"
@@ -92,7 +93,7 @@
 
 	<target name="test_unit"
 	   description="Runs unit and random tests about CSet/Regulars/etc">
-		<java classpath="bin/" failonerror="yes" classname="test.Test"/>
-		<java classpath="bin/" failonerror="yes" classname="test.misc.TestSCC"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.Test"/>
+		<java classpath="bin/" failonerror="yes" classname="org.stekikun.dolmen.test.misc.TestSCC"/>
 	</target>
 </project>

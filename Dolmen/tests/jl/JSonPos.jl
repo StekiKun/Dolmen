@@ -1,5 +1,5 @@
-import static test.examples.JSonPosParser.Token.*;
-import test.examples.JSonPosParser.Token;
+import static org.stekikun.dolmen.test.examples.JSonPosParser.Token.*;
+import org.stekikun.dolmen.test.examples.JSonPosParser.Token;
 
 // Lexical analyzer for non-standard JSON values
 //
@@ -54,9 +54,8 @@ public { Token } rule main =
 | "object"  { return OBJECT; }
 | "array"   { return ARRAY; }
 | '"'		{ 
-              Position stringStart = getLexemeStart();
-			  buf.setLength(0); string();
-			  startLoc = stringStart;
+			  buf.setLength(0);
+              saveStart(this::string);
 			  return STRING(buf.toString());
 			}
 | number	{ return NUMBER(Double.parseDouble(getLexeme())); }

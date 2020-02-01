@@ -35,7 +35,7 @@
       (and the literals true, false, null are shared so there are 
        in reality way more actual nodes than that ; we could share
        even more nodes by interning string-nodes since the same string
-       attributed are repeated everywhere in the JSon file)
+       attributes are repeated everywhere in the JSon file)
   NB: the same parser in Menhir takes around 7s in native, and 15s
   	  in bytecode so there's something going on. There is definitely
   	  more overhead in the Java representation of the AST but does it

@@ -1,0 +1,323 @@
+include::config.adoc[]
+:icons: font
+:example-caption!:
+// :toc:
+// :toclevels: 4
+
+= Dolmen Parsers: Syntax Reference
+
+In this section we present the complete syntax reference for Dolmen
+parser descriptions. We start with the lexical structure of Dolmen
+parsers before describing the actual grammar of the language.
+
+== Lexical conventions
+
+The following lexical conventions explain how the raw characters in a
+Dolmen parser description are split into the lexical elements that are
+then used as terminals of the grammar.
+
+White space::
+
+  The five following characters are considered as white space: _space_
+  `(0x20)`, _horizontal tab_ `(0x09)`, _line feed_ `(0x0A)`, _form
+  feed_ `(0x0C)` and _carriage return_ `(0x0D)`. The line feed and
+  carriage return characters are called _line terminators_. White
+  space does not produce lexical elements but can serve as separator
+  between other lexical elements.
+
+Comments::
+
+  Comments follow the same rules as in the Java language. They can be
+  either end-of-line comments `// ...` extending up to a line
+  terminator, or traditional multi-line comments `+/* ... */+`. Comments
+  cannot be _nested_, which means in particular that neither `//` nor
+  `/*` are interpreted inside a traditional multi-line comment. As
+  with white space, comments do not produce lexical elements but can
+  serve as separators between other lexical elements.
+
+[[IDENT]]Identifiers (`IDENT`)::
+
+  Identifiers are formed by non empty-sequences of _letters_ (a
+  lowercase letter from `a` to `z`, an uppercase letter from `A` to
+  `Z`, or the underscore character `+_+`) and _digits_ (from `0` to
+  `9`), and *must* start with a letter. For instance, `id`, `+_FOO+`
+  or `+_x32_y+` are valid identifiers. Some otherwise valid sequences
+  of letters are reserved as <<Keywords,_keywords_>> and cannot be
+  used as identifiers.
+
+[[LSTRING]][[MLSTRING]]String literals (`MLSTRING`)::
+
+  A string literal is expressed as a sequence of simple characters and
+  escape sequences between double quotes `"..."`. A simple character
+  is any character other than `"` and `\`; in particular string literals
+  can span multiple lines in a Dolmen parser description. An escape 
+  sequence can be any of the following:
+  * an octal character code between `\000` and `\377`, representing the
+    character with the given octal ASCII code;
+  * an escape sequence amongst `\\`, `\'`, `\"`, `\r` (0x0D),
+    `\n` (0x0A), `\b` (0x08), `\t` (0x09) and `\f` (0x0C);
+  * a Unicode character code between `\u0000` and `\uFFFF`, representing
+    the corresponding UTF-16 _code unit_; just like in Java, there can be
+    any positive number of `u` characters before the actual hexadecimal
+    code.
+====
+For instance, possible characters in a string literal are `g`, `$`,
+`+\'+`, `\047` or `\uuu0027`. The last three happen to all represent
+the same character.
+====
+
+WARNING: Characters and escape sequences in a string literal are
+  interpreted greedily in the order in which they appear, and
+  therefore a `\` character will only be understood as the start of an
+  escape sequence if the number of other backslash `\` that
+  *contiguously* precede it is even (which includes zero). +
+  Therefore, the string literal `+"\\u006E"+` is interpreted as an
+  escaped backslash followed by `"u006E"`.
+
+TIP: As in Java, Unicode code points outside the Basic Multilingual
+  Plane cannot be represented with a single character or escape
+  sequence; one must use two code points (a
+  https://docs.oracle.com/javase/tutorial/i18n/text/supplementaryChars.html[_surrogate
+  pair_]) instead. For instance, the Unicode code point `U+1D11E`,
+  which is the symbol for the musical G clef &#119070;, can be
+  obtained with two Unicode escape sequences `\uD834\uDD1E`.
+
+[[ACTION]]Java actions (`ACTION`):: 
+
+  Java actions are lexical elements which represent verbatim excerpts
+  of Java code. They are used as part of the semantic actions
+  associated to a parser rule's <<Production,productions>>, to express
+  the Java return type of a <<Rule,rule>> or the Java type of the
+  value associated to a <<TokenDecl,token>>, and also for the top-level
+  header and footer of the generated syntactic analyzer. +
+  A Java action is a block of _well-delimited_ Java code between curly
+  braces: `{ ...well-delimited Java code... }`. A snippet of Java code
+  is well-delimited if every character literal, string literal,
+  instruction block, method, class or comment that it contains is
+  correctly closed and balanced. This essentially ensures that Dolmen
+  is able to correctly and safely identify the closing `}` which
+  delimits the end of the Java action. +
+  Because Dolmen grammar rules can be <<FormalParams,parametric>>,
+  Java actions are not necessarily copied verbatim in the generated
+  parser: some generic parts of the Java action may undergo a
+  _substitution_ to account for the actual instantiation of a rule's
+  formal parameters. To that end, Java actions can contain
+  placeholders of the form `\#_key_` called _holes_, where `key` must be
+  any <<IDENT,identifier>> starting with a lower-case letter. When
+  instantiating grammar rules, these holes are filled by Dolmen
+  with the Java types of the formal parameters whose names match the
+  holes' keys. One limitation of this mechanism is that holes are
+  *not* interpreted when they appear inside a Java comment, character
+  literal or string literal. In other contexts, the `#` character can
+  safely be interpreted as a hole marker since it is not a Java separator
+  or operator symbol.
+
+.Example (Comments)
+====
+The following snippet:
+[source,jg]
+----
+{ // TODO Later }
+----
+is not a valid Java action because the internal end-of-line comment
+is not closed inside the action. In fact the closing `}` is understood
+as being part of the Java snippet and thus part of the comment (as 
+revealed by the syntax highlighting). Adding
+a line break makes this a valid Java action:
+[source,jg]
+----
+{ // TODO Later
+}
+----
+====
+
+.Example (Literals)
+====
+The following snippet:
+[source,jg]
+----
+{ System.out.printf("In action \"Foo\"); }
+----
+is not a valid Java action because the internal String literal
+is not properly closed inside the action. Closing the literal
+makes this a valid Java action:
+[source,jg]
+----
+{ System.out.printf("In action \"Foo\""); }
+
+----
+====
+
+.Example (Holes)
+====
+The following snippet:
+[source,jg]
+----
+{
+  // See A#foo()
+  List<#elt> l = new ArrayList<#elt>();
+}
+----
+is a valid Java action with holes referencing some formal
+parameter `elt`. The `#foo` in the comment is not
+interpreted as a hole.
+====
+
+TIP: Dolmen's companion https://dolmenplugin.stekikun.org[Eclipse
+     plug-in] offers editors with syntax highlighting, including
+     relevant syntax highlighting inside Java actions which also
+     recognizes holes. It is obvious in the examples above that decent
+     Java-aware syntax highlighting goes a long way in helping one
+     avoid silly typos and syntactic mistakes inside Java actions.
+
+WARNING: Dolmen's lexical conventions for white space, comments and
+         literals follow those used in the Java programming
+         language. In particular, Dolmen will follow the same rules
+         when encountering character or string literals inside and
+         outside Java actions. There is a subtle but important
+         difference between Dolmen and Java though:
+         https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.3[unlike
+         Java], Dolmen does not unescape Unicode sequences in a
+         _preliminary_ pass but during the main lexical translation
+         instead. Therefore, if one uses a Unicode escape code to
+         stand for a line terminator, a delimiter or a character in an
+         escape sequence, it is possible to write valid Java code that
+         is not a valid Java action, or the other way around. +
+         Consider for instance the Java literal `+"Hello\u0022+`: this
+         is a valid Java string because `\u0022` is first replaced by
+         the double quote character `"`, but as far as Dolmen is
+         concerned this is an incomplete string literal whose first
+         six characters were `Hello"`. Another example is `+"\u005C"+`
+         which is a valid Dolmen string representing the single
+         character `\`, and is understood by Java as being an
+         incomplete string literal whose first character is `"`. +
+
+[[ARGUMENTS]]Java arguments (`ARGUMENTS`):: 
+
+  Java arguments are very similar to <<ACTION,Java actions>> in that
+  they are lexical elements which represent verbatim excerpts of Java
+  code. They are used to declare a <<Rule,parser rule>>'s arguments
+  and to pass arguments to a non-terminal in a
+  <<Production,production>>. +
+  Java arguments are formed by a block of _well-delimited_ Java code
+  between parentheses: `( ...well-delimited Java code... )`. The
+  snippet of Java code is well-delimited if every character literal,
+  string literal, or parenthesized expression that it
+  contains is correctly closed and balanced. This essentially ensures
+  that Dolmen is able to correctly and safely identify the closing `)`
+  which delimits the end of the Java arguments. +
+  Like Java actions, Java arguments can contain _holes_ in the form of
+  identifiers introduced by a `#` character. Holes are only interpreted
+  outside Java comments and literals.
+
+[[Keywords]]Keywords::
+  
+  The following lower-case identifiers are reserved keywords of the
+  language: +
+  `continue`, `import`, `private`, `public`,
+  `rule`, `static`, `token`.
+
+Operators and punctuation::
+
+  The following symbols serve as operators or punctuation symbols in
+  Dolmen lexer descriptions: +
+  `=`, `|`, `[`, `]`, `.`, `<`, `>`, `,`, `;`.
+
+Any input sequence which does not match any of the categories above
+will result in a lexical error.
+
+== Grammar of Dolmen Parsers
+
+:bnf-listing: verbatim,quotes,macros
+
+We give the complete grammar for Dolmen parser descriptions below. The
+terminals of the grammar are the lexical elements described _infra_,
+and keywords, punctuation and operator symbols are displayed in
+*boldface*.  The main symbol is <<Parser,Parser>> and we use traditional
+https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form[BNF syntax] to
+present the grammar's rules, augmented with the usual repetition
+operators `?` (at most one), `+` (at least one) and `+*+` (any number
+of repetitions).
+
+[listing, subs="{bnf-listing}"]
+--
+[[Parser]]Parser :=
+  <<Option>>*
+  <<Import>>*
+  <<TokenDecl>>*
+  <<ACTION>>        // header
+  <<Rule>>*
+  <<ACTION>>        // footer
+--
+
+=== Options, Imports and Auxiliary Definitions
+
+[listing, subs="{bnf-listing}"]
+--
+[[Option]]Option :=
+  *[* <<IDENT>> *=* <<MLSTRING>> *]*
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[Import]]Import :=
+  *import* (*static*)? <<Typename>> *;*
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[Typename]]Typename :=
+| <<IDENT>>
+| <<IDENT>> *.* <<Typename>>
+| <<IDENT>> *.* ***
+--
+
+=== Token Declarations
+
+[listing, subs="{bnf-listing}"]
+--
+[[TokenDecl]]TokenDecl :=
+  *token* (<<ACTION>>)? <<IDENT>>+      // all uppercase identifiers only
+--
+
+=== Grammar Rules and Productions
+
+[listing, subs="{bnf-listing}"]
+--
+[[Rule]]Rule :=
+  (*public* | *private*)
+  <<ACTION>>              // rule's return type
+  *rule* <<IDENT>>          // must start with lowercase letter
+  (<<FormalParams>>)?     // rule's optional formal parameters
+  (<<ARGUMENTS>>)?        // rule's optional arguments
+  *=* <<Production>>+ *;*
+
+[[FormalParams]]FormalParams :=
+  *<* <<IDENT>> (*,* <<IDENT>>)* *>*    //  formals must start with lowercase letter
+
+[[Production]]Production :=
+  *|* <<Item>>*
+--
+
+=== Production Items and Actuals
+
+[listing, subs="{bnf-listing}"]
+--
+[[Item]]Item :=
+| <<ACTION>>                     // a semantic action
+| (<<IDENT>> *=*)? <<ACTUAL>>        // a grammar symbol, potentially bound to some value
+| *continue*                    // can only appear last in a production
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[Actual]]Actual :=
+  <<ActualExpr>> (<<ARGUMENTS>>)?         // optional arguments to the actual
+--
+
+[listing, subs="{bnf-listing}"]
+--
+[[ActualExpr]]ActualExpr :=
+| <<IDENT>>                                      // a terminal or ground non-terminal
+| <<IDENT>> *<* <<ActualExpr>> (*,* <<ActualExpr>>)* *>*   // application of a parametric non-terminal
+--

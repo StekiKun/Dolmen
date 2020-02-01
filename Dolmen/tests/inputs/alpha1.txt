@@ -1,0 +1,10 @@
+ALFA
+BRAVO
+CHARLIE
+DELTA
+ECHO
+#include tests/inputs/alpha2.txt
+WHISKEY
+XRAY
+YANKEE
+ZULU

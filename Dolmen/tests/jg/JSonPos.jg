@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.LinkedHashMap;
-import common.Lists;
-import common.Maps;
-import codegen.LexBuffer.Position;
+import org.stekikun.dolmen.common.Lists;
+import org.stekikun.dolmen.common.Maps;
+import org.stekikun.dolmen.codegen.LexBuffer.Position;
 
 // The tokens of the JSON language
 token LBRACKET RBRACKET LSQUARE RSQUARE

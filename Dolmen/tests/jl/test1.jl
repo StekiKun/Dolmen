@@ -1,6 +1,6 @@
 // Imports
-import static jl.JLToken.*;
-import jl.JLToken;
+import static org.stekikun.dolmen.jl.JLToken.*;
+import org.stekikun.dolmen.jl.JLToken;
 
 /* Lexer class header */
 {

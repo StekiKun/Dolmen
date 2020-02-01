@@ -1,5 +1,5 @@
-import static test.examples.JSonParser.Token.*;
-import test.examples.JSonParser.Token;
+import static org.stekikun.dolmen.test.examples.JSonParser.Token.*;
+import org.stekikun.dolmen.test.examples.JSonParser.Token;
 
 {
 	private final StringBuilder buf = new StringBuilder();
@@ -47,9 +47,8 @@ public { Token } rule main =
 | "false"	{ return FALSE; }
 | "null"	{ return NULL; }
 | '"'		{ 
-              Position stringStart = getLexemeStart();
-			  buf.setLength(0); string();
-			  startLoc = stringStart;
+              buf.setLength(0);
+              saveStart(this::string);
 			  return STRING(buf.toString());
 			}
 | number	{ return NUMBER(Double.parseDouble(getLexeme())); }

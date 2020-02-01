@@ -1,0 +1,17 @@
+/* A grammar with no rules */
+[ class_annotations = "@SuppressWarnings(\"unused\")"]
+
+/* This is allowed for a case where one would like
+   to solely use Dolmen to generate the Token type
+   (for instance when sharing token types between
+   different lexers or parsers).
+ */
+ 
+ token A B C
+ token { int } I
+ 
+ { }
+ 
+ // No rules
+ 
+ { }

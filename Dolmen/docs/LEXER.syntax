@@ -87,4 +87,5 @@ Exactly like in Java
 
 | CHAR - CHAR	// character range
 | CHAR			// single char
+| IDENT			// reference to defined char set
 | CSET0 CSET0	// concatenation

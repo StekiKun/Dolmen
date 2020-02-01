@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html>
+    <style>
+        body {
+            background-color: BlanchedAlmond;
+        }
+        
+        h1 {
+            color: white;
+            text-align: center;
+        }
+        
+        .input {
+            white-space: pre;
+            font-family: monospace;
+            background-color: white;
+            padding: 5px;
+            margin-left: 20px;
+            margin-right: 20px;
+            border: 2px solid black;
+        }
+        
+        .bol {
+            color: gray;
+            margin-right: 5px;
+        }
+        
+        .tok {
+            visibility: hidden;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            padding: 5px 5px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            display: block;
+            bottom: 150%;
+            left: -5px;
+        }
+        
+        .tok::after {
+            content: "";
+            position: absolute;
+            top: 100%;
+            left: 0%;
+            text-align: left;
+            margin-left: 5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+        
+        .tokenerr {
+            background-color: black;
+            border-color: red;
+            color: white;
+        }
+        
+        .tokenerr:hover .tok {
+            visibility: visible;
+        }
+        
+        .token1 {
+            background-color: MediumSpringGreen;
+            border-color: MediumSpringGreen;
+        }
+        
+        .token1:hover .tok {
+            visibility: visible;
+        }
+        
+        .token3 {
+            background-color: LightPink;
+            border-color: LightPink;
+        }
+        
+        .token3:hover .tok {
+            visibility: visible;
+        }
+        
+        .token0 {
+            background-color: LightSkyBlue;
+            border-color: LightSkyBlue;
+        }
+        
+        .token0:hover .tok {
+            visibility: visible;
+        }
+        
+        .token2 {
+            background-color: Khaki;
+            border-color: Khaki;
+        }
+        
+        .token2:hover .tok {
+            visibility: visible;
+        }
+        
+        .tokenerr, .token1, .token3, .token0, .token2 {
+            display: inline-block;
+            position: relative;
+            vertical-align: top;
+            border-width: 1px;
+            border-style: solid;
+            border-radius: 4px;
+        }
+        
+        
+    </style>
+    <body>
+        <h2>Result of lexical analysis for file resources/simple.json</h2>
+        <div class="input">
+<span class="bol">1 </span><div class="token0">{<span class="tok">LBRACE
+(at line 1, column 1)</span></div> &quot;persons<div class="token1">&quot;<span class="tok">STRING(persons)
+(at line 1, column 11)</span></div><div class="token0">:<span class="tok">COLON
+(at line 1, column 12)</span></div> <div class="token0">[<span class="tok">LBRACKET
+(at line 1, column 14)</span></div>&quot;Joe<div class="token1">&quot;<span class="tok">STRING(Joe)
+(at line 1, column 19)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 1, column 20)</span></div> &quot;Bob<div class="token1">&quot;<span class="tok">STRING(Bob)
+(at line 1, column 26)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 1, column 27)</span></div> <div class="token2">null<span class="tok">NULL
+(at line 1, column 29)</span></div><div class="token0">]<span class="tok">RBRACKET
+(at line 1, column 33)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 1, column 34)</span></div>
+<span class="bol">2 </span>  &quot;open<div class="token1">&quot;<span class="tok">STRING(open)
+(at line 2, column 8)</span></div><div class="token0">:<span class="tok">COLON
+(at line 2, column 9)</span></div> <div class="token2">true<span class="tok">TRUE
+(at line 2, column 11)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 2, column 15)</span></div>
+<span class="bol">3 </span>  &quot;loc<div class="token1">&quot;<span class="tok">STRING(loc)
+(at line 3, column 7)</span></div><div class="token0">:<span class="tok">COLON
+(at line 3, column 8)</span></div> <div class="token0">[<span class="tok">LBRACKET
+(at line 3, column 10)</span></div><div class="token3">-12.45<span class="tok">NUMBER(-12,4500)
+(at line 3, column 11)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 3, column 17)</span></div> <div class="token3">3.40e1<span class="tok">NUMBER(34,0000)
+(at line 3, column 19)</span></div><div class="token0">]<span class="tok">RBRACKET
+(at line 3, column 25)</span></div><div class="token0">,<span class="tok">COMMA
+(at line 3, column 26)</span></div>
+<span class="bol">4 </span>  &quot;text<div class="token1">&quot;<span class="tok">STRING(text)
+(at line 4, column 8)</span></div><div class="token0">:<span class="tok">COLON
+(at line 4, column 9)</span></div> &quot;sdfk\&quot;j<div class="token1">&quot;<span class="tok">STRING(sdfk&quot;j)
+(at line 4, column 19)</span></div>
+<span class="bol">5 </span><div class="token0">}<span class="tok">RBRACE
+(at line 5, column 1)</span></div>
+<span class="bol">6 </span>
+        </div>
+    </body>
+</html>

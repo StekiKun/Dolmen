@@ -11,18 +11,20 @@
         </sealing>
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
-        <javaElement handleIdentifier="=Dolmen/src&lt;codegen"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;jle"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;syntax"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;tagged"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;automaton"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.common"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.debug"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.cli"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.jge"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.automaton"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.syntax"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.codegen"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.jle"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.jg"/>
         <file path="/Dolmen/.project"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;jg"/>
         <file path="/Dolmen/Manifest.txt"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;unparam"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;common"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;jl"/>
-        <javaElement handleIdentifier="=Dolmen/src&lt;jge"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.jl"/>
         <file path="/Dolmen/.classpath"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.tagged"/>
+        <javaElement handleIdentifier="=Dolmen/src&lt;org.stekikun.dolmen.unparam"/>
     </selectedElements>
 </jardesc>
