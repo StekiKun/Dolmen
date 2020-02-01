@@ -1,0 +1,96 @@
+////
+ This is the chapter on building lexical analyzers in the Dolmen documentation.
+ Its master file is README.adoc.
+////
+
+:jls8: https://docs.oracle.com/javase/specs/jls/se8
+:jdk8: https://docs.oracle.com/javase/8/docs/api/java
+:jdoc-base: {doc-base}/javadoc
+:jdoc-dolmen: {jdoc-base}/org/stekikun/dolmen
+:codegen: {jdoc-dolmen}/codegen
+:lexbuf: {codegen}/LexBuffer.html
+:debug: {jdoc-dolmen}/debug
+:json-pdf: http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf
+
+[#Lexers]
+== Lexical Analyzers
+
+////
+ Plan:
+   + Simple introductory example
+     * Lexer structure
+     * Main entry
+     * Compiling and testing
+     * Adding nested entries
+     * Improving error reports
+     * Debugging locations
+   + Lexer entries
+     * Regular expressions
+     * Semantic actions
+     * eof, _, orelse
+     * options
+     * CLI
+   + Advanced concepts
+     * nested rules
+     * handling token locations
+     * tail-recursion
+   + Lexer description reference
+////
+
+In this chapter, we explain how to produce lexical analysers with
+Dolmen by writing _Dolmen lexer descriptions_. We start by showing how
+to write a simple lexer description for the JSON format before
+presenting the various features of the lexer description format in
+more detailed fashion. A complete reference for the lexer description
+syntax can be found at <<Lexers_Syntax_Ref,the end of this chapter>>.
+
+// The tutorial section
+include::lexers-tutorial.adoc[]
+
+<<<
+=== Lexer Entries
+
+
+
+==== Regular Expressions
+
+_Coming soon_
+
+[#Lexers_Semantic_Actions_Ref]
+==== Semantic Actions
+
+_Coming soon_
+
+[#Lexers_Wildcards]
+==== Understanding `eof`, `_` and `orelse`
+
+_Coming soon_
+
+==== Lexer Options
+
+_Coming soon_
+
+==== Command Line Interface
+
+_Coming soon_
+
+=== Advanced Concepts
+
+_Coming soon_
+
+==== Nested Rules
+
+_Coming soon_
+
+==== Managing Token Locations
+
+_Coming soon_
+
+[#Lexers_Tail_Recursion_Ref]
+==== Tail-Recursion
+
+_Coming soon_
+
+<<<
+// Include the language reference section
+include::LEXER-syntax.adoc[leveloffset=+2]

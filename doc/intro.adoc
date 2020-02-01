@@ -1,0 +1,300 @@
+////
+ This is the introduction chapter in the Dolmen documentation.
+ Its master file is README.adoc.
+////
+
+[#Introduction]
+== Introduction
+
+In this section, we shortly introduce the notions of lexical and
+syntactic analyses and how they are typically combined into parsers
+for structured languages such as programming languages, configuration
+files, markup, etc. For a more thorough presentation of these
+concepts, one can for instance refer to resources such as <<ASU>> and
+<<App>>. If you are familiar with these concepts, you can skip
+directly to the documentation for Dolmen <<Lexers>> or <<Parsers>>.
+
+=== From characters to abstract syntax trees
+
+To illustrate the kind of tasks that Dolmen may help you perform,
+consider a couple of statements in some programming language:
+
+[source,ruby]
+----
+x = 1 + y * 3;
+# Some comment
+if (x < 0) then printf("(if;=\"#1\n");
+----
+
+These statements are initially read from a source file as a mere
+sequence of _characters_. The process of turning this sequence of
+characters into a structured object that can be manipulated by a
+program (e.g. an interpreter, a compiler, a static analyzer, etc) is
+called _parsing_. For the statements above, the structured object
+would typically look somewhat like this:
+
+----
+Sequence
+ ├─ Assignment
+ │   ├─ Variable "x"
+ │   └─ Add
+ │       ├─ Integer 0x00000001
+ │       └─ Mult
+ │           ├─ Variable "y"
+ │           └─ Integer 0x00000003
+ └─ IfThenElse
+     ├─ LessThan
+     │   ├─ Variable "x"
+     │   └─ Integer 0x00000000
+     ├─ Call "printf"
+     │   └─ String ['i' 'f' ';' '=' '"' '#' '1' 0x0A]
+     └─ Nop
+----
+
+Such a structure is usually called an _Abstract Syntax Tree_ (AST), as
+it conveys the actual abstract structure that is expressed in the
+original syntactic piece of code. There are a few important things to
+note when comparing the AST and the original source:
+
+* Punctuation and operator symbols do not appear in the AST _as such_
+  but they contribute to its structure:
+  
+** punctuation symbols, such as semi-colons used to terminate
+   statements, block delimiters or separation whitespace (e.g. the
+   space between `then` and `printf`), are useful to express the
+   structure of the program and separate its core syntactic elements;
+   they are reflected in the AST for instance in the `Sequence` node
+   or the `IfThenElse` control-flow structure; 
+   
+** operators such as `+`, `if .. then` or `=` are translated to
+   abstract nodes for the operations they represent, such as
+   `Assignment`, `Add` and so on.
++
+It is technically possible to modify these syntactic conventions in
+the language and adapt the source snippet without changing the AST at
+all, i.e. without needing to change the back-ends of your compiler,
+interpreter, etc.
+
+* Comments do not appear in the AST as they have no bearing on the
+  actual meaning of the program (the same goes for extra whitespace as
+  well, e.g. indentation or formatting). Of course, a tool which needs
+  to interpret some special comments (such as
+  https://docs.oracle.com/javase/8/docs/technotes/tools/windows/javadoc.html[Javadoc]
+  or http://www.doxygen.nl[Doxygen] documentation) will typically have
+  to keep at least some of the comments as part of the AST.
+
+* Some things that were implicit in the original source have been made
+  explicit in the AST:
+
+** rules that govern the _precedence_ of various operators have been
+   applied; in that case the fact that the multiplication operator `*`
+   binds tighter than the addition operator `+` is reflected in the
+   way the arithmetic expression `1 + y * 3` was parsed;
+
+** some forms of syntactic sugar have been removed, such as the
+   missing `else` branch being filled with a default no-operation
+   `Nop` node.
++
+In essence, a program manipulating an AST need not care about all the
+subtle syntactic possibilites to write the same statement or
+expression, and writing `1 + (y * 3)` or an explicit `else {}` branch
+would have made no difference.
+
+* Last but not least, constant literals are also usually canonized in
+  ASTs:
+
+** integer literals may be input using decimal, hexadecimal or octal
+   notations for instance, and it is the actual value represented by
+   the literal which is normally stored in the AST;
+
+** string or character literals may contain escape sequences for
+   Unicode values or special characters such as `"` and the line feed
+   `\n` in our example, and these are replaced by the actual encoded
+   character when parsing the literal into the AST.
+
+Some of the things that are typically not performed during parsing
+include the resolution of identifiers (is `x` a global constant or
+some local variable? is `printf` a local function or one from an
+imported external module?...), type-checking (calling `printf(4, x)`
+would have been parsed successfully) and other semantic analyses.
+
+=== Tokenization
+
+Although it is always technically possible, it should be clear that
+manually parsing source code into an AST _in a single-pass_ is not
+very practical: one needs to keep track of all possible contexts,
+handle possible comments everywhere, match opening and closing
+delimiters such as parentheses and braces, handle precedence rules and
+syntactic varieties, unescape characters when applicable, etc. It is
+code that is definitely hard to write, hard to read and even harder
+to maintain.
+
+==== Tokens
+A better way of handling this parsing problem is to first split the
+source code into its atomic lexical elements, much like reading a
+sentence in a natural language requires to first identify the various
+words before checking whether their arrangement is grammatically
+correct. These lexical elements are called _tokens_ and the phase
+which transforms the input stream of characters into a stream of
+tokens is called _tokenization_.
+
+The tokens of a programming language usually consist of:
+
+* punctuation symbols such as `;`, `,`, `(`...
+* operators such as `+`, `==`, `<<`, `&`, `>=`...
+* keywords of the language such as `if`, `while`, `def`...
+* identifiers such as `x`, `_y12`, `speedX`...
+* constant literals such as `12`, `0xFA2E`, `0.85f`, `'c'`, `"hello"`...
+
+In particular, there are usually no tokens for whitespace or comments,
+although there could be tokens for special documentation comments if
+required. Looking at these couple of statements again:
+[source,ruby]
+----
+x = 1 + y * 3;
+# Some comment
+if (x < 0) then printf("(if;=\"#1\n");
+----
+the corresponding tokens would be
+--
+`x`, `=`, `1`, `+`, `y`, `*`, `3`, `;`, `if`, `(`, `x`, `<`, `0`, `)`,
+`then`, `printf`, `"(if;=\"#1\n"`, `)` and `;`.
+--
+Some tokens such as constant literals or identifiers are associated to
+a _value_, such as the literal's value or the identifier's name,
+whereas the other tokens hold no particular value other than
+themselves.
+
+==== Regular Expressions
+The tokenization process is usually simple enough for the different
+tokens to be recognizable by _regular expressions_. For instance, one
+might informally describe some of the rules to identify the tokens of
+our language above as follows:
+----
+";" -> SEMICOLON
+"&" -> AMPERSAND
+...
+"if" -> IF
+"def" -> DEF
+...
+[_a-zA-Z][_a-zA-Z0-9]* -> IDENT
+(0 | [1-9][0-9]*) -> INT
+...
+'"' [^"] '"' -> STRING
+----
+where `SEMICOLON`, `IF`, `IDENT`, etc. are the symbolic names given to
+the different kinds of tokens. The regular expressions for operators
+and keywords are straightforward and match the associated symbols
+exactly. Identifiers are simply a letter or an underscore followed by
+any number of alphanumeric characters, whereas decimal integer
+literals are either 0 or any number not starting with 0. There would
+be other rules for integer literals in other radices, but they could
+share the same token kind. Finally, string literals are formed by a
+pair of matching `"` without any double quotes in the middle; of
+course this is an oversimplification as it does not account for
+escaped characters appearing inside the string. The different rules
+are not necessarily exclusive, in which case some _disambiguation
+rules_ must be applied. For instance, keywords look very much like
+valid identifiers, and in fact they are pretty much just that:
+reserved identifiers. A common way of handling this is to use the
+_"longest-match rule"_, expressing that when a choice exists, the
+token that consumes the most characters in the input should be given
+preference. This ensures that `defined` is a single identifier token
+instead of the keyword `def` followed by an identifier `ined`, and
+that `1234` is a single integer instead of `1` followed by `234` or
+any other combination. When several rules match the same amount of
+input, a possible choice is to always pick the one which appears first
+in the set of rules; in our case above, this ensures the keyword `if`
+is matched as `IF` and not as an identifier.
+
+Disambiguation aside, these regular expressions can be merged into a
+single regular expression which in turn can be transformed into a
+_deterministic finite automaton_ (DFA) that recognizes the tokens. The
+final states of the DFA represent the various token rules and the DFA
+can be used to efficiently consume characters from the input
+stream. When the DFA reaches a final state, it emits the corresponding
+token, and in this fashion the input character stream can be
+transformed into a token stream. If ever the DFA fails to recognize
+the input characters at some point, this means the input string has a
+syntax error. With our rules above, this would for instance happen
+with an non-terminated string literal. Last but not least, we have not
+explained how whitespace and comments are handled: they must
+definitely be recognized and _consumed_ but should produce no
+tokens. One way to do this in our informal description is to add
+the corresponding rules:
+----
+(' ' | '\r' | '\n' | '\t')+ ->          /* whitespace, skip */
+"//" [^\r\n]* ->                        /* comments, skip */
+----
+but have them produce no token at all. When the DFA reaches the
+corresponding state, it simply starts over with the remaining input
+without emitting any token in the output stream.
+
+==== Lexical Analyzer Generators
+
+Lexical analyzer generators are tools which automate the process of
+turning a set of rules, such as those given informally above, into
+source code which implements the recognition mechanism for the DFA
+associated with the rules. This allows developers to keep a reasonably
+abstract view of the tokenization process, concentrate on designing
+the various regular expressions correctly, and leave everything else
+to the generator:
+
+* managing the input stream buffer and character encoding;
+* the translation of the regular expressions into an optimized DFA;
+* handling disambiguation rules, in particular the backtracking which
+  is normally entailed by using the longest-match rule;
+* checking for potential ambiguities or issues in the rules, such as
+  rules which are always shadowed by another rule;
+* keeping track of line and column numbers or character offsets, which
+  are useful both for error reporting and to associate source
+  locations to AST nodes during the parsing phase.
+
+As none of the above is particularly easy to deal with, these
+generators are a great asset when trying to write a parser. Many
+generators, including Dolmen, will additionnally support input rules
+which are more expressive than simple regular expressions, like
+https://en.wikipedia.org/wiki/Pushdown_automaton[pushdown automata],
+making it possible to perform quite complex tasks during the
+tokenization phase.
+
+Some lexical analyzer generators such as the ones in
+https://www.antlr.org/[ANTLR] or https://www.antlr.org/[JavaCC] are
+intrinsically linked to an associated parser generator and are used to
+produce tokens for these parsers, but lexical analysis is not limited
+to producing tokens for a grammar-based syntactic analysis. One can
+actually associate the lexer rules to any computable action, such as
+printing something or aggregating some information. Possible
+applications of a "standalone" lexical analyzer may be:
+
+* counting the lines or the number of occurrences of some lexical
+  element in a file, skipping comments;
+* perform simple C-style pre-processing of a program;
+* simple syntax highlighting such as the one applied to code
+  blocks in this very document;
+* character stream transformation passes such as the initial Unicode
+  unescaping phase in
+  https://docs.oracle.com/javase/specs/jls/se9/html/jls-3.html#jls-3.3[lexical
+  translation of Java sources].
+
+Lexers generated by Dolmen are not specialized for tokenization and
+can be used for any kind of lexical analysis by designing the
+appropriate actions. Another lexer generator in the Java ecosystem
+which produces standalone lexical analyzers is
+https://jflex.de/[JFlex]. In particular both can be used to produce
+token streams for other parser generators such as
+http://www2.cs.tum.edu/projects/cup/[Cup] or
+http://byaccj.sourceforge.net/[BYacc/J]. The <<Lexers>> chapter in
+this documentation explains how to write your own lexers with Dolmen.
+
+=== Parsing
+
+_Coming soon_
+
+[bibliography]
+=== References
+
+- [[[ASU]]] _Compilers: principles, techniques, and
+tools._ Aho, Sethi and Ullman. (Addison-Wesley, 1986)
+- [[[App]]] _Modern compiler implementation in ML_.
+  Appel. (Cambridge University Press, 1998)

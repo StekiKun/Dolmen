@@ -1,0 +1,13 @@
+////
+ This is the chapter on building syntactic analyzers in the Dolmen documentation.
+ Its master file is README.adoc.
+////
+
+[#Parsers]
+== Parsers
+
+_Coming soon_
+
+<<<
+// Include the language reference section
+include::PARSER-syntax.adoc[leveloffset=+2]
