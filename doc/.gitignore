@@ -1,0 +1,9 @@
+/javadoc
+/files
+/images
+/legacy/
+/sandbox/
+/tuto/
+*.html
+*.xml
+*.pdf
