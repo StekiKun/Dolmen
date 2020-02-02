@@ -8,7 +8,7 @@
 :icons: font
 :example-caption!:
 // The base folder for the documentation, for links
-:doc-base: ../docs
+:doc-base: .
 :doc-files: {doc-base}/files
 // The base directory for image resources
 :imagesdir: {doc-base}/images

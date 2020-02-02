@@ -1296,7 +1296,7 @@ match the tokens for the <code>true</code>, <code>false</code> and <code>null</c
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/json_number.png" alt="JSON numbers" width="50%">
+<img src="./images/json_number.png" alt="JSON numbers" width="50%">
 </div>
 </div>
 <div class="paragraph">
@@ -1435,7 +1435,7 @@ In this tutorial, we will generate and test the lexical analyzer
 The best way to enjoy this tutorial is to try and proceed
   along on your own system, following the different steps to
   reach an actual complete JSON lexer. We provide an
-  <a href="../docs/files/lexer-tutorial.tgz">archive</a>
+  <a href="./files/lexer-tutorial.tgz">archive</a>
   to set up a working directory just like the one we assume
   in this section. This archive also contains a basic <code>Makefile</code>
   to compiler the lexer and tokenizer, and a target <code>test</code> which
@@ -1620,7 +1620,7 @@ our main lexer entry.</p>
 <table>
 <tr>
 <td><i class="conum" data-value="1"></i><b>1</b></td>
-<td><a href="../docs/javadoc/org/stekikun/dolmen/common/Prompt.html#getInputLine-java.lang.String-"><code>Prompt.getInputLine</code></a>
+<td><a href="./javadoc/org/stekikun/dolmen/common/Prompt.html#getInputLine-java.lang.String-"><code>Prompt.getInputLine</code></a>
  is provided for quick testing by
 the Dolmen runtime and simply returns a line of standard
 input.</td>
@@ -1637,7 +1637,7 @@ stream and print the tokens.</td>
 </tr>
 <tr>
 <td><i class="conum" data-value="4"></i><b>4</b></td>
-<td><code>lexer.main()</code> will throw a <a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.LexicalError.html"><code>LexicalError</code></a>
+<td><code>lexer.main()</code> will throw a <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.LexicalError.html"><code>LexicalError</code></a>
 exception when encountering unsuitable input.</td>
 </tr>
 </table>
@@ -1937,7 +1937,7 @@ diagram</em> for JSON string values:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/json_string.png" alt="JSON strings" width="50%">
+<img src="./images/json_string.png" alt="JSON strings" width="50%">
 </div>
 </div>
 <div class="paragraph">
@@ -2588,7 +2588,7 @@ disambiguation rule, this clause will not be used if <code>u</code> happens to b
 followed by four hexadecimal digits. The second clause uses the
 special <em>wildcard</em> regular expression <code>_</code>, which matches any single
 character, to handle the case of all invalid escape characters. The
-<a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#error-java.lang.String-"><code>error()</code></a> method used in
+<a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#error-java.lang.String-"><code>error()</code></a> method used in
 the semantic actions here is a method exported
 by Dolmen&#8217;s base class for lexical analyzers and which simply
 returns a <code>LexicalError</code> exception with the given message and associated
@@ -2799,8 +2799,8 @@ in terms of a line and a column number:</p>
 Dolmen-generated code and the custom lexical errors we raise ourselves
 in the semantic actions. Yet, for the latter, we never bothered to
 explicitly specify an input location when throwing the exception; in
-fact, the <a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#error-java.lang.String-"><code>error()</code></a> library function
-inherited from <a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html"><code>LexBuffer</code></a> that
+fact, the <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#error-java.lang.String-"><code>error()</code></a> library function
+inherited from <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html"><code>LexBuffer</code></a> that
 we used to build the lexical exception did choose a position
 automatically. To make sure these positions are relevant, one needs to
 get a good grasp of the principles behind them. Not only are positions
@@ -2819,14 +2819,14 @@ fully fledged JSON file instead of one-line sentences. We could adapt
 our <code>Tokenizer</code> class to read from a file and display all tokens, but
 this time we are interested in displaying the input locations
 associated to the tokens as well. The two methods
-<a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#getLexemeStart"><code>getLexemeStart()</code></a> and
-<a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#getLexemeEnd"><code>getLexemeEnd()</code></a> inherited from the base
-<a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html"><code>LexBuffer</code></a> class can be used in semantic actions to
+<a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#getLexemeStart"><code>getLexemeStart()</code></a> and
+<a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#getLexemeEnd"><code>getLexemeEnd()</code></a> inherited from the base
+<a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html"><code>LexBuffer</code></a> class can be used in semantic actions to
 retrieve the positions of the part of the input which matched the
 current clause: <code>getLexemeStart()</code> will return the position of the
 first character of the match, while <code>getLexemeEnd()</code> will return the
 position of the first character which <em>follows</em> the match.
-The <a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.Position.html">positions</a> themselves
+The <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.Position.html">positions</a> themselves
 consist of the following information:</p>
 </div>
 <div class="ulist">
@@ -2854,7 +2854,7 @@ from which, together with the offset of the position, the
 are managed automatically by the generated lexer, whereas the other
 part is the responsibility of the developer writing the lexer
 description. The
-<a href="../docs/javadoc/org/stekikun/dolmen/debug/package-summary.html">org.stekikun.dolmen.debug</a>
+<a href="./javadoc/org/stekikun/dolmen/debug/package-summary.html">org.stekikun.dolmen.debug</a>
 package contains utilities to help one debug lexical analyzers; using
 the <code>Tokenizer</code> class from this package, it is very easy to tokenize an
 input file as follows:</p>
@@ -2911,7 +2911,7 @@ input file as follows:</p>
 </div>
 <div class="paragraph">
 <p>The
-<a href="../docs/javadoc/org/stekikun/dolmen/debug/Tokenizer.html#file-org.stekikun.dolmen.debug.Tokenizer.LexerInterface-java.io.File-java.io.File-boolean-">Tokenizer.file</a>
+<a href="./javadoc/org/stekikun/dolmen/debug/Tokenizer.html#file-org.stekikun.dolmen.debug.Tokenizer.LexerInterface-java.io.File-java.io.File-boolean-">Tokenizer.file</a>
 method used in this example requires an interface describing what
 lexical analyzer to use, and how to use it, and will tokenize any
 given input file, printing the results to the specified output
@@ -2984,7 +2984,7 @@ right.</p>
 current line number, but <strong>do not update it automatically</strong>. In order to
 fix our locations, we must thus tell the underlying lexing buffer when
 a new line starts. This is typically done from a semantic action by
-calling the helper method <a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#newline--"><code>newline()</code></a>,
+calling the helper method <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#newline--"><code>newline()</code></a>,
 available from the base <code>LexBuffer</code> class. Calling <code>newline()</code> will
 simply increment the current line count, and tell the engine that a
 new line starts at the <em>end</em> of the current match. This is the reason
@@ -3092,7 +3092,7 @@ positions for some of the tokens look very suspicious; for instance,
 the token <code>STRING(open)</code> for the <code>"open"</code> literal on line 2 only spans
 <em>one</em> character according to the locations. We could look up the
 actual positions in detail manually, but Dolmen&#8217;s
-<a href="../docs/javadoc/org/stekikun/dolmen/debug/TokenVisualizer.html"><code>TokenVisualizer</code></a> class offers a
+<a href="./javadoc/org/stekikun/dolmen/debug/TokenVisualizer.html"><code>TokenVisualizer</code></a> class offers a
 more convenient way to check the token&#8217;s positions against the actual
 input. Its usage is very similar to <code>Tokenizer</code> but instead of simply
 displaying the tokens' information, it will generate a standalone HTML
@@ -3174,12 +3174,12 @@ for categorizing tokens is to use their <em>kind</em>.</p>
 <div class="paragraph">
 <p>Compiling our <code>Visualizer</code> class and running it on <code>simple.json</code> will
 produce a
-<a href="../docs/files/simple.json.bad.html"><code>simple.json.html</code></a> file
+<a href="./files/simple.json.bad.html"><code>simple.json.html</code></a> file
 in the <code>resources</code> folder which looks like this:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/simple_json_bad_html.png" alt="Tokenization of `simple.json`" width="90%">
+<img src="./images/simple_json_bad_html.png" alt="Tokenization of `simple.json`" width="90%">
 </div>
 </div>
 <div class="paragraph">
@@ -3190,7 +3190,7 @@ position:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/simple_json_bad_html_hover.png" alt="Hovering over a token" width="50%">
+<img src="./images/simple_json_bad_html_hover.png" alt="Hovering over a token" width="50%">
 </div>
 </div>
 <div class="paragraph">
@@ -3211,7 +3211,7 @@ been consumed already, both start and end positions point to the first
 available character, namely <code>"</code>.</p>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/string_lexing0.png" alt="Entering main" width="30%">
+<img src="./images/string_lexing0.png" alt="Entering main" width="30%">
 </div>
 </div>
 </li>
@@ -3231,7 +3231,7 @@ reflect the fact that only one character has been matched:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/string_lexing1.png" alt="Entering main's semantic action" width="30%">
+<img src="./images/string_lexing1.png" alt="Entering main's semantic action" width="30%">
 </div>
 </div>
 </li>
@@ -3252,7 +3252,7 @@ matched:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/string_lexing2.png" alt="Entering string's semantic action 1/2" width="30%">
+<img src="./images/string_lexing2.png" alt="Entering string's semantic action 1/2" width="30%">
 </div>
 </div>
 <div class="paragraph">
@@ -3275,7 +3275,7 @@ this point reflect that the last match was the closing double-quote character:</
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/string_lexing3.png" alt="Entering string's semantic action 2/2" width="30%">
+<img src="./images/string_lexing3.png" alt="Entering string's semantic action 2/2" width="30%">
 </div>
 </div>
 </li>
@@ -3296,7 +3296,7 @@ is returned is as follows:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/string_lexing4.png" alt="Leaving main's semantic action" width="30%">
+<img src="./images/string_lexing4.png" alt="Leaving main's semantic action" width="30%">
 </div>
 </div>
 <div class="paragraph">
@@ -3309,7 +3309,7 @@ Dolmen does not automatically save positions on the stack in nested
 calls. Moreover, the saving and restoring of a position can be
 performed in an elegant fashion by simply wrapping the nested call
 with the
-<a href="../docs/javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#saveStart-java.util.function.Supplier-"><code>saveStart</code></a>
+<a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#saveStart-java.util.function.Supplier-"><code>saveStart</code></a>
 method exported by <code>LexBuffer</code>:</p>
 </div>
 <div class="listingblock">
@@ -3324,12 +3324,12 @@ method exported by <code>LexBuffer</code>:</p>
 <div class="paragraph">
 <p>After having amended our lexer description as above, recompiled
 everything, and executed <code>Visualizer</code> again, the produced
-<a href="../docs/files/simple.json.good.html"><code>simple.json.html</code></a>
+<a href="./files/simple.json.good.html"><code>simple.json.html</code></a>
 file now seems good all around:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/simple_json_good_html.png" alt="Tokenization of `simple.json`" width="90%">
+<img src="./images/simple_json_good_html.png" alt="Tokenization of `simple.json`" width="90%">
 </div>
 </div>
 <div class="admonitionblock tip">
@@ -3483,7 +3483,7 @@ The results are summarized in the figure below:</p>
 </div>
 <div class="imageblock" style="text-align: center">
 <div class="content">
-<img src="../docs/images/lexer_bench_2.png" alt="JSON lexing speed" width="90%">
+<img src="./images/lexer_bench_2.png" alt="JSON lexing speed" width="90%">
 </div>
 </div>
 <div class="paragraph">
@@ -4401,7 +4401,7 @@ of repetitions).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-01 23:45:33 CET
+Last updated 2020-02-02 00:42:06 CET
 </div>
 </div>
 </body>
