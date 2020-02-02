@@ -1,6 +1,6 @@
 ////
  This is the chapter on building lexical analyzers in the Dolmen documentation.
- Its master file is README.adoc.
+ Its master file is manual.adoc.
 ////
 
 :jls8: https://docs.oracle.com/javase/specs/jls/se8

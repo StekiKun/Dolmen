@@ -1,6 +1,6 @@
 ////
  This is the chapter on building syntactic analyzers in the Dolmen documentation.
- Its master file is README.adoc.
+ Its master file is manual.adoc.
 ////
 
 [#Parsers]

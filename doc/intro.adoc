@@ -1,6 +1,6 @@
 ////
  This is the introduction chapter in the Dolmen documentation.
- Its master file is README.adoc.
+ Its master file is manual.adoc.
 ////
 
 [#Introduction]
