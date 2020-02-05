@@ -1,0 +1,16 @@
+= Dolmen: A Generator for Lexical Analyzers and Parsers in Java
+Stéphane Lescuyer <stephane.lescuyer@m4x.org>
+include::manual/config.adoc[]
+
+Dolmen is a generator of
+https://en.wikipedia.org/wiki/Lexical_analysis[lexical analyzers] and
+https://en.wikipedia.org/wiki/Parsing[parsers] for the Java
+programming language. It will produce lexical analyzers
+(resp. syntactic analyzers) based on textual lexer descriptions
+(resp. grammar descriptions). Dolmen can be used declaratively, as a
+library, to produce lexers and parsers from descriptions, or more
+commonly as a command-line tool. There also exists a dedicated
+https://github.com/StekiKun/DolmenPlugin[Eclipse plug-in] for Dolmen.
+
+Documentation for Dolmen is available
+link:https://stekikun.github.io/Dolmen/[here].
