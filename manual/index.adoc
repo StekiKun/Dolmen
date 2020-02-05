@@ -1,0 +1,34 @@
+= Dolmen Documentation
+Stéphane Lescuyer <stephane.lescuyer@m4x.org>
+include::config.adoc[]
+// We manually place the table of contents after the
+// introduction paragraph, except in the HTML backend
+// where we want the toc in a left sidebar
+ifeval::["{backend}" != "html5"]
+:toc: macro
+endif::[]
+ifeval::["{backend}" == "html5"]
+:toc: left
+endif::[]
+:toclevels: 3
+
+Welcome to Dolmen's documentation!
+
+== Documentation
+
+* link:{doc-base}/manual.html[Complete Dolmen manual (HTML)] +
+  The Dolmen manual introduces the tasks of lexical and syntactic
+  analysis that Dolmen is designed for, and details how to write
+  lexical analyzers and syntactic analyzers using Dolmen. +
+  It contains two detailed tutorials which can be followed
+  to get started with Dolmen:
+  - link:{doc-base}/manual.html#_a_complete_example_lexical_analyzer_for_json[Dolmen lexer tutorial]
+  - link:{doc-base}/manual.html#_a_complete_example_parser_for_json[Dolmen parser tutorial]
+
+* link:{doc-base}/LEXER-syntax.html[Dolmen lexers syntax reference] +
+  The formal grammar and lexical conventions for Dolmen lexer descriptions.
+
+* link:{doc-base}/PARSER-syntax.html[Dolmen parsers syntax reference] +
+  The formal grammar and lexical conventions for Dolmen parser descriptions.
+
+* link:{doc-base}/javadoc/index.html[Javadoc for the Dolmen runtime]
