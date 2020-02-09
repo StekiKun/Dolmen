@@ -32,3 +32,9 @@ Welcome to Dolmen's documentation!
   The formal grammar and lexical conventions for Dolmen parser descriptions.
 
 * link:{doc-base}/javadoc/index.html[Javadoc for the Dolmen runtime]
+
+== Repositories
+
+* The Dolmen repository is available link:https://dolmen.stekikun.org[here].
+
+* The Eclipse Dolmen plug-in repository is available link:https://dolmenplugin.stekikun.org[here].
