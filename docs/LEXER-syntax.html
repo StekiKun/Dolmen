@@ -810,8 +810,8 @@ of repetitions).</p>
   <a href="#JLOption">Option</a>*
   <a href="#JLImport">Import</a>*
   <a href="#JLACTION">ACTION</a>        // header
-  <a href="#Definition">[Definition]</a>*
-  <a href="#Entry">[Entry]</a>+
+  <a href="#JLDefinition">Definition</a>*
+  <a href="#JLEntry">Entry</a>+
   <a href="#JLACTION">ACTION</a>        // footer</pre>
 </div>
 </div>
@@ -841,7 +841,7 @@ of repetitions).</p>
 <div class="listingblock">
 <div class="content">
 <pre><a id="Definition"></a>Definition :=
-  <a href="#JLIDENT">IDENT</a> <strong>=</strong> <a href="#Regular">[Regular]</a> <strong>;</strong></pre>
+  <a href="#JLIDENT">IDENT</a> <strong>=</strong> <a href="#JLRegular">Regular</a> <strong>;</strong></pre>
 </div>
 </div>
 </div>
@@ -849,19 +849,19 @@ of repetitions).</p>
 <h3 id="_lexer_entries">Lexer Entries</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Entry"></a>Entry :=
+<pre><a id="JLEntry"></a>Entry :=
   (<strong>public</strong> | <strong>private</strong>)
   <a href="#JLACTION">ACTION</a>            // entry's return type
   <strong>rule</strong> <a href="#JLIDENT">IDENT</a>
   (<a href="#JLACTION">ACTION</a>)?         // entry's optional arguments
-  <strong>=</strong> (<strong>shortest</strong>)?        // whether shortest-match or longest-match rule is used
-  <a href="#Clause">[Clause]</a>+</pre>
+  <strong>=</strong> (<strong>shortest</strong>)?     // whether shortest-match or longest-match rule is used
+  <a href="#JLClause">Clause</a>+</pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Clause"></a>Clause :=
-| <strong>|</strong> <a href="#Regular">[Regular]</a> <a href="#JLACTION">ACTION</a>
+<pre><a id="JLClause"></a>Clause :=
+| <strong>|</strong> <a href="#JLRegular">Regular</a> <a href="#JLACTION">ACTION</a>
 | <strong>|</strong> <strong>orelse</strong>  <a href="#JLACTION">ACTION</a></pre>
 </div>
 </div>
@@ -870,54 +870,54 @@ of repetitions).</p>
 <h3 id="_regular_expressions">Regular Expressions</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Regular"></a>Regular :=
-| <a href="#Regular">[Regular]</a> <strong>as</strong> <a href="#JLIDENT">IDENT</a>    // <strong>as</strong> is left-associative
-| <a href="#AltRegular">[AltRegular]</a>
+<pre><a id="JLRegular"></a>Regular :=
+| <a href="#JLRegular">Regular</a> <strong>as</strong> <a href="#JLIDENT">IDENT</a>    // <strong>as</strong> is left-associative
+| <a href="#JLAltRegular">AltRegular</a>
 
-<a id="AltRegular"></a>AltRegular :=
-| <a href="#SeqRegular">[SeqRegular]</a> <strong>|</strong> <a href="#AltRegular">[AltRegular]</a>        // choice
-| <a href="#SeqRegular">[SeqRegular]</a>
+<a id="JLAltRegular"></a>AltRegular :=
+| <a href="#JLSeqRegular">SeqRegular</a> <strong>|</strong> <a href="#JLAltRegular">AltRegular</a>        // choice
+| <a href="#JLSeqRegular">SeqRegular</a>
 
-<a id="SeqRegular"></a>SeqRegular :=
-| <a href="#PostfixRegular">[PostfixRegular]</a> <a href="#SeqRegular">[SeqRegular]</a>      // concatenation
-| <a href="#PostfixRegular">[PostfixRegular]</a>
+<a id="JLSeqRegular"></a>SeqRegular :=
+| <a href="#JLPostfixRegular">PostfixRegular</a> <a href="#JLSeqRegular">SeqRegular</a>      // concatenation
+| <a href="#JLPostfixRegular">PostfixRegular</a>
 
-<a id="PostfixRegular"></a>PostfixRegular :=
-| <a href="#DiffRegular">[DiffRegular]</a> <strong>*</strong>                    // zero, one or more occurrences
-| <a href="#DiffRegular">[DiffRegular]</a> <strong>+</strong>                    // at least one occurrence
-| <a href="#DiffRegular">[DiffRegular]</a> <strong>?</strong>                    // at most one occurrence
-| <a href="#DiffRegular">[DiffRegular]</a> <strong>&lt;</strong> <a href="#LNAT">[LNAT]</a> <strong>&gt;</strong>           // fixed # of occurrences
-| <a href="#DiffRegular">[DiffRegular]</a> <strong>&lt;</strong> <a href="#LNAT">[LNAT]</a> <strong>,</strong> <a href="#LNAT">[LNAT]</a> <strong>&gt;</strong>  // min. and max. # of occurrences
-| <a href="#DiffRegular">[DiffRegular]</a>
+<a id="JLPostfixRegular"></a>PostfixRegular :=
+| <a href="#JLDiffRegular">DiffRegular</a> <strong>*</strong>                    // zero, one or more occurrences
+| <a href="#JLDiffRegular">DiffRegular</a> <strong>+</strong>                    // at least one occurrence
+| <a href="#JLDiffRegular">DiffRegular</a> <strong>?</strong>                    // at most one occurrence
+| <a href="#JLDiffRegular">DiffRegular</a> <strong>&lt;</strong> <a href="#LNAT">LNAT</a> <strong>&gt;</strong>             // fixed # of occurrences
+| <a href="#JLDiffRegular">DiffRegular</a> <strong>&lt;</strong> <a href="#LNAT">LNAT</a> <strong>,</strong> <a href="#LNAT">LNAT</a> <strong>&gt;</strong>      // min. and max. # of occurrences
+| <a href="#JLDiffRegular">DiffRegular</a>
 
-<a id="DiffRegular"></a>DiffRegular :=
-| <a href="#AtomicRegular">[AtomicRegular]</a> <strong>#</strong> <a href="#AtomicRegular">[AtomicRegular]</a>  // only with char classes
-| <a href="#AtomicRegular">[AtomicRegular]</a>
+<a id="JLDiffRegular"></a>DiffRegular :=
+| <a href="#JLAtomicRegular">AtomicRegular</a> <strong>#</strong> <a href="#JLAtomicRegular">AtomicRegular</a>  // only with char classes
+| <a href="#JLAtomicRegular">AtomicRegular</a>
 
-<a id="AtomicRegular"></a>AtomicRegular :=
+<a id="JLAtomicRegular"></a>AtomicRegular :=
 | <strong>_</strong>                           // all characters except <strong>eof</strong>
 | <strong>eof</strong>                         // end-of-input
-| <a href="#LCHAR">[LCHAR]</a>                     // a single character
+| <a href="#LCHAR">LCHAR</a>                       // a single character
 | <a href="#JLLSTRING">LSTRING</a>                     // an exact sequence of characters
 | <a href="#JLIDENT">IDENT</a>                       // defined regular expression
-| <a href="#CharClass">[CharClass]</a>                 // a character class
-| <strong>(</strong> <a href="#Regular">[Regular]</a> <strong>)</strong></pre>
+| <a href="#JLCharClass">CharClass</a>                   // a character class
+| <strong>(</strong> <a href="#JLRegular">Regular</a> <strong>)</strong></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="CharClass"></a>CharClass :=
-  <strong>[</strong> <a href="#CharSet">[CharSet]</a> <strong>]</strong>
+<pre><a id="JLCharClass"></a>CharClass :=
+  <strong>[</strong> <a href="#JLCharSet">CharSet</a> <strong>]</strong>
 
-<a id="CharSet"></a>CharSet :=
-| <strong>^</strong> <a href="#CharSetPositive">[CharSetPositive]</a>         // complement character set
-| <a href="#CharSetPositive">[CharSetPositive]</a>
+<a id="JLCharSet"></a>CharSet :=
+| <strong>^</strong> <a href="#JLCharSetPositive">CharSetPositive</a>         // complement character set
+| <a href="#JLCharSetPositive">CharSetPositive</a>
 
-<a id="CharSetPositive"></a>CharSetPositive :=
-| <a href="#LCHAR">[LCHAR]</a>                     // a single character
-| <a href="#LCHAR">[LCHAR]</a> <strong>-</strong> <a href="#LCHAR">[LCHAR]</a>           // a range of characters (inclusive)
-| <a href="#JLIDENT">IDENT</a>                       // defined character set
-| <a href="#CharSetPositive">[CharSetPositive]</a> <a href="#CharSetPositive">[CharSetPositive]</a> // union of character sets</pre>
+<a id="JLCharSetPositive"></a>CharSetPositive :=
+| <a href="#LCHAR">LCHAR</a>                     // a single character
+| <a href="#LCHAR">LCHAR</a> <strong>-</strong> <a href="#LCHAR">LCHAR</a>             // a range of characters (inclusive)
+| <a href="#JLIDENT">IDENT</a>                     // defined character set
+| <a href="#JLCharSetPositive">CharSetPositive</a> <a href="#JLCharSetPositive">CharSetPositive</a> // union of character sets</pre>
 </div>
 </div>
 </div>
@@ -926,7 +926,7 @@ of repetitions).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-02 00:42:06 CET
+Last updated 2020-02-15 13:09:27 CET
 </div>
 </div>
 </body>

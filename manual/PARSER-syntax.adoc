@@ -35,7 +35,7 @@ Comments::
   with white space, comments do not produce lexical elements but can
   serve as separators between other lexical elements.
 
-[[IDENT]]Identifiers (`IDENT`)::
+[[JGIDENT]]Identifiers (`IDENT`)::
 
   Identifiers are formed by non empty-sequences of _letters_ (a
   lowercase letter from `a` to `z`, an uppercase letter from `A` to
@@ -45,7 +45,7 @@ Comments::
   of letters are reserved as <<Keywords,_keywords_>> and cannot be
   used as identifiers.
 
-[[LSTRING]][[MLSTRING]]String literals (`MLSTRING`)::
+[[JGMLSTRING]]String literals (`MLSTRING`)::
 
   A string literal is expressed as a sequence of simple characters and
   escape sequences between double quotes `"..."`. A simple character
@@ -82,13 +82,13 @@ TIP: As in Java, Unicode code points outside the Basic Multilingual
   which is the symbol for the musical G clef &#119070;, can be
   obtained with two Unicode escape sequences `\uD834\uDD1E`.
 
-[[ACTION]]Java actions (`ACTION`):: 
+[[JGACTION]]Java actions (`ACTION`):: 
 
   Java actions are lexical elements which represent verbatim excerpts
   of Java code. They are used as part of the semantic actions
-  associated to a parser rule's <<Production,productions>>, to express
-  the Java return type of a <<Rule,rule>> or the Java type of the
-  value associated to a <<TokenDecl,token>>, and also for the top-level
+  associated to a parser rule's <<JGProduction,productions>>, to express
+  the Java return type of a <<JGRule,rule>> or the Java type of the
+  value associated to a <<JGTokenDecl,token>>, and also for the top-level
   header and footer of the generated syntactic analyzer. +
   A Java action is a block of _well-delimited_ Java code between curly
   braces: `{ ...well-delimited Java code... }`. A snippet of Java code
@@ -97,13 +97,13 @@ TIP: As in Java, Unicode code points outside the Basic Multilingual
   correctly closed and balanced. This essentially ensures that Dolmen
   is able to correctly and safely identify the closing `}` which
   delimits the end of the Java action. +
-  Because Dolmen grammar rules can be <<FormalParams,parametric>>,
+  Because Dolmen grammar rules can be <<JGFormalParams,parametric>>,
   Java actions are not necessarily copied verbatim in the generated
   parser: some generic parts of the Java action may undergo a
   _substitution_ to account for the actual instantiation of a rule's
   formal parameters. To that end, Java actions can contain
   placeholders of the form `\#_key_` called _holes_, where `key` must be
-  any <<IDENT,identifier>> starting with a lower-case letter. When
+  any <<JGIDENT,identifier>> starting with a lower-case letter. When
   instantiating grammar rules, these holes are filled by Dolmen
   with the Java types of the formal parameters whose names match the
   holes' keys. One limitation of this mechanism is that holes are
@@ -192,13 +192,13 @@ WARNING: Dolmen's lexical conventions for white space, comments and
          character `\`, and is understood by Java as being an
          incomplete string literal whose first character is `"`. +
 
-[[ARGUMENTS]]Java arguments (`ARGUMENTS`):: 
+[[JGARGUMENTS]]Java arguments (`ARGUMENTS`):: 
 
-  Java arguments are very similar to <<ACTION,Java actions>> in that
+  Java arguments are very similar to <<JGACTION,Java actions>> in that
   they are lexical elements which represent verbatim excerpts of Java
-  code. They are used to declare a <<Rule,parser rule>>'s arguments
+  code. They are used to declare a <<JGRule,parser rule>>'s arguments
   and to pass arguments to a non-terminal in a
-  <<Production,production>>. +
+  <<JGProduction,production>>. +
   Java arguments are formed by a block of _well-delimited_ Java code
   between parentheses: `( ...well-delimited Java code... )`. The
   snippet of Java code is well-delimited if every character literal,
@@ -228,12 +228,10 @@ will result in a lexical error.
 
 == Grammar of Dolmen Parsers
 
-:bnf-listing: verbatim,quotes,macros
-
 We give the complete grammar for Dolmen parser descriptions below. The
 terminals of the grammar are the lexical elements described _infra_,
 and keywords, punctuation and operator symbols are displayed in
-*boldface*.  The main symbol is <<Parser,Parser>> and we use traditional
+*boldface*.  The main symbol is <<JGParser,Parser>> and we use traditional
 https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form[BNF syntax] to
 present the grammar's rules, augmented with the usual repetition
 operators `?` (at most one), `+` (at least one) and `+*+` (any number
@@ -241,83 +239,83 @@ of repetitions).
 
 [listing, subs="{bnf-listing}"]
 --
-[[Parser]]Parser :=
-  <<Option>>*
-  <<Import>>*
-  <<TokenDecl>>*
-  <<ACTION>>        // header
-  <<Rule>>*
-  <<ACTION>>        // footer
+[[JGParser]]Parser :=
+  <<JGOption,Option>>*
+  <<JGImport,Import>>*
+  <<JGTokenDecl,TokenDecl>>*
+  <<JGACTION,ACTION>>        // header
+  <<JGRule,Rule>>*
+  <<JGACTION,ACTION>>        // footer
 --
 
 === Options, Imports and Auxiliary Definitions
 
 [listing, subs="{bnf-listing}"]
 --
-[[Option]]Option :=
-  *[* <<IDENT>> *=* <<MLSTRING>> *]*
+[[JGOption]]Option :=
+  *[* <<JGIDENT,IDENT>> *=* <<JGMLSTRING,MLSTRING>> *]*
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[Import]]Import :=
-  *import* (*static*)? <<Typename>> *;*
+[[JGImport]]Import :=
+  *import* (*static*)? <<JGTypename,Typename>> *;*
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[Typename]]Typename :=
-| <<IDENT>>
-| <<IDENT>> *.* <<Typename>>
-| <<IDENT>> *.* ***
+[[JGTypename]]Typename :=
+| <<JGIDENT,IDENT>>
+| <<JGIDENT,IDENT>> *.* <<JGTypename,Typename>>
+| <<JGIDENT,IDENT>> *.* ***
 --
 
 === Token Declarations
 
 [listing, subs="{bnf-listing}"]
 --
-[[TokenDecl]]TokenDecl :=
-  *token* (<<ACTION>>)? <<IDENT>>+      // all uppercase identifiers only
+[[JGTokenDecl]]TokenDecl :=
+  *token* (<<JGACTION,ACTION>>)? <<JGIDENT,IDENT>>+      // all uppercase identifiers only
 --
 
 === Grammar Rules and Productions
 
 [listing, subs="{bnf-listing}"]
 --
-[[Rule]]Rule :=
+[[JGRule]]Rule :=
   (*public* | *private*)
-  <<ACTION>>              // rule's return type
-  *rule* <<IDENT>>          // must start with lowercase letter
-  (<<FormalParams>>)?     // rule's optional formal parameters
-  (<<ARGUMENTS>>)?        // rule's optional arguments
-  *=* <<Production>>+ *;*
+  <<JGACTION,ACTION>>              // rule's return type
+  *rule* <<JGIDENT,IDENT>>          // must start with lowercase letter
+  (<<JGFormalParams,FormalParams>>)?     // rule's optional formal parameters
+  (<<JGARGUMENTS,ARGUMENTS>>)?        // rule's optional arguments
+  *=* <<JGProduction,Production>>+ *;*
 
-[[FormalParams]]FormalParams :=
-  *<* <<IDENT>> (*,* <<IDENT>>)* *>*    //  formals must start with lowercase letter
+[[JGFormalParams]]FormalParams :=
+  *<* <<JGIDENT,IDENT>> (*,* <<JGIDENT,IDENT>>)* *>*    //  formals must start with lowercase letter
 
-[[Production]]Production :=
-  *|* <<Item>>*
+[[JGProduction]]Production :=
+  *|* <<JGItem,Item>>*
 --
 
 === Production Items and Actuals
 
 [listing, subs="{bnf-listing}"]
 --
-[[Item]]Item :=
-| <<ACTION>>                     // a semantic action
-| (<<IDENT>> *=*)? <<ACTUAL>>        // a grammar symbol, potentially bound to some value
-| *continue*                    // can only appear last in a production
+[[JGItem]]Item :=
+| <<JGACTION,ACTION>>                     // a semantic action
+| (<<JGIDENT,IDENT>> *=*)? <<JGActual,Actual>>          // a grammar symbol, potentially bound to some value
+| *continue*                   // can only appear last in a production
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[Actual]]Actual :=
-  <<ActualExpr>> (<<ARGUMENTS>>)?         // optional arguments to the actual
+[[JGActual]]Actual :=
+  <<JGActualExpr,ActualExpr>> (<<JGARGUMENTS,ARGUMENTS>>)?         // optional arguments to the actual
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[ActualExpr]]ActualExpr :=
-| <<IDENT>>                                      // a terminal or ground non-terminal
-| <<IDENT>> *<* <<ActualExpr>> (*,* <<ActualExpr>>)* *>*   // application of a parametric non-terminal
+[[JGActualExpr]]ActualExpr :=
+| <<JGIDENT,IDENT>>                                  // a terminal or ground non-terminal
+| <<JGIDENT,IDENT>> *<* <<JGActualExpr,ActualExpr>> (*,* <<JGActualExpr,ActualExpr>>)* *>*   // application of a parametric non-terminal
 --

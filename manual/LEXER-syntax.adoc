@@ -202,8 +202,6 @@ will result in a lexical error.
 
 == Grammar of Dolmen Lexers
 
-:bnf-listing: verbatim,quotes,macros
-
 We give the complete grammar for Dolmen lexer descriptions below. The
 terminals of the grammar are the lexical elements described _infra_,
 and keywords, punctuation and operator symbols are displayed in
@@ -220,8 +218,8 @@ of repetitions).
   <<JLOption,Option>>*
   <<JLImport,Import>>*
   <<JLACTION,ACTION>>        // header
-  <<Definition>>*
-  <<Entry>>+
+  <<JLDefinition,Definition>>*
+  <<JLEntry,Entry>>+
   <<JLACTION,ACTION>>        // footer
 --
 
@@ -251,26 +249,26 @@ of repetitions).
 [listing, subs="{bnf-listing}"]
 --
 [[Definition]]Definition :=
-  <<JLIDENT,IDENT>> *=* <<Regular>> *;*
+  <<JLIDENT,IDENT>> *=* <<JLRegular,Regular>> *;*
 --
 
 === Lexer Entries
 
 [listing, subs="{bnf-listing}"]
 --
-[[Entry]]Entry :=
+[[JLEntry]]Entry :=
   (*public* | *private*)
   <<JLACTION,ACTION>>            // entry's return type
   *rule* <<JLIDENT,IDENT>>
   (<<JLACTION,ACTION>>)?         // entry's optional arguments
-  *=* (*shortest*)?        // whether shortest-match or longest-match rule is used
-  <<Clause>>+
+  *=* (*shortest*)?     // whether shortest-match or longest-match rule is used
+  <<JLClause,Clause>>+
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[Clause]]Clause :=
-| *|* <<Regular>> <<JLACTION,ACTION>>
+[[JLClause]]Clause :=
+| *|* <<JLRegular,Regular>> <<JLACTION,ACTION>>
 | *|* *orelse*  <<JLACTION,ACTION>>
 --
 
@@ -278,52 +276,52 @@ of repetitions).
 
 [listing, subs="{bnf-listing}"]
 --
-[[Regular]]Regular :=
-| <<Regular>> *as* <<JLIDENT,IDENT>>    // *as* is left-associative
-| <<AltRegular>>
+[[JLRegular]]Regular :=
+| <<JLRegular,Regular>> *as* <<JLIDENT,IDENT>>    // *as* is left-associative
+| <<JLAltRegular,AltRegular>>
 
-[[AltRegular]]AltRegular :=
-| <<SeqRegular>> *|* <<AltRegular>>        // choice
-| <<SeqRegular>>
+[[JLAltRegular]]AltRegular :=
+| <<JLSeqRegular,SeqRegular>> *|* <<JLAltRegular,AltRegular>>        // choice
+| <<JLSeqRegular,SeqRegular>>
 
-[[SeqRegular]]SeqRegular :=
-| <<PostfixRegular>> <<SeqRegular>>      // concatenation
-| <<PostfixRegular>>
+[[JLSeqRegular]]SeqRegular :=
+| <<JLPostfixRegular,PostfixRegular>> <<JLSeqRegular,SeqRegular>>      // concatenation
+| <<JLPostfixRegular,PostfixRegular>>
 
-[[PostfixRegular]]PostfixRegular :=
-| <<DiffRegular>> ***                    // zero, one or more occurrences
-| <<DiffRegular>> *+*                    // at least one occurrence
-| <<DiffRegular>> *?*                    // at most one occurrence
-| <<DiffRegular>> *<* <<LNAT>> *>*           // fixed # of occurrences
-| <<DiffRegular>> *<* <<LNAT>> *,* <<LNAT>> *>*  // min. and max. # of occurrences
-| <<DiffRegular>>
+[[JLPostfixRegular]]PostfixRegular :=
+| <<JLDiffRegular,DiffRegular>> ***                    // zero, one or more occurrences
+| <<JLDiffRegular,DiffRegular>> *+*                    // at least one occurrence
+| <<JLDiffRegular,DiffRegular>> *?*                    // at most one occurrence
+| <<JLDiffRegular,DiffRegular>> *<* <<LNAT,LNAT>> *>*             // fixed # of occurrences
+| <<JLDiffRegular,DiffRegular>> *<* <<LNAT,LNAT>> *,* <<LNAT,LNAT>> *>*      // min. and max. # of occurrences
+| <<JLDiffRegular,DiffRegular>>
 
-[[DiffRegular]]DiffRegular :=
-| <<AtomicRegular>> *#* <<AtomicRegular>>  // only with char classes
-| <<AtomicRegular>>
+[[JLDiffRegular]]DiffRegular :=
+| <<JLAtomicRegular,AtomicRegular>> *#* <<JLAtomicRegular,AtomicRegular>>  // only with char classes
+| <<JLAtomicRegular,AtomicRegular>>
 
-[[AtomicRegular]]AtomicRegular :=
+[[JLAtomicRegular]]AtomicRegular :=
 | *_*                           // all characters except *eof*
 | *eof*                         // end-of-input
-| <<LCHAR>>                     // a single character
+| <<LCHAR,LCHAR>>                       // a single character
 | <<JLLSTRING,LSTRING>>                     // an exact sequence of characters
 | <<JLIDENT,IDENT>>                       // defined regular expression
-| <<CharClass>>                 // a character class
-| *(* <<Regular>> *)*
+| <<JLCharClass,CharClass>>                   // a character class
+| *(* <<JLRegular,Regular>> *)*
 --
 
 [listing, subs="{bnf-listing}"]
 --
-[[CharClass]]CharClass :=
-  *[* <<CharSet>> *]*
+[[JLCharClass]]CharClass :=
+  *[* <<JLCharSet,CharSet>> *]*
 
-[[CharSet]]CharSet :=
-| *^* <<CharSetPositive>>         // complement character set
-| <<CharSetPositive>>
+[[JLCharSet]]CharSet :=
+| *^* <<JLCharSetPositive,CharSetPositive>>         // complement character set
+| <<JLCharSetPositive,CharSetPositive>>
 
-[[CharSetPositive]]CharSetPositive :=
-| <<LCHAR>>                     // a single character
-| <<LCHAR>> *-* <<LCHAR>>           // a range of characters (inclusive)
-| <<JLIDENT,IDENT>>                       // defined character set
-| <<CharSetPositive>> <<CharSetPositive>> // union of character sets
+[[JLCharSetPositive]]CharSetPositive :=
+| <<LCHAR,LCHAR>>                     // a single character
+| <<LCHAR,LCHAR>> *-* <<LCHAR,LCHAR>>             // a range of characters (inclusive)
+| <<JLIDENT,IDENT>>                     // defined character set
+| <<JLCharSetPositive,CharSetPositive>> <<JLCharSetPositive,CharSetPositive>> // union of character sets
 --

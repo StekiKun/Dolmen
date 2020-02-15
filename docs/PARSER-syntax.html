@@ -541,7 +541,7 @@ cannot be <em>nested</em>, which means in particular that neither <code>//</code
 with white space, comments do not produce lexical elements but can
 serve as separators between other lexical elements.</p>
 </dd>
-<dt class="hdlist1"><a id="IDENT"></a>Identifiers (<code>IDENT</code>)</dt>
+<dt class="hdlist1"><a id="JGIDENT"></a>Identifiers (<code>IDENT</code>)</dt>
 <dd>
 <p>Identifiers are formed by non empty-sequences of <em>letters</em> (a
 lowercase letter from <code>a</code> to <code>z</code>, an uppercase letter from <code>A</code> to
@@ -551,7 +551,7 @@ or <code>_x32_y</code> are valid identifiers. Some otherwise valid sequences
 of letters are reserved as <a href="#Keywords"><em>keywords</em></a> and cannot be
 used as identifiers.</p>
 </dd>
-<dt class="hdlist1"><a id="LSTRING"></a><a id="MLSTRING"></a>String literals (<code>MLSTRING</code>)</dt>
+<dt class="hdlist1"><a id="JGMLSTRING"></a>String literals (<code>MLSTRING</code>)</dt>
 <dd>
 <p>A string literal is expressed as a sequence of simple characters and
 escape sequences between double quotes <code>"&#8230;&#8203;"</code>. A simple character
@@ -626,13 +626,13 @@ As in Java, Unicode code points outside the Basic Multilingual
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a id="ACTION"></a>Java actions (<code>ACTION</code>)</dt>
+<dt class="hdlist1"><a id="JGACTION"></a>Java actions (<code>ACTION</code>)</dt>
 <dd>
 <p>Java actions are lexical elements which represent verbatim excerpts
 of Java code. They are used as part of the semantic actions
-associated to a parser rule&#8217;s <a href="#Production">productions</a>, to express
-the Java return type of a <a href="#Rule">rule</a> or the Java type of the
-value associated to a <a href="#TokenDecl">token</a>, and also for the top-level
+associated to a parser rule&#8217;s <a href="#JGProduction">productions</a>, to express
+the Java return type of a <a href="#JGRule">rule</a> or the Java type of the
+value associated to a <a href="#JGTokenDecl">token</a>, and also for the top-level
 header and footer of the generated syntactic analyzer.<br>
 A Java action is a block of <em>well-delimited</em> Java code between curly
 braces: <code>{ &#8230;&#8203;well-delimited Java code&#8230;&#8203; }</code>. A snippet of Java code
@@ -641,13 +641,13 @@ instruction block, method, class or comment that it contains is
 correctly closed and balanced. This essentially ensures that Dolmen
 is able to correctly and safely identify the closing <code>}</code> which
 delimits the end of the Java action.<br>
-Because Dolmen grammar rules can be <a href="#FormalParams">parametric</a>,
+Because Dolmen grammar rules can be <a href="#JGFormalParams">parametric</a>,
 Java actions are not necessarily copied verbatim in the generated
 parser: some generic parts of the Java action may undergo a
 <em>substitution</em> to account for the actual instantiation of a rule&#8217;s
 formal parameters. To that end, Java actions can contain
 placeholders of the form <code>#<em>key</em></code> called <em>holes</em>, where <code>key</code> must be
-any <a href="#IDENT">identifier</a> starting with a lower-case letter. When
+any <a href="#JGIDENT">identifier</a> starting with a lower-case letter. When
 instantiating grammar rules, these holes are filled by Dolmen
 with the Java types of the formal parameters whose names match the
 holes' keys. One limitation of this mechanism is that holes are
@@ -779,13 +779,13 @@ Dolmen&#8217;s lexical conventions for white space, comments and
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><a id="ARGUMENTS"></a>Java arguments (<code>ARGUMENTS</code>)</dt>
+<dt class="hdlist1"><a id="JGARGUMENTS"></a>Java arguments (<code>ARGUMENTS</code>)</dt>
 <dd>
-<p>Java arguments are very similar to <a href="#ACTION">Java actions</a> in that
+<p>Java arguments are very similar to <a href="#JGACTION">Java actions</a> in that
 they are lexical elements which represent verbatim excerpts of Java
-code. They are used to declare a <a href="#Rule">parser rule</a>'s arguments
+code. They are used to declare a <a href="#JGRule">parser rule</a>'s arguments
 and to pass arguments to a non-terminal in a
-<a href="#Production">production</a>.<br>
+<a href="#JGProduction">production</a>.<br>
 Java arguments are formed by a block of <em>well-delimited</em> Java code
 between parentheses: <code>( &#8230;&#8203;well-delimited Java code&#8230;&#8203; )</code>. The
 snippet of Java code is well-delimited if every character literal,
@@ -825,7 +825,7 @@ will result in a lexical error.</p>
 <p>We give the complete grammar for Dolmen parser descriptions below. The
 terminals of the grammar are the lexical elements described <em>infra</em>,
 and keywords, punctuation and operator symbols are displayed in
-<strong>boldface</strong>.  The main symbol is <a href="#Parser">Parser</a> and we use traditional
+<strong>boldface</strong>.  The main symbol is <a href="#JGParser">Parser</a> and we use traditional
 <a href="https://en.wikipedia.org/wiki/Backus%E2%80%93Naur_form">BNF syntax</a> to
 present the grammar&#8217;s rules, augmented with the usual repetition
 operators <code>?</code> (at most one), <code>+</code> (at least one) and <code>*</code> (any number
@@ -833,35 +833,35 @@ of repetitions).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Parser"></a>Parser :=
-  <a href="#Option">[Option]</a>*
-  <a href="#Import">[Import]</a>*
-  <a href="#TokenDecl">[TokenDecl]</a>*
-  <a href="#ACTION">[ACTION]</a>        // header
-  <a href="#Rule">[Rule]</a>*
-  <a href="#ACTION">[ACTION]</a>        // footer</pre>
+<pre><a id="JGParser"></a>Parser :=
+  <a href="#JGOption">Option</a>*
+  <a href="#JGImport">Import</a>*
+  <a href="#JGTokenDecl">TokenDecl</a>*
+  <a href="#JGACTION">ACTION</a>        // header
+  <a href="#JGRule">Rule</a>*
+  <a href="#JGACTION">ACTION</a>        // footer</pre>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_imports_and_auxiliary_definitions">Options, Imports and Auxiliary Definitions</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Option"></a>Option :=
-  <strong>[</strong> <a href="#IDENT">[IDENT]</a> <strong>=</strong> <a href="#MLSTRING">[MLSTRING]</a> <strong>]</strong></pre>
+<pre><a id="JGOption"></a>Option :=
+  <strong>[</strong> <a href="#JGIDENT">IDENT</a> <strong>=</strong> <a href="#JGMLSTRING">MLSTRING</a> <strong>]</strong></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Import"></a>Import :=
-  <strong>import</strong> (<strong>static</strong>)? <a href="#Typename">[Typename]</a> <strong>;</strong></pre>
+<pre><a id="JGImport"></a>Import :=
+  <strong>import</strong> (<strong>static</strong>)? <a href="#JGTypename">Typename</a> <strong>;</strong></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Typename"></a>Typename :=
-| <a href="#IDENT">[IDENT]</a>
-| <a href="#IDENT">[IDENT]</a> <strong>.</strong> <a href="#Typename">[Typename]</a>
-| <a href="#IDENT">[IDENT]</a> <strong>.</strong> <strong>*</strong></pre>
+<pre><a id="JGTypename"></a>Typename :=
+| <a href="#JGIDENT">IDENT</a>
+| <a href="#JGIDENT">IDENT</a> <strong>.</strong> <a href="#JGTypename">Typename</a>
+| <a href="#JGIDENT">IDENT</a> <strong>.</strong> <strong>*</strong></pre>
 </div>
 </div>
 </div>
@@ -869,8 +869,8 @@ of repetitions).</p>
 <h3 id="_token_declarations">Token Declarations</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="TokenDecl"></a>TokenDecl :=
-  <strong>token</strong> (<a href="#ACTION">[ACTION]</a>)? <a href="#IDENT">[IDENT]</a>+      // all uppercase identifiers only</pre>
+<pre><a id="JGTokenDecl"></a>TokenDecl :=
+  <strong>token</strong> (<a href="#JGACTION">ACTION</a>)? <a href="#JGIDENT">IDENT</a>+      // all uppercase identifiers only</pre>
 </div>
 </div>
 </div>
@@ -878,19 +878,19 @@ of repetitions).</p>
 <h3 id="_grammar_rules_and_productions">Grammar Rules and Productions</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Rule"></a>Rule :=
+<pre><a id="JGRule"></a>Rule :=
   (<strong>public</strong> | <strong>private</strong>)
-  <a href="#ACTION">[ACTION]</a>              // rule's return type
-  <strong>rule</strong> <a href="#IDENT">[IDENT]</a>          // must start with lowercase letter
-  (<a href="#FormalParams">[FormalParams]</a>)?     // rule's optional formal parameters
-  (<a href="#ARGUMENTS">[ARGUMENTS]</a>)?        // rule's optional arguments
-  <strong>=</strong> <a href="#Production">[Production]</a>+ <strong>;</strong>
+  <a href="#JGACTION">ACTION</a>              // rule's return type
+  <strong>rule</strong> <a href="#JGIDENT">IDENT</a>          // must start with lowercase letter
+  (<a href="#JGFormalParams">FormalParams</a>)?     // rule's optional formal parameters
+  (<a href="#JGARGUMENTS">ARGUMENTS</a>)?        // rule's optional arguments
+  <strong>=</strong> <a href="#JGProduction">Production</a>+ <strong>;</strong>
 
-<a id="FormalParams"></a>FormalParams :=
-  <strong>&lt;</strong> <a href="#IDENT">[IDENT]</a> (<strong>,</strong> <a href="#IDENT">[IDENT]</a>)* <strong>&gt;</strong>    //  formals must start with lowercase letter
+<a id="JGFormalParams"></a>FormalParams :=
+  <strong>&lt;</strong> <a href="#JGIDENT">IDENT</a> (<strong>,</strong> <a href="#JGIDENT">IDENT</a>)* <strong>&gt;</strong>    //  formals must start with lowercase letter
 
-<a id="Production"></a>Production :=
-  <strong>|</strong> <a href="#Item">[Item]</a>*</pre>
+<a id="JGProduction"></a>Production :=
+  <strong>|</strong> <a href="#JGItem">Item</a>*</pre>
 </div>
 </div>
 </div>
@@ -898,23 +898,23 @@ of repetitions).</p>
 <h3 id="_production_items_and_actuals">Production Items and Actuals</h3>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Item"></a>Item :=
-| <a href="#ACTION">[ACTION]</a>                     // a semantic action
-| (<a href="#IDENT">[IDENT]</a> <strong>=</strong>)? <a href="#ACTUAL">[ACTUAL]</a>        // a grammar symbol, potentially bound to some value
-| <strong>continue</strong>                    // can only appear last in a production</pre>
+<pre><a id="JGItem"></a>Item :=
+| <a href="#JGACTION">ACTION</a>                     // a semantic action
+| (<a href="#JGIDENT">IDENT</a> <strong>=</strong>)? <a href="#JGActual">Actual</a>          // a grammar symbol, potentially bound to some value
+| <strong>continue</strong>                   // can only appear last in a production</pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Actual"></a>Actual :=
-  <a href="#ActualExpr">[ActualExpr]</a> (<a href="#ARGUMENTS">[ARGUMENTS]</a>)?         // optional arguments to the actual</pre>
+<pre><a id="JGActual"></a>Actual :=
+  <a href="#JGActualExpr">ActualExpr</a> (<a href="#JGARGUMENTS">ARGUMENTS</a>)?         // optional arguments to the actual</pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="ActualExpr"></a>ActualExpr :=
-| <a href="#IDENT">[IDENT]</a>                                      // a terminal or ground non-terminal
-| <a href="#IDENT">[IDENT]</a> <strong>&lt;</strong> <a href="#ActualExpr">[ActualExpr]</a> (<strong>,</strong> <a href="#ActualExpr">[ActualExpr]</a>)* <strong>&gt;</strong>   // application of a parametric non-terminal</pre>
+<pre><a id="JGActualExpr"></a>ActualExpr :=
+| <a href="#JGIDENT">IDENT</a>                                  // a terminal or ground non-terminal
+| <a href="#JGIDENT">IDENT</a> <strong>&lt;</strong> <a href="#JGActualExpr">ActualExpr</a> (<strong>,</strong> <a href="#JGActualExpr">ActualExpr</a>)* <strong>&gt;</strong>   // application of a parametric non-terminal</pre>
 </div>
 </div>
 </div>
@@ -923,7 +923,7 @@ of repetitions).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-02 00:42:06 CET
+Last updated 2020-02-15 13:22:43 CET
 </div>
 </div>
 </body>

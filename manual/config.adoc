@@ -7,6 +7,7 @@
 :pygments-style: dolmen
 :icons: font
 :example-caption!:
+:bnf-listing: verbatim,quotes,macros
 // The base folder for the documentation, for links
 :doc-base: .
 :doc-files: {doc-base}/files
