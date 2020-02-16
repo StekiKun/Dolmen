@@ -50,11 +50,397 @@ include::lexers-tutorial.adoc[]
 <<<
 === Lexer Entries
 
+The main building blocks of a Dolmen lexical analyzer are the lexer
+_entries_. Dolmen will generate a single Java method per entry in the
+resulting generated lexical analyzer. The syntax of a lexer entry is
+as follows:
 
+[listing, subs="{bnf-listing}"]
+--
+[[InJLEntry]]Entry :=
+  (*public* | *private*)         // entry's visibility
+  <<JLACTION,ACTION>>            // entry's return type
+  *rule* <<JLIDENT,IDENT>>       // entry's name
+  (<<JLACTION,ACTION>>)?         // entry's optional arguments
+  *=* (*shortest*)?     // whether shortest or longest match rule is used
+  <<JLClause,Clause>>+
+--
 
+An entry has a visibility (public or private), a return type, a name
+and optional parameters: all of these will propagate directly to the
+Java method generated from the entry. The remainder of the entry
+is a sequence of _clauses_ which associate a regular expression
+to some arbitrary Java _semantic action_:
+
+[listing, subs="{bnf-listing}"]
+--
+[[InJLClause]]Clause :=
+| *|* <<JLRegular,Regular>> <<JLACTION,ACTION>>
+| *|* *orelse*  <<JLACTION,ACTION>>
+--
+
+In essence, Dolmen lexers let you conveniently program methods which
+consume an input sequence of characters, recognize some input patterns
+described by regular expressions, and take on different actions
+depending on what patterns have been matched. Whether you use these
+actions to tokenize the input stream, to transform the input stream by
+extracting, decoding, encoding or filtering parts of it, to count
+occurrences of certain patterns or anything else, is completely
+irrelevant to Dolmen. Dolmen's job is to take the high-level lexer
+description and turn it into an efficient analyzer by taking care of
+important details such as:
+
+* managing input loading and buffering;
+
+* compiling an entry's clauses into efficient code which matches
+  input and select the adequate semantic action;
+
+* keeping track of matched input positions, as well as those fragments
+  corresponding to patterns captured via the `... as c` construct;
+
+* assisting users by statically detecting and reporting common
+  mistakes in lexer descriptions, such as useless clauses, etc.
+
+When more than one clause in the entry matches the current input, the
+default disambiguation rule is to pick the clause which yields the
+_longest_ match. This behaviour can be changed for a given entry by
+using the `*shortest*` keyword prior to the clauses: in this case,
+priority is given to the clause yielding the shortest match. In any
+case, when several clauses yield matches with the same length, the
+clause which appears first in the lexer description will be selected.
+
+The shortest-match rule is seldom used, at least for tokenizing
+purposes. It can prove useful when writing text stream processors, in
+particular when reading input from a network staream or from standard
+input, as entries which use the shortest-match rule never need to
+"look ahead" in the input stream and backtrack before selecting the
+correct clause, unlike regular longest-match entries.
+
+[#Lexers_Regular_Expressions]
 ==== Regular Expressions
 
-_Coming soon_
+In this section, we describe the Dolmen syntax for regular
+expressions. Regular expressions appear as part of clauses in lexer
+entries, but auxiliary regular expressions can also be defined
+before the lexer entries:
+
+[listing, subs="{bnf-listing}"]
+--
+[[InJLDefinition]]Definition :=
+  <<JLIDENT,IDENT>> *=* <<JLRegular,Regular>> *;*
+--
+
+The identifier on the left-hand side in a regular expression
+definition is the name which can be used to denote that regular
+expression in subsequent definitions as well as in clauses. The
+various regular expression constructs are summarized in
+<<Lexers_Regexps_Table,this table>>, we detail each of them
+in the following.
+
+Literals::
+
+The most basic form of regular expression are the _character_ and
+_string_ literals. A character literal such as `'a'` or `'\040'` is a
+regular expression which simply matches the given character.
+Similarly, a string literal such as `"foo"` or `"\r\n"` is a regular
+expression which matches the given string. The exact syntax for
+character and string literals is detailed in the the
+<<Lexers_Lexical_Conventions,lexical conventions>>.
++
+[source,jl]
+----
+// Some literal regular expressions
+space = ' ';
+pub = "public";
+----
++
+Additionally, there are two "special" literals `+_+` and `eof`,
+respectively called _wildcard_ and _end-of-input_. `eof` is
+a meta-character with represents the fact that the end of
+the input stream has been reached; in particular it does not
+really match a given character, but simply succeeds when the
+input stream has been exhausted. On the other hand, the
+wildcard `+_+` will match any single character from the input,
+and thus in particular is mutually exclusive with `eof`.
+These special literals are discussed further
+<<Lexers_Wildcards,below>>.
+
+Character classes::
++
+A _character class_ is a way of denoting a regular expression which
+must only match a character in a subset of the whole character set. It
+is introduced by square brackets `[...]` and can contain any non-empty
+sequence of:
++
+--
+* single character literals, such as `'a'`, `'0'`;
+
+* character ranges, such as `'a'-'z'`, `'0'-'9'`, denoting all the
+  characters which belong to the specified range (inclusive on both
+  ends);
+
+* names of already defined regular expressions whose value corresponds
+  to a character class (or can be reduced to a character class, such
+  as a single character literal or the wildcard `+_+`).
+--
++
+The meaning of a character class can also be completely *inverted*
+if it starts with a `^` character, in which case it matches any
+character which does not belong to the specified set.
++
+[source,jl]
+----
+// Some character classes
+whitespace = ['\t' space '\f'];
+alpha = ['a'-'z' 'A'-'Z'];
+nonctrl = [^'\000'-'\037'];
+----
+The grammar for character classes is recalled in the
+<<JLCharClass,syntax reference>>.
+
+Character class difference::
+The _difference operator_ `r # s` lets one define a regular
+expression by taking the set of characters which match
+the given class `r` but do not match the class `s`. The regular
+expressions used as operands for `#` must reduce to character
+classes or a lexical error will be reported by Dolmen.
++
+[source,jl]
+----
+// Some character class differences
+digit = ['0'-'9'];
+nzdigit = digit # '0';
+lowercase = alpha # ['a'-'z'];
+ctrl = _ # nonctrl;
+----
+
+Repetitions::
++
+Dolmen supports the following traditional postfix _repetition_
+operators:
++
+--
+* `r?` matches zero or one occurrence of the regular expression `r`;
+* `r+` matches one or more occurrences of the regular expression `r`;
+* `r*` matches any number of occurrences of the regular expression
+  `r`, including zero.
+--
++
+Besides these basic operators, it is also possible to specify any
+finite number of repetitions using the following syntax where `n` and
+`m` stand for literal decimal natural integers:
++
+--
+* `r<n>` matches exactly `n` occurrences of the regular expression `r`;
+* `r<n,m>` matches anything between `n` and `m` (inclusive) occurrences
+  of the regular expression `r`.
+--
++
+Note that `r<n>` is just syntactic shortcut for `r<n,n>`, and that
+`r?` is completely equivalent to `r<0,1>`. There is no way to specify
+an "infinite" upper bound, so `r+` and `r*` cannot be obtained with an
+instance of `r<n,m>`. This is not a limitation in practice, since
+something like any number of repetitions larger or equal to 3 can be
+obtained by a combination such as `r<3>r*`.
++
+[source,jl]
+----
+// Using repetition operators
+decimal = digit+;
+hexcode = [digit 'a'-'f' 'A'-'F']<4>;
+word = ['_' alpha]+;
+blanks = whitespace*;
+----
+
+Concatenation::
++
+The concatenation of two regular expressions `r s` is a regular
+expression which first matches `r` and then `s`. Concatenation is
+_right-associative_, and has strictly lower precedence than every
+operator we have seen so far. In particular, a string literal regular
+expression such as `"foo"` is just syntactic sugar for the
+concatenation `'f''o''o'` of its character literals. Similarly, a
+repetition `r<4>` is just another, shorter, way of writing `r r r r`.
++
+[source,jl]
+----
+// Using concatenation
+float = decimal ('.' decimal)?;
+string = '"' [^ ctrl '"']* '"';
+r1 = 'a''b'+;  // ab......b
+r2 = ('a''b')+;  // abab...ab
+----
++
+Note how parentheses can be used to disambiguate or regroup regular
+expressions when natural precedence rules would not yield the intended
+result.
+
+Choice::
++
+The _choice operator_ `r | s` matches anything that either regular
+expression `r` or `s` matches. The choice operator is
+_right-associative_, and has strictly lower precedence than every
+operator we have seen so far, including concatenation. In particular,
+the regular expression `r?` is equivalent to `r | ""`.
++
+[source,jl]
+----
+// Using the choice operator
+ident = alpha (alpha | digit | '_')*;
+newline = '\r' | '\n' | "\r\n";
+r3 = 'a'|'b''c';  // a or bc
+r4 = ('a'|'b')'c';  // ac or bc
+----
+
+Capturing groups::
++
+The _capture_ operator `r *as* c` matches exactly like the regular
+expression `r` but when successful, it also saves the part of the
+input stream which it matched. The matched contents are then made
+available in the semantic action of the corresponding clause as a
+local variable with name `c`. Captures are very convenient when
+the semantic action would otherwise need to extract some interesting
+part of the matched input, potentially at the cost of rescanning
+some of it.
++
+The type of a capture variable depends on the captured regular
+expression, and on the overall clause's expression it appears in. It
+can be either `String`, `char`, `Optional<String>` or
+`Optional<Character>`. The `Optional` wrappers are introduced when the
+overall regular expression can succeed without the captured regular
+expression having matched at all, such as in `(r *as* c)?` or `(r1
+*as* c) | r2`. Other than that, a capture variable is normally of type
+`String`, unless it captures a regular expression which can only
+statically match a _single_ character (e.g. a character literal, a
+character class, a wildcard or an alternation of any of those), in
+which case its type is that of a Java character.
++
+====
+The rationale behind the fact that the type of capture variables
+adapts to the regular expression is twofold:
+
+. Using a simpler type such as `char` in comparison to `String`
+  enhances efficiency since no heap-allocation is required to capture
+  a single character. Moreover, captured groups are always assigned
+  before entering a clause's semantic action, even if it is never
+  going to be used in the semantic action.
+
+. Wrapping optional captured groups with `java.util.Optional` goes
+  against raw efficiency instead, but for the very good reason of
+  making sure that semantic actions always use captured variables in a
+  way that is consistent with the associated clause. In particular,
+  using `null` or default values instead would make it very easy
+  for a developer to break a semantic action's intended behaviour
+  by only slightly changing the associated regular expression.
+  With our approach, such a breaking change will normally result
+  in a type-checking error in the compiler.
+====
++
+Dolmen does not enforce that a capture variable appears only
+once in a clause's regular expression. This allows for instance
+patterns such as `(r1 *as* c) | (r2 *as* c)` where `c` can
+then be handled in a uniform fashion in the semantic action.
+The type of a capture variable which appears more than once
+in a regular expression is simply the "simplest" type which
+can accomodate all occurrences of the variable. For instance,
+the capture variable can only have type `char` if all its
+occurrences can have type `char`, and so on.
++
+[source,jl]
+.Examples of captures in action
+----
+// North-American style phone number, capturing groups
+phone = (digit<3> as area) '-' (digit<3> as office) '-' (digit<4> as num);
+// Markdown-style header, capturing the title
+header = '#'+ blanks ([^ '\r' '\n']+ as title) newline;
+// GCC #line directive, capturing filename and line number
+linedir = "#line" blanks (digit+ as line) blanks (string as filename);
+// Java Unicode escape sequence, capturing the code unit value
+unicode = '\\' 'u'+ (hexcode as code);
+----
++
+Even when a capture variable is bound only once in a regular
+expression, it is possible that it is part of a repeated expression,
+for instance `(r *as* c)<2>`, and can therefore be matched several
+times during a single overall match. In such a case, the variable will
+be bound to the contents that correspond to the last match. Similarly,
+if the same capture variable appears nested in a captured group, such
+as in `(r0 (r1 *as* c) r2) *as* c`, only the outermost occurrence can
+ever find its way into the semantic action. The innermost captures are
+actually optimized away very early by Dolmen, and do not even
+contribute to the choice of the type associated to the variable `c`.
++
+Finally, there may be cases where there is not a unique way of
+matching the input stream with some regular expression, and that the
+different ways would yield different captured contents. For instance,
+consider matching the string `aaaaa` with the regular expression
+`('a'<2,3> *as* i) ('a'<2,3> *as* j)`: there are two correct ways in
+which `i` and `j` could be assigned. In such a case, which one is
+produced by the Dolmen-generated lexical analyzer is left unspecified.
+
+
+The following table summarizes the different regular expression
+constructs in order of *decreasing* precedence, i.e. operators
+appearing first bind tighter than those appearing later down
+the table.
+
+[[Lexers_Regexps_Table]]
+.Regular expression operators
+[cols=4*,options="header"]
+|===
+| Name
+| Syntax
+| Meaning
+| Associative
+
+| Difference
+| `r # s`
+| Matches the characters in `r` which are not in `s`.
+  Both `r` and `s` must reduce to character classes.
+| No
+
+| Option
+| `r?`
+| Matches like `r`, or the empty string.
+| No
+
+| Kleene star
+| `r*`
+| Matches any number of repetitions of `r`.
+| No
+
+| Kleene plus
+| `r+`
+| Matches one or more number of repetitions of `r`.
+| No
+
+| Repetition
+| `r<n>`
+| Matches exactly `n` repetitions of `r`.
+| No
+
+| Bounded repetition
+| `r<n, m>`
+| Matches between `n` and `m` (inclusive) repetitions of `r`.
+| No
+
+| Concatenation
+| `r s`
+| Matches `r` first and then `s`.
+| Right-associative
+
+| Choice
+| `r \| s`
+| Matches either `r` or `s`.
+| Right-associative
+
+| Capture
+| `r as c`
+| Matches like `r` but associates the matched part
+  to a local variable named `c`.
+| Left-associative
+
+|===
 
 [#Lexers_Semantic_Actions_Ref]
 ==== Semantic Actions
@@ -66,10 +452,12 @@ _Coming soon_
 
 _Coming soon_
 
+[#Lexers_Options]
 ==== Lexer Options
 
 _Coming soon_
 
+[#Lexers_CLI]
 ==== Command Line Interface
 
 _Coming soon_

@@ -538,11 +538,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_lexer_entries">Lexer Entries</a>
 <ul class="sectlevel3">
-<li><a href="#_regular_expressions_2">Regular Expressions</a></li>
+<li><a href="#Lexers_Regular_Expressions">Regular Expressions</a></li>
 <li><a href="#Lexers_Semantic_Actions_Ref">Semantic Actions</a></li>
 <li><a href="#Lexers_Wildcards">Understanding <code>eof</code>, <code>_</code> and <code>orelse</code></a></li>
-<li><a href="#_lexer_options">Lexer Options</a></li>
-<li><a href="#_command_line_interface">Command Line Interface</a></li>
+<li><a href="#Lexers_Options">Lexer Options</a></li>
+<li><a href="#Lexers_CLI">Command Line Interface</a></li>
 </ul>
 </li>
 <li><a href="#_advanced_concepts">Advanced Concepts</a>
@@ -554,7 +554,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#Lexers_Syntax_Ref">Dolmen Lexers: Syntax Reference</a>
 <ul class="sectlevel3">
-<li><a href="#_lexical_conventions">Lexical conventions</a></li>
+<li><a href="#Lexers_Lexical_Conventions">Lexical conventions</a></li>
 <li><a href="#_grammar_of_dolmen_lexers">Grammar of Dolmen Lexers</a></li>
 </ul>
 </li>
@@ -564,7 +564,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_dolmen_parsers_syntax_reference">Dolmen Parsers: Syntax Reference</a>
 <ul class="sectlevel3">
-<li><a href="#_lexical_conventions_2">Lexical conventions</a></li>
+<li><a href="#_lexical_conventions">Lexical conventions</a></li>
 <li><a href="#_grammar_of_dolmen_parsers">Grammar of Dolmen Parsers</a></li>
 </ul>
 </li>
@@ -3503,25 +3503,493 @@ short description is quite satisfactory.</p>
 </div>
 <div class="sect2">
 <h3 id="_lexer_entries">Lexer Entries</h3>
+<div class="paragraph">
+<p>The main building blocks of a Dolmen lexical analyzer are the lexer
+<em>entries</em>. Dolmen will generate a single Java method per entry in the
+resulting generated lexical analyzer. The syntax of a lexer entry is
+as follows:</p>
+</div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="InEntry"></a>Entry :=
-  (<strong>public</strong> | <strong>private</strong>) <a href="#JLACTION">ACTION</a> <strong>rule</strong> <a href="#JLIDENT">IDENT</a> (<a href="#JLACTION">ACTION</a>)? <strong>=</strong> (<strong>shortest</strong>)?
-  <a href="#InClause">[InClause]</a>+</pre>
+<pre><a id="InJLEntry"></a>Entry :=
+  (<strong>public</strong> | <strong>private</strong>)         // entry's visibility
+  <a href="#JLACTION">ACTION</a>            // entry's return type
+  <strong>rule</strong> <a href="#JLIDENT">IDENT</a>       // entry's name
+  (<a href="#JLACTION">ACTION</a>)?         // entry's optional arguments
+  <strong>=</strong> (<strong>shortest</strong>)?     // whether shortest or longest match rule is used
+  <a href="#JLClause">Clause</a>+</pre>
 </div>
+</div>
+<div class="paragraph">
+<p>An entry has a visibility (public or private), a return type, a name
+and optional parameters: all of these will propagate directly to the
+Java method generated from the entry. The remainder of the entry
+is a sequence of <em>clauses</em> which associate a regular expression
+to some arbitrary Java <em>semantic action</em>:</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="InClause"></a>Clause :=
-| <strong>|</strong> <a href="#InRegular">[InRegular]</a> <a href="#JLACTION">ACTION</a>
+<pre><a id="InJLClause"></a>Clause :=
+| <strong>|</strong> <a href="#JLRegular">Regular</a> <a href="#JLACTION">ACTION</a>
 | <strong>|</strong> <strong>orelse</strong>  <a href="#JLACTION">ACTION</a></pre>
 </div>
 </div>
-<div class="sect3">
-<h4 id="_regular_expressions_2">Regular Expressions</h4>
 <div class="paragraph">
-<p><em>Coming soon</em></p>
+<p>In essence, Dolmen lexers let you conveniently program methods which
+consume an input sequence of characters, recognize some input patterns
+described by regular expressions, and take on different actions
+depending on what patterns have been matched. Whether you use these
+actions to tokenize the input stream, to transform the input stream by
+extracting, decoding, encoding or filtering parts of it, to count
+occurrences of certain patterns or anything else, is completely
+irrelevant to Dolmen. Dolmen&#8217;s job is to take the high-level lexer
+description and turn it into an efficient analyzer by taking care of
+important details such as:</p>
 </div>
+<div class="ulist">
+<ul>
+<li>
+<p>managing input loading and buffering;</p>
+</li>
+<li>
+<p>compiling an entry&#8217;s clauses into efficient code which matches
+input and select the adequate semantic action;</p>
+</li>
+<li>
+<p>keeping track of matched input positions, as well as those fragments
+corresponding to patterns captured via the <code>&#8230;&#8203; as c</code> construct;</p>
+</li>
+<li>
+<p>assisting users by statically detecting and reporting common
+mistakes in lexer descriptions, such as useless clauses, etc.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>When more than one clause in the entry matches the current input, the
+default disambiguation rule is to pick the clause which yields the
+<em>longest</em> match. This behaviour can be changed for a given entry by
+using the <code><strong>shortest</strong></code> keyword prior to the clauses: in this case,
+priority is given to the clause yielding the shortest match. In any
+case, when several clauses yield matches with the same length, the
+clause which appears first in the lexer description will be selected.</p>
+</div>
+<div class="paragraph">
+<p>The shortest-match rule is seldom used, at least for tokenizing
+purposes. It can prove useful when writing text stream processors, in
+particular when reading input from a network staream or from standard
+input, as entries which use the shortest-match rule never need to
+"look ahead" in the input stream and backtrack before selecting the
+correct clause, unlike regular longest-match entries.</p>
+</div>
+<div class="sect3">
+<h4 id="Lexers_Regular_Expressions">Regular Expressions</h4>
+<div class="paragraph">
+<p>In this section, we describe the Dolmen syntax for regular
+expressions. Regular expressions appear as part of clauses in lexer
+entries, but auxiliary regular expressions can also be defined
+before the lexer entries:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre><a id="InJLDefinition"></a>Definition :=
+  <a href="#JLIDENT">IDENT</a> <strong>=</strong> <a href="#JLRegular">Regular</a> <strong>;</strong></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The identifier on the left-hand side in a regular expression
+definition is the name which can be used to denote that regular
+expression in subsequent definitions as well as in clauses. The
+various regular expression constructs are summarized in
+<a href="#Lexers_Regexps_Table">this table</a>, we detail each of them
+in the following.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Literals</dt>
+<dd>
+<p>The most basic form of regular expression are the <em>character</em> and
+<em>string</em> literals. A character literal such as <code>'a'</code> or <code>'\040'</code> is a
+regular expression which simply matches the given character.
+Similarly, a string literal such as <code>"foo"</code> or <code>"\r\n"</code> is a regular
+expression which matches the given string. The exact syntax for
+character and string literals is detailed in the the
+<a href="#Lexers_Lexical_Conventions">lexical conventions</a>.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Some literal regular expressions</span>
+<span class="tok-nf">space</span> <span class="tok-o">=</span> <span class="tok-sc">&#39; &#39;</span><span class="tok-p">;</span>
+<span class="tok-nf">pub</span> <span class="tok-o">=</span> <span class="tok-s">&quot;public&quot;</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Additionally, there are two "special" literals <code>_</code> and <code>eof</code>,
+respectively called <em>wildcard</em> and <em>end-of-input</em>. <code>eof</code> is
+a meta-character with represents the fact that the end of
+the input stream has been reached; in particular it does not
+really match a given character, but simply succeeds when the
+input stream has been exhausted. On the other hand, the
+wildcard <code>_</code> will match any single character from the input,
+and thus in particular is mutually exclusive with <code>eof</code>.
+These special literals are discussed further
+<a href="#Lexers_Wildcards">below</a>.</p>
+</div>
+</dd>
+<dt class="hdlist1">Character classes</dt>
+<dd>
+<div class="paragraph">
+<p>A <em>character class</em> is a way of denoting a regular expression which
+must only match a character in a subset of the whole character set. It
+is introduced by square brackets <code>[&#8230;&#8203;]</code> and can contain any non-empty
+sequence of:</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p>single character literals, such as <code>'a'</code>, <code>'0'</code>;</p>
+</li>
+<li>
+<p>character ranges, such as <code>'a'-'z'</code>, <code>'0'-'9'</code>, denoting all the
+characters which belong to the specified range (inclusive on both
+ends);</p>
+</li>
+<li>
+<p>names of already defined regular expressions whose value corresponds
+to a character class (or can be reduced to a character class, such
+as a single character literal or the wildcard <code>_</code>).</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>The meaning of a character class can also be completely <strong>inverted</strong>
+if it starts with a <code>^</code> character, in which case it matches any
+character which does not belong to the specified set.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Some character classes</span>
+<span class="tok-nf">whitespace</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-sc">&#39;\</span><span class="tok-s">t</span><span class="tok-sc">&#39;</span> <span class="tok-nf">space</span> <span class="tok-sc">&#39;\</span><span class="tok-s">f</span><span class="tok-sc">&#39;</span><span class="tok-p">];</span>
+<span class="tok-nf">alpha</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-sc">&#39;a&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;z&#39;</span> <span class="tok-sc">&#39;A&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;Z&#39;</span><span class="tok-p">];</span>
+<span class="tok-nf">nonctrl</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-o">^</span><span class="tok-sc">&#39;\</span><span class="tok-s">000</span><span class="tok-sc">&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;\</span><span class="tok-s">037</span><span class="tok-sc">&#39;</span><span class="tok-p">];</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The grammar for character classes is recalled in the
+<a href="#JLCharClass">syntax reference</a>.</p>
+</div>
+</dd>
+<dt class="hdlist1">Character class difference</dt>
+<dd>
+<p>The <em>difference operator</em> <code>r # s</code> lets one define a regular
+expression by taking the set of characters which match
+the given class <code>r</code> but do not match the class <code>s</code>. The regular
+expressions used as operands for <code>#</code> must reduce to character
+classes or a lexical error will be reported by Dolmen.</p>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Some character class differences</span>
+<span class="tok-nf">digit</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-sc">&#39;0&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;9&#39;</span><span class="tok-p">];</span>
+<span class="tok-nf">nzdigit</span> <span class="tok-o">=</span> <span class="tok-nf">digit</span> <span class="tok-o">#</span> <span class="tok-sc">&#39;0&#39;</span><span class="tok-p">;</span>
+<span class="tok-nf">lowercase</span> <span class="tok-o">=</span> <span class="tok-nf">alpha</span> <span class="tok-o">#</span> <span class="tok-p">[</span><span class="tok-sc">&#39;a&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;z&#39;</span><span class="tok-p">];</span>
+<span class="tok-nf">ctrl</span> <span class="tok-o">=</span> <span class="tok-nf">_</span> <span class="tok-o">#</span> <span class="tok-nf">nonctrl</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">Repetitions</dt>
+<dd>
+<div class="paragraph">
+<p>Dolmen supports the following traditional postfix <em>repetition</em>
+operators:</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><code>r?</code> matches zero or one occurrence of the regular expression <code>r</code>;</p>
+</li>
+<li>
+<p><code>r+</code> matches one or more occurrences of the regular expression <code>r</code>;</p>
+</li>
+<li>
+<p><code>r*</code> matches any number of occurrences of the regular expression
+<code>r</code>, including zero.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Besides these basic operators, it is also possible to specify any
+finite number of repetitions using the following syntax where <code>n</code> and
+<code>m</code> stand for literal decimal natural integers:</p>
+</div>
+<div class="openblock">
+<div class="content">
+<div class="ulist">
+<ul>
+<li>
+<p><code>r&lt;n&gt;</code> matches exactly <code>n</code> occurrences of the regular expression <code>r</code>;</p>
+</li>
+<li>
+<p><code>r&lt;n,m&gt;</code> matches anything between <code>n</code> and <code>m</code> (inclusive) occurrences
+of the regular expression <code>r</code>.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Note that <code>r&lt;n&gt;</code> is just syntactic shortcut for <code>r&lt;n,n&gt;</code>, and that
+<code>r?</code> is completely equivalent to <code>r&lt;0,1&gt;</code>. There is no way to specify
+an "infinite" upper bound, so <code>r+</code> and <code>r*</code> cannot be obtained with an
+instance of <code>r&lt;n,m&gt;</code>. This is not a limitation in practice, since
+something like any number of repetitions larger or equal to 3 can be
+obtained by a combination such as <code>r&lt;3&gt;r*</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Using repetition operators</span>
+<span class="tok-nf">decimal</span> <span class="tok-o">=</span> <span class="tok-nf">digit</span><span class="tok-o">+</span><span class="tok-p">;</span>
+<span class="tok-nf">hexcode</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-nf">digit</span> <span class="tok-sc">&#39;a&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;f&#39;</span> <span class="tok-sc">&#39;A&#39;</span><span class="tok-o">-</span><span class="tok-sc">&#39;F&#39;</span><span class="tok-p">]&lt;</span><span class="tok-m">4</span><span class="tok-p">&gt;;</span>
+<span class="tok-nf">word</span> <span class="tok-o">=</span> <span class="tok-p">[</span><span class="tok-sc">&#39;_&#39;</span> <span class="tok-nf">alpha</span><span class="tok-p">]</span><span class="tok-o">+</span><span class="tok-p">;</span>
+<span class="tok-nf">blanks</span> <span class="tok-o">=</span> <span class="tok-nf">whitespace</span><span class="tok-o">*</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">Concatenation</dt>
+<dd>
+<div class="paragraph">
+<p>The concatenation of two regular expressions <code>r s</code> is a regular
+expression which first matches <code>r</code> and then <code>s</code>. Concatenation is
+<em>right-associative</em>, and has strictly lower precedence than every
+operator we have seen so far. In particular, a string literal regular
+expression such as <code>"foo"</code> is just syntactic sugar for the
+concatenation <code>'f''o''o'</code> of its character literals. Similarly, a
+repetition <code>r&lt;4&gt;</code> is just another, shorter, way of writing <code>r r r r</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Using concatenation</span>
+<span class="tok-nf">float</span> <span class="tok-o">=</span> <span class="tok-nf">decimal</span> <span class="tok-p">(</span><span class="tok-sc">&#39;.&#39;</span> <span class="tok-nf">decimal</span><span class="tok-p">)</span><span class="tok-o">?</span><span class="tok-p">;</span>
+<span class="tok-nf">string</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;&quot;&#39;</span> <span class="tok-p">[</span><span class="tok-o">^</span> <span class="tok-nf">ctrl</span> <span class="tok-sc">&#39;&quot;&#39;</span><span class="tok-p">]</span><span class="tok-o">*</span> <span class="tok-sc">&#39;&quot;&#39;</span><span class="tok-p">;</span>
+<span class="tok-nf">r1</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;a&#39;&#39;b&#39;</span><span class="tok-o">+</span><span class="tok-p">;</span>  <span class="tok-c tok-c-Singleline">// ab......b</span>
+<span class="tok-nf">r2</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-sc">&#39;a&#39;&#39;b&#39;</span><span class="tok-p">)</span><span class="tok-o">+</span><span class="tok-p">;</span>  <span class="tok-c tok-c-Singleline">// abab...ab</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Note how parentheses can be used to disambiguate or regroup regular
+expressions when natural precedence rules would not yield the intended
+result.</p>
+</div>
+</dd>
+<dt class="hdlist1">Choice</dt>
+<dd>
+<div class="paragraph">
+<p>The <em>choice operator</em> <code>r | s</code> matches anything that either regular
+expression <code>r</code> or <code>s</code> matches. The choice operator is
+<em>right-associative</em>, and has strictly lower precedence than every
+operator we have seen so far, including concatenation. In particular,
+the regular expression <code>r?</code> is equivalent to <code>r | ""</code>.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Using the choice operator</span>
+<span class="tok-nf">ident</span> <span class="tok-o">=</span> <span class="tok-nf">alpha</span> <span class="tok-p">(</span><span class="tok-nf">alpha</span> <span class="tok-o">|</span> <span class="tok-nf">digit</span> <span class="tok-o">|</span> <span class="tok-sc">&#39;_&#39;</span><span class="tok-p">)</span><span class="tok-o">*</span><span class="tok-p">;</span>
+<span class="tok-nf">newline</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;\</span><span class="tok-s">r</span><span class="tok-sc">&#39;</span> <span class="tok-o">|</span> <span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span> <span class="tok-o">|</span> <span class="tok-s">&quot;\r\n&quot;</span><span class="tok-p">;</span>
+<span class="tok-nf">r3</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;a&#39;</span><span class="tok-o">|</span><span class="tok-sc">&#39;b&#39;&#39;c&#39;</span><span class="tok-p">;</span>  <span class="tok-c tok-c-Singleline">// a or bc</span>
+<span class="tok-nf">r4</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-sc">&#39;a&#39;</span><span class="tok-o">|</span><span class="tok-sc">&#39;b&#39;</span><span class="tok-p">)</span><span class="tok-sc">&#39;c&#39;</span><span class="tok-p">;</span>  <span class="tok-c tok-c-Singleline">// ac or bc</span></code></pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">Capturing groups</dt>
+<dd>
+<div class="paragraph">
+<p>The <em>capture</em> operator <code>r <strong>as</strong> c</code> matches exactly like the regular
+expression <code>r</code> but when successful, it also saves the part of the
+input stream which it matched. The matched contents are then made
+available in the semantic action of the corresponding clause as a
+local variable with name <code>c</code>. Captures are very convenient when
+the semantic action would otherwise need to extract some interesting
+part of the matched input, potentially at the cost of rescanning
+some of it.</p>
+</div>
+<div class="paragraph">
+<p>The type of a capture variable depends on the captured regular
+expression, and on the overall clause&#8217;s expression it appears in. It
+can be either <code>String</code>, <code>char</code>, <code>Optional&lt;String&gt;</code> or
+<code>Optional&lt;Character&gt;</code>. The <code>Optional</code> wrappers are introduced when the
+overall regular expression can succeed without the captured regular
+expression having matched at all, such as in <code>(r <strong>as</strong> c)?</code> or <code>(r1
+<strong>as</strong> c) | r2</code>. Other than that, a capture variable is normally of type
+<code>String</code>, unless it captures a regular expression which can only
+statically match a <em>single</em> character (e.g. a character literal, a
+character class, a wildcard or an alternation of any of those), in
+which case its type is that of a Java character.</p>
+</div>
+<div class="exampleblock">
+<div class="content">
+<div class="paragraph">
+<p>The rationale behind the fact that the type of capture variables
+adapts to the regular expression is twofold:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Using a simpler type such as <code>char</code> in comparison to <code>String</code>
+enhances efficiency since no heap-allocation is required to capture
+a single character. Moreover, captured groups are always assigned
+before entering a clause&#8217;s semantic action, even if it is never
+going to be used in the semantic action.</p>
+</li>
+<li>
+<p>Wrapping optional captured groups with <code>java.util.Optional</code> goes
+against raw efficiency instead, but for the very good reason of
+making sure that semantic actions always use captured variables in a
+way that is consistent with the associated clause. In particular,
+using <code>null</code> or default values instead would make it very easy
+for a developer to break a semantic action&#8217;s intended behaviour
+by only slightly changing the associated regular expression.
+With our approach, such a breaking change will normally result
+in a type-checking error in the compiler.</p>
+</li>
+</ol>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>Dolmen does not enforce that a capture variable appears only
+once in a clause&#8217;s regular expression. This allows for instance
+patterns such as <code>(r1 <strong>as</strong> c) | (r2 <strong>as</strong> c)</code> where <code>c</code> can
+then be handled in a uniform fashion in the semantic action.
+The type of a capture variable which appears more than once
+in a regular expression is simply the "simplest" type which
+can accomodate all occurrences of the variable. For instance,
+the capture variable can only have type <code>char</code> if all its
+occurrences can have type <code>char</code>, and so on.</p>
+</div>
+<div class="listingblock">
+<div class="title">Examples of captures in action</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// North-American style phone number, capturing groups</span>
+<span class="tok-nf">phone</span> <span class="tok-o">=</span> <span class="tok-p">(</span><span class="tok-nf">digit</span><span class="tok-p">&lt;</span><span class="tok-m">3</span><span class="tok-p">&gt;</span> <span class="tok-k">as</span> <span class="tok-nf">area</span><span class="tok-p">)</span> <span class="tok-sc">&#39;-&#39;</span> <span class="tok-p">(</span><span class="tok-nf">digit</span><span class="tok-p">&lt;</span><span class="tok-m">3</span><span class="tok-p">&gt;</span> <span class="tok-k">as</span> <span class="tok-nf">office</span><span class="tok-p">)</span> <span class="tok-sc">&#39;-&#39;</span> <span class="tok-p">(</span><span class="tok-nf">digit</span><span class="tok-p">&lt;</span><span class="tok-m">4</span><span class="tok-p">&gt;</span> <span class="tok-k">as</span> <span class="tok-nf">num</span><span class="tok-p">);</span>
+<span class="tok-c tok-c-Singleline">// Markdown-style header, capturing the title</span>
+<span class="tok-nf">header</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;#&#39;</span><span class="tok-o">+</span> <span class="tok-nf">blanks</span> <span class="tok-p">([</span><span class="tok-o">^</span> <span class="tok-sc">&#39;\</span><span class="tok-s">r</span><span class="tok-sc">&#39;</span> <span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span><span class="tok-p">]</span><span class="tok-o">+</span> <span class="tok-k">as</span> <span class="tok-nf">title</span><span class="tok-p">)</span> <span class="tok-nf">newline</span><span class="tok-p">;</span>
+<span class="tok-c tok-c-Singleline">// GCC #line directive, capturing filename and line number</span>
+<span class="tok-nf">linedir</span> <span class="tok-o">=</span> <span class="tok-s">&quot;#line&quot;</span> <span class="tok-nf">blanks</span> <span class="tok-p">(</span><span class="tok-nf">digit</span><span class="tok-o">+</span> <span class="tok-k">as</span> <span class="tok-nf">line</span><span class="tok-p">)</span> <span class="tok-nf">blanks</span> <span class="tok-p">(</span><span class="tok-nf">string</span> <span class="tok-k">as</span> <span class="tok-nf">filename</span><span class="tok-p">);</span>
+<span class="tok-c tok-c-Singleline">// Java Unicode escape sequence, capturing the code unit value</span>
+<span class="tok-nf">unicode</span> <span class="tok-o">=</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span> <span class="tok-sc">&#39;u&#39;</span><span class="tok-o">+</span> <span class="tok-p">(</span><span class="tok-nf">hexcode</span> <span class="tok-k">as</span> <span class="tok-nf">code</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Even when a capture variable is bound only once in a regular
+expression, it is possible that it is part of a repeated expression,
+for instance <code>(r <strong>as</strong> c)&lt;2&gt;</code>, and can therefore be matched several
+times during a single overall match. In such a case, the variable will
+be bound to the contents that correspond to the last match. Similarly,
+if the same capture variable appears nested in a captured group, such
+as in <code>(r0 (r1 <strong>as</strong> c) r2) <strong>as</strong> c</code>, only the outermost occurrence can
+ever find its way into the semantic action. The innermost captures are
+actually optimized away very early by Dolmen, and do not even
+contribute to the choice of the type associated to the variable <code>c</code>.</p>
+</div>
+<div class="paragraph">
+<p>Finally, there may be cases where there is not a unique way of
+matching the input stream with some regular expression, and that the
+different ways would yield different captured contents. For instance,
+consider matching the string <code>aaaaa</code> with the regular expression
+<code>('a'&lt;2,3&gt; <strong>as</strong> i) ('a'&lt;2,3&gt; <strong>as</strong> j)</code>: there are two correct ways in
+which <code>i</code> and <code>j</code> could be assigned. In such a case, which one is
+produced by the Dolmen-generated lexical analyzer is left unspecified.</p>
+</div>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following table summarizes the different regular expression
+constructs in order of <strong>decreasing</strong> precedence, i.e. operators
+appearing first bind tighter than those appearing later down
+the table.</p>
+</div>
+<table id="Lexers_Regexps_Table" class="tableblock frame-all grid-all spread">
+<caption class="title">Table 1. Regular expression operators</caption>
+<colgroup>
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+<col style="width: 25%;">
+</colgroup>
+<thead>
+<tr>
+<th class="tableblock halign-left valign-top">Name</th>
+<th class="tableblock halign-left valign-top">Syntax</th>
+<th class="tableblock halign-left valign-top">Meaning</th>
+<th class="tableblock halign-left valign-top">Associative</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Difference</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r # s</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches the characters in <code>r</code> which are not in <code>s</code>.
+  Both <code>r</code> and <code>s</code> must reduce to character classes.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Option</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r?</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches like <code>r</code>, or the empty string.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kleene star</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r*</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches any number of repetitions of <code>r</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Kleene plus</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r+</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches one or more number of repetitions of <code>r</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Repetition</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r&lt;n&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches exactly <code>n</code> repetitions of <code>r</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Bounded repetition</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r&lt;n, m&gt;</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches between <code>n</code> and <code>m</code> (inclusive) repetitions of <code>r</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Concatenation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r s</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches <code>r</code> first and then <code>s</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Right-associative</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Choice</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r | s</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches either <code>r</code> or <code>s</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Right-associative</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Capture</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>r as c</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Matches like <code>r</code> but associates the matched part
+  to a local variable named <code>c</code>.</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Left-associative</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect3">
 <h4 id="Lexers_Semantic_Actions_Ref">Semantic Actions</h4>
@@ -3536,13 +4004,13 @@ short description is quite satisfactory.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_lexer_options">Lexer Options</h4>
+<h4 id="Lexers_Options">Lexer Options</h4>
 <div class="paragraph">
 <p><em>Coming soon</em></p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_command_line_interface">Command Line Interface</h4>
+<h4 id="Lexers_CLI">Command Line Interface</h4>
 <div class="paragraph">
 <p><em>Coming soon</em></p>
 </div>
@@ -3581,7 +4049,7 @@ lexer descriptions. We start with the lexical structure of Dolmen
 lexers before describing the actual grammar of the language.</p>
 </div>
 <div class="sect3">
-<h4 id="_lexical_conventions">Lexical conventions</h4>
+<h4 id="Lexers_Lexical_Conventions">Lexical conventions</h4>
 <div class="paragraph">
 <p>The following lexical conventions explain how the raw characters in a
 Dolmen lexer description are split into the lexical elements that are then
@@ -3905,7 +4373,7 @@ of repetitions).</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre><a id="Definition"></a>Definition :=
+<pre><a id="JLDefinition"></a>Definition :=
   <a href="#JLIDENT">IDENT</a> <strong>=</strong> <a href="#JLRegular">Regular</a> <strong>;</strong></pre>
 </div>
 </div>
@@ -3932,7 +4400,7 @@ of repetitions).</p>
 </div>
 </div>
 <div class="sect4">
-<h5 id="_regular_expressions_3">Regular Expressions</h5>
+<h5 id="_regular_expressions_2">Regular Expressions</h5>
 <div class="listingblock">
 <div class="content">
 <pre><a id="JLRegular"></a>Regular :=
@@ -4006,7 +4474,7 @@ parser descriptions. We start with the lexical structure of Dolmen
 parsers before describing the actual grammar of the language.</p>
 </div>
 <div class="sect3">
-<h4 id="_lexical_conventions_2">Lexical conventions</h4>
+<h4 id="_lexical_conventions">Lexical conventions</h4>
 <div class="paragraph">
 <p>The following lexical conventions explain how the raw characters in a
 Dolmen parser description are split into the lexical elements that are

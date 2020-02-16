@@ -9,6 +9,7 @@ In this section we present the complete syntax reference for Dolmen
 lexer descriptions. We start with the lexical structure of Dolmen
 lexers before describing the actual grammar of the language.
 
+[#Lexers_Lexical_Conventions]
 == Lexical conventions
 
 The following lexical conventions explain how the raw characters in a
@@ -248,7 +249,7 @@ of repetitions).
 
 [listing, subs="{bnf-listing}"]
 --
-[[Definition]]Definition :=
+[[JLDefinition]]Definition :=
   <<JLIDENT,IDENT>> *=* <<JLRegular,Regular>> *;*
 --
 
