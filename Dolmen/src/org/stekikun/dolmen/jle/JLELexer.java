@@ -25,10 +25,14 @@ public final class JLELexer extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private char fromOctalCode(String code) {
-        return (char)(Integer.parseInt(code, 8));    }
+        return (char)(Integer.parseInt(code, 8));
+	}
     
     private char fromHexCode(String code) {
-        return (char)(Integer.parseInt(code, 16));    }
+    	int c = Integer.parseInt(code, 16);
+    	if (c == 0xFFFF) throw error("Invalid character code \\uffff");
+        return (char)c;
+	}
     
     private Token identOrKeyword(String id) {
         if (id.equals("rule")) return RULE;
@@ -1184,6 +1188,10 @@ public final class JLELexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 39: {
             return _jl_cell55();
         }
+        // EOF
+        case 65535: {
+            return _jl_cell54();
+        }
         default:  {
             return _jl_cell54();
         }
@@ -1471,11 +1479,11 @@ public final class JLELexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell78();
+            return _jl_cell77();
         }
         // 0x000d
         case 13: {
-            return _jl_cell77();
+            return _jl_cell78();
         }
         // "
         case 34: {
@@ -1569,21 +1577,21 @@ public final class JLELexer extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell77() {
+        return 7;
+    }
+    
+    private int _jl_cell78() {
         mark(7);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell78();
+            return _jl_cell77();
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell78() {
-        return 7;
     }
     
     private int _jl_cell79() {

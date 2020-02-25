@@ -22,10 +22,14 @@ public final class JLLexerGenerated extends org.stekikun.dolmen.codegen.LexBuffe
     }
     
     private char fromOctalCode(String code) {
-        return (char)(Integer.parseInt(code, 8));    }
+        return (char)(Integer.parseInt(code, 8));
+    }
     
     private char fromHexCode(String code) {
-        return (char)(Integer.parseInt(code, 16));    }
+        int c = Integer.parseInt(code, 16);
+        if (c == 0xFFFF) throw error("Invalid character code \uffff");
+        return (char)c;
+    }
     
     private org.stekikun.dolmen.jl.JLToken identOrKeyword(String id) {
         if (id.equals("rule")) return RULE;

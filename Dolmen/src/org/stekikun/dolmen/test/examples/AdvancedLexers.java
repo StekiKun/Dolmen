@@ -132,8 +132,8 @@ public abstract class AdvancedLexers {
 				Regular.string("/"),	" return Token.DIV; ",
 				Regular.string("("),	" return Token.LPAREN; ",
 				Regular.string(")"),	" return Token.RPAREN; ",
-				Regular.chars(CSet.EOF),	" return Token.EOF; ",
-				Regular.chars(CSet.ALL),	" throw error(\"Unexpected char\"); "
+				Regular.EOF,			" return Token.EOF; ",
+				Regular.chars(CSet.ALL_BUT_EOF),	" throw error(\"Unexpected char\"); "
 			);
 		
 		private static final CSet inComment =
@@ -145,7 +145,7 @@ public abstract class AdvancedLexers {
 				newline,		 			" newline(); comment(); return;",
 				Regular.string("*"), 		" comment(); return;",
 				Regular.chars(inComment),   " comment(); return;",
-				Regular.chars(CSet.EOF),    " throw error(\"EOF in comment\"); "
+				Regular.EOF,    			" throw error(\"EOF in comment\"); "
 			);
 		private final static Lexer.Entry mainEntry =
 			new Lexer.Entry(true, Located.dummy("main"),

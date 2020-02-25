@@ -208,7 +208,7 @@ public abstract class JLLexer {
 			.add(rchar('>'), "return RANGLE;")
 			.add(rchar(','), "return COMMA;")
 			.add(rchar(';'), "return SEMICOL;")
-			.add(chars(CSet.EOF), "return END;")
+			.add(Regular.EOF, "return END;")
 			.add(any, "throw error(\"Unfinished token\");")
 			.build();
 	
@@ -239,7 +239,7 @@ public abstract class JLLexer {
 						     "stringBuffer.setLength(0);" +
 						     "comment(); return;\n")
 			.add(rchar('\''), "skipChar(); comment(); return;")
-			.add(chars(CSet.EOF), "throw error(\"Unterminated comment\");")
+			.add(Regular.EOF, "throw error(\"Unterminated comment\");")
 			.add(nl, "newline(); comment(); return;")
 			.add(plus(inComment), "comment(); return;")
 			.build();
@@ -280,7 +280,7 @@ public abstract class JLLexer {
 			.add(seq(rchar('\\'), binding(any, Located.dummy("c"))),
 					"stringBuffer.append('\\\\').append(c); string(); return;")
 			.add(rchar('\\'), "throw error(\"Unterminated escape sequence in string literal\");")
-			.add(chars(CSet.EOF), "throw error(\"Unterminated string literal\");")
+			.add(Regular.EOF, "throw error(\"Unterminated string literal\");")
 			.add(plus(inString), 
 					"stringBuffer.append(getLexeme()); string(); return;")
 			.build();
@@ -321,7 +321,7 @@ public abstract class JLLexer {
 			.add(rchar('\''), "skipChar(); return action();")
 			.add(string("/*"), "comment(); return action();")
 			.add(slcomment, "return action();")
-			.add(chars(CSet.EOF), "throw error(\"Unterminated action\");")
+			.add(Regular.EOF, "throw error(\"Unterminated action\");")
 			.add(nl, "newline(); return action();")
 			.add(rchar('/'), "return action();")
 			.add(plus(inAction), "return action();")
@@ -370,11 +370,13 @@ public abstract class JLLexer {
 	"    }\n" +
 	"    \n" +
 	"    private char fromOctalCode(String code) {\n" +
-	"        return (char)(Integer.parseInt(code, 8));" +
+	"        return (char)(Integer.parseInt(code, 8));\n" +
 	"    }\n" +
 	"    \n" +
 	"    private char fromHexCode(String code) {\n" +
-	"        return (char)(Integer.parseInt(code, 16));" +
+	"        int c = Integer.parseInt(code, 16);\n" +
+	"        if (c == 0xFFFF) throw error(\"Invalid character code \\uffff\");\n" +
+	"        return (char)c;\n" +
 	"    }\n" +
 	"    \n" +
 	"    private org.stekikun.dolmen.jl.JLToken identOrKeyword(String id) {\n" +

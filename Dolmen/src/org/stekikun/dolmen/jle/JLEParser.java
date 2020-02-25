@@ -14,7 +14,6 @@ import org.stekikun.dolmen.codegen.LexBuffer.Position;
 import org.stekikun.dolmen.syntax.Extent;
 import org.stekikun.dolmen.syntax.Located;
 import org.stekikun.dolmen.syntax.Regular;
-import org.stekikun.dolmen.syntax.Regular.Characters;
 import org.stekikun.dolmen.syntax.Regulars;
 import org.stekikun.dolmen.syntax.Lexer;
 import org.stekikun.dolmen.syntax.Option;
@@ -226,20 +225,10 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
 	 *  to a character set
 	 */
 	private CSet asCSet(Regular reg) {
-		switch (reg.getKind()) {
-		case EPSILON:
-		case EOF:
-		case ALTERNATE:
-		case SEQUENCE:
-		case REPETITION:
-		case BINDING:
+		@Nullable CSet res = Regulars.asCSet(reg);
+		if (res == null)
 			throw parsingError("Regular expression " + reg + " is not a character set.");
-		case CHARACTERS: {
-			final Characters characters = (Characters) reg;
-			return characters.chars;
-		}
-		}
-		throw new IllegalStateException();
+		return res;
 	}
 
     /**
@@ -906,7 +895,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case EOF: {
                 // EOF
                 eat(Token.Kind.EOF);
-                 return Regular.chars(CSet.EOF); 
+                 return Regular.EOF; 
             }
             case IDENT: {
                 // id = IDENT

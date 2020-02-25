@@ -374,7 +374,10 @@ public abstract class CSet implements Comparable<CSet> {
 		if (i == null) return EMPTY;
 		if (i.next != null) return new Intervals(i);
 		if (i.first == i.last) return new Singleton(i.first);
-		if (i.first == 0 && i.last == 0xFFFF) return ALL;
+		if (i.first == 0) {
+			if (i.last == 0xFFFE) return ALL_BUT_EOF;
+			if (i.last == 0xFFFF) return ALL;
+		}
 		return new Intervals(i);
 	}
 	
@@ -725,8 +728,10 @@ public abstract class CSet implements Comparable<CSet> {
  
 			/** Probability to generate {@link CSet#EMPTY} */
 			public float empty = 0.15f;
-			/** Probability to generate {@link CSet#ALL} */
+			/** Probability to generate {@link CSet#ALL} or {@link CSet#ALL_BUT_EOF} */
 			public float all = 0.35f;
+			/** Whether {@link CSet#ALL} or {@link CSet#ALL_BUT_EOF} should be generated */
+			public boolean eof = true;
 			/** Probability to generate singleton character set */
 			public float singleton = 0.75f;
 			/** Maximum number of character intervals generated */
@@ -763,7 +768,7 @@ public abstract class CSet implements Comparable<CSet> {
 		public CSet generate() {
 			float f = random.nextFloat();
 			if (f < config.empty) return EMPTY;
-			if (f < config.all) return ALL;
+			if (f < config.all) return (config.eof ? ALL : ALL_BUT_EOF);
 			if (f < config.singleton) return singleton(nextChar());
 			
 			// Generate n random intervals in [minChar, maxChar]

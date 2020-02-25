@@ -1847,6 +1847,10 @@ public final class JGELexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 39: {
             return _jl_cell85();
         }
+        // EOF
+        case 65535: {
+            return _jl_cell84();
+        }
         default:  {
             return _jl_cell84();
         }

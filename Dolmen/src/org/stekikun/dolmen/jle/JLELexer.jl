@@ -27,10 +27,14 @@ import org.stekikun.dolmen.syntax.Extent;
     }
     
     private char fromOctalCode(String code) {
-        return (char)(Integer.parseInt(code, 8));    }
+        return (char)(Integer.parseInt(code, 8));
+	}
     
     private char fromHexCode(String code) {
-        return (char)(Integer.parseInt(code, 16));    }
+    	int c = Integer.parseInt(code, 16);
+    	if (c == 0xFFFF) throw error("Invalid character code \\uffff");
+        return (char)c;
+	}
     
     private Token identOrKeyword(String id) {
         if (id.equals("rule")) return RULE;

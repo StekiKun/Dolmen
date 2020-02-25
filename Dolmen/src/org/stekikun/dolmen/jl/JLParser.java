@@ -34,11 +34,10 @@ import org.stekikun.dolmen.jl.JLToken.Kind;
 import org.stekikun.dolmen.jl.JLToken.LChar;
 import org.stekikun.dolmen.jl.JLToken.LString;
 import org.stekikun.dolmen.syntax.Lexer;
+import org.stekikun.dolmen.syntax.Lexer.Clause;
 import org.stekikun.dolmen.syntax.Located;
 import org.stekikun.dolmen.syntax.Regular;
 import org.stekikun.dolmen.syntax.Regulars;
-import org.stekikun.dolmen.syntax.Lexer.Clause;
-import org.stekikun.dolmen.syntax.Regular.Characters;
 
 /**
  * A manually written top-down parser for lexer descriptions,
@@ -410,20 +409,10 @@ public final class JLParser extends BaseParser<JLToken> {
 	}
 	
 	private CSet asCSet(Regular reg) {
-		switch (reg.getKind()) {
-		case EPSILON:
-		case EOF:
-		case ALTERNATE:
-		case SEQUENCE:
-		case REPETITION:
-		case BINDING:
+		@Nullable CSet res = Regulars.asCSet(reg);
+		if (res == null)
 			throw parsingError("Regular expression " + reg + " is not a character set.");
-		case CHARACTERS: {
-			final Characters characters = (Characters) reg;
-			return characters.chars;
-		}
-		}
-		throw new IllegalStateException();
+		return res;
 	}
 	
 	private Regular parseAtomicRegular() {
@@ -433,7 +422,7 @@ public final class JLParser extends BaseParser<JLToken> {
 			return Regular.chars(CSet.ALL_BUT_EOF);
 		case EOF:
 			eat();
-			return Regular.chars(CSet.EOF);
+			return Regular.EOF;
 		case LCHAR: {
 			LChar tok = (LChar) eat(Kind.LCHAR);
 			return Regular.chars(CSet.singleton(tok.value));

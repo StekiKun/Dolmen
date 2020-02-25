@@ -186,7 +186,8 @@ public abstract class Regular {
 	
 	/**
 	 * Instances of regular expressions that match exactly
-	 * one character amongst a set of possible characters
+	 * one character amongst a set of possible characters.
+	 * The set cannot contain the special end-of-input character.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -212,13 +213,16 @@ public abstract class Regular {
 		}
 	}
 	/**
-	 * @param chars
+	 * @param chars		must not contain {@link CSet#EOF}
 	 * @return a regular expression which matches exactly
 	 * 		one character in the character set {@code chars}
 	 */
 	public static Regular chars(CSet chars) {
+		if (chars.contains((char)0xFFFF))
+			throw new IllegalArgumentException();
 		return new Characters(chars);
 	}
+	
 	/**
 	 * @param s
 	 * @return a regular expression matching exactly
@@ -232,8 +236,7 @@ public abstract class Regular {
 		@SuppressWarnings("null")
 		@NonNull Regular[] allChars = (@NonNull Regular[]) chars;
 		return seq(allChars);
-	}
-	
+	}	
 	
 	/**
 	 * Instances of regular expressions that represent a choice
@@ -512,6 +515,8 @@ public abstract class Regular {
 			
 			/** Maximum depth of a generated regular expression */
 			public int maxDepth = 8;
+			/** Whether binding regular expressions of size 0 are allowed */
+			public boolean allowEmptyBindings = true;
 			/** Configuration used to generate the random character sets */
 			public CSet.Gen.Config csConfig = new CSet.Gen.Config();
 		}
@@ -530,9 +535,10 @@ public abstract class Regular {
 		public Gen(Random random, Config config) {
 			this.random = random;
 			this.config = config;
-			// Use easy characters
+			// Use easy characters and forbid 0xFFFF in character sets
 			config.csConfig.minChar='A';
 			config.csConfig.maxChar='z';
+			config.csConfig.eof = false;
 			this.csetGenerator = new CSet.Gen(random, config.csConfig);
 		}
 		
@@ -570,7 +576,9 @@ public abstract class Regular {
 			// the probability of capture/shadowing
 //			if (random.nextBoolean())
 //				name += (char) ('a' + random.nextInt(4));
-			return binding(genAux(curDepth + 1), Located.dummy(name));
+			Regular r = genAux(curDepth + 1);
+			if (r.size == 0 && !config.allowEmptyBindings) return r;
+			return binding(r, Located.dummy(name));
 		}
 		
 		@Override

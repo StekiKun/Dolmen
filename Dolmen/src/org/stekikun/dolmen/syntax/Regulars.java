@@ -711,6 +711,45 @@ public abstract class Regulars {
 	}
 	
 	/**
+	 * A regular expression corresponds to a character set if it is either
+	 * a character set, or an alternation of expression which correspond to
+	 * a character set. Binding regular expressions never correspond to
+	 * character sets.
+	 * 
+	 * @param reg
+	 * @return the character set that the given regular expression corresponds
+	 *  to and returns {@code null} if {@code reg} does not correspond
+	 *  to a character set.
+	 */
+	public static @Nullable CSet asCSet(Regular reg) {
+		// By definition, a regular expression which correspond to a
+		// character set will have size 1, and not have bindings.
+		if (reg.size != 1 || reg.hasBindings) return null;
+		
+		switch (reg.getKind()) {
+		case EPSILON:
+		case EOF:
+		case SEQUENCE:
+		case REPETITION:
+		case BINDING:
+			return null;
+		case CHARACTERS: {
+			final Characters characters = (Characters) reg;
+			return characters.chars;
+		}
+		case ALTERNATE: {
+			final Alternate alternate = (Alternate) reg;
+			@Nullable CSet clhs = asCSet(alternate.lhs);
+			if (clhs == null) return null;
+			@Nullable CSet crhs = asCSet(alternate.rhs);
+			if (crhs == null) return null;
+			return CSet.union(clhs, crhs);
+		}
+		}
+		throw new IllegalStateException();
+	}
+	
+	/**
 	 * The two maps {@code m1} and {@code m2} must be injective, i.e. they must
 	 * have keys which are pairwise disjoint character sets. The returned map
 	 * has the same property.

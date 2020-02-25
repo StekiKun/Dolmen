@@ -62,15 +62,19 @@ Comments::
     character with the given octal ASCII code;
   * an escape sequence amongst `\\`, `\'`, `\"`, `\r` (0x0D),
     `\n` (0x0A), `\b` (0x08), `\t` (0x09) and `\f` (0x0C);
-  * a Unicode character code between `\u0000` and `\uFFFF`, representing
+  * a Unicode character code between `\u0000` and `\uFFFE`, representing
     the corresponding UTF-16 _code unit_; just like in Java, there can be
     any positive number of `u` characters before the actual hexadecimal
     code.
+
++
 ====
 For instance, possible character literals are `'g'`, `'$'`, `+'\''+`,
 `'\047'` or `'\uuu0027'`. The last three happen to all represent the
 same character.
 ====
+Note that the character `\uFFFF` is not allowed as it is reserved to
+represent the end-of-input; it is not a valid Unicode character anyway.
 
 [[JLLSTRING]][[JLMLSTRING]]String literals (`LSTRING`, `MLSTRING`)::
 

@@ -576,15 +576,12 @@ character with the given octal ASCII code;</p>
 <code>\n</code> (0x0A), <code>\b</code> (0x08), <code>\t</code> (0x09) and <code>\f</code> (0x0C);</p>
 </li>
 <li>
-<p>a Unicode character code between <code>\u0000</code> and <code>\uFFFF</code>, representing
+<p>a Unicode character code between <code>\u0000</code> and <code>\uFFFE</code>, representing
 the corresponding UTF-16 <em>code unit</em>; just like in Java, there can be
 any positive number of <code>u</code> characters before the actual hexadecimal
 code.</p>
 </li>
 </ul>
-</div>
-</dd>
-</dl>
 </div>
 <div class="exampleblock">
 <div class="content">
@@ -595,8 +592,11 @@ same character.</p>
 </div>
 </div>
 </div>
-<div class="dlist">
-<dl>
+<div class="paragraph">
+<p>Note that the character <code>\uFFFF</code> is not allowed as it is reserved to
+represent the end-of-input; it is not a valid Unicode character anyway.</p>
+</div>
+</dd>
 <dt class="hdlist1"><a id="JLLSTRING"></a><a id="JLMLSTRING"></a>String literals (<code>LSTRING</code>, <code>MLSTRING</code>)</dt>
 <dd>
 <p>A string literal is expressed as a sequence of simple characters and
@@ -926,7 +926,7 @@ of repetitions).</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-02-16 00:02:01 CET
+Last updated 2020-02-26 00:21:17 CET
 </div>
 </div>
 </body>

@@ -210,7 +210,10 @@ public abstract class TRegular {
 	 * 
 	 * Can also match the end-of-input via a special 
 	 * character set, in which case {@link TRegular#size}
-	 * will be 0 and not 1.
+	 * will be 0 and not 1. If {@link #eof} is false,
+	 * then {@link #chars} cannot contain the end-of-input
+	 * marker; if {@link #eof} is true, then {@link #chars}
+	 * must only contain the end-of-input marker.
 	 * 
 	 * @author Stéphane Lescuyer
 	 */
@@ -239,6 +242,10 @@ public abstract class TRegular {
 		}
 	}
 	/**
+	 * If {@code eof} is true, {@code cset} must point to a
+	 * singleton end-of-input. Otherwise, {@code cset} must not
+	 * contain the end-of-input marker.
+	 * 
 	 * @param cset
 	 * @param eof
 	 * @return a tagged regular expression which matches exactly
@@ -398,7 +405,7 @@ public abstract class TRegular {
 	
 	/**
 	 * Stands for a semantic action to be executed
-	 * when matching reaching this regular expression.
+	 * when matching reaches this regular expression.
 	 * Semantic actions are indexed by an integer.
 	 * 
 	 * @author Stéphane Lescuyer

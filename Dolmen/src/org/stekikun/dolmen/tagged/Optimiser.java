@@ -11,7 +11,6 @@ import org.eclipse.jdt.annotation.Nullable;
 import org.stekikun.dolmen.common.Maps;
 import org.stekikun.dolmen.syntax.Regulars.VarsInfo;
 import org.stekikun.dolmen.tagged.TRegular.Alternate;
-import org.stekikun.dolmen.tagged.TRegular.Characters;
 import org.stekikun.dolmen.tagged.TRegular.Repetition;
 import org.stekikun.dolmen.tagged.TRegular.Sequence;
 import org.stekikun.dolmen.tagged.TRegular.Tag;
@@ -223,6 +222,7 @@ public final class Optimiser {
 	 */
 	private PosTRegular simpleForward(PosTRegular pr) {
 		final int pos = pr.pos;
+		if (pos < 0) throw new IllegalArgumentException();
 		final TRegular regular = pr.regular;
 		// If no tags, we know the regexp can't change, and we know
 		// its size so we can avoid the traversal
@@ -234,11 +234,9 @@ public final class Optimiser {
 					
 		switch (regular.getKind()) {
 		case EPSILON:
-			return pr;
-		case CHARACTERS: {
-			final Characters characters = (Characters) regular;
-			return new PosTRegular(characters.eof ? pos : pos + 1, regular);
-		}
+		case CHARACTERS:
+			// Already handled before the switch
+			throw new IllegalStateException();
 		case TAG: {
 			final Tag tag = (Tag) regular;
 			if (varsInfo.dblVars.contains(tag.tag.id))
@@ -247,7 +245,6 @@ public final class Optimiser {
 			return new PosTRegular(pos, TRegular.EPSILON);
 		}
 		case ALTERNATE: {
-			if (pos < 0) return pr;
 			if (regular.size < 0) return new PosTRegular(-1, regular);
 			return new PosTRegular(pos + regular.size, regular);
 		}
@@ -296,6 +293,7 @@ public final class Optimiser {
 	 */
 	private PosTRegular simpleBackward(PosTRegular pr) {
 		final int pos = pr.pos;
+		if (pos < 0) throw new IllegalArgumentException();
 		final TRegular regular = pr.regular;
 		// If no tags, we know the regexp can't change, and we know
 		// its size so we can avoid the traversal
@@ -307,21 +305,18 @@ public final class Optimiser {
 					
 		switch (regular.getKind()) {
 		case EPSILON:
-			return pr;
-		case CHARACTERS: {
-			final Characters characters = (Characters) regular;
-			return new PosTRegular(characters.eof ? pos : pos + 1, regular);
-		}
+		case CHARACTERS:
+			// Already handled before the switch
+			throw new IllegalStateException();
 		case TAG: {
 			final Tag tag = (Tag) regular;
 			if (varsInfo.dblVars.contains(tag.tag.id))
 				return pr;
-			// The offset in the tag adrdress will be negative
+			// The offset in the tag address will be negative
 			recordTagAddr(tag.tag, TagAddr.of(TagAddr.END, -pos));
 			return new PosTRegular(pos, TRegular.EPSILON);
 		}
 		case ALTERNATE: {
-			if (pos < 0) return pr;
 			if (regular.size < 0) return new PosTRegular(-1, regular);
 			return new PosTRegular(pos + regular.size, regular);
 		}
@@ -438,7 +433,7 @@ public final class Optimiser {
 	 * @author Stéphane Lescuyer
 	 */
 	public static final class IdentInfo {
-		/** Whether the identifier is only optionnally bound */
+		/** Whether the identifier is only optionally bound */
 		public final boolean optional;
 		/** The tag address of the start of the bound sub-expression */
 		public final TagAddr start;
