@@ -396,7 +396,7 @@ public final class AutomataOutput {
 		// Add a final field for the memory used by this entry
 		if (entry.memSize > 0) {
 			buf.emit("private final int ")
-				.emit("@org.eclipse.jdt.annotation.NonNull [] ")
+				.emit("[] ")
 				.emit(memoryName(entry.name))
 				.emit(" = new int[").emit("" + entry.memSize).emitln("];");
 		}

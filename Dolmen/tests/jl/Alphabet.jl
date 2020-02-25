@@ -1,5 +1,3 @@
-[ class_annotations = "@SuppressWarnings(\"null\")" ]
-
 import org.eclipse.jdt.annotation.Nullable;
 
 import java.io.FileReader;
