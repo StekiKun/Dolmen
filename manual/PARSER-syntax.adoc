@@ -60,6 +60,8 @@ Comments::
     the corresponding UTF-16 _code unit_; just like in Java, there can be
     any positive number of `u` characters before the actual hexadecimal
     code.
+
++
 ====
 For instance, possible characters in a string literal are `g`, `$`,
 `+\'+`, `\047` or `\uuu0027`. The last three happen to all represent

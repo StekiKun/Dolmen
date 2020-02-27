@@ -454,7 +454,236 @@ _Coming soon_
 [#Lexers_Wildcards]
 ==== Understanding `eof`, `_` and `orelse`
 
-_Coming soon_
+In this section, we discuss the meaning of the special regular
+expressions `eof` and `_`, which can sometimes be confusing, as well
+as the special `orelse` keyword which can be used to introduce a
+"catch-everything-else" clause in a lexer entry.
+
+End-of-input::
+
+As explained <<Lexers_Regular_Expressions,above>>, `eof` is a special
+regular expression literal which matches when the input stream has
+been exhausted. It actually represents the single meta-character
+`\uFFFF`, which is used internally to represent the end-of-input and
+is not a valid escaping sequence in character or string literals.
+Even if `eof` is internally encoded as a character, it does not behave
+as a character:
+
+* matching `eof` does not _consume_ any character from the input
+  stream, it simply checks that the end of the input stream has
+  indeed been reached; therefore it always matches an empty
+  input string, whereas regular characters always match an input
+  of size 1;
+* because it does not consume anything, `eof` has some rather
+  exotic properties when it comes to regular expressions;
+  for instance, `eof` and `eof+` are completely equivalent;
+* `eof` is not considered as a regular expression which reduces to a
+  character class; hence it is not possible to use `eof` in a
+  character set difference operation `.. # ..`, or inside a character
+  class `[.. eof ..]`;
+* finally, even though `eof` stands for the end of the input stream,
+  any regular expression which matches the empty string can still
+  match after `eof`, e.g. `eof ""`, `eof ("" as c)` or even `eof
+  ("foo"?)` will all successfully match the empty string `""`.
+
++
+All in all, writing complex regular expressions using `eof` should be
+really uncommon. As a rule of thumb, `eof` is usually best used all by
+itself in a clause, as the end-of-input normally calls for some ad hoc
+action, in particular in terms of <<Lexers_Error_Reports,error
+reporting>>.
+
+Wildcard::
+
+The wildcard `+_+` is a regular expression which can match any valid
+character. It is actually equivalent to the character class
+`['\u0000' - '\uFFFE']`, and in particular *excludes* the end-of-input
+meta-character. Therefore, `_` will behave in an expected way,
+consuming exactly one character of the input stream, much like `.` in
+many common regular expression engines.
++
+What sometimes causes confusion is that `+_+` is not sufficient when
+trying to write a default clause to catch any unexpected character for
+instance:
++
+[source,jl]
+----
+| _ as c { throw error("Unexpected character: " + c); }
+----
++
+This will catch any actual unexpected character but will still leave
+`eof` unhandled--and if so, this will be reported by Dolmen as a
+warning for a potentially incomplete lexer entry. It is possible to
+match `(_ | eof) as c` or `(_ as c) | eof` of course, but whereas `c`
+in the clause above had type `char`, `c` in the latter examples would
+be an `Optional<Character>` which means the semantic action will not
+handle both cases in a uniform manner anyway. It is usually simpler to
+just have another clause dedicated to `eof`.
++
+Note that for the same reason that `+_+` only matches actual non
+end-of-input characters, the character class complement operation
+`[^...]` only contains characters in the 0x0000-0xFFFE range. In
+other words, the complement `[^ cset ]` of some character set
+is actually equivalent to `_ # [cset]`.
+
+Clause `orelse`::
+
+The keyword `orelse` can be used in place of a regular expression to
+introduce a special form of clause:
++
+[source, jl]
+----
+| orelse  { ... }
+----
++
+The meaning of the `orelse` pattern depends on the context in which it
+is used, namely of the other clauses declared before in the same lexer
+entry. Its purpose is to match the longest possible prefix of input
+which could not possibly match any of the other clauses above.
++
+More precisely, suppose `orelse` is preceded by _n_ clauses with
+respective regular expressions `r1`, ... `rn`; the regular expression
+that `orelse` will denote is computed as follows:
++
+--
+. For each `ri`, compute the character set `Ci` of the characters
+  which can start a match of `ri`. This character set can easily
+  be computed by induction on the regular expression; for instance,
+  it is the first character of the string for a string literal,
+  the union of the first characters of `s` and `t` for a choice
+  expression `s | t`, and so on.
+
+. Compute the union `C` of all the character sets `Ci`, i.e. the set
+  of all the characters which can start a match of any of the `ri`.
+
+. Then, `orelse` will represent the regular expression `[^C]+`,
+  i.e. it will match any non-empty number of characters which
+  cannot start any of the `ri`.
+--
++
+An `orelse` clause is useful when one is only interested in
+recognizing certain patterns, but can pass over the rest of the
+input without having to interpret it. Consider for instance
+a lexer entry `mlcomment` which is entered when starting
+a (possibly multi-line) comment `/* ... */` and which must
+match until the end of the comment:
++
+[source,jl]
+.An entry for multi-line comments
+----
+private { void } rule mlcomment =
+| "*/"    { return; }
+| newline { newline(); continue mlcomment; }
+| eof     { throw error("Unterminated comment"); }
+| ...
+----
++
+where `newline` is defined as `('\r' | '\n' | "\r\n")`.  As it is, the
+entry recognizes the closing comment delimiter and also handles line
+breaks and end-of-input gracefully. It still needs to be able to pass
+everything else that the comment can contains. One correct way to do
+that is to use a wildcard to catch everything else:
++
+[source,jl]
+----
+...
+| _     { continue mlcomment; }
+----
++
+In particular this works because by the longest-match rule, it will not
+match a `*` character if it happens to be followed by a `\`. Unfortunately,
+reentering the rule at every character is somewhat inefficient in comparison
+to matching largest parts of the comment at once; indeed, every time a
+rule is entered or reentered, the generated lexical analyzer performs some
+minor bookkeeping regarding the current lexeme's positions. To pass as much
+of the comment's contents as we possibly can in one go, we can use an ad-hoc
+regular expression like the following:
++
+[source,jl]
+----
+...
+| [^'*' '\r' '\n']+     { continue mlcomment; }
+----
++
+The issue with this is twofold:
++
+--
+. On one hand, it is fragile as it relies on correctly listing
+  all characters which are of interest to the other clauses in
+  the rule. Should we forget one of them, the Kleene `+` operator
+  and the longest-match rule will conspire to make sure our entry
+  does not work as intended. Also, this must be maintained when
+  adding new patterns to the rule.
+. On the other hand, it still does not cover the case of `*`
+  characters which are not followed by a `/`. One could of course
+  fix the regular expression like this:
++
+[source,jl]
+----
+...
+| ([^'*' '\r' '\n']+ | '*'+[^'/' '*'])+  { continue mlcomment; }
+----
++
+but this would definitely make the first issue even more pregnant
+(Hint: incidentally, this regular expression is still not good
+enough!).
+--
++
+Reliability and reviewability are design principles in Dolmen, and the
+`orelse` clause was brought up precisely to bring an elegant solution
+for such a case. Using `orelse` here will be equivalent to `[^'*' '\r'
+'\n']+` but in a much less error-prone way:
++
+[source,jl]
+----
+private { void } rule mlcomment =
+| "*/"    { return; }
+| newline { newline(); continue mlcomment; }
+| eof     { throw error("Unterminated comment"); }
+| '*'     { continue mlcomment; }
+| orelse  { continue mlcomment; }
+----
++
+Of course, lonely `*` characters still need to be singled out but this
+is reasonably simple. One can even switch the last two clauses around
+and use a wildcard:
++
+[source,jl]
+----
+private { void } rule mlcomment =
+...
+| orelse  { continue mlcomment; }
+| _       { continue mlcomment; }
+----
++
+Writing the entry this way will make maintenance really
+straightforward. For instance, suppose we want to start
+allowing nested `/* ... */` comments, this can be achieved
+by keeping track of the current comment "depth" in a local
+field and add a clause to handle opening delimiters:
++
+[source,jl]
+----
+private { void } rule mlcomment =
+| "*/"    { if (--depth == 0) return; continue mlcomment; }
+| "/*"    { ++depth; continue mlcomment; }
+| newline { newline(); continue mlcomment; }
+| eof     { throw error("Unterminated comment"); }
+| orelse  { continue mlcomment; }
+| _       { continue mlcomment; }
+----
++
+The benefit of using `orelse` and a wildcard instead of complex
+hand-crafted expressions is immediately apparent, as this is all that
+we have to do to handle nested comments in our entry. `orelse` will
+now take care of not consuming `/` characters, whereas the wildcard
+will deal with `/` characters that are not followed by a `*`.
++
+Note that as in the example above, the `orelse` clause need not
+be the last one in the entry, it will simply depend on the clauses
+defined above. It is even syntactically possible to have more than
+one `orelse` clause in an entry, although all such extra clauses
+will be shadowed by the first one by construction.
 
 [#Lexers_Options]
 ==== Lexer Options

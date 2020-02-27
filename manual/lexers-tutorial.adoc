@@ -977,6 +977,7 @@ understand, and it can correctly analyze any correct JSON file! In the
 next section of this tutorial, we will see how to improve the lexer's
 behaviour in the case where it is fed syntactically incorrect files.
 
+[#Lexers_Error_Reports]
 ==== Improving Error Reports
 
 So far, we have designed a working lexical analyzer for JSON files, but
