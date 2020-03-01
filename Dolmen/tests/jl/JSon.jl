@@ -71,7 +71,7 @@ private { void } rule string =
 			{ throw error("Unknown escape sequence: " + c); }
 | eof		{ throw error("Unterminated string"); }
 | orelse	{ 
-			  buf.append(getLexeme());
+			  buf.append(getLexemeChars());
 			  continue string;
 			}
 

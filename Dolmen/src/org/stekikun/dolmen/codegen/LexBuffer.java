@@ -1,9 +1,15 @@
 package org.stekikun.dolmen.codegen;
 
 import java.io.IOException;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.PrimitiveIterator;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.Stack;
 import java.util.function.Supplier;
+import java.util.stream.IntStream;
+import java.util.stream.StreamSupport;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -456,8 +462,8 @@ public class LexBuffer {
 	 * the new one is complete.	This takes care of closing the input
 	 * stream which was in use until that point.
 	 * 
-	 * @param filename
-	 * @param reader
+	 * @param filename		name of the new input source
+	 * @param reader		new input character stream
 	 */
 	protected final void changeInput(String filename, java.io.Reader reader) {
 		if (filename == null || reader == null)
@@ -573,7 +579,12 @@ public class LexBuffer {
     
     /**
      * When successful, this is equivalent to {@code getLexeme().charAt(idx)},
-     * but will be more efficient in general.
+     * but will be more efficient in general since it does not require
+     * allocating the lexeme string as {@link #getLexeme()} does.
+     * <p>
+     * Beware that this method must only be called in the associated semantic
+     * action, and <b>before</b> any call to a nested rule, as leaving the
+     * action or entering another rule can change the underlying buffer.
      * 
      * @param idx
      * @return the character at index {@code idx} in the last
@@ -586,6 +597,101 @@ public class LexBuffer {
 			throw error("Invalid index  " + idx 
 						+ " in lexeme of length " + getLexemeLength());
     	return tokenBuf[startPos + idx];
+    }
+
+    /**
+     * This method returns the same sequence of characters that
+     * {@link #getLexeme()} would, but it is only a view based on the
+     * current state of the {@link LexBuffer}. Therefore it can be more
+     * efficient than {@link #getLexeme()} when the only requirement is
+     * iterating on the characters in sequence, for instance appending
+     * the contents to a {@link StringBuilder}.
+     * <p>
+     * The downside is that the result of {@link #getLexemeChars()} must
+     * be used with more care, as it depends on the current state of
+     * the buffer. It only makes sense during the associated semantic
+     * action, and <b>before</b> any call to a nested entry rule as well.
+     * Otherwise, the contents or size of the underlying buffer may
+     * have changed and the contents of the returned {@link CharSequence}
+     * is undefined.
+     * 
+     * @return the sequence of characters forming the last matched lexeme
+     */
+    public final CharSequence getLexemeChars() {
+    	return new LexemeCharSequence(startPos, curPos);
+    }
+    
+    /**
+     * An implementation of {@link CharacterSequence} which is backed up
+     * by the underlying {@link LexBuffer}. It represents a range inside
+     * the current buffer, and can be used to retrieve a lexeme efficiently
+     * without actually copying the lexeme's data to a standalone {@link String},
+     * for cases where the semantic action does not need more than a
+     * {@link CharSequence}.
+     * <p>
+     * Of course, instances of this class will only make sense for the duration
+     * of the associated semantic action, and before any possible call to
+     * a nested rule. Otherwise, the underlying data may have been replaced,
+     * the buffer may have been resized, etc.
+     * 
+     * @author Stéphane Lescuyer
+     */
+    private final class LexemeCharSequence implements CharSequence {
+    	// Absolute start offset in the underlying LexBuffer
+    	private final int start;
+    	// Absolute end offset in the underlying LexBuffer
+    	private final int end;
+    	// Length of the sequence in chars
+    	private final int length;
+    	
+    	LexemeCharSequence(int start, int end) {
+    		this.start = start;
+    		this.end = end;
+    		this.length = end - start;
+    	}
+
+		@Override
+		public int length() {
+			return length;
+		}
+
+		@Override
+		public char charAt(int index) {
+			if (index < 0 || index >= length)
+				throw error("Invalid index " + index
+						+ " in character sequence of length " + length);
+			return tokenBuf[start + index];
+		}
+
+		@Override
+		public CharSequence subSequence(int sstart, int send) {
+	        if ((sstart < 0) || (send > length) || (sstart > send))
+	        	throw new IndexOutOfBoundsException();
+	        return new LexemeCharSequence(start + sstart, start + send);
+		}
+		
+		@Override
+	    public IntStream chars() {
+	        class CharIterator implements PrimitiveIterator.OfInt {
+	            int cur = start;
+
+	            @Override public boolean hasNext() {
+	                return cur < end;
+	            }
+
+	            @Override public int nextInt() {
+	                if (hasNext()) {
+	                    return tokenBuf[cur++];
+	                } else {
+	                    throw new NoSuchElementException();
+	                }
+	            }
+	        }
+
+	        return StreamSupport.intStream(
+	        	Spliterators.spliterator(new CharIterator(), length, Spliterator.ORDERED),
+	            false);
+	    }
     }
     
     /**

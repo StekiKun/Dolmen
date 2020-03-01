@@ -141,7 +141,7 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             case 5:  {
                  
-			  buf.append(getLexeme());
+			  buf.append(getLexemeChars());
 			  continue string;
 			
             }

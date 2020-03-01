@@ -135,7 +135,7 @@ public final class JSonLWLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             case 5:  {
                  
-			  buf.append(getLexeme());
+			  buf.append(getLexemeChars());
 			  continue string;
 			
             }

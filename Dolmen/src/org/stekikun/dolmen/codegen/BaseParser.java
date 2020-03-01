@@ -111,7 +111,7 @@ public abstract class BaseParser<Token> {
     }
 	
 	/** The underlying lexing buffer */
-    @DolmenInternal(read=true)
+	@DolmenInternal(read = true)
     protected final LexBuffer _jl_lexbuf;
 	
 	/** The actual tokenizer */
@@ -129,7 +129,7 @@ public abstract class BaseParser<Token> {
 	 * the parser, or the start-of-input position if no token
 	 * was consumed yet
 	 */
-    @DolmenInternal(read=true)
+	@DolmenInternal(read = true)
     protected LexBuffer.Position _jl_lastTokenStart;
 
 	/**
@@ -137,7 +137,7 @@ public abstract class BaseParser<Token> {
 	 * the parser, or the start-of-input position if no token
 	 * was consumed yet
 	 */
-    @DolmenInternal(read=true)
+	@DolmenInternal(read = true)
 	protected LexBuffer.Position _jl_lastTokenEnd;
 	
 	/**
