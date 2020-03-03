@@ -695,6 +695,18 @@ public class LexBuffer {
     }
     
     /**
+     * Appends the last matched lexeme to the given buffer {@code buf}.
+     * This is equivalent to {@code buf.append(getLexeme())} or
+     * {@code buf.append(getLexemeChars())} but will be faster than
+     * both.
+     * 
+     * @param buf	the buffer to append the last lexeme to
+     */
+    public void appendLexeme(StringBuilder buf) {
+    	buf.append(tokenBuf, startPos, curPos - startPos);
+    }
+    
+    /**
      * @param start
      * @param end
      * @return the substring between positions {@code pos}
