@@ -391,7 +391,7 @@ public abstract class TRegulars {
 	}
 	
 	/**
-	 * @param regular
+	 * @param regular	must be nullable
 	 * @return the set of tags that can potentially be
 	 * 	matched when matching the empty string with {@code regular}
 	 */
@@ -419,7 +419,7 @@ public abstract class TRegulars {
 		}
 		case REPETITION: {
 			final Repetition repetition = (Repetition) regular;
-			if (repetition.nullable)
+			if (repetition.reg.nullable)
 				return emptyMatched(repetition.reg);
 			return Sets.empty();
 		}
