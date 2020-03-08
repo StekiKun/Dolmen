@@ -259,13 +259,14 @@ making it possible to perform quite complex tasks during the
 tokenization phase.
 
 Some lexical analyzer generators such as the ones in
-https://www.antlr.org/[ANTLR] or https://www.antlr.org/[JavaCC] are
-intrinsically linked to an associated parser generator and are used to
-produce tokens for these parsers, but lexical analysis is not limited
-to producing tokens for a grammar-based syntactic analysis. One can
-actually associate the lexer rules to any computable action, such as
-printing something or aggregating some information. Possible
-applications of a "standalone" lexical analyzer may be:
+https://www.antlr.org/[ANTLR] or
+https://javacc.github.io/javacc/[JavaCC] are intrinsically linked to
+an associated parser generator and are used to produce tokens for
+these parsers, but lexical analysis is not limited to producing tokens
+for a grammar-based syntactic analysis. One can actually associate the
+lexer rules to any computable action, such as printing something or
+aggregating some information. Possible applications of a "standalone"
+lexical analyzer may be:
 
 * counting the lines or the number of occurrences of some lexical
   element in a file, skipping comments;

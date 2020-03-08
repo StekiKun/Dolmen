@@ -525,12 +525,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#Lexers">Lexical Analyzers</a>
 <ul class="sectlevel2">
-<li><a href="#_a_complete_example_lexical_analyzer_for_json">A Complete Example: Lexical Analyzer for JSON</a>
+<li><a href="#Lexers_Tutorial">A Complete Example: Lexical Analyzer for JSON</a>
 <ul class="sectlevel3">
 <li><a href="#_dolmen_lexer_structure">Dolmen Lexer Structure</a></li>
 <li><a href="#_adding_lexer_entries">Adding Lexer Entries</a></li>
 <li><a href="#_compiling_and_testing_the_lexer">Compiling and Testing the Lexer</a></li>
-<li><a href="#_adding_more_entries">Adding More Entries</a></li>
+<li><a href="#Lexers_Adding_More_Entries">Adding More Entries</a></li>
 <li><a href="#Lexers_Error_Reports">Improving Error Reports</a></li>
 <li><a href="#_debugging_locations">Debugging locations</a></li>
 <li><a href="#_afterword">Afterword</a></li>
@@ -937,13 +937,14 @@ tokenization phase.</p>
 </div>
 <div class="paragraph">
 <p>Some lexical analyzer generators such as the ones in
-<a href="https://www.antlr.org/">ANTLR</a> or <a href="https://www.antlr.org/">JavaCC</a> are
-intrinsically linked to an associated parser generator and are used to
-produce tokens for these parsers, but lexical analysis is not limited
-to producing tokens for a grammar-based syntactic analysis. One can
-actually associate the lexer rules to any computable action, such as
-printing something or aggregating some information. Possible
-applications of a "standalone" lexical analyzer may be:</p>
+<a href="https://www.antlr.org/">ANTLR</a> or
+<a href="https://javacc.github.io/javacc/">JavaCC</a> are intrinsically linked to
+an associated parser generator and are used to produce tokens for
+these parsers, but lexical analysis is not limited to producing tokens
+for a grammar-based syntactic analysis. One can actually associate the
+lexer rules to any computable action, such as printing something or
+aggregating some information. Possible applications of a "standalone"
+lexical analyzer may be:</p>
 </div>
 <div class="ulist">
 <ul>
@@ -1015,7 +1016,7 @@ more detailed fashion. A complete reference for the lexer description
 syntax can be found at <a href="#Lexers_Syntax_Ref">the end of this chapter</a>.</p>
 </div>
 <div class="sect2">
-<h3 id="_a_complete_example_lexical_analyzer_for_json">A Complete Example: Lexical Analyzer for JSON</h3>
+<h3 id="Lexers_Tutorial">A Complete Example: Lexical Analyzer for JSON</h3>
 <div class="paragraph">
 <p>We introduce lexical analysis with Dolmen by writing a lexical
 analyzer for the <a href="https://www.json.org">JavaScript Object Notation
@@ -1929,7 +1930,7 @@ the syntactic analysis and not for the lexing phase to sort out.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_adding_more_entries">Adding More Entries</h4>
+<h4 id="Lexers_Adding_More_Entries">Adding More Entries</h4>
 <div class="paragraph">
 <p>The last kind of tokens we need to recognize is string
 literals. Again, the <a href="http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf">JSON standard</a> proposes a <em>railroad
@@ -4199,7 +4200,7 @@ semantic action.</p>
 <div class="content">
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>String getLexeme()</code></dt>
+<dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>String getLexeme()</code></dt>
 <dd>
 <p>Returns the last matched lexeme.</p>
 </dd>
@@ -4217,13 +4218,13 @@ lexeme.</p>
 <dd>
 <p>Returns the length of the last matched lexeme.</p>
 </dd>
-<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>char getLexemeChar(int idx)</code></dt>
+<dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>char getLexemeChar(int idx)</code></dt>
 <dd>
 <p>Returns the character at index <code>idx</code> in the last matched lexeme.
 The index is 0-based, and must be between 0 (inclusive) and
 <code>getLexemeLength()</code> (exclusive).</p>
 </dd>
-<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>CharSequence getLexemeChars()</code></dt>
+<dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>CharSequence getLexemeChars()</code></dt>
 <dd>
 <p>Returns the contents of the last matched lexeme as a character
 sequence. The character sequence refers to the current internal
@@ -4231,7 +4232,7 @@ state of the lexing engine and becomes unspecified after
 <a href="#Lexers_Nested_Rules">nested rule calls</a>, even if it was retrieved
 before any nested call.</p>
 </dd>
-<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>void appendLexeme(StringBuilder buf)</code></dt>
+<dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>void appendLexeme(StringBuilder buf)</code></dt>
 <dd>
 <p>Appends the contents of the last matched lexeme to the
 given buffer <code>buf</code>.</p>
@@ -4241,6 +4242,10 @@ given buffer <code>buf</code>.</p>
 </div>
 </div>
 </dd>
+</dl>
+</div>
+<div id="Lexers_Input_Management" class="dlist">
+<dl>
 <dt class="hdlist1">Input management</dt>
 <dd>
 <p>The following members available in semantic actions
@@ -4813,12 +4818,350 @@ Other problem reports will be written to <code>lexer.reports</code>.</p>
 <div class="sect2">
 <h3 id="_advanced_concepts">Advanced Concepts</h3>
 <div class="paragraph">
-<p><em>Coming soon</em></p>
+<p>In the remaining sections, we take a quick tour of some advanced principles
+lexical analysis with Dolmen. These concepts have all already been introduced,
+in more or less depth, in the <a href="#Lexers_Tutorial">tutorial</a>.</p>
 </div>
 <div class="sect3">
 <h4 id="Lexers_Nested_Rules">Nested Rules</h4>
 <div class="paragraph">
-<p><em>Coming soon</em></p>
+<p>When trying to tokenize an input stream containing some sentences in a
+programming language or some data in an non-binary exchange format, it
+it usually apparent that the same characters may take on very
+different meanings depending on the <em>context</em> in which they
+appear.</p>
+</div>
+<div class="paragraph">
+<p>For instance, special symbols like <code>+</code> or <code>;</code> which represent
+operators or separators in one part of the input, need not be
+interpreted in any special manner when they appear inside a string
+literal, or inside some comment. Similarly, a keyword loses its
+special status should it belong to some comment or literal. Many
+languages even embed some other language in their syntax, in one form
+or another; consider for instance GCC&#8217;s preprocessor directives which
+are added on top of the C language, or more evidently the presence of
+Java actions inside Dolmen lexer descriptions. Even simple traits such
+as literals supporting a variety of escape sequences, or interpreted
+documentation comments such as Javadoc or Doxygen, can be thought of
+as "mini"-languages inside the main programming language.</p>
+</div>
+<div class="paragraph">
+<p>The GCC preprocessor does not need to <em>parse</em> the C declarations
+between the preprocessor directives, no more than Dolmen actually
+needs to <em>parse</em> the semantic actions in Java, but both need to be
+able to care for the lexical conventions of the embedded language.
+Trying to write a lexical analyzer which can handle preprocessing
+directives, complex literals, structured comments and embedded
+snippets in some external language, without being able to effectively
+separate the different concerns raised by these different contexts,
+amounts to writing a single very complex entry rule whose clauses are
+able to recognize everything. Imagine clauses like these:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-k">public</span> <span class="tok-g">{ Token }</span> <span class="tok-k">rule</span> <span class="tok-nf">main</span> <span class="tok-o">=</span>
+...
+<span class="tok-o">|</span> <span class="tok-sc">&#39;&quot;&#39;</span> <span class="tok-p">(</span><span class="tok-nf">string_literal</span> <span class="tok-k">as</span> <span class="tok-nf">s</span><span class="tok-p">)</span> <span class="tok-sc">&#39;&quot;&#39;</span>   <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> Token.STRING(decode(s)); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span> <span class="tok-p">(</span><span class="tok-nf">java_action</span> <span class="tok-k">as</span> <span class="tok-nf">a</span><span class="tok-p">)</span> <span class="tok-sc">&#39;}&#39;</span>      <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> Token.ACTION(a); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;#&#39;</span> <span class="tok-p">(</span><span class="tok-nf">pp_directive</span> <span class="tok-k">as</span> <span class="tok-nf">d</span><span class="tok-p">)</span> <span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span>    <span class="tok-g">{ handle(d); </span><span class="tok-ge">continue</span><span class="tok-g"> main; }</span>
+<span class="tok-o">|</span> <span class="tok-s">&quot;/*&quot;</span> <span class="tok-nf">ml_comments</span> <span class="tok-s">&quot;*/&quot;</span>           <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> main; }</span>
+...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Let us first ignore how complex these regular expressions ought to be,
+and just discuss each clause&#8217;s purpose:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The <code>string_literal</code> clause recognizes a literal string&#8217;s contents,
+with possible escape sequences for control characters or Unicode
+code points. The escape sequences are <em>unescaped</em> by the <code>decode</code>
+function in the semantic action before returning the token. One
+could store the literal without decoding the escape sequences, but
+this will need to be done at some point in time when the program
+needs to interpret or expose the literal&#8217;s value.</p>
+</li>
+<li>
+<p>The <code>java_action</code> clause recognizes a Dolmen-style Java action
+delimited by curly braces. It turns out it is <strong>impossible</strong> to write
+such a regular expression because <code>{</code> and <code>}</code> can appear nested
+inside the Java actions and thus the language to recognize is not
+<a href="https://en.wikipedia.org/wiki/Regular_language">regular</a>, but we
+could make do by picking more discriminating delimiters such as <code>{%</code>
+and <code>%}</code>, the way <a href="https://jflex.de/">JFlex</a> does. The <code>java_action</code>
+still needs to correctly analyze the Java lexicon, as it needs to be
+able to ignore occurrences of <code>%}</code> inside Java string literals or
+Java comments.</p>
+</li>
+<li>
+<p>The <code>pp_directive</code> clause recognizes some sort of preprocessing
+directive. As is often the case with preprocessing, it may not be
+part of a separate first phase, but may be applied on-the-fly during
+the lexical analysis. Here, we suppose the directive is directly
+handled by some method <code>handle</code> in the semantic action, before
+handing control back to the lexer. This method may register a new
+macro, push some new file on the <a href="#Lexers_Input_Management">input
+stack</a>, etc. It must decode and validate the raw directive which
+has been recognized.</p>
+</li>
+<li>
+<p>The <code>ml_comments</code> clause recognizes C-style multi-line comments.  It
+may contain structured comments aimed at tools like Javadoc or
+Doxygen, and in this case the clause simply skips the comment.  Not
+trying to interpret the contents of the comment, we can surely leave
+this task to external tools which will be applied independently on
+the source code. But what if we are precisely writing a
+documentation tool like these? In that case, not only do we need to
+handle and decode the contents of the structured comments, but we
+also need to recognize the remainder of the language with enough
+precision, so that it is possible for instance to ignore occurrences
+of <code>/*</code> appearing in a string literal. Even if we can avoid
+interpreting the comments, lexing a multi-line comments in one go
+means that line and column numbers cannot be properly updated
+(cf. <a href="./javadoc/org/stekikun/dolmen/codegen/LexBuffer.html#newline--">newline()</a>), except by scanning for
+line terminators in the semantic action. Finally, if we ever wanted
+to support <em>nested comments</em>, such as <code>(* .. *)</code> comments in
+<a href="https://ocaml.org/index.fr.html">OCaml</a>, then sadly it would not be possible to write a suitable
+<code>ml_comments</code> regular expression as nested comments are not a
+regular language.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>These examples basically sum up the main reasons why we want some form
+of contextual rules in lexer generation:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>writing and maintaining correct complex regular expressions
+like <code>java_action</code> or <code>string_literal</code> is precisely what lexer
+generators are supposed to help one avoid;</p>
+</li>
+<li>
+<p>even when recognized successfully, the internal structure of
+these lexemes must still be decoded eventually, and that task
+will somewhat duplicate the work that the generated lexer did
+when recognizing the expression; not only is it inefficient,
+it also duplicates the actual <em>logic</em> of the internal structure;</p>
+</li>
+<li>
+<p>when the contents of a string literal or a Java action happen to be
+lexically invalid (e.g. because of an invalid escape sequence), the
+lexical error will be returned at the very beginning of the clause,
+which is not very helpful; the only way to provide a better error
+message is to write other clauses matching <em>invalid</em> cases and
+throw custom error messages.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Lexer generators like <a href="https://www.antlr.org/">ANTLR</a>, <a href="https://javacc.github.io/javacc/">JavaCC</a> or <a href="https://jflex.de/">JFlex</a> allow
+contextualization by introducing a notion of <em>state</em> and letting
+users associate different lexing rules to different states, as well
+as switching states in semantic actions.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Unlike <a href="https://javacc.github.io/javacc/">JavaCC</a> and <a href="https://jflex.de/">JFlex</a> which call them "lexical states",
+        <a href="https://www.antlr.org/">ANTLR</a> actually calls these states "modes", which is arguably
+        a better way of characterizing them, as the lexical analyzer&#8217;s
+        <em>state</em> is not reduced to the current mode. Instead the
+        analyzer&#8217;s state comprises the whole stack of modes which have
+        been entered and are yet to be returned from.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Dolmen does not follow a state-based approach but a function-based
+one, inspired by OCaml&#8217;s lexer generator
+<a href="https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html">ocamllex</a>. In
+this approach, lexing rules are grouped in different lexer <em>entries</em>
+which each correspond to a different function in the generated
+lexer. Each entry can correspond to a different lexing context, and
+switching from one context to another is done by calling the adequate
+entry. A lexer description could contain different public entries
+which are designed to be called independently from an external class;
+it can also feature a main entry and other private entries which are
+only designed to be called from other entries' semantic actions. We
+call such rules which are accessed via calls nested in other rules'
+semantic actions <em>nested rules</em>.</p>
+</div>
+<div class="paragraph">
+<p>We now demonstrate the use of nested rules on the examples of string
+literals and nested comments.</p>
+</div>
+<div class="exampleblock">
+<div class="title">Example 1 (String literals)</div>
+<div class="content">
+<div class="paragraph">
+<p>Let us use nested rules to recognize string literals like <code>"abc"</code>
+supporting simple escape sequences <code>\n</code>, <code>\\</code> and <code>\"</code>. We start
+in the main rule by matching the opening delimiter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl">...
+<span class="tok-o">|</span> <span class="tok-sc">&#39;&quot;&#39;</span> <span class="tok-g">{ StringBuilder buf = </span><span class="tok-ge">new</span><span class="tok-g"> StringBuilder();</span>
+<span class="tok-g">        String s = string(buf); </span><span class="tok-gd">// Nested call</span><span class="tok-g"></span>
+<span class="tok-g">        </span><span class="tok-ge">return</span><span class="tok-g"> Token.STRING(s);</span>
+<span class="tok-g">      }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the opening <code>"</code> is matched, a buffer for the literal&#8217;s contents
+is allocated and passed to the nested rule <code>string</code> which will match
+the literal and decode its contents into the buffer at the same time.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-k">private</span> <span class="tok-g">{ String }</span> <span class="tok-k">rule</span> <span class="tok-nf">string</span><span class="tok-p">(</span><span class="tok-nf">StringBuilder</span> <span class="tok-nf">buf</span><span class="tok-p">)</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;&quot;&#39;</span>      <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> buf.toString(); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span> <span class="tok-sc">&#39;n&#39;</span> <span class="tok-g">{ buf.append(</span><span class="tok-gs">&#39;\n&#39;</span><span class="tok-g">); </span><span class="tok-ge">continue</span><span class="tok-g"> string; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span> <span class="tok-sc">&#39;&quot;&#39;</span> <span class="tok-g">{ buf.append(</span><span class="tok-gs">&#39;&quot;&#39;</span><span class="tok-g">); </span><span class="tok-ge">continue</span><span class="tok-g"> string; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span> <span class="tok-g">{ buf.append(</span><span class="tok-gs">&#39;\\&#39;</span><span class="tok-g">); </span><span class="tok-ge">continue</span><span class="tok-g"> string; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;\</span><span class="tok-s">\</span><span class="tok-sc">&#39;</span>     <span class="tok-g">{ </span><span class="tok-ge">throw</span><span class="tok-g"> error(</span><span class="tok-gs">&quot;Invalid escape sequence&quot;</span><span class="tok-g">); }</span>
+<span class="tok-o">|</span> <span class="tok-k">eof</span>      <span class="tok-g">{ </span><span class="tok-ge">throw</span><span class="tok-g"> error(</span><span class="tok-gs">&quot;Unterminated string literal&quot;</span><span class="tok-g">); }</span>
+<span class="tok-o">|</span> <span class="tok-k">orelse</span>   <span class="tok-g">{ appendLexeme(buf); </span><span class="tok-ge">continue</span><span class="tok-g"> string; }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The nested rule returns the buffer&#8217;s contents when encountering a
+closing <code>"</code>. When it reads a valid escape sequence, it appends the
+encoded character to the buffer. When it reads an invalid escape
+sequence or encounters the unexpected end-of-input, it throws an
+adequate error. Other characters are just appended to the buffer as
+they are.</p>
+</div>
+<div class="paragraph">
+<p>The <a href="#Lexers_Adding_More_Entries">tutorial</a> shows a more complete
+example of this on the JSON format, in particular using another
+nested rule dedicated to escape sequences.</p>
+</div>
+</div>
+</div>
+<div class="exampleblock">
+<div class="title">Example 2 (Nested comments)</div>
+<div class="content">
+<div class="paragraph">
+<p>Let us use nested rules to recognize nested multi-line <code>/* .. */</code>
+comments. We will rely on a local field <code>depth</code> of type <code>int</code> to track
+the current nesting level when analyzing the comments&#8212;&#8203;this field must
+have been declared in the prelude.  We start in the main rule by
+matching the opening delimiter:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl">...
+<span class="tok-o">|</span> <span class="tok-s">&quot;/*&quot;</span> <span class="tok-g">{ depth = 0;</span>
+<span class="tok-g">         ml_comments(); </span><span class="tok-gd">// Nested call</span><span class="tok-g"></span>
+<span class="tok-g">         </span><span class="tok-ge">continue</span><span class="tok-g"> main;</span>
+<span class="tok-g">       }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>When the opening <code>/*</code> is matched, the nesting depth is set to 0 and
+the nested rule is called to start analyzing the comment&#8217;s contents.</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-k">private</span> <span class="tok-g">{ </span><span class="tok-ge">void</span><span class="tok-g"> }</span> <span class="tok-k">rule</span> <span class="tok-nf">ml_comments</span><span class="tok-p">()</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-s">&quot;*/&quot;</span>      <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (depth == 0) </span><span class="tok-ge">return</span><span class="tok-g">;</span>
+<span class="tok-g">              --depth; </span><span class="tok-ge">continue</span><span class="tok-g"> ml_comments;</span>
+<span class="tok-g">            }</span>
+<span class="tok-o">|</span> <span class="tok-s">&quot;/*&quot;</span>      <span class="tok-g">{ ++depth; </span><span class="tok-ge">continue</span><span class="tok-g"> ml_comments; }</span>
+<span class="tok-o">|</span> <span class="tok-nf">newline</span>   <span class="tok-g">{ newline(); </span><span class="tok-ge">continue</span><span class="tok-g"> ml_comments; }</span>
+<span class="tok-o">|</span> <span class="tok-k">eof</span>       <span class="tok-g">{ </span><span class="tok-ge">throw</span><span class="tok-g"> error(</span><span class="tok-gs">&quot;Unterminated comments&quot;</span><span class="tok-g">); }</span>
+<span class="tok-o">|</span> <span class="tok-k">orelse</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> ml_comments; }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>         <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> ml_comments; }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The nested rule returns when encountering the closing <code>*/</code> while on
+depth zero, and otherwise decrements the depth and continues running
+the same rule. The depth is incremented when a nested <code>/*</code> is
+encountered. The rule also takes care of tracking line breaks to
+update the line and column numbers, and to throw an error should the
+end-of-input be reached before the comments end.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>There is yet another possible advantage of using separate
+dedicated entries for parts of a language, and it is to
+factorize the rules for similar patterns which can be found
+in different contexts. For instance, the escape sequences
+available in string literals may be completely identical
+to the escape sequences in character literals, and having
+a dedicated entry for escape sequences can help factorize
+the two in a single set of rules.</p>
+</div>
+<div class="paragraph">
+<p>When using nested rules, one must be aware of the couple of
+subtleties. First, it is possible write a recursive entry, or a group
+of mutually recursive entries, in which case the user should be aware
+of the possibility of stack overflow. This is discussed
+<a href="#Lexers_Tail_Recursion_Ref">below</a>. Second, the internal state
+of the lexing buffer is updated when performing nested calls,
+and a number of the <a href="#Lexers_Semantic_Actions_Ref">inherited methods</a>
+available during semantic actions do depend on this internal state.
+For instance the following clause may observe the internal state
+being overwritten by the nested call inside:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-o">|</span> <span class="tok-nf">r</span> <span class="tok-g">{ Position start = getLexemeStart(); </span><i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-g">      String lex = getLexeme();          </span><i class="conum" data-value="2"></i><b>(2)</b>
+<span class="tok-g">      nested_rule();                      </span><i class="conum" data-value="3"></i><b>(3)</b>
+<span class="tok-g">      Position start2 = getLexemeStart(); </span><i class="conum" data-value="4"></i><b>(4)</b>
+<span class="tok-g">      String lex2 = getLexeme();          </span><i class="conum" data-value="5"></i><b>(5)</b>
+<span class="tok-g">    }</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>Retrieving the starting position of the lexeme matched by <code>r</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Retrieving the string matched by <code>r</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="3"></i><b>3</b></td>
+<td>Performing some nested call, which overwrites the internal
+state of the lexer.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="4"></i><b>4</b></td>
+<td>Retrieving the starting position of the <strong>last</strong> lexeme
+matched in <code>nested_rule</code>.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="5"></i><b>5</b></td>
+<td>Retrieving the contents of the <strong>last</strong> lexeme matched
+in <code>nested_rule</code>.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>If you find this situation surprising, consider that preventing it
+would require Dolmen to keep a stack of all relevant information
+across nested calls, which would be costly for the frequent cases when
+this information is not needed. When it indeed is needed, it is
+straightforward to just retrieve it before performing nested calls, as
+is the case in the example above for <code>start</code> and <code>lex</code>. The
+<a href="#Lexers_Token_Locations">next section</a> precisely covers how to deal
+with managing token positions across nested rules.</p>
 </div>
 </div>
 <div class="sect3">

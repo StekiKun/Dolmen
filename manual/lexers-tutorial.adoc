@@ -3,6 +3,7 @@
  Its master file is lexers.adoc.
 ////
 
+[#Lexers_Tutorial]
 === A Complete Example: Lexical Analyzer for JSON
 
 We introduce lexical analysis with Dolmen by writing a lexical
@@ -679,6 +680,7 @@ Now, there is no valid JSON file where the keywords `true` and
 the syntactic analysis and not for the lexing phase to sort out.
 ====
 
+[#Lexers_Adding_More_Entries]
 ==== Adding More Entries
 
 The last kind of tokens we need to recognize is string

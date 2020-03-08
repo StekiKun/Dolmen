@@ -11,6 +11,10 @@
 :lexbuf: {codegen}/LexBuffer.html
 :debug: {jdoc-dolmen}/debug
 :json-pdf: http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf
+:ocaml: link:https://ocaml.org/index.fr.html[OCaml]
+:antlr: link:https://www.antlr.org/[ANTLR]
+:javacc: link:https://javacc.github.io/javacc/[JavaCC]
+:jflex: link:https://jflex.de/[JFlex]
 
 [#Lexers]
 == Lexical Analyzers
@@ -602,7 +606,7 @@ Lexeme::
 
 +
 --
-{meth-pub} `String getLexeme()`::
+{meth-pro} `String getLexeme()`::
            Returns the last matched lexeme.
 {meth-pub} `Position getLexemeStart()`::
            Returns the starting position of the last matched lexeme.
@@ -612,21 +616,22 @@ Lexeme::
            lexeme.
 {meth-pub} `int getLexemeLength()`::
            Returns the length of the last matched lexeme.
-{meth-pub} `char getLexemeChar(int idx)`::
+{meth-pro} `char getLexemeChar(int idx)`::
            Returns the character at index `idx` in the last matched lexeme.
            The index is 0-based, and must be between 0 (inclusive) and
            `getLexemeLength()` (exclusive).
-{meth-pub} `CharSequence getLexemeChars()`::
+{meth-pro} `CharSequence getLexemeChars()`::
            Returns the contents of the last matched lexeme as a character
            sequence. The character sequence refers to the current internal
            state of the lexing engine and becomes unspecified after 
            <<Lexers_Nested_Rules,nested rule calls>>, even if it was retrieved
            before any nested call.
-{meth-pub} `void appendLexeme(StringBuilder buf)`::
+{meth-pro} `void appendLexeme(StringBuilder buf)`::
            Appends the contents of the last matched lexeme to the
            given buffer `buf`.
 --
 
+[#Lexers_Input_Management]
 Input management::
   The following members available in semantic actions
   relate to the management of the input stream during a lexical
@@ -1085,12 +1090,291 @@ $ java -jar Dolmen_1.0.0.jar -l -p foo.bar --reports lexer.reports src/foo/bar/M
 
 === Advanced Concepts
 
-_Coming soon_
+In the remaining sections, we take a quick tour of some advanced principles
+lexical analysis with Dolmen. These concepts have all already been introduced,
+in more or less depth, in the <<Lexers_Tutorial,tutorial>>.
 
 [#Lexers_Nested_Rules]
 ==== Nested Rules
 
-_Coming soon_
+When trying to tokenize an input stream containing some sentences in a
+programming language or some data in an non-binary exchange format, it
+it usually apparent that the same characters may take on very
+different meanings depending on the _context_ in which they
+appear.
+
+For instance, special symbols like `+` or `;` which represent
+operators or separators in one part of the input, need not be
+interpreted in any special manner when they appear inside a string
+literal, or inside some comment. Similarly, a keyword loses its
+special status should it belong to some comment or literal. Many
+languages even embed some other language in their syntax, in one form
+or another; consider for instance GCC's preprocessor directives which
+are added on top of the C language, or more evidently the presence of
+Java actions inside Dolmen lexer descriptions. Even simple traits such
+as literals supporting a variety of escape sequences, or interpreted
+documentation comments such as Javadoc or Doxygen, can be thought of
+as "mini"-languages inside the main programming language.
+
+The GCC preprocessor does not need to _parse_ the C declarations
+between the preprocessor directives, no more than Dolmen actually
+needs to _parse_ the semantic actions in Java, but both need to be
+able to care for the lexical conventions of the embedded language.
+Trying to write a lexical analyzer which can handle preprocessing
+directives, complex literals, structured comments and embedded
+snippets in some external language, without being able to effectively
+separate the different concerns raised by these different contexts,
+amounts to writing a single very complex entry rule whose clauses are
+able to recognize everything. Imagine clauses like these:
+
+[source,jl]
+----
+public { Token } rule main =
+...
+| '"' (string_literal as s) '"'   { return Token.STRING(decode(s)); }
+| '{' (java_action as a) '}'      { return Token.ACTION(a); }
+| '#' (pp_directive as d) '\n'    { handle(d); continue main; }
+| "/*" ml_comments "*/"           { continue main; }
+...
+----
+
+Let us first ignore how complex these regular expressions ought to be,
+and just discuss each clause's purpose:
+
+. The `string_literal` clause recognizes a literal string's contents,
+  with possible escape sequences for control characters or Unicode
+  code points. The escape sequences are _unescaped_ by the `decode`
+  function in the semantic action before returning the token. One
+  could store the literal without decoding the escape sequences, but
+  this will need to be done at some point in time when the program
+  needs to interpret or expose the literal's value.
+
+. The `java_action` clause recognizes a Dolmen-style Java action
+  delimited by curly braces. It turns out it is *impossible* to write
+  such a regular expression because `{` and `}` can appear nested
+  inside the Java actions and thus the language to recognize is not
+  https://en.wikipedia.org/wiki/Regular_language[regular], but we
+  could make do by picking more discriminating delimiters such as `{%`
+  and `%}`, the way https://jflex.de/[JFlex] does. The `java_action`
+  still needs to correctly analyze the Java lexicon, as it needs to be
+  able to ignore occurrences of `%}` inside Java string literals or
+  Java comments.
+
+. The `pp_directive` clause recognizes some sort of preprocessing
+  directive. As is often the case with preprocessing, it may not be
+  part of a separate first phase, but may be applied on-the-fly during
+  the lexical analysis. Here, we suppose the directive is directly
+  handled by some method `handle` in the semantic action, before
+  handing control back to the lexer. This method may register a new
+  macro, push some new file on the <<Lexers_Input_Management,input
+  stack>>, etc. It must decode and validate the raw directive which
+  has been recognized.
+
+. The `ml_comments` clause recognizes C-style multi-line comments.  It
+  may contain structured comments aimed at tools like Javadoc or
+  Doxygen, and in this case the clause simply skips the comment.  Not
+  trying to interpret the contents of the comment, we can surely leave
+  this task to external tools which will be applied independently on
+  the source code. But what if we are precisely writing a
+  documentation tool like these? In that case, not only do we need to
+  handle and decode the contents of the structured comments, but we
+  also need to recognize the remainder of the language with enough
+  precision, so that it is possible for instance to ignore occurrences
+  of `+/*+` appearing in a string literal. Even if we can avoid
+  interpreting the comments, lexing a multi-line comments in one go
+  means that line and column numbers cannot be properly updated
+  (cf. link:{lexbuf}#newline--[newline()]), except by scanning for
+  line terminators in the semantic action. Finally, if we ever wanted
+  to support _nested comments_, such as `(* .. *)` comments in
+  {ocaml}, then sadly it would not be possible to write a suitable
+  `ml_comments` regular expression as nested comments are not a
+  regular language.
+
+These examples basically sum up the main reasons why we want some form
+of contextual rules in lexer generation:
+
+* writing and maintaining correct complex regular expressions
+  like `java_action` or `string_literal` is precisely what lexer
+  generators are supposed to help one avoid;
+* even when recognized successfully, the internal structure of
+  these lexemes must still be decoded eventually, and that task
+  will somewhat duplicate the work that the generated lexer did
+  when recognizing the expression; not only is it inefficient,
+  it also duplicates the actual _logic_ of the internal structure;
+* when the contents of a string literal or a Java action happen to be
+  lexically invalid (e.g. because of an invalid escape sequence), the
+  lexical error will be returned at the very beginning of the clause,
+  which is not very helpful; the only way to provide a better error
+  message is to write other clauses matching _invalid_ cases and
+  throw custom error messages.  
+
+Lexer generators like {antlr}, {javacc} or {jflex} allow
+contextualization by introducing a notion of _state_ and letting
+users associate different lexing rules to different states, as well
+as switching states in semantic actions.
+
+NOTE: Unlike {javacc} and {jflex} which call them "lexical states",
+        {antlr} actually calls these states "modes", which is arguably
+        a better way of characterizing them, as the lexical analyzer's
+        _state_ is not reduced to the current mode. Instead the
+        analyzer's state comprises the whole stack of modes which have
+        been entered and are yet to be returned from.
+
+Dolmen does not follow a state-based approach but a function-based
+one, inspired by OCaml's lexer generator
+link:https://caml.inria.fr/pub/docs/manual-ocaml/lexyacc.html[ocamllex]. In
+this approach, lexing rules are grouped in different lexer _entries_
+which each correspond to a different function in the generated
+lexer. Each entry can correspond to a different lexing context, and
+switching from one context to another is done by calling the adequate
+entry. A lexer description could contain different public entries
+which are designed to be called independently from an external class;
+it can also feature a main entry and other private entries which are
+only designed to be called from other entries' semantic actions. We
+call such rules which are accessed via calls nested in other rules'
+semantic actions _nested rules_.
+
+We now demonstrate the use of nested rules on the examples of string
+literals and nested comments.
+
+.Example 1 (String literals)
+====
+Let us use nested rules to recognize string literals like `"abc"`
+supporting simple escape sequences `\n`, `\\` and `\"`. We start
+in the main rule by matching the opening delimiter:
+
+[source,jl]
+----
+...
+| '"' { StringBuilder buf = new StringBuilder();
+        String s = string(buf); // Nested call
+        return Token.STRING(s);
+      }
+----
+
+When the opening `"` is matched, a buffer for the literal's contents
+is allocated and passed to the nested rule `string` which will match
+the literal and decode its contents into the buffer at the same time.
+
+[source,jl]
+----
+private { String } rule string(StringBuilder buf) =
+| '"'      { return buf.toString(); }
+| '\\' 'n' { buf.append('\n'); continue string; }
+| '\\' '"' { buf.append('"'); continue string; }
+| '\\' '\\' { buf.append('\\'); continue string; }
+| '\\'     { throw error("Invalid escape sequence"); }
+| eof      { throw error("Unterminated string literal"); }
+| orelse   { appendLexeme(buf); continue string; }
+----
+
+The nested rule returns the buffer's contents when encountering a
+closing `"`. When it reads a valid escape sequence, it appends the
+encoded character to the buffer. When it reads an invalid escape
+sequence or encounters the unexpected end-of-input, it throws an
+adequate error. Other characters are just appended to the buffer as
+they are.
+
+The <<Lexers_Adding_More_Entries,tutorial>> shows a more complete
+example of this on the JSON format, in particular using another
+nested rule dedicated to escape sequences.
+====
+
+.Example 2 (Nested comments)
+====
+Let us use nested rules to recognize nested multi-line `/* .. */`
+comments. We will rely on a local field `depth` of type `int` to track
+the current nesting level when analyzing the comments--this field must
+have been declared in the prelude.  We start in the main rule by
+matching the opening delimiter:
+
+[source,jl]
+----
+...
+| "/*" { depth = 0;
+         ml_comments(); // Nested call
+         continue main;
+       }
+----
+
+When the opening `/*` is matched, the nesting depth is set to 0 and
+the nested rule is called to start analyzing the comment's contents.
+
+[source,jl]
+----
+private { void } rule ml_comments() =
+| "*/"      { if (depth == 0) return;
+              --depth; continue ml_comments;
+            }
+| "/*"      { ++depth; continue ml_comments; }
+| newline   { newline(); continue ml_comments; }
+| eof       { throw error("Unterminated comments"); }
+| orelse    { continue ml_comments; }
+| _         { continue ml_comments; }
+----
+
+The nested rule returns when encountering the closing `+*/+` while on
+depth zero, and otherwise decrements the depth and continues running
+the same rule. The depth is incremented when a nested `/*` is
+encountered. The rule also takes care of tracking line breaks to
+update the line and column numbers, and to throw an error should the
+end-of-input be reached before the comments end.
+////
+It may seem more elegant to remove the instance field
+and pass `depth` as a parameter to `ml_comments` instead, but
+doing so would prevent the use of `continue` to optimize the
+<<Lexers_Tail_Recursion_Ref,recursive calls>> to `ml_comments`.
+A possible workaround would be to pass an object containing
+a mutable integer
+////
+====
+
+There is yet another possible advantage of using separate
+dedicated entries for parts of a language, and it is to
+factorize the rules for similar patterns which can be found
+in different contexts. For instance, the escape sequences
+available in string literals may be completely identical
+to the escape sequences in character literals, and having
+a dedicated entry for escape sequences can help factorize
+the two in a single set of rules.
+
+When using nested rules, one must be aware of the couple of
+subtleties. First, it is possible write a recursive entry, or a group
+of mutually recursive entries, in which case the user should be aware
+of the possibility of stack overflow. This is discussed
+<<Lexers_Tail_Recursion_Ref,below>>. Second, the internal state
+of the lexing buffer is updated when performing nested calls,
+and a number of the <<Lexers_Semantic_Actions_Ref,inherited methods>>
+available during semantic actions do depend on this internal state.
+For instance the following clause may observe the internal state
+being overwritten by the nested call inside:
+
+[source,jl]
+----
+| r { Position start = getLexemeStart(); <1>
+      String lex = getLexeme();          <2>
+      nested_rule();                      <3>
+      Position start2 = getLexemeStart(); <4>
+      String lex2 = getLexeme();          <5>
+    }
+----
+<1> Retrieving the starting position of the lexeme matched by `r`.
+<2> Retrieving the string matched by `r`.
+<3> Performing some nested call, which overwrites the internal
+    state of the lexer.
+<4> Retrieving the starting position of the *last* lexeme
+    matched in `nested_rule`.
+<5> Retrieving the contents of the *last* lexeme matched
+    in `nested_rule`.
+
+If you find this situation surprising, consider that preventing it
+would require Dolmen to keep a stack of all relevant information
+across nested calls, which would be costly for the frequent cases when
+this information is not needed. When it indeed is needed, it is
+straightforward to just retrieve it before performing nested calls, as
+is the case in the example above for `start` and `lex`. The 
+<<Lexers_Token_Locations,next section>> precisely covers how to deal
+with managing token positions across nested rules.
 
 [#Lexers_Token_Locations]
 ==== Managing Token Locations
