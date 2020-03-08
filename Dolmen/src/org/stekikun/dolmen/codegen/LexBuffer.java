@@ -592,7 +592,7 @@ public class LexBuffer {
      * @throws LexicalError when {@code idx} is negative or not less
      * 	than the {@link #getLexemeLength() length} of the lexeme
      */
-    public final char getLexemeChar(int idx) {
+    protected final char getLexemeChar(int idx) {
     	if (idx < 0 || idx >= getLexemeLength())
 			throw error("Invalid index  " + idx 
 						+ " in lexeme of length " + getLexemeLength());
@@ -617,7 +617,7 @@ public class LexBuffer {
      * 
      * @return the sequence of characters forming the last matched lexeme
      */
-    public final CharSequence getLexemeChars() {
+    protected final CharSequence getLexemeChars() {
     	return new LexemeCharSequence(startPos, curPos);
     }
     
@@ -702,7 +702,7 @@ public class LexBuffer {
      * 
      * @param buf	the buffer to append the last lexeme to
      */
-    public void appendLexeme(StringBuilder buf) {
+    protected void appendLexeme(StringBuilder buf) {
     	buf.append(tokenBuf, startPos, curPos - startPos);
     }
     
