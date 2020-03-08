@@ -8,6 +8,7 @@ import java.util.Set;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.stekikun.dolmen.common.Sets;
+import org.stekikun.dolmen.tagged.TLexer;
 import org.stekikun.dolmen.tagged.TLexerEntry;
 import org.stekikun.dolmen.tagged.TRegular;
 import org.stekikun.dolmen.tagged.TRegulars;
@@ -304,14 +305,14 @@ public class NFA {
 	}
 
 	/**
-	 * @param entries
+	 * @param tlexer
 	 * @return the set of transitions which can follow each
-	 * 	character set when matching the given regular expressions
+	 * 	character set of the given lexer when matching its
+	 * 	entries' regular expressions
 	 */
-	protected static Set<Transition>[]
-		followPos(int size, List<TLexerEntry> entries) {
-		FollowPos fp = new FollowPos(size);
-		for (TLexerEntry entry : entries)
+	protected static Set<Transition>[] followPos(TLexer tlexer) {
+		FollowPos fp = new FollowPos(tlexer.charsets.size());
+		for (TLexerEntry entry : tlexer.entries)
 			fp.fill(new HashSet<>(), entry.regexp);
 		return fp.fpos;
 	}

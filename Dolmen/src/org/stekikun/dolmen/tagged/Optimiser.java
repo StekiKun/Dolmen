@@ -2,9 +2,9 @@ package org.stekikun.dolmen.tagged;
 
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -506,7 +506,7 @@ public final class Optimiser {
 		TRegular allocatedOpt = allocateAddresses(new AddrTRegular(null, opt)).regular;
 		
 		// Map all binding names to allocated addresses
-		Map<String, IdentInfo> idents = new LinkedHashMap<>();
+		Map<String, IdentInfo> idents = new TreeMap<>();
 		for (String name : varsInfo.allVars) {
 			boolean optional = varsInfo.optVars.contains(name);
 			TagAddr tstart = getTagAddr(new TagKey(name, true));

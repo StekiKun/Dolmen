@@ -540,8 +540,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             // 0x0020
             case 32: {
-                memory[6] = curPos;
                 memory[7] = curPos;
+                memory[6] = curPos;
                 memory[5] = memory[7];
                 continue;
             }
@@ -550,8 +550,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
                 return rewind();
             }
             default:  {
-                memory[6] = curPos;
                 memory[5] = memory[7];
+                memory[6] = curPos;
                 return _jl_cell25();
             }
             }

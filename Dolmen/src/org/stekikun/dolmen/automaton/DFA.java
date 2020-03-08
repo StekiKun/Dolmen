@@ -444,7 +444,7 @@ public class DFA {
 		
 		/**
 		 * Represents a memory action where some memory
-		 * cells {@link #dst} must be set to the current
+		 * cell {@link #dst} must be set to the current
 		 * position input
 		 * 
 		 * @author Stéphane Lescuyer

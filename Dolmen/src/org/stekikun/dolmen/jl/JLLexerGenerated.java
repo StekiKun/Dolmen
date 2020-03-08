@@ -368,7 +368,7 @@ return action();
             case 9:
             case 12:
             case 32: {
-                return _jl_cell29();
+                return _jl_cell30();
             }
             // 0x000a
             case 10: {
@@ -519,7 +519,7 @@ return action();
                         }
                         // EOF
                         case 65535: {
-                            return _jl_cell30();
+                            return _jl_cell29();
                         }
                         default:  {
                             return _jl_cell1();
@@ -849,6 +849,10 @@ return action();
     }
     
     private int _jl_cell29() {
+        return 31;
+    }
+    
+    private int _jl_cell30() {
         while (true) {
             mark(0);
             final char _jl_char = getNextChar();
@@ -864,10 +868,6 @@ return action();
             }
             }
         }
-    }
-    
-    private int _jl_cell30() {
-        return 31;
     }
     
     private int _jl_cell31() {

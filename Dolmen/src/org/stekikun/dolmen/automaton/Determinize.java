@@ -3,6 +3,7 @@ package org.stekikun.dolmen.automaton;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -385,7 +386,7 @@ public class Determinize {
 			MemAction.Copy copy = (MemAction.Copy) memActions.get(pivot);
 			int tmp = allocTemp();
 			// We save copy.dst value in tmp, and change every
-			// furhter occurrence to copy.dst to tmp
+			// further occurrence to copy.dst to tmp
 			MemAction.Copy sav = MemAction.copy(tmp, copy.dst);
 			for (int i = from; i <= to; ++i) {
 				MemAction mi = memActions.get(i);
@@ -885,7 +886,7 @@ public class Determinize {
 		for (Finisher finisher : finishers) {
 			final int act = finisher.action;
 			if (res[act] != null) throw new IllegalStateException();
-			Map<@NonNull TagInfo, @NonNull Integer> locs = Maps.create();
+			Map<@NonNull TagInfo, @NonNull Integer> locs = new LinkedHashMap<>();
 			finisher.tags.forEach((name, info) -> {
 				addTagEntries(act, name, info, locs);
 			});
@@ -910,8 +911,7 @@ public class Determinize {
 		// First get a tagged optimized version of the lexer entries
 		final TLexer tlexer = Encoder.encodeLexer(lexer, optimisation);
 		// Compute the follow sets for the whole entries
-		Set<NFA.Transition>[] follows =
-			NFA.followPos(tlexer.charsets.size(), tlexer.entries);
+		Set<NFA.Transition>[] follows = NFA.followPos(tlexer);
 		
 		// Create a fresh determinization context
 		Determinize det = new Determinize();
