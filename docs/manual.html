@@ -5173,7 +5173,258 @@ with managing token positions across nested rules.</p>
 <div class="sect3">
 <h4 id="Lexers_Tail_Recursion_Ref">Tail-Recursion</h4>
 <div class="paragraph">
-<p><em>Coming soon</em></p>
+<p>When using <a href="#Lexers_Nested_Rules">nested rules</a> in a lexer
+description, one should be wary of nested calls being so deep that the
+lexical analysis could cause the Java program to excess its stack
+space, leading to a
+<a href="https://docs.oracle.com/javase/8/docs/api/java/lang/StackOverflowError.html">StackOverflowError</a>
+being thrown. This is realistically only an issue with <em>recursive</em>
+calls, i.e. when some rule is called from its own semantic actions,
+either directly or indirectly through other rules.</p>
+</div>
+<div class="paragraph">
+<p>For instance, consider a lexing rule <code>main()</code> with a clause for
+skipping Python comments (assuming for the sake of conciseness that
+the only line terminator is the line feed character):</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-k">public</span> <span class="tok-g">{ Token }</span> <span class="tok-k">rule</span> <span class="tok-nf">main</span><span class="tok-p">()</span> <span class="tok-o">=</span>
+...
+<span class="tok-o">|</span> <span class="tok-sc">&#39;#&#39;</span> <span class="tok-p">[</span><span class="tok-o">^</span><span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span><span class="tok-p">]</span><span class="tok-o">*</span> <span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span> <span class="tok-g">{ newline(); </span><span class="tok-ge">return</span><span class="tok-g"> main(); }</span>
+...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This clause will consume the comment until (and including) the end of
+the line, and continues analyzing the input stream with the same rule
+by calling <code>main()</code> recursively. This recursive call to <code>main()</code> has
+the peculiarity of being a
+<a href="https://en.wikipedia.org/wiki/Tail_call"><em>tail-call</em></a>, i.e. that
+this call is the very final action taken in this function. As such,
+the call could be optimized so that the callee&#8217;s frame can reuse the
+space of the caller&#8217;s frame, a process dubbed <em>tail-call
+optimization</em>. Tail-call optimization is not limited to recursive
+tail-calls, but it is an important feature of compilers for functional
+languages where recursion is a key paradigm. Unfortunately, Java does
+not have tail-call optimization in general, so code like the clause
+above will use an amount of stack space that is proportional to the
+largest number of consecutive comment lines <code># &#8230;&#8203;</code> in the source.
+This can be arbitrary large, and it is not rare to find very long
+comment blocks in real code.</p>
+</div>
+<div class="paragraph">
+<p>The standard countermeasure to prevent a recursive function from
+blowing up the stack in the absence of tail-call optimization is to
+rewrite the recursion as a regular loop. It is particularly
+straightforward when the function was tail-recursive in the first
+place. Dolmen provides this possibility by generating the code
+for every lexer entry inside a <code>while</code> loop labelled with
+the name of the rule itself. Therefore, the code for the entry
+<code>main</code> will follow this structure:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="java"><span class="tok-kd">public</span> <span class="tok-n">Token</span> <span class="tok-nf">main</span><span class="tok-o">()</span> <span class="tok-o">{</span>
+  <span class="tok-n">main</span><span class="tok-o">:</span>
+  <span class="tok-k">while</span> <span class="tok-o">(</span><span class="tok-kc">true</span><span class="tok-o">)</span> <span class="tok-o">{</span>
+    <span class="tok-o">...</span> <span class="tok-c1">// Consumes input, find matching clause</span>
+    <span class="tok-o">...</span> <span class="tok-c1">// Executes corresponding semantic action</span>
+  <span class="tok-o">}</span>
+<span class="tok-o">}</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This layout allows using Java&#8217;s <code>continue</code> statement to continue
+executing the rule <code>main</code> without explicitly calling it recursively,
+namely by rewriting our clause for Python comments as follows:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-k">public</span> <span class="tok-g">{ Token }</span> <span class="tok-k">rule</span> <span class="tok-nf">main</span><span class="tok-p">()</span> <span class="tok-o">=</span>
+...
+<span class="tok-o">|</span> <span class="tok-sc">&#39;#&#39;</span> <span class="tok-p">[</span><span class="tok-o">^</span><span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span><span class="tok-p">]</span><span class="tok-o">*</span> <span class="tok-sc">&#39;\</span><span class="tok-s">n</span><span class="tok-sc">&#39;</span> <span class="tok-g">{ newline(); </span><span class="tok-ge">continue</span><span class="tok-g"> main; }</span>
+...</code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>As the semantic action will simply jump back to the beginning of the
+entry and start scanning again, this version of <code>main</code> uses a constant
+amount of stack (barring issues in other clauses) and can accomodate
+thousands of contiguous lines of comments.</p>
+</div>
+<div class="paragraph">
+<p>The strategy of resorting to a <code>continue</code> statement has two
+limitations.</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>If the rule which is reentered using <code>continue</code> has parameters, it
+is not possible to change these parameters with <code>continue</code> whereas
+it would be possible with an explicit tail-call. For instance,
+consider a rule which recognizes nested <code>{ .. }</code>
+expressions&#8212;&#8203;similarly to Dolmen&#8217;s own rule for lexing semantic
+actions in lexer descriptions&#8212;&#8203;and is parameterized by the current
+nesting <code>depth</code>, representing the number of <code>}</code> still to find:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl">...
+<span class="tok-c tok-c-Singleline">// Somewhere in another rule</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> action(1); }</span>
+...
+
+<span class="tok-k">private</span> <span class="tok-g">{ ... }</span> <span class="tok-k">rule</span> <span class="tok-nf">action</span><span class="tok-p">(</span><span class="tok-nf">int</span> <span class="tok-nf">depth</span><span class="tok-p">)</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> action(depth + 1); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;}&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (depth == 1) </span><span class="tok-ge">return</span><span class="tok-g"> ...;</span>
+<span class="tok-g">         </span><span class="tok-ge">else</span><span class="tok-g"> </span><span class="tok-ge">return</span><span class="tok-g"> action(depth - 1);</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> action; }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This snippet can use <code>continue</code> in the last clause, when simply
+looking for more curly braces, but must use <code>return</code> in the first
+two clauses in order to update the depth level accordingly. A
+simple way to fix such a rule is to add an instance field
+to the lexer&#8217;s prelude and use it instead of passing a parameter
+to  <code>action</code>. Another possibility is to define a mutable container
+class for the rule&#8217;s parameters, in our case a simple integer,
+and pass such a container to the rule:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-g">{</span>
+<span class="tok-g">  </span><span class="tok-gd">// In the prelude</span><span class="tok-g"></span>
+<span class="tok-g">  </span><span class="tok-ge">private</span><span class="tok-g"> </span><span class="tok-ge">static</span><span class="tok-g"> </span><span class="tok-ge">class</span><span class="tok-g"> DepthLevel {</span>
+<span class="tok-g">    </span><span class="tok-ge">int</span><span class="tok-g"> val = 1;</span>
+<span class="tok-g">  }</span>
+<span class="tok-g">}</span>
+
+...
+
+...
+<span class="tok-c tok-c-Singleline">// Somewhere in another rule</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> action(</span><span class="tok-ge">new</span><span class="tok-g"> DepthLevel()); }</span>
+...
+
+<span class="tok-k">public</span> <span class="tok-g">{ ... }</span> <span class="tok-k">rule</span> <span class="tok-nf">action</span><span class="tok-p">(</span><span class="tok-nf">DepthLevel</span> <span class="tok-nf">depth</span><span class="tok-p">)</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ depth.val++; </span><span class="tok-ge">continue</span><span class="tok-g"> action; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;}&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (depth.val == 1) </span><span class="tok-ge">return</span><span class="tok-g"> ...;</span>
+<span class="tok-g">         depth.val--; </span><span class="tok-ge">continue</span><span class="tok-g"> action;</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> action; }</span></code></pre>
+</div>
+</div>
+</li>
+<li>
+<p>The second limitation with <code>continue</code> is that it can be used solely
+with direct recursion, and not in the case of several mutually
+recursive rules. This arguably rarely arises in practical cases.
+Consider two rules which respectively recognize blocks <code>{ &#8230;&#8203; }</code>
+(resp. <code>[ &#8230;&#8203; ]</code>) delimited by curly brackets (resp. square
+brackets). Suppose each kind of block can include the other kind
+of block, as long as things remain well-parenthesized. A natural
+description of these two rules could be:</p>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-c tok-c-Singleline">// Somewhere in main rule</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> curlyBlock(); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;[&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> squareBlock(); }</span>
+...
+
+<span class="tok-k">private</span> <span class="tok-g">{ ... }</span> <span class="tok-k">rule</span> <span class="tok-nf">curlyBlock</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;}&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g">; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;[&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> squareBlock(); }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> curlyBlock; }</span>
+
+<span class="tok-k">private</span> <span class="tok-g">{ ... }</span> <span class="tok-k">rule</span> <span class="tok-nf">squareBlock</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;]&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g">; }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> curlyBlock(); }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> squareBlock; }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>This is simple enough, but the stack will not survive input which
+contain long sequences like "[{[{[{[{[{[{[ &#8230;&#8203;. ]}]}]}]}]}]}]}".  The
+only way to force such rules to use constant stack space is to merge
+the mutually recursive rules together into a single lexer entry. This
+may be quite tedious in general depending on the rules' clauses, but
+in this case this is rather pedestrian as the clauses from the two
+rules do not really interfere. Nevertheless, we must take care of
+tracking whether the last opened block was a curly or squared one,
+and the overalll number of all blocks that have been opened so far.
+For that reason we introduce a local container class to represent
+that state of the combined rule:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="jl"><span class="tok-g">{</span>
+<span class="tok-g">  </span><span class="tok-gd">// In prelude</span><span class="tok-g"></span>
+<span class="tok-g">  </span><span class="tok-ge">private</span><span class="tok-g"> </span><span class="tok-ge">static</span><span class="tok-g"> Blocks {</span>
+<span class="tok-g">    </span><span class="tok-ge">private</span><span class="tok-g"> Blocks(</span><span class="tok-ge">int</span><span class="tok-g"> depth, </span><span class="tok-ge">boolean</span><span class="tok-g"> inCurly) {</span>
+<span class="tok-g">      </span><span class="tok-ge">this</span><span class="tok-g">.depth = depth;</span>
+<span class="tok-g">      </span><span class="tok-ge">this</span><span class="tok-g">.inCurly = inCurly;</span>
+<span class="tok-g">    }</span>
+
+<span class="tok-g">    </span><span class="tok-ge">static</span><span class="tok-g"> Blocks newCurly() {</span>
+<span class="tok-g">      </span><span class="tok-ge">return</span><span class="tok-g"> </span><span class="tok-ge">new</span><span class="tok-g"> Blocks(1, </span><span class="tok-ge">true</span><span class="tok-g">);</span>
+<span class="tok-g">    }</span>
+<span class="tok-g">    </span><span class="tok-ge">static</span><span class="tok-g"> Blocks newSquare() {</span>
+<span class="tok-g">      </span><span class="tok-ge">return</span><span class="tok-g"> </span><span class="tok-ge">new</span><span class="tok-g"> Blocks(1, </span><span class="tok-ge">false</span><span class="tok-g">);</span>
+<span class="tok-g">    }</span>
+
+<span class="tok-g">    </span><span class="tok-ge">int</span><span class="tok-g"> depth;</span>
+<span class="tok-g">    </span><span class="tok-ge">boolean</span><span class="tok-g"> inCurly;</span>
+<span class="tok-g">  }</span>
+<span class="tok-g">}</span>
+
+<span class="tok-c tok-c-Singleline">// Somewhere in main rule</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> blocks(Blocks.newCurly()); }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;[&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">return</span><span class="tok-g"> blocks(Blocks.newSquare()); }</span>
+...
+
+<span class="tok-k">private</span> <span class="tok-g">{ ... }</span> <span class="tok-k">rule</span> <span class="tok-nf">blocks</span><span class="tok-p">(</span><span class="tok-nf">Blocks</span> <span class="tok-nf">st</span><span class="tok-p">)</span> <span class="tok-o">=</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;{&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (!st.inCurly) {</span>
+<span class="tok-g">           st.depth++; st.inCurly = </span><span class="tok-ge">true</span><span class="tok-g">;</span>
+<span class="tok-g">         }</span>
+<span class="tok-g">         </span><span class="tok-ge">continue</span><span class="tok-g"> blocks;</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;}&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (st.inCurly) {</span>
+<span class="tok-g">           st.depth--;</span>
+<span class="tok-g">           </span><span class="tok-ge">if</span><span class="tok-g"> (st.depth == 0) </span><span class="tok-ge">return</span><span class="tok-g">;</span>
+<span class="tok-g">           st.inCurly = </span><span class="tok-ge">false</span><span class="tok-g">;</span>
+<span class="tok-g">         }</span>
+<span class="tok-g">         </span><span class="tok-ge">continue</span><span class="tok-g"> blocks;</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;[&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (st.inCurly) {</span>
+<span class="tok-g">           st.depth++; st.inCurly = </span><span class="tok-ge">false</span><span class="tok-g">;</span>
+<span class="tok-g">         }</span>
+<span class="tok-g">         </span><span class="tok-ge">continue</span><span class="tok-g"> blocks;</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-sc">&#39;]&#39;</span>  <span class="tok-g">{ </span><span class="tok-ge">if</span><span class="tok-g"> (!st.inCurly) {</span>
+<span class="tok-g">           st.depth--;</span>
+<span class="tok-g">           </span><span class="tok-ge">if</span><span class="tok-g"> (st.depth == 0) </span><span class="tok-ge">return</span><span class="tok-g">;</span>
+<span class="tok-g">           st.inCurly = </span><span class="tok-ge">true</span><span class="tok-g">;</span>
+<span class="tok-g">         }</span>
+<span class="tok-g">         </span><span class="tok-ge">continue</span><span class="tok-g"> blocks;</span>
+<span class="tok-g">       }</span>
+<span class="tok-o">|</span> <span class="tok-nf">_</span>    <span class="tok-g">{ </span><span class="tok-ge">continue</span><span class="tok-g"> blocks; }</span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Now, do not worry if this transformation does not look that
+"pedestrian". Arguably, one should only very rarely have a really good
+reason to use a lexical analyzer to parse something like this.
+It is possible nonetheless, and is worth showcasing for the sake
+of completeness. Also, as a matter of style, a class such as <code>Blocks</code>
+in the example above should probably be implemented in a companion
+Java file and not in the lexer description&#8217;s prelude. The prelude
+should really only contain fields or local helper methods which
+access the state of the underlying lexing engine.</p>
+</div>
+</li>
+</ol>
 </div>
 <div style="page-break-after: always;"></div>
 </div>

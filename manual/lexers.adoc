@@ -1372,7 +1372,7 @@ would require Dolmen to keep a stack of all relevant information
 across nested calls, which would be costly for the frequent cases when
 this information is not needed. When it indeed is needed, it is
 straightforward to just retrieve it before performing nested calls, as
-is the case in the example above for `start` and `lex`. The 
+is the case in the example above for `start` and `lex`. The
 <<Lexers_Token_Locations,next section>> precisely covers how to deal
 with managing token positions across nested rules.
 
@@ -1384,7 +1384,243 @@ _Coming soon_
 [#Lexers_Tail_Recursion_Ref]
 ==== Tail-Recursion
 
-_Coming soon_
+When using <<Lexers_Nested_Rules,nested rules>> in a lexer
+description, one should be wary of nested calls being so deep that the
+lexical analysis could cause the Java program to excess its stack
+space, leading to a
+link:https://docs.oracle.com/javase/8/docs/api/java/lang/StackOverflowError.html[StackOverflowError]
+being thrown. This is realistically only an issue with _recursive_
+calls, i.e. when some rule is called from its own semantic actions,
+either directly or indirectly through other rules.
+
+For instance, consider a lexing rule `main()` with a clause for
+skipping Python comments (assuming for the sake of conciseness that
+the only line terminator is the line feed character):
+
+[source,jl]
+----
+public { Token } rule main() =
+...
+| '#' [^'\n']* '\n' { newline(); return main(); }
+...
+----
+
+This clause will consume the comment until (and including) the end of
+the line, and continues analyzing the input stream with the same rule
+by calling `main()` recursively. This recursive call to `main()` has
+the peculiarity of being a
+link:https://en.wikipedia.org/wiki/Tail_call[_tail-call_], i.e. that
+this call is the very final action taken in this function. As such,
+the call could be optimized so that the callee's frame can reuse the
+space of the caller's frame, a process dubbed _tail-call
+optimization_. Tail-call optimization is not limited to recursive
+tail-calls, but it is an important feature of compilers for functional
+languages where recursion is a key paradigm. Unfortunately, Java does
+not have tail-call optimization in general, so code like the clause
+above will use an amount of stack space that is proportional to the
+largest number of consecutive comment lines `# ...` in the source.
+This can be arbitrary large, and it is not rare to find very long
+comment blocks in real code.
+
+The standard countermeasure to prevent a recursive function from
+blowing up the stack in the absence of tail-call optimization is to
+rewrite the recursion as a regular loop. It is particularly
+straightforward when the function was tail-recursive in the first
+place. Dolmen provides this possibility by generating the code
+for every lexer entry inside a `while` loop labelled with
+the name of the rule itself. Therefore, the code for the entry
+`main` will follow this structure:
+
+[source,java]
+----
+public Token main() {
+  main:
+  while (true) {
+    ... // Consumes input, find matching clause
+    ... // Executes corresponding semantic action
+  }
+}
+----
+
+This layout allows using Java's `continue` statement to continue
+executing the rule `main` without explicitly calling it recursively,
+namely by rewriting our clause for Python comments as follows:
+
+[source,jl]
+----
+public { Token } rule main() =
+...
+| '#' [^'\n']* '\n' { newline(); continue main; }
+...
+----
+
+As the semantic action will simply jump back to the beginning of the
+entry and start scanning again, this version of `main` uses a constant
+amount of stack (barring issues in other clauses) and can accomodate
+thousands of contiguous lines of comments.
+
+The strategy of resorting to a `continue` statement has two
+limitations.
+
+. If the rule which is reentered using `continue` has parameters, it
+  is not possible to change these parameters with `continue` whereas
+  it would be possible with an explicit tail-call. For instance,
+  consider a rule which recognizes nested `{ .. }`
+  expressions--similarly to Dolmen's own rule for lexing semantic
+  actions in lexer descriptions--and is parameterized by the current
+  nesting `depth`, representing the number of `}` still to find:
++
+[source,jl]
+----
+...
+// Somewhere in another rule
+| '{'  { return action(1); }
+...
+
+private { ... } rule action(int depth) =
+| '{'  { return action(depth + 1); }
+| '}'  { if (depth == 1) return ...;
+         else return action(depth - 1);
+       }
+| _    { continue action; }
+----
++
+This snippet can use `continue` in the last clause, when simply
+looking for more curly braces, but must use `return` in the first
+two clauses in order to update the depth level accordingly. A
+simple way to fix such a rule is to add an instance field
+to the lexer's prelude and use it instead of passing a parameter
+to  `action`. Another possibility is to define a mutable container
+class for the rule's parameters, in our case a simple integer,
+and pass such a container to the rule:
++
+[source,jl]
+----
+{
+  // In the prelude
+  private static class DepthLevel {
+    int val = 1;
+  }
+}
+
+...
+
+...
+// Somewhere in another rule
+| '{'  { return action(new DepthLevel()); }
+...
+
+public { ... } rule action(DepthLevel depth) =
+| '{'  { depth.val++; continue action; }
+| '}'  { if (depth.val == 1) return ...;
+         depth.val--; continue action;
+       }
+| _    { continue action; }
+----
+
+. The second limitation with `continue` is that it can be used solely
+  with direct recursion, and not in the case of several mutually
+  recursive rules. This arguably rarely arises in practical cases.
+  Consider two rules which respectively recognize blocks `{ ... }`
+  (resp. `[ ... ]`) delimited by curly brackets (resp. square
+  brackets). Suppose each kind of block can include the other kind
+  of block, as long as things remain well-parenthesized. A natural
+  description of these two rules could be:
++
+[source,jl]
+----
+// Somewhere in main rule
+| '{'  { return curlyBlock(); }
+| '['  { return squareBlock(); }
+...
+
+private { ... } rule curlyBlock =
+| '}'  { return; }
+| '['  { return squareBlock(); }
+| _    { continue curlyBlock; }
+
+private { ... } rule squareBlock =
+| ']'  { return; }
+| '{'  { return curlyBlock(); }
+| _    { continue squareBlock; }
+----
++
+This is simple enough, but the stack will not survive input which
+contain long sequences like "[{[{[{[{[{[{[ .... ]}]}]}]}]}]}]}".  The
+only way to force such rules to use constant stack space is to merge
+the mutually recursive rules together into a single lexer entry. This
+may be quite tedious in general depending on the rules' clauses, but
+in this case this is rather pedestrian as the clauses from the two
+rules do not really interfere. Nevertheless, we must take care of
+tracking whether the last opened block was a curly or squared one,
+and the overalll number of all blocks that have been opened so far.
+For that reason we introduce a local container class to represent
+that state of the combined rule:
++
+[source,jl]
+----
+{
+  // In prelude
+  private static Blocks {
+    private Blocks(int depth, boolean inCurly) {
+      this.depth = depth;
+      this.inCurly = inCurly;
+    }
+
+    static Blocks newCurly() {
+      return new Blocks(1, true);
+    }    
+    static Blocks newSquare() {
+      return new Blocks(1, false);
+    }
+
+    int depth;
+    boolean inCurly;
+  }
+}
+
+// Somewhere in main rule
+| '{'  { return blocks(Blocks.newCurly()); }
+| '['  { return blocks(Blocks.newSquare()); }
+...
+
+private { ... } rule blocks(Blocks st) =
+| '{'  { if (!st.inCurly) {
+           st.depth++; st.inCurly = true;
+         }
+         continue blocks;
+       }
+| '}'  { if (st.inCurly) {
+           st.depth--;
+           if (st.depth == 0) return;
+           st.inCurly = false;
+         }
+         continue blocks;
+       }
+| '['  { if (st.inCurly) {
+           st.depth++; st.inCurly = false;
+         }
+         continue blocks;
+       }
+| ']'  { if (!st.inCurly) {
+           st.depth--;
+           if (st.depth == 0) return;
+           st.inCurly = true;
+         }
+         continue blocks;
+       }
+| _    { continue blocks; } 
+----
++
+Now, do not worry if this transformation does not look that
+"pedestrian". Arguably, one should only very rarely have a really good
+reason to use a lexical analyzer to parse something like this.
+It is possible nonetheless, and is worth showcasing for the sake
+of completeness. Also, as a matter of style, a class such as `Blocks`
+in the example above should probably be implemented in a companion
+Java file and not in the lexer description's prelude. The prelude
+should really only contain fields or local helper methods which
+access the state of the underlying lexing engine.
 
 <<<
 // Include the language reference section
