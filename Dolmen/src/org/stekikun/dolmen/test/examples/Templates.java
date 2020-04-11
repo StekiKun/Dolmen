@@ -91,6 +91,7 @@ public final class Templates extends org.stekikun.dolmen.codegen.BaseParser<Temp
                  List< String >  v = separated_nelistˎCOMMAˌSTRINGˏ();
                  return v; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.RPAREN, Token.Kind.STRING);
             }
@@ -157,6 +158,7 @@ public final class Templates extends org.stekikun.dolmen.codegen.BaseParser<Temp
                 case RPAREN: {
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RPAREN);
                 }

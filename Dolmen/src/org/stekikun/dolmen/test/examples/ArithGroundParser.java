@@ -116,6 +116,7 @@ public final class ArithGroundParser extends org.stekikun.dolmen.codegen.BasePar
                 int n = exp();
                 return n;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS);
             }
@@ -144,6 +145,7 @@ public final class ArithGroundParser extends org.stekikun.dolmen.codegen.BasePar
                 int n = factor();
                 return n;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.TIMES);
             }
@@ -164,6 +166,7 @@ public final class ArithGroundParser extends org.stekikun.dolmen.codegen.BasePar
                 int n = atomic();
                 return -n;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.INT, Token.Kind.MINUS);
             }

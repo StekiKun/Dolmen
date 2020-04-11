@@ -208,6 +208,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 imports(acc);
                 return acc;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.TOKEN);
             }
@@ -232,6 +233,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 String tn = typename();
                 return "static " + id + tn;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
             }
@@ -250,6 +252,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
             case SEMICOL: {
                 return "";
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
             }
@@ -270,6 +273,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 eat(Token.Kind.STAR);
                 return "*";
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
             }
@@ -292,6 +296,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 tokens(acc);
                 return acc;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.TOKEN);
             }
@@ -316,6 +321,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                    throw parsingError("Token name should be all uppercase: " + id);
                 return new TokenDecl(withLoc(id), null);
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
             }
@@ -337,6 +343,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 rules(acc);
                 return acc;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -381,6 +388,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 eat(Token.Kind.PUBLIC);
                 return true;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -402,6 +410,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 Extent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                 return ext;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
@@ -423,6 +432,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 eat(Token.Kind.SEMICOL);
                 return;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.BAR, Token.Kind.SEMICOL);
             }
@@ -468,6 +478,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 items(builder);
                 return;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }
@@ -496,6 +507,7 @@ public final class JGParserGenerated extends org.stekikun.dolmen.codegen.BasePar
                 @Nullable Extent args = args();
                 return actual(id, lname, args);
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.SEMICOL);
             }

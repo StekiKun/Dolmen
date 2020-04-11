@@ -305,6 +305,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
                 eat(Token.Kind.TRUE);
                  return valTrue; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -341,6 +342,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
                 eat(Token.Kind.RSQUARE);
                  return elts == null ? Lists.empty() : elts; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -364,6 +366,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
                     eat(Token.Kind.RSQUARE);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
                 }
@@ -394,6 +397,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
                 more_members(acc);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
             }
@@ -416,6 +420,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
                     eat(Token.Kind.RBRACKET);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
                 }

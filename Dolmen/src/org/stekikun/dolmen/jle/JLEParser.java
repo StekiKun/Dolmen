@@ -326,6 +326,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 options(acc);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.IMPORT, Token.Kind.LBRACKET, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -346,6 +347,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
 	  throw parsingError("Illegal multi-line string literal");
 	
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.LSTRING, Token.Kind.MLSTRING);
             }
@@ -379,6 +381,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 imports(acc);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.IMPORT, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -404,6 +407,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.SEMICOL);
                  buf.append(";"); return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
             }
@@ -432,6 +436,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case SEMICOL: {
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
             }
@@ -450,6 +455,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.STAR);
                  buf.append('*'); return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
             }
@@ -477,6 +483,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case PUBLIC: {
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -509,6 +516,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 more_entries(acc);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -552,6 +560,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.PUBLIC);
                  return true; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -568,6 +577,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case EQUAL: {
                  return null; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.EQUAL);
             }
@@ -584,6 +594,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.SHORTEST);
                  return true; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.OR, Token.Kind.SHORTEST);
             }
@@ -614,6 +625,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 more_clauses(acc);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.OR, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -661,6 +673,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
 		return withLoc(reg);	// location of 'orelse'
 	
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.ORELSE, Token.Kind.UNDERSCORE);
             }
@@ -692,6 +705,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  Regular  reg = regular_op(Regular.binding(r, lid));
                  return reg; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.RPAREN, Token.Kind.SEMICOL);
             }
@@ -721,6 +735,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  Regular  r2 = altRegular();
                  return Regular.or(r1, r2); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL);
             }
@@ -756,6 +771,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  Regular  r2 = seqRegular();
                  return Regular.seq(r1, r2); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.UNDERSCORE);
             }
@@ -814,6 +830,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.STAR);
                  return Regular.star(r); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
@@ -842,6 +859,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.RANGLE);
                  return Regular.repeat(r, min); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
             }
@@ -884,6 +902,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  Regular  r2 = atomicRegular();
                  return Regular.chars(CSet.diff(asCSet(r1), asCSet(r2))); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.AS, Token.Kind.EOF, Token.Kind.HASH, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MAYBE, Token.Kind.MLSTRING, Token.Kind.OR, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOL, Token.Kind.STAR, Token.Kind.UNDERSCORE);
             }
@@ -936,6 +955,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.UNDERSCORE);
                  return Regular.chars(CSet.ALL_BUT_EOF); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LBRACKET, Token.Kind.LCHAR, Token.Kind.LPAREN, Token.Kind.LSTRING, Token.Kind.MLSTRING, Token.Kind.UNDERSCORE);
             }
@@ -967,6 +987,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  CSet  c = charSetPositive();
                  return c; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.CARET, Token.Kind.IDENT, Token.Kind.LCHAR);
             }
@@ -995,6 +1016,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                  CSet  res = more_charSetPositive(cs);
                  return res; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.LCHAR);
             }
@@ -1015,6 +1037,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case RBRACKET: {
                  return CSet.singleton(first); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.DASH, Token.Kind.IDENT, Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
@@ -1032,6 +1055,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case RBRACKET: {
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.LCHAR, Token.Kind.RBRACKET);
             }
@@ -1052,6 +1076,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
             case RULE: {
                  throw expectedError("Expected Java action here. Did you forget the " + msg + "?"); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.END, Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.RULE);
             }
@@ -1068,6 +1093,7 @@ public final class JLEParser extends org.stekikun.dolmen.codegen.BaseParser<JLEP
                 eat(Token.Kind.RULE);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.RULE);
             }

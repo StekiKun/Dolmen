@@ -155,6 +155,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
                 stmts();
                 return;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.EOF, Token.Kind.SEMICOLON);
             }
@@ -185,6 +186,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
                 eat(Token.Kind.RPAREN);
                 return;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ID, Token.Kind.PRINT);
             }
@@ -205,6 +207,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
             case RPAREN: {
                 return;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RPAREN);
             }
@@ -253,6 +256,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
                 int n = term();
                 return lhs + n;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON);
             }
@@ -291,6 +295,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
                 int n = factor();
                 return lhs * n;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.DIV, Token.Kind.EOF, Token.Kind.MINUS, Token.Kind.PLUS, Token.Kind.RPAREN, Token.Kind.SEMICOLON, Token.Kind.TIMES);
             }
@@ -318,6 +323,7 @@ public final class StraightLineParser extends org.stekikun.dolmen.codegen.BasePa
                 eat(Token.Kind.RPAREN);
                 return e;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ID, Token.Kind.INT, Token.Kind.LPAREN);
             }

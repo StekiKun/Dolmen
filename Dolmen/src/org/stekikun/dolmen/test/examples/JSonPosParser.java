@@ -333,6 +333,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                 shift(null);
                  return valTrue(getStartPos(), getEndPos()); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -352,6 +353,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                 enter(0);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.LSQUARE);
             }
@@ -398,6 +400,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                 shift(null);
                  return elts == null ? Lists.empty() : elts; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ARRAY, Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.OBJECT, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -426,6 +429,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                     shift(null);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
                 }
@@ -446,6 +450,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                 shift(null);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.LBRACKET, Token.Kind.OBJECT);
             }
@@ -483,6 +488,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                 leave(null);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
             }
@@ -510,6 +516,7 @@ public final class JSonPosParser extends org.stekikun.dolmen.codegen.BaseParser.
                     shift(null);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
                 }

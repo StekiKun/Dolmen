@@ -157,6 +157,7 @@ public final class JSonLWParser extends org.stekikun.dolmen.codegen.BaseParser<J
                 eat(Token.Kind.TRUE);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -191,6 +192,7 @@ public final class JSonLWParser extends org.stekikun.dolmen.codegen.BaseParser<J
                 eat(Token.Kind.RSQUARE);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.FALSE, Token.Kind.LBRACKET, Token.Kind.LSQUARE, Token.Kind.NULL, Token.Kind.NUMBER, Token.Kind.RSQUARE, Token.Kind.STRING, Token.Kind.TRUE);
             }
@@ -213,6 +215,7 @@ public final class JSonLWParser extends org.stekikun.dolmen.codegen.BaseParser<J
                     eat(Token.Kind.RSQUARE);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RSQUARE);
                 }
@@ -242,6 +245,7 @@ public final class JSonLWParser extends org.stekikun.dolmen.codegen.BaseParser<J
                 more_members();
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.RBRACKET, Token.Kind.STRING);
             }
@@ -264,6 +268,7 @@ public final class JSonLWParser extends org.stekikun.dolmen.codegen.BaseParser<J
                     eat(Token.Kind.RBRACKET);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RBRACKET);
                 }

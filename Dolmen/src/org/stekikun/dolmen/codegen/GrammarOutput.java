@@ -340,6 +340,10 @@ public final class GrammarOutput {
 			}
 			// Generate a default rule for when no tokens
 			if (trans.size() < grammar.tokenDecls.size()) {
+				// Output this magic sequence to be nice with target
+				// projects which use the "signal even if 'default' case exists"
+				// incomplete-switch warning on enums.
+				buf.emitln("//$CASES-OMITTED$");
 				buf.emit("default:").openBlock();
 				buf.emit("throw tokenError(peek()");
 				trans.keySet().forEach(tok -> buf.emit(", Token.Kind." + tok));

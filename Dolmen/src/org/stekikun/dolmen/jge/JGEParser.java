@@ -268,6 +268,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 options(acc);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.LSQUARE, Token.Kind.TOKEN);
             }
@@ -294,6 +295,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 imports(acc);
                 return acc;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IMPORT, Token.Kind.TOKEN);
             }
@@ -318,6 +320,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 String tn = typename();
                 return "static " + id + tn;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STATIC);
             }
@@ -336,6 +339,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
             case SEMICOL: {
                 return "";
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.DOT, Token.Kind.SEMICOL);
             }
@@ -356,6 +360,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.STAR);
                 return "*";
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.STAR);
             }
@@ -377,6 +382,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 tokens(acc);
                  return acc; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.TOKEN);
             }
@@ -405,6 +411,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
             case IDENT: {
                  return null; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT);
             }
@@ -426,6 +433,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 more_token_decls(tokens, value);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.IDENT, Token.Kind.TOKEN);
             }
@@ -448,6 +456,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 rules(acc);
                 return acc;
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.EOF, Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -493,6 +502,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.PUBLIC);
                  return true; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.PRIVATE, Token.Kind.PUBLIC);
             }
@@ -520,6 +530,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 more_formal_params(params);
                  return params; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ARGUMENTS, Token.Kind.EQUAL, Token.Kind.LANGLE);
             }
@@ -547,6 +558,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                     eat(Token.Kind.RANGLE);
                      return; 
                 }
+                //$CASES-OMITTED$
                 default: {
                     throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
                 }
@@ -572,6 +584,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 PExtent ext = ((Token.ARGUMENTS) eat(Token.Kind.ARGUMENTS)).value;
                  return ext; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EOF, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.SEMICOL);
             }
@@ -604,6 +617,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.SEMICOL);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.BAR, Token.Kind.EOF, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.SEMICOL);
             }
@@ -654,6 +668,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 items(builder);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.SEMICOL);
             }
@@ -681,6 +696,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.IDENT);
                  return; /* dead code */ 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.BAR, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.SEMICOL);
             }
@@ -718,6 +734,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                  @Nullable PExtent  args = args();
                  return actual(id, aexpr, args); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.CONTINUE, Token.Kind.EOF, Token.Kind.EQUAL, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.SEMICOL);
             }
@@ -753,6 +770,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 actual_exprs(params);
                  return new ActualExpr(id, params); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.ARGUMENTS, Token.Kind.BAR, Token.Kind.COMMA, Token.Kind.CONTINUE, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.LANGLE, Token.Kind.PRIVATE, Token.Kind.PUBLIC, Token.Kind.RANGLE, Token.Kind.SEMICOL);
             }
@@ -778,6 +796,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.RANGLE);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.COMMA, Token.Kind.RANGLE);
             }
@@ -796,6 +815,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
             case RULE: {
                  throw expectedError("Expected Java action here. Did you forget the " + msg + "?"); 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.ACTION, Token.Kind.EOF, Token.Kind.IDENT, Token.Kind.RULE);
             }
@@ -812,6 +832,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
                 eat(Token.Kind.RULE);
                  return; 
             }
+            //$CASES-OMITTED$
             default: {
                 throw tokenError(peek(), Token.Kind.IDENT, Token.Kind.RULE);
             }
