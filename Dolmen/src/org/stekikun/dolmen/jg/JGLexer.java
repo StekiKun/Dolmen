@@ -104,15 +104,18 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
                  return DOT; 
             }
             case 9:  {
-                 return EQUAL; 
+                 return STAR; 
             }
             case 10:  {
-                 return BAR; 
+                 return EQUAL; 
             }
             case 11:  {
-                 return EOF; 
+                 return BAR; 
             }
             case 12:  {
+                 return EOF; 
+            }
+            case 13:  {
                  throw error("Unfinished token"); 
             }
             default:
@@ -130,7 +133,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         while (true) {
             // Initialize lexer for this automaton
             startToken();
-            int result = _jl_cell16();
+            int result = _jl_cell17();
             endToken();
             switch (result) {
             case 0:  {
@@ -163,7 +166,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         while (true) {
             // Initialize lexer for this automaton
             startToken();
-            int result = _jl_cell23();
+            int result = _jl_cell24();
             endToken();
             switch (result) {
             case 0:  {
@@ -207,7 +210,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         while (true) {
             // Initialize lexer for this automaton
             startToken();
-            int result = _jl_cell31();
+            int result = _jl_cell32();
             endToken();
             switch (result) {
             case 0:  {
@@ -262,7 +265,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         while (true) {
             // Initialize lexer for this automaton
             startToken();
-            int result = _jl_cell43();
+            int result = _jl_cell44();
             endToken();
             switch (result) {
             case 0:  {
@@ -317,7 +320,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         while (true) {
             // Initialize lexer for this automaton
             startToken();
-            int result = _jl_cell55();
+            int result = _jl_cell56();
             endToken();
             switch (result) {
             case 0:  {
@@ -338,33 +341,37 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
     
     private int _jl_cell0() {
         final char _jl_char = getNextChar();
-        if (_jl_char <= 58) {
+        if (_jl_char <= 47) {
             switch (_jl_char) {
             // [0x0008-0x0009 0x0020]
             case 8:
             case 9:
             case 32: {
-                return _jl_cell13();
+                return _jl_cell14();
             }
             // 0x000a
             case 10: {
-                return _jl_cell11();
+                return _jl_cell12();
             }
             // 0x000d
             case 13: {
-                return _jl_cell12();
+                return _jl_cell13();
             }
             // (
             case 40: {
-                return _jl_cell8();
+                return _jl_cell9();
+            }
+            // *
+            case 42: {
+                return _jl_cell5();
             }
             // .
             case 46: {
-                return _jl_cell5();
+                return _jl_cell6();
             }
             // /
             case 47: {
-                return _jl_cell10();
+                return _jl_cell11();
             }
             default:  {
                 return _jl_cell1();
@@ -372,29 +379,36 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             }
         } else  {
             if (_jl_char <= 94) {
-                switch (_jl_char) {
-                // ;
-                case 59: {
-                    return _jl_cell6();
-                }
-                // [< >-@ \[-\^]
-                case 60:
-                case 62:
-                case 63:
-                case 64:
-                case 91:
-                case 92:
-                case 93:
-                case 94: {
-                    return _jl_cell1();
-                }
-                // 0x003d
-                case 61: {
-                    return _jl_cell4();
-                }
-                default:  {
-                    return _jl_cell7();
-                }
+                if (_jl_char <= 60) {
+                    switch (_jl_char) {
+                    // ;
+                    case 59: {
+                        return _jl_cell7();
+                    }
+                    default:  {
+                        return _jl_cell1();
+                    }
+                    }
+                } else  {
+                    switch (_jl_char) {
+                    // 0x003d
+                    case 61: {
+                        return _jl_cell4();
+                    }
+                    // [>-@ \[-\^]
+                    case 62:
+                    case 63:
+                    case 64:
+                    case 91:
+                    case 92:
+                    case 93:
+                    case 94: {
+                        return _jl_cell1();
+                    }
+                    default:  {
+                        return _jl_cell8();
+                    }
+                    }
                 }
             } else  {
                 if (_jl_char <= 122) {
@@ -404,14 +418,14 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
                         return _jl_cell1();
                     }
                     default:  {
-                        return _jl_cell7();
+                        return _jl_cell8();
                     }
                     }
                 } else  {
                     switch (_jl_char) {
                     // {
                     case 123: {
-                        return _jl_cell9();
+                        return _jl_cell10();
                     }
                     // |
                     case 124: {
@@ -431,30 +445,34 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell1() {
-        return 12;
+        return 13;
     }
     
     private int _jl_cell2() {
-        return 11;
+        return 12;
     }
     
     private int _jl_cell3() {
-        return 10;
+        return 11;
     }
     
     private int _jl_cell4() {
-        return 9;
+        return 10;
     }
     
     private int _jl_cell5() {
-        return 8;
+        return 9;
     }
     
     private int _jl_cell6() {
-        return 7;
+        return 8;
     }
     
     private int _jl_cell7() {
+        return 7;
+    }
+    
+    private int _jl_cell8() {
         while (true) {
             mark(6);
             final char _jl_char = getNextChar();
@@ -532,25 +550,25 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell8() {
+    private int _jl_cell9() {
         return 5;
     }
     
-    private int _jl_cell9() {
+    private int _jl_cell10() {
         return 4;
     }
     
-    private int _jl_cell10() {
-        mark(12);
+    private int _jl_cell11() {
+        mark(13);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // *
         case 42: {
-            return _jl_cell15();
+            return _jl_cell16();
         }
         // /
         case 47: {
-            return _jl_cell14();
+            return _jl_cell15();
         }
         default:  {
             return rewind();
@@ -558,17 +576,17 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell11() {
+    private int _jl_cell12() {
         return 1;
     }
     
-    private int _jl_cell12() {
+    private int _jl_cell13() {
         mark(1);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell11();
+            return _jl_cell12();
         }
         default:  {
             return rewind();
@@ -576,7 +594,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell13() {
+    private int _jl_cell14() {
         while (true) {
             mark(0);
             final char _jl_char = getNextChar();
@@ -594,7 +612,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell14() {
+    private int _jl_cell15() {
         while (true) {
             mark(3);
             final char _jl_char = getNextChar();
@@ -612,36 +630,36 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell15() {
+    private int _jl_cell16() {
         return 2;
     }
     
-    private int _jl_cell16() {
+    private int _jl_cell17() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell18();
+            return _jl_cell19();
         }
         // 0x000d
         case 13: {
-            return _jl_cell19();
+            return _jl_cell20();
         }
         // *
         case 42: {
-            return _jl_cell21();
+            return _jl_cell22();
         }
         // EOF
         case 65535: {
-            return _jl_cell20();
+            return _jl_cell21();
         }
         default:  {
-            return _jl_cell17();
+            return _jl_cell18();
         }
         }
     }
     
-    private int _jl_cell17() {
+    private int _jl_cell18() {
         while (true) {
             mark(4);
             final char _jl_char = getNextChar();
@@ -660,17 +678,17 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell18() {
+    private int _jl_cell19() {
         return 3;
     }
     
-    private int _jl_cell19() {
+    private int _jl_cell20() {
         mark(3);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell18();
+            return _jl_cell19();
         }
         default:  {
             return rewind();
@@ -678,17 +696,17 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell20() {
+    private int _jl_cell21() {
         return 2;
     }
     
-    private int _jl_cell21() {
+    private int _jl_cell22() {
         mark(1);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // /
         case 47: {
-            return _jl_cell22();
+            return _jl_cell23();
         }
         default:  {
             return rewind();
@@ -696,16 +714,16 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell22() {
+    private int _jl_cell23() {
         return 0;
     }
     
-    private int _jl_cell23() {
+    private int _jl_cell24() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // "
         case 34: {
-            return _jl_cell24();
+            return _jl_cell28();
         }
         // \\
         case 92: {
@@ -719,10 +737,6 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             return _jl_cell25();
         }
         }
-    }
-    
-    private int _jl_cell24() {
-        return 0;
     }
     
     private int _jl_cell25() {
@@ -759,31 +773,35 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 110:
         case 114:
         case 116: {
-            return _jl_cell30();
+            return _jl_cell31();
         }
         // EOF
         case 65535: {
-            return _jl_cell28();
+            return _jl_cell29();
         }
         default:  {
-            return _jl_cell29();
+            return _jl_cell30();
         }
         }
     }
     
     private int _jl_cell28() {
-        return 3;
+        return 0;
     }
     
     private int _jl_cell29() {
-        return 2;
+        return 3;
     }
     
     private int _jl_cell30() {
-        return 1;
+        return 2;
     }
     
     private int _jl_cell31() {
+        return 1;
+    }
+    
+    private int _jl_cell32() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
@@ -804,7 +822,7 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // /
         case 47: {
-            return _jl_cell32();
+            return _jl_cell41();
         }
         // {
         case 123: {
@@ -820,24 +838,6 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         default:  {
             return _jl_cell37();
-        }
-        }
-    }
-    
-    private int _jl_cell32() {
-        mark(9);
-        final char _jl_char = getNextChar();
-        switch (_jl_char) {
-        // *
-        case 42: {
-            return _jl_cell41();
-        }
-        // /
-        case 47: {
-            return _jl_cell42();
-        }
-        default:  {
-            return rewind();
         }
         }
     }
@@ -904,10 +904,28 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell41() {
-        return 4;
+        mark(9);
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
+        // *
+        case 42: {
+            return _jl_cell42();
+        }
+        // /
+        case 47: {
+            return _jl_cell43();
+        }
+        default:  {
+            return rewind();
+        }
+        }
     }
     
     private int _jl_cell42() {
+        return 4;
+    }
+    
+    private int _jl_cell43() {
         while (true) {
             mark(5);
             final char _jl_char = getNextChar();
@@ -925,64 +943,64 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell43() {
+    private int _jl_cell44() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell49();
+            return _jl_cell50();
         }
         // 0x000d
         case 13: {
-            return _jl_cell50();
+            return _jl_cell51();
         }
         // "
         case 34: {
-            return _jl_cell45();
+            return _jl_cell46();
         }
         // '
         case 39: {
-            return _jl_cell44();
+            return _jl_cell45();
         }
         // (
         case 40: {
-            return _jl_cell47();
+            return _jl_cell48();
         }
         // )
         case 41: {
-            return _jl_cell46();
+            return _jl_cell47();
         }
         // /
         case 47: {
-            return _jl_cell52();
+            return _jl_cell53();
         }
         // EOF
         case 65535: {
-            return _jl_cell51();
+            return _jl_cell52();
         }
         default:  {
-            return _jl_cell48();
+            return _jl_cell49();
         }
         }
-    }
-    
-    private int _jl_cell44() {
-        return 3;
     }
     
     private int _jl_cell45() {
-        return 2;
+        return 3;
     }
     
     private int _jl_cell46() {
-        return 1;
+        return 2;
     }
     
     private int _jl_cell47() {
-        return 0;
+        return 1;
     }
     
     private int _jl_cell48() {
+        return 0;
+    }
+    
+    private int _jl_cell49() {
         while (true) {
             mark(8);
             final char _jl_char = getNextChar();
@@ -1005,17 +1023,17 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell49() {
+    private int _jl_cell50() {
         return 7;
     }
     
-    private int _jl_cell50() {
+    private int _jl_cell51() {
         mark(7);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell49();
+            return _jl_cell50();
         }
         default:  {
             return rewind();
@@ -1023,17 +1041,17 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell51() {
+    private int _jl_cell52() {
         return 6;
     }
     
-    private int _jl_cell52() {
+    private int _jl_cell53() {
         mark(9);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // *
         case 42: {
-            return _jl_cell53();
+            return _jl_cell55();
         }
         // /
         case 47: {
@@ -1043,10 +1061,6 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell53() {
-        return 4;
     }
     
     private int _jl_cell54() {
@@ -1068,6 +1082,10 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell55() {
+        return 4;
+    }
+    
+    private int _jl_cell56() {
         mark(2);
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -1078,23 +1096,10 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // \\
         case 92: {
-            return _jl_cell56();
-        }
-        default:  {
             return _jl_cell57();
         }
-        }
-    }
-    
-    private int _jl_cell56() {
-        final char _jl_char = getNextChar();
-        switch (_jl_char) {
-        // EOF
-        case 65535: {
-            return rewind();
-        }
         default:  {
-            return _jl_cell59();
+            return _jl_cell58();
         }
         }
     }
@@ -1102,26 +1107,22 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
     private int _jl_cell57() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
-        // '
-        case 39: {
-            return _jl_cell58();
+        // EOF
+        case 65535: {
+            return rewind();
         }
         default:  {
-            return rewind();
+            return _jl_cell60();
         }
         }
     }
     
     private int _jl_cell58() {
-        return 0;
-    }
-    
-    private int _jl_cell59() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // '
         case 39: {
-            return _jl_cell60();
+            return _jl_cell59();
         }
         default:  {
             return rewind();
@@ -1129,7 +1130,24 @@ public final class JGLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
+    private int _jl_cell59() {
+        return 0;
+    }
+    
     private int _jl_cell60() {
+        final char _jl_char = getNextChar();
+        switch (_jl_char) {
+        // '
+        case 39: {
+            return _jl_cell61();
+        }
+        default:  {
+            return rewind();
+        }
+        }
+    }
+    
+    private int _jl_cell61() {
         return 1;
     }
     

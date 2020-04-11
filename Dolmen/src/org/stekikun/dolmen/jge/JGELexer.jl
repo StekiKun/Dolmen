@@ -130,6 +130,7 @@ public {Token} rule main =
 | ','		{ return COMMA; }
 | ';'		{ return SEMICOL; }
 | '.'		{ return DOT; }
+| '*'		{ return STAR; }
 | '='		{ return EQUAL; }
 | '|'		{ return BAR; }
 | eof		{ return EOF; }
