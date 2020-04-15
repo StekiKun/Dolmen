@@ -249,7 +249,11 @@ public final class TokenVisualizer {
 	
 	/**
 	 * A special type of location to record lexical errors.
-	 * It is reduced to the position where the lexical error occurred.
+	 * <p>
+	 * It spans the interval between the position where the lexical 
+	 * error occurred up to the last position matched by the lexer.
+	 * In case this interval is empty (e.g. for an empty token error)
+	 * it reports on the first character at this position.
 	 * 
 	 * @author Stéphane Lescuyer
 	 *
@@ -257,22 +261,25 @@ public final class TokenVisualizer {
 	 */
 	private static final class LexError<T> extends Location<T> {
 		final LexicalError e;
+		final LexBuffer.Position end;
 		
 		/**
 		 * {@code e} must have a non-null position.
 		 * 
 		 * @param e
 		 */
-		LexError(LexicalError e) {
+		LexError(LexicalError e, LexBuffer.Position end) {
 			// We are only building locations for lexical errors which
 			// have a non-null position
 			super(Nulls.ok(e.pos));
 			this.e = e;
+			this.end = end;
 		}
 		
 		@Override
 		int end() {
-			return start.offset + 1;
+			return end.offset == start.offset ? 
+					start.offset + 1 : end.offset;
 		}
 		
 		@Override
@@ -410,7 +417,7 @@ public final class TokenVisualizer {
 			catch (LexicalError e) {
 				// Record the location of the error (if it had one)
 				if (e.pos == null) return false;
-				final Location<T> loc = new LexError<>(e);
+				final Location<T> loc = new LexError<>(e, lexbuf.getLexemeEnd());
 				record(loc);
 				return false;
 			}
