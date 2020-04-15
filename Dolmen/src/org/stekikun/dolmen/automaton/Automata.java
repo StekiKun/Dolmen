@@ -161,6 +161,27 @@ public final class Automata {
 			if (!cell.sanityCheck()) return false;
 		return true;
 	}
+	
+	/**
+	 * @return {@code true} iff at least one of the entries
+	 * 	in the automata requires a non-empty number of memory cells
+	 *  and at least one of the entries require none.
+	 */
+	public boolean needsEmptyMemories() {
+		boolean allEmpty = true;
+		boolean allBusy = true;
+		for (Entry entry : automataEntries) {
+			if (entry.memSize > 0) {
+				if (!allBusy) return true;
+				allEmpty = false;
+			}
+			else {
+				if (!allEmpty) return true;
+				allBusy = false;
+			}
+		}
+		return false;
+	}
 
 	@Override
 	public String toString() {

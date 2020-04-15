@@ -49,10 +49,17 @@ public final class AutomataOutput {
 	/** The code buffer being used */
 	private final CodeBuilder buf;
 	
+	/**
+	 * Whether we need to associate empty memories to entries
+	 * without the need for memory cells.
+	 */
+	private final boolean needsEmptyMemories;
+	
 	private AutomataOutput(Config config, Automata aut) {
 		this.config = config;
 		this.aut = aut;
 		this.buf = new CodeBuilder(0);
+		this.needsEmptyMemories = aut.needsEmptyMemories();
 	}
 
 //	private void genLexicalError() {
@@ -371,6 +378,9 @@ public final class AutomataOutput {
 			buf.emit("memory = ").emit(memoryName(entry.name)).emitln(";");
 			buf.emitln("java.util.Arrays.fill(memory, -1);");
 		}
+		else if (needsEmptyMemories) {
+			buf.emitln("memory = NO_MEM_CELLS;");
+		}
 		buf.emitln("startToken();");
 		// Perform initial memory actions if any
 		if (!entry.initializer.isEmpty()) {
@@ -430,6 +440,13 @@ public final class AutomataOutput {
 		
 		genHeader();
 		genConstructor(name);
+		
+		// Declare a static final empty array of memory cells to
+		// share between entries without memory cells, if needed
+		if (needsEmptyMemories) {
+			buf.newline()
+				.emitln("private static final int[] NO_MEM_CELLS = new int[0];");
+		}
 		
 		// For every automata entry, there will be a public
 		// entry point
