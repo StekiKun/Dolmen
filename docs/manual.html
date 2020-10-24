@@ -3640,7 +3640,7 @@ character and string literals is detailed in the the
 <div class="paragraph">
 <p>Additionally, there are two "special" literals <code>_</code> and <code>eof</code>,
 respectively called <em>wildcard</em> and <em>end-of-input</em>. <code>eof</code> is
-a meta-character with represents the fact that the end of
+a meta-character which represents the fact that the end of
 the input stream has been reached; in particular it does not
 really match a given character, but simply succeeds when the
 input stream has been exhausted. On the other hand, the
@@ -4153,7 +4153,7 @@ correct track of lines and columns.</p>
 <dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>&lt;T&gt; T saveStart(Supplier&lt;T&gt; s)</code></dt>
 <dd>
 <p>This convenience method calls the given supplier <code>s</code>, returning
-the same value as ̀s`, but saving the current value of <code>startLoc</code>
+the same value as <code>s</code>, but saving the current value of <code>startLoc</code>
 before the call and restoring it afterwards. This is used when
 <a href="#Lexers_Nested_Rules">nested rules</a> are used to parse a token
 and the token location needs to be adjusted.</p>
@@ -4161,7 +4161,7 @@ and the token location needs to be adjusted.</p>
 <dt class="hdlist1"><span class="image"><img src="./images/methpro_obj.png" alt="methpro obj" title="protected method"></span> <code>&lt;T&gt; T savePosition(Supplier&lt;T&gt; s, Position start)</code></dt>
 <dd>
 <p>This convenience method calls the given supplier <code>s</code>, returning
-the same value as ̀s`, but setting the value of <code>startLoc</code> to
+the same value as <code>s</code>, but setting the value of <code>startLoc</code> to
 <code>start</code> afterwards. This is used when
 <a href="#Lexers_Nested_Rules">nested rules</a> are used to parse a token
 and the token location needs to be adjusted.</p>
@@ -4485,7 +4485,7 @@ match until the end of the comment:</p>
 <p>where <code>newline</code> is defined as <code>('\r' | '\n' | "\r\n")</code>.  As it is, the
 entry recognizes the closing comment delimiter and also handles line
 breaks and end-of-input gracefully. It still needs to be able to pass
-everything else that the comment can contains. One correct way to do
+everything else that the comment can contain. One correct way to do
 that is to use a wildcard to catch everything else:</p>
 </div>
 <div class="listingblock">
@@ -4496,7 +4496,7 @@ that is to use a wildcard to catch everything else:</p>
 </div>
 <div class="paragraph">
 <p>In particular this works because by the longest-match rule, it will not
-match a <code>*</code> character if it happens to be followed by a <code>\</code>. Unfortunately,
+match a <code>*</code> character if it happens to be followed by a <code>/</code>. Unfortunately,
 reentering the rule at every character is somewhat inefficient in comparison
 to matching largest parts of the comment at once; indeed, every time a
 rule is entered or reentered, the generated lexical analyzer performs some
@@ -5321,9 +5321,9 @@ and pass such a container to the rule:</p>
 <p>The second limitation with <code>continue</code> is that it can be used solely
 with direct recursion, and not in the case of several mutually
 recursive rules. This arguably rarely arises in practical cases.
-Consider two rules which respectively recognize blocks <code>{ &#8230;&#8203; }</code>
-(resp. <code>[ &#8230;&#8203; ]</code>) delimited by curly brackets (resp. square
-brackets). Suppose each kind of block can include the other kind
+Consider two rules which recognize both <code>{ &#8230;&#8203; }</code>
+and <code>[ &#8230;&#8203; ]</code> blocks, delimited respectively by curly and square
+brackets. Suppose each kind of block can include the other kind
 of block, as long as things remain well-parenthesized. A natural
 description of these two rules could be:</p>
 <div class="listingblock">
@@ -5353,7 +5353,7 @@ may be quite tedious in general depending on the rules' clauses, but
 in this case this is rather pedestrian as the clauses from the two
 rules do not really interfere. Nevertheless, we must take care of
 tracking whether the last opened block was a curly or squared one,
-and the overalll number of all blocks that have been opened so far.
+and the overall number of all blocks that have been opened so far.
 For that reason we introduce a local container class to represent
 that state of the combined rule:</p>
 </div>
