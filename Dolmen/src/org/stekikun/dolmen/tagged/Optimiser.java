@@ -472,14 +472,14 @@ public final class Optimiser {
 		/** The optimised regular expression */
 		public final TRegular regular;
 		/** Tag addresses for each binding variable's boundaries */
-		public final Map<String, @NonNull IdentInfo> identInfos;
+		public final TreeMap<String, @NonNull IdentInfo> identInfos;
 		/** Total number of memory cells for tags */
 		public final int numCells;
 		
 		/** Necessary? Environment from tags to memory cells */
 		public final Map<@NonNull TagKey, @NonNull TagAddr> env;
 		
-		private Allocated(TRegular regular, Map<String, IdentInfo> identInfos, 
+		private Allocated(TRegular regular, TreeMap<String, IdentInfo> identInfos, 
 				int numCells, Map<TagKey, TagAddr> env) {
 			this.regular = regular;
 			this.identInfos = identInfos;
@@ -506,7 +506,7 @@ public final class Optimiser {
 		TRegular allocatedOpt = allocateAddresses(new AddrTRegular(null, opt)).regular;
 		
 		// Map all binding names to allocated addresses
-		Map<String, IdentInfo> idents = new TreeMap<>();
+		TreeMap<String, IdentInfo> idents = new TreeMap<>();
 		for (String name : varsInfo.allVars) {
 			boolean optional = varsInfo.optVars.contains(name);
 			TagAddr tstart = getTagAddr(new TagKey(name, true));

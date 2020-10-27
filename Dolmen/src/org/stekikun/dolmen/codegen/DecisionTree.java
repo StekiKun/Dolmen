@@ -3,9 +3,9 @@ package org.stekikun.dolmen.codegen;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -24,7 +24,7 @@ import org.stekikun.dolmen.common.Nulls;
  * <p>
  * The point of {@link DecisionTree} is that it provides several implementations
  * of how these transition tables can be encoded,  giving different trade-offs
- * depending on the shape of the transition table. The method {@link #compile(Map)}
+ * depending on the shape of the transition table. The method {@link #compile(TreeMap)}
  * is used to build a "good" decision tree from a raw transition table.
  * 
  * @author Stéphane Lescuyer
@@ -198,9 +198,9 @@ public abstract class DecisionTree {
 	 */
 	public final static class Switch extends DecisionTree {
 		/** The transition table implemented in this switch */
-		public final Map<@NonNull CSet, @NonNull TransActions> table;
+		public final TreeMap<@NonNull CSet, @NonNull TransActions> table;
 		
-		private Switch(Map<@NonNull CSet, @NonNull TransActions> table) {
+		private Switch(TreeMap<@NonNull CSet, @NonNull TransActions> table) {
 			this.table = table;
 		}
 
@@ -222,7 +222,7 @@ public abstract class DecisionTree {
 	 * @return a decision tree expressing the given {@code table}
 	 * 	as a switch between character sets
 	 */
-	public final static DecisionTree switchTable(Map<@NonNull CSet, @NonNull TransActions> table) {
+	public final static DecisionTree switchTable(TreeMap<@NonNull CSet, @NonNull TransActions> table) {
 		if (table.isEmpty()) return IMPOSSIBLE;
 		return new Switch(table);
 	}
@@ -353,8 +353,7 @@ public abstract class DecisionTree {
 			CSet total = CSet.interval(min, max);
 			if (CSet.included(switch_.getDomain(), total))
 				return switch_;
-			Map<@NonNull CSet, @NonNull TransActions> clamped = 
-				new LinkedHashMap<>(switch_.table.size());
+			TreeMap<@NonNull CSet, @NonNull TransActions> clamped = new TreeMap<>();
 			switch_.table.forEach((cset, trans) -> {
 				CSet key = CSet.inter(cset, total);
 				if (key.isEmpty()) return;
@@ -411,7 +410,7 @@ public abstract class DecisionTree {
 	 */
 	private static final class Compiling {
 		/**
-		 * A segment represents an contiguous interval of characters
+		 * A segment represents a contiguous interval of characters
 		 * from {@link #first} to {@link #last} (inclusive) which are
 		 * all mapped to the same {@linkplain #trans action}
 		 * 
@@ -491,10 +490,10 @@ public abstract class DecisionTree {
 			return allNonDefault;
 		}
 
-		private static Map<@NonNull CSet, @NonNull TransActions>
+		private static TreeMap<@NonNull CSet, @NonNull TransActions>
 			partitionOf(List<@NonNull Segment> segments, int from, int length) {
 			// First regroup all segments which lead to the same transition actions
-			Map<@NonNull TransActions, @NonNull CSet> inverse = new LinkedHashMap<>(length);
+			Map<@NonNull TransActions, @NonNull CSet> inverse = new HashMap<>(length);
 			for (int i = from; i < from + length; ++i) {
 				Segment segi = segments.get(i);
 				CSet csi = CSet.interval(segi.first, segi.last);
@@ -506,8 +505,7 @@ public abstract class DecisionTree {
 			}
 			// Then invert the map, which must be bijective because we have
 			// built the values by merging segments that were all disjoint initially
-			Map<@NonNull CSet, @NonNull TransActions> partition =
-				new LinkedHashMap<>(inverse.size());
+			TreeMap<@NonNull CSet, @NonNull TransActions> partition = new TreeMap<>();
 			inverse.forEach((trans, cset) -> partition.put(cset, trans));
 			return partition;
 		}
@@ -515,7 +513,7 @@ public abstract class DecisionTree {
 		private static final int SWITCH_LIMIT = 64;	// enough for [_0-9a-zA-Z]
 		private static final int SPLIT_LIMIT = 4;
 		
-		static DecisionTree compile(Map<@NonNull CSet, @NonNull TransActions> partition) {
+		static DecisionTree compile(TreeMap<@NonNull CSet, @NonNull TransActions> partition) {
 			// Strategy: try to minimize some notion of 'cost' which will account
 			//		both for nlocs of generated code and the supposed efficiency
 			//      (i.e. number of character comparisons performed on average input)
@@ -545,7 +543,7 @@ public abstract class DecisionTree {
 			if (allNonDefault <= SWITCH_LIMIT)
 				return switchTable(partition);
 			List<Segment> segments = segments(partition);
-			return balance(0, segments(partition), 0, segments.size());
+			return balance(0, segments, 0, segments.size());
 		}
 		
 		private static DecisionTree balance(int depth, List<Segment> segments, int from, int length) {
@@ -563,7 +561,8 @@ public abstract class DecisionTree {
 			// If the classes left are amenable for a switch-block, let's do it
 			// We divide the maximum size for a switch by 2^depth for the worst case
 			// where every leaf would contain a big switch
-			Map<@NonNull CSet, @NonNull TransActions> part = partitionOf(segments, from, length);
+			TreeMap<@NonNull CSet, @NonNull TransActions> part =
+				partitionOf(segments, from, length);
 			int allNonDefault = sizeForSwitch(part.keySet());
 			if (allNonDefault <= Math.max(SPLIT_LIMIT, SWITCH_LIMIT >> depth))
 				return switchTable(part);
@@ -585,7 +584,7 @@ public abstract class DecisionTree {
 	 * @return a decision tree that encodes the given transition table {@code partition}
 	 * 	in a hopefully concise and efficient way
 	 */
-	public static DecisionTree compile(Map<@NonNull CSet, @NonNull TransActions> partition) {
+	public static DecisionTree compile(TreeMap<@NonNull CSet, @NonNull TransActions> partition) {
 		DecisionTree tree = Compiling.compile(partition);
 		tree = simplify(tree);
 		return tree;
@@ -604,7 +603,7 @@ public abstract class DecisionTree {
 	}
 	
 	/**
-	 * Functional tests of decision trees and {@link #compile(Map)}
+	 * Functional tests of decision trees and {@link #compile(TreeMap)}
 	 * 
 	 * @param args
 	 */
@@ -613,7 +612,7 @@ public abstract class DecisionTree {
 		Return r1 = ret(new TransActions(GotoAction.Goto(1), Lists.empty()));
 		Return r2 = ret(new TransActions(GotoAction.Goto(2), Lists.empty()));
 		
-		Map<@NonNull CSet, @NonNull TransActions> map = new HashMap<>();
+		TreeMap<@NonNull CSet, @NonNull TransActions> map = new TreeMap<>();
 		map.put(CSet.interval('a', 'z'), r1.transActions);
 		map.put(CSet.interval('0', '9'), r2.transActions);
 		DecisionTree sw = switchTable(map);
@@ -637,7 +636,7 @@ public abstract class DecisionTree {
 		
 		compile(map);
 
-		Map<@NonNull CSet, @NonNull TransActions> map2 = new HashMap<>(map);
+		TreeMap<@NonNull CSet, @NonNull TransActions> map2 = new TreeMap<>(map);
 		map2.put(CSet.interval((char)500, (char)3000),
 				new TransActions(GotoAction.Goto(3), Lists.empty()));
 		map2.put(CSet.interval((char)0, (char)10),
@@ -648,7 +647,7 @@ public abstract class DecisionTree {
 				new TransActions(GotoAction.Goto(6), Lists.empty()));
 		compile(map2);
 		
-		Map<@NonNull CSet, @NonNull TransActions> map3 = new HashMap<>(map2);
+		TreeMap<@NonNull CSet, @NonNull TransActions> map3 = new TreeMap<>(map2);
 		CSet others = CSet.union(CSet.EOF,
 			CSet.complement(map2.keySet().stream().reduce(CSet.EMPTY, CSet::union)));
 		map3.put(others, rewind.transActions);

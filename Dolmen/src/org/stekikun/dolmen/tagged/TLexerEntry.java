@@ -1,7 +1,7 @@
 package org.stekikun.dolmen.tagged;
 
 import java.util.List;
-import java.util.Map;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -38,7 +38,7 @@ public final class TLexerEntry {
 		 * an interpretation of the identifier in terms of 
 		 * tags and static offsets
 		 */
-		public final Map<@NonNull String, @NonNull IdentInfo> tags;
+		public final TreeMap<@NonNull String, @NonNull IdentInfo> tags;
 		/** The location of the semantic action <i>per se</i> */
 		public final Extent loc;
 		
@@ -49,7 +49,7 @@ public final class TLexerEntry {
 		 * @param tags
 		 * @param loc
 		 */
-		public Finisher(int action, Map<String, IdentInfo> tags, Extent loc) {
+		public Finisher(int action, TreeMap<String, IdentInfo> tags, Extent loc) {
 			this.action = action;
 			this.tags = tags;
 			this.loc = loc;

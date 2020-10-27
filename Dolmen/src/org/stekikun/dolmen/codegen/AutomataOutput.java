@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.io.Writer;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
@@ -245,7 +246,7 @@ public final class AutomataOutput {
 	}
 
 	private void genTransTable(int source,
-			Map<@NonNull CSet, @NonNull TransActions> table) {
+			TreeMap<@NonNull CSet, @NonNull TransActions> table) {
 		// Compile the transition table into a hopefully efficient decision tree
 		DecisionTree tree = DecisionTree.compile(table);
 		// Output code that implements the tree. If it's not a simple switch

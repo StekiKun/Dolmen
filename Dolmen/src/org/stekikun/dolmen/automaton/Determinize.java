@@ -1,6 +1,7 @@
 package org.stekikun.dolmen.automaton;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -9,6 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 import org.eclipse.jdt.annotation.NonNull;
@@ -26,10 +28,10 @@ import org.stekikun.dolmen.common.Nulls;
 import org.stekikun.dolmen.common.Sets;
 import org.stekikun.dolmen.syntax.Lexer;
 import org.stekikun.dolmen.tagged.Encoder;
-import org.stekikun.dolmen.tagged.TLexer;
-import org.stekikun.dolmen.tagged.TLexerEntry;
 import org.stekikun.dolmen.tagged.Optimiser.IdentInfo;
 import org.stekikun.dolmen.tagged.Optimiser.TagAddr;
+import org.stekikun.dolmen.tagged.TLexer;
+import org.stekikun.dolmen.tagged.TLexerEntry;
 import org.stekikun.dolmen.tagged.TLexerEntry.Finisher;
 import org.stekikun.dolmen.tagged.TRegular.TagInfo;
 
@@ -87,7 +89,7 @@ public class Determinize {
 	}
 	
 	private static boolean withDebug = false;
-	private void debug(String msg) {
+	private static void debug(String msg) {
 		if (withDebug) System.out.println(msg);
 	}
 
@@ -213,7 +215,7 @@ public class Determinize {
 			oldInMap(mmap.locs, used);
 		
 		// Allocate new addresses in s, collecting moves on the way
-		Set<Integer> moves = new HashSet<>();
+		TreeSet<Integer> moves = new TreeSet<>();
 		Map<TagInfo, Integer> newFLocs = allocMap(used, fLocs, moves);
 		Map<Integer, MemMap> newOthers = new HashMap<>();
 		s.others.forEach((k, mmap) -> {
@@ -381,7 +383,7 @@ public class Determinize {
 		int pivot = partitionMoves(from, memActions, to, modified);
 		if (pivot == from) {
 			// We haven't made progress, we need to add a temporary
-			// (does this happen ?? probably in pathological cases..
+			// (does this happen?? probably in pathological cases..
 			//  would it be easier to just not merge states in this case?)
 			MemAction.Copy copy = (MemAction.Copy) memActions.get(pivot);
 			int tmp = allocTemp();
@@ -412,9 +414,29 @@ public class Determinize {
 	 * @param memActions
 	 */
 	void sortMoves(ArrayList<MemAction> memActions) {
-		if (memActions.isEmpty()) return;
+		if (memActions.size() <= 1) return;
+		// For the stability of the relative order of memory actions
+		// in generated code, we start by sorting them
+		memActions.sort(MEM_ACTION_COMPARATOR);
 		sortMovesAux(0, memActions, memActions.size() - 1);
 	}
+	
+	/**
+	 * A comparator for {@link MemAction}s used to order memory actions when
+	 * merging states (cf {@link #moveTo}). The order in itself is irrelevant,
+	 * but must be stable and predictable as it can be observed in the generated
+	 * analyzers.
+	 */
+	private static final Comparator<MemAction> MEM_ACTION_COMPARATOR = new Comparator<MemAction>() {
+		@Override
+		public int compare(MemAction o1, MemAction o2) {
+			int c = o1.getSrc() - o2.getSrc();
+			// <- this puts Set before Copy, it would probably be wiser to put them the other
+			//	  way around in case the copy reads the written cells
+			if (c != 0) return c;
+			return o1.getDest() - o2.getDest();
+		}
+	};
 
 	/**
 	 * When two states {@code src} and {@code tgt} have the
@@ -784,7 +806,7 @@ public class Determinize {
 	 */
 	private List<TagAction> doTagActions(int action,
 		@NonNull Map<TagInfo, Integer>[] env, Map<TagInfo, Integer> locs) {
-		List<TagAction> actions = new ArrayList<>(locs.size());
+		ArrayList<TagAction> actions = new ArrayList<>(locs.size());
 		// First compute the set of used memory cells, and the associated
 		// tag actions
 		Set<Integer> used = Sets.create();
@@ -801,9 +823,29 @@ public class Determinize {
 				actions.add(TagAction.EraseTag(m));
 			}
 		});
-		// XXX Shall I reverse the actions list? Is order important?
+		// Order should be irrelevant here, but must be stable as it
+		// can be observed in the generated analyzers.
+		actions.sort(TAG_ACTION_COMPARATOR);
 		return actions;
 	}
+	
+	/**
+	 * A comparator for {@link TagAction}s used to order tag actions in
+	 * finalizers of automaton cells (cf {@link #doTagActions}). The order in
+	 * itself is irrelevant, but must be stable and predictable as it can be
+	 * observed in the generated analyzers.
+	 */
+	private static final Comparator<TagAction> TAG_ACTION_COMPARATOR = new Comparator<TagAction>() {
+		@Override
+		public int compare(TagAction o1, TagAction o2) {
+			int c = o1.tag - o2.tag;	// sort by tag first as there should 
+										// only be at most one action per tag
+			if (c != 0) return c;
+			debug("Unexpected tag clash in tag actions: "
+					+ o1 + " and " + o2);
+			return o1.from - o2.from;
+		}
+	};
 	
 	/**
 	 * @param shortest	whether shortest-match rule applies
@@ -957,7 +999,7 @@ public class Determinize {
 		indexedCells.forEach(icell -> {
 			if (cells[icell.index] != null)
 				throw new IllegalStateException();
-			cells[icell.index]= icell.elt;
+			cells[icell.index] = icell.elt;
 		});
 		// Because we checked for duplicates and we set
 		// as many cells as the size, we know there are no

@@ -374,8 +374,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             // 0x0020
             case 32: {
-                memory[4] = curPos;
                 memory[3] = curPos;
+                memory[4] = curPos;
                 memory[2] = memory[4];
                 continue;
             }
@@ -384,8 +384,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
                 return rewind();
             }
             default:  {
-                memory[2] = memory[4];
                 memory[3] = curPos;
+                memory[2] = memory[4];
                 return _jl_cell15();
             }
             }
@@ -394,8 +394,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
     
     private int _jl_cell17() {
         mark(2);
-        memory[1] = memory[3];
         memory[0] = memory[2];
+        memory[1] = memory[3];
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
@@ -409,8 +409,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell18() {
-        memory[1] = memory[3];
         memory[0] = memory[2];
+        memory[1] = memory[3];
         return 2;
     }
     
@@ -540,8 +540,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             // 0x0020
             case 32: {
-                memory[7] = curPos;
                 memory[6] = curPos;
+                memory[7] = curPos;
                 memory[5] = memory[7];
                 continue;
             }
@@ -550,8 +550,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
                 return rewind();
             }
             default:  {
-                memory[5] = memory[7];
                 memory[6] = curPos;
+                memory[5] = memory[7];
                 return _jl_cell25();
             }
             }
@@ -560,8 +560,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
     
     private int _jl_cell27() {
         mark(1);
-        memory[1] = memory[6];
         memory[0] = memory[5];
+        memory[1] = memory[6];
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
@@ -575,8 +575,8 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
     }
     
     private int _jl_cell28() {
-        memory[1] = memory[6];
         memory[0] = memory[5];
+        memory[1] = memory[6];
         return 1;
     }
     

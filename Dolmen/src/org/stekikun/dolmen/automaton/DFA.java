@@ -775,7 +775,7 @@ public class DFA {
 		/**
 		 * The transition table between character sets and transition actions
 		 */
-		public final Map<@NonNull CSet, @NonNull TransActions> transTable;
+		public final TreeMap<@NonNull CSet, @NonNull TransActions> transTable;
 		
 		/**
 		 * @param remember
