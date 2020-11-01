@@ -174,7 +174,9 @@ public final class Args {
 			true, NONE, NONE),
 		REPORTS('r', "reports", Type.STRING, Value.mkString(""),
 			"file where potential problems should be reported (by default, the source file + '.reports')",
-			false, NONE, NONE);
+			false, NONE, NONE),
+		NO_COLORS(null, "no-colors", Type.FLAG, Value.NO,
+			"disable colors in output");
 		
 		Item(@Nullable Character shortName, String longName, Type type,
 			Value deflt, @Nullable String description,

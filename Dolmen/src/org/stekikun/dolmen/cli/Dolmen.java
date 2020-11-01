@@ -87,7 +87,8 @@ public final class Dolmen {
 	private static void generateLexer(Args args,
 			File input, File output, File reportsFile, String className) {
 		PrintStream log = args.getFlag(Item.QUIET) ? nullStream : System.out;
-		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling lexer description " + input);
+		final boolean colored = !args.getFlag(Item.NO_COLORS);
+		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling lexer description " + input, colored);
 
 		try (FileReader reader = new FileReader(input);
 			 FileWriter reports = new FileWriter(reportsFile))
@@ -160,7 +161,8 @@ public final class Dolmen {
 	private static void generateParser(Args args,
 			File input, File output, File reportsFile, String className) {
 		PrintStream log = args.getFlag(Item.QUIET) ? nullStream : System.out; 
-		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling grammar description " + input);
+		final boolean colored = !args.getFlag(Item.NO_COLORS);
+		final Bookkeeper tasks = Bookkeeper.start(log, "Compiling grammar description " + input, colored);
 		
 		try (FileReader reader = new FileReader(input);
 			 FileWriter reports = new FileWriter(reportsFile))

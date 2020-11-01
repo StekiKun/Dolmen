@@ -5,6 +5,9 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Stack;
 
+import org.stekikun.dolmen.common.Prompt.Colors;
+import org.stekikun.dolmen.common.Prompt.TermStream;
+
 /**
  * This is a utility class which helps keep track
  * of a task, possibly split into several subtasks
@@ -63,20 +66,25 @@ import java.util.Stack;
  * │  ├─ a ripe avocado			[0ms]
  *    ╧  could not found lime juice
  * <pre>
+ * <p>
+ * When the output will be displayed to an ANSI/VT-100
+ * terminal or emulator, it is possible to activate a colored
+ * mode that will take advantage of the output stream's text
+ * formatting capabilities.
  * 
  * @author Stéphane Lescuyer
  */
 public final class Bookkeeper {
 	@SuppressWarnings("unused")
 	private final String mainTask;
-	private final PrintStream out;
+	private final TermStream out;
 	
 	private int depth;
 	private String prefix;
 	private final Stack<Instant> tasks;
 	private boolean aborted;
 	
-	private Bookkeeper(PrintStream out, String mainTask) {
+	private Bookkeeper(TermStream out, String mainTask) {
 		this.out = out;
 		this.mainTask = mainTask;
 		this.depth = 0;
@@ -89,13 +97,31 @@ public final class Bookkeeper {
 	/**
 	 * @param out
 	 * @param mainTask
+	 * @param colorSupport	whether {@code out} supports ANSI control sequences
+	 * 					    for text formatting
+	 * @return a new bookkeeper for the task {@code mainTask}
+	 * 	which will display progress on {@code out}
+	 */
+	public static Bookkeeper start(PrintStream out, String mainTask, boolean colorSupport) {
+		Bookkeeper bk = new Bookkeeper(new TermStream(out, colorSupport), mainTask);
+		bk.enter(mainTask);
+		return bk;
+	}
+
+	/**
+	 * Same as {@code start(out, mainTask, false)}.
+	 * 
+	 * @param out
+	 * @param mainTask
 	 * @return a new bookkeeper for the task {@code mainTask}
 	 * 	which will display progress on {@code out}
 	 */
 	public static Bookkeeper start(PrintStream out, String mainTask) {
-		Bookkeeper bk = new Bookkeeper(out, mainTask);
-		bk.enter(mainTask);
-		return bk;
+		return start(out, mainTask, false);
+	}
+	
+	private TermStream pf() {
+		return out.fg(Colors.LIGHT_BLUE);
 	}
 	
 	/**
@@ -107,8 +133,11 @@ public final class Bookkeeper {
 	public void enter(String task) {
 		if (aborted) throw new IllegalArgumentException();
 		if (depth > 0) out.println("");
-		out.print(prefix);
-		out.print(task);
+		pf().print(prefix).clear();
+		if (depth == 0)
+			out.bold().fg(Colors.CYAN);
+		out.print(task)
+			.clear();
 		Instant now = Instant.now();
 
 		++this.depth;
@@ -129,35 +158,62 @@ public final class Bookkeeper {
 		if (aborted) throw new IllegalArgumentException();
 		Instant start = tasks.pop();
 		out.println("");
-		out.print(prefix);
+		pf().print(prefix).clear();
 		out.print(task);
 		Instant now = Instant.now();
 		Duration elapsed = Duration.between(start, now);
-		out.print(String.format("\t\t\t[%dms]", elapsed.toMillis()));
+		out.fg(Colors.DARK_GRAY)
+			.print(String.format("\t\t\t[%dms]", elapsed.toMillis()))
+			.clear();
 		tasks.push(now);
 	}
-	
+
 	/**
-	 * Adds some infos about the last completed subtask
+	 * Adds some infos about the last completed subtask.
 	 * 
 	 * @param infos
 	 */
 	public void infos(String infos) {
+		infos0(infos, false);
+	}
+
+	/**
+	 * Adds some warnings about the last completed subtask.
+	 * 
+	 * @param infos
+	 */
+	public void warn(String infos) {
+		infos0(infos, true);
+	}
+
+	/**
+	 * Adds some infos about the last completed subtask.
+	 * <p>
+	 * If color support is enabled and {@code warn} is true,
+	 * the {@code infos} will be displayed in light yellow color.
+	 * 
+	 * @param infos
+	 * @param warn
+	 */
+	private void infos0(String infos, boolean warn) {
 		if (aborted) throw new IllegalArgumentException();
 		out.println("");
-		out.print(prefix.substring(0, prefix.length() - 3) + "│  ");
-		out.print(infos);
+		pf().print(prefix.substring(0, prefix.length() - 3) + "│  ").clear();
+		out.dim()
+			.fg(warn ? Colors.LIGHT_YELLOW : Colors.DEFAULT)
+			.print(infos)
+			.clear();
 	}
-	
+
 	/**
-	 * Convenient wrapper around {@link #infos(String)} to report
-	 * on a certain number of problems found during the last completed subtask
+	 * Convenient wrapper around {@link #warn(String)} to report
+	 * on a certain number of problems found during the last completed subtask.
 	 * 
 	 * @param n
 	 */
 	public void problems(int n) {
 		if (n <= 0) return;
-		infos("(" + n + " potential problem" + (n > 1 ? "s" : "") + " found)");
+		warn("(" + n + " potential problem" + (n > 1 ? "s" : "") + " found)");
 	}
 	
 	/**
@@ -172,11 +228,12 @@ public final class Bookkeeper {
 		if (aborted) throw new IllegalArgumentException();
 		out.println("");
 		int nblanks = prefix.length() - 3;
-		for (int i = 0; i < nblanks; ++i)
-			out.print(' ');
-		out.print("╧  ");
-		out.print(reason);
-		out.println();
+		pf().spaces(nblanks)
+			.fg(Colors.RED).bold()
+			.print("╧  ")
+			.print(reason)
+			.clear();
+		out.newline();
 		this.aborted = true;
 	}
 	
@@ -196,8 +253,14 @@ public final class Bookkeeper {
 
 		out.println("");
 		prefix = prefix.substring(0, prefix.length() - 3);
-		out.print(prefix); out.print("└─ ");
-		out.print(String.format("Done in %dms", elapsed.toMillis()));
+		pf().print(prefix); out.print("└─ ").clear();
+		if (depth == 1)
+			out.bold();
+		else
+			out.dim();
+		out.fg(Colors.LIGHT_BLUE)
+			.print(String.format("Done in %dms", elapsed.toMillis()))
+			.clear();
 		if (depth == 1)
 			out.println("");
 		
@@ -231,50 +294,54 @@ public final class Bookkeeper {
 	 * @throws InterruptedException
 	 */
 	public static void main(String[] args) throws InterruptedException {
-//		Bookkeeper bk = Bookkeeper.start(System.out, "Cooking meal");
-//		bk.done("Picked recipe");
-//		bk.infos("(Guacamole)");
-//		bk.enter("Gathering ingredients");
-//		bk.done("a ripe avocado");
-//		bk.aborted("could not found lime juice");
-//		bk.done("a lime");
-//		bk.done("salt and pepper");
-//		bk.leave();
-//		bk.done("Found mortar and pestle");
-//		bk.infos("(in the cupboard)");
-//		bk.enter("Making the guacamole");
-//		bk.done("Mashed avocado");
-//		bk.done("Added lime juice");
-//		bk.leaveWith("Added seasonings");
-//		bk.done("Served with nachos!");
-//		bk.leave();
-		
-		Bookkeeper bk = Bookkeeper.start(System.out, "Super task A");
-		Thread.sleep(100);
-		bk.done("First step A.1");
-		bk.infos("(infos are a cool feature)");
-		Thread.sleep(50);
-		bk.done("Second step A.2");
-		bk.enter("Starting big task A.3");
-		bk.done("Well it was easy");
-		bk.leave();
-		Thread.sleep(75);
-		bk.done("Fourth step A.4");
-		bk.enter("Starting big task A.5");
-		bk.enter("Starting medium task A.5.a)");
-		bk.done("OK I see");
-		bk.infos("(turns out)");
-		bk.done("Yes, it was easy");
-		bk.infos("(it could have been easier)");
-		bk.infos("(but i'm not complaining)");
-		bk.leave();
-		Thread.sleep(50);
-		bk.done("Not so easy this time A.5.b)");
-		Thread.sleep(50);
-		bk.done("I told you I was freaky A.5.c");
-		bk.done("You didn't believe me A.5.d)");
-		bk.leave();
-		bk.done("Sixth step A.6");
-		bk.leave();
+		{
+			Bookkeeper bk = Bookkeeper.start(System.out, "Cooking meal", true);
+			bk.done("Picked recipe");
+			bk.infos("(Guacamole)");
+			bk.enter("Gathering ingredients");
+			bk.done("a ripe avocado");
+			bk.aborted("could not found lime juice");
+//			bk.done("a lime");
+//			bk.done("salt and pepper");
+//			bk.leave();
+//			bk.done("Found mortar and pestle");
+//			bk.infos("(in the cupboard)");
+//			bk.enter("Making the guacamole");
+//			bk.done("Mashed avocado");
+//			bk.done("Added lime juice");
+//			bk.leaveWith("Added seasonings");
+//			bk.done("Served with nachos!");
+//			bk.leave();
+		}
+		System.out.println();
+		{
+			Bookkeeper bk = Bookkeeper.start(System.out, "Super task A", true);
+			Thread.sleep(100);
+			bk.done("First step A.1");
+			bk.infos("(infos are a cool feature)");
+			Thread.sleep(50);
+			bk.done("Second step A.2");
+			bk.enter("Starting big task A.3");
+			bk.done("Well it was easy");
+			bk.leave();
+			Thread.sleep(75);
+			bk.done("Fourth step A.4");
+			bk.enter("Starting big task A.5");
+			bk.enter("Starting medium task A.5.a)");
+			bk.done("OK I see");
+			bk.infos("(turns out)");
+			bk.done("Yes, it was easy");
+			bk.warn("(it could have been easier)");
+			bk.warn("(but i'm not complaining)");
+			bk.leave();
+			Thread.sleep(50);
+			bk.done("Not so easy this time A.5.b)");
+			Thread.sleep(50);
+			bk.done("I told you I was freaky A.5.c");
+			bk.done("You didn't believe me A.5.d)");
+			bk.leave();
+			bk.done("Sixth step A.6");
+			bk.leave();
+		}
 	}
 }
