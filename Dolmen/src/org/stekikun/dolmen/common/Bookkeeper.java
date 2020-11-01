@@ -148,6 +148,11 @@ public final class Bookkeeper {
 		tasks.push(now);
 	}
 	
+	// Completely arbitrary for now.
+	// TODO: Should I try fetching the value for COLUMNS in the environment?
+	//		Anyway, it won't work for non-terminals, or for the Eclipse console..
+	private final int maxWidth = 60;
+
 	/**
 	 * Reports that the subtask {@code task} of the current
 	 * task has been completed
@@ -159,11 +164,13 @@ public final class Bookkeeper {
 		Instant start = tasks.pop();
 		out.println("");
 		pf().print(prefix).clear();
-		out.print(task);
+		int width = maxWidth - prefix.length();
+		String paddedTask = "%-" + width + "s";
+		out.print(String.format(paddedTask, task));
 		Instant now = Instant.now();
 		Duration elapsed = Duration.between(start, now);
 		out.fg(Colors.DARK_GRAY)
-			.print(String.format("\t\t\t[%dms]", elapsed.toMillis()))
+			.print(String.format("[%dms]", elapsed.toMillis()))
 			.clear();
 		tasks.push(now);
 	}
