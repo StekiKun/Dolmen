@@ -114,16 +114,12 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // EOF
         case 65535: {
-            return _jl_cell1();
+            return 3;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell1() {
-        return 3;
     }
     
     private int _jl_cell2() {
@@ -149,7 +145,7 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
             switch (_jl_char) {
             // 0x000a
             case 10: {
-                return _jl_cell5();
+                return 0;
             }
             // 0x000d
             case 13: {
@@ -197,16 +193,12 @@ public final class Alphabet extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell5();
+            return 0;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell5() {
-        return 0;
     }
     
     private int _jl_cell6() {

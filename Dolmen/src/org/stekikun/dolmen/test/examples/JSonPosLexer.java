@@ -187,7 +187,7 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // 0x000a
         case 10: {
-            return _jl_cell18();
+            return 1;
         }
         // 0x000d
         case 13: {
@@ -195,11 +195,11 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // "
         case 34: {
-            return _jl_cell16();
+            return 13;
         }
         // ,
         case 44: {
-            return _jl_cell10();
+            return 4;
         }
         // \-
         case 45: {
@@ -223,15 +223,15 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // :
         case 58: {
-            return _jl_cell9();
+            return 5;
         }
         // \[
         case 91: {
-            return _jl_cell8();
+            return 6;
         }
         // \]
         case 93: {
-            return _jl_cell7();
+            return 7;
         }
         // a
         case 97: {
@@ -255,15 +255,15 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // {
         case 123: {
-            return _jl_cell14();
+            return 2;
         }
         // }
         case 125: {
-            return _jl_cell11();
+            return 3;
         }
         // EOF
         case 65535: {
-            return _jl_cell2();
+            return 15;
         }
         default:  {
             return rewind();
@@ -282,10 +282,6 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell2() {
-        return 15;
     }
     
     private int _jl_cell3() {
@@ -338,26 +334,6 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell7() {
-        return 7;
-    }
-    
-    private int _jl_cell8() {
-        return 6;
-    }
-    
-    private int _jl_cell9() {
-        return 5;
-    }
-    
-    private int _jl_cell10() {
-        return 4;
-    }
-    
-    private int _jl_cell11() {
-        return 3;
     }
     
     private int _jl_cell12() {
@@ -417,10 +393,6 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell14() {
-        return 2;
-    }
-    
     private int _jl_cell15() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -446,25 +418,17 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell16() {
-        return 13;
-    }
-    
     private int _jl_cell17() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell18();
+            return 1;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell18() {
-        return 1;
     }
     
     private int _jl_cell19() {
@@ -702,16 +666,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // e
         case 101: {
-            return _jl_cell29();
+            return 8;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell29() {
-        return 8;
     }
     
     private int _jl_cell30() {
@@ -745,16 +705,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // e
         case 101: {
-            return _jl_cell33();
+            return 9;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell33() {
-        return 9;
     }
     
     private int _jl_cell34() {
@@ -775,16 +731,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // l
         case 108: {
-            return _jl_cell36();
+            return 10;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell36() {
-        return 10;
     }
     
     private int _jl_cell37() {
@@ -831,16 +783,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // t
         case 116: {
-            return _jl_cell41();
+            return 11;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell41() {
-        return 11;
     }
     
     private int _jl_cell42() {
@@ -874,7 +822,7 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // y
         case 121: {
-            return _jl_cell45();
+            return 12;
         }
         default:  {
             return rewind();
@@ -882,16 +830,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell45() {
-        return 12;
-    }
-    
     private int _jl_cell46() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // "
         case 34: {
-            return _jl_cell48();
+            return 0;
         }
         // \\
         case 92: {
@@ -899,7 +843,7 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // EOF
         case 65535: {
-            return _jl_cell50();
+            return 4;
         }
         default:  {
             return _jl_cell49();
@@ -919,24 +863,20 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 110:
         case 114:
         case 116: {
-            return _jl_cell53();
+            return 1;
         }
         // u
         case 117: {
-            return _jl_cell52();
+            return 2;
         }
         // EOF
         case 65535: {
             return rewind();
         }
         default:  {
-            return _jl_cell51();
+            return 3;
         }
         }
-    }
-    
-    private int _jl_cell48() {
-        return 0;
     }
     
     private int _jl_cell49() {
@@ -955,22 +895,6 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
             }
             }
         }
-    }
-    
-    private int _jl_cell50() {
-        return 4;
-    }
-    
-    private int _jl_cell51() {
-        return 3;
-    }
-    
-    private int _jl_cell52() {
-        return 2;
-    }
-    
-    private int _jl_cell53() {
-        return 1;
     }
     
     private int _jl_cell54() {
@@ -1102,16 +1026,12 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 100:
         case 101:
         case 102: {
-            return _jl_cell58();
+            return 0;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell58() {
-        return 0;
     }
     
      

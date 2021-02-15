@@ -10,6 +10,7 @@ import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.stekikun.dolmen.automaton.Automata;
 import org.stekikun.dolmen.automaton.DFA;
+import org.stekikun.dolmen.automaton.DFA.Cell;
 import org.stekikun.dolmen.automaton.DFA.GotoAction;
 import org.stekikun.dolmen.automaton.DFA.MemAction;
 import org.stekikun.dolmen.automaton.DFA.Perform;
@@ -23,6 +24,7 @@ import org.stekikun.dolmen.codegen.DecisionTree.Switch;
 import org.stekikun.dolmen.common.CSet;
 import org.stekikun.dolmen.common.Constants;
 import org.stekikun.dolmen.common.CountingWriter;
+import org.stekikun.dolmen.common.Maps;
 import org.stekikun.dolmen.common.Nulls;
 import org.stekikun.dolmen.syntax.Extent;
 import org.stekikun.dolmen.tagged.Optimiser.IdentInfo;
@@ -56,11 +58,30 @@ public final class AutomataOutput {
 	 */
 	private final boolean needsEmptyMemories;
 	
+	/**
+	 * A map from final cell numbers to the semantic action they
+	 * should return. This only contains {@link DFA.Perform} cells
+	 * with an empty finisher list, and is used to inline calls to
+	 * these states in the generated lexer.
+	 */
+	private final Map<Integer, Integer> shortCircuits;
+	
 	private AutomataOutput(Config config, Automata aut) {
 		this.config = config;
 		this.aut = aut;
 		this.buf = new CodeBuilder(0);
 		this.needsEmptyMemories = aut.needsEmptyMemories();
+		
+		// Initialize the shortCircuits map used to inline
+		// calls to action cells.
+		this.shortCircuits = Maps.create();
+		for (int i = 0; i < aut.automataCells.length; ++i) {
+			DFA.Cell cell = aut.automataCells[i];
+			if (cell.getKind() != Cell.Kind.PERFORM) continue;
+			DFA.Perform perform = (DFA.Perform) cell;
+			if (!perform.tagActions.isEmpty()) continue;
+			shortCircuits.put(i, perform.action);
+		}
 	}
 
 //	private void genLexicalError() {
@@ -108,6 +129,16 @@ public final class AutomataOutput {
 	
 	private static String memoryName(String entryName) {
 		return "_jl_mem_" + entryName;
+	}
+	
+	private String cellCall(int idx) {
+		@Nullable Integer ret = shortCircuits.get(idx);
+		if (ret == null)
+			// If the cell should not be inlined, call it
+			return cellName(idx) + "()";
+		else
+			// If it should be inlined, return the associated action
+			return "" + ret;
 	}
 	
 	private void genMemAccess(int addr) {
@@ -176,8 +207,8 @@ public final class AutomataOutput {
 			if (source == gotoAction.target)
 				buf.emit("continue;");
 			else
-				buf.emit("return ").emit(cellName(gotoAction.target))
-								   .emit("();");
+				buf.emit("return ").emit(cellCall(gotoAction.target))
+									.emit(';');
 		}
 	}
 	
@@ -389,8 +420,8 @@ public final class AutomataOutput {
 			genMemActions(entry.initializer);
 		}
 		// Launch the recognition...
-		buf.emit("int result = ").emit(cellName(entry.initialState))
-								 .emitln("();");
+		buf.emit("int result = ").emit(cellCall(entry.initialState))
+								.emitln(";");
 		// ...update positions on return...
 		buf.emitln("endToken();");
 		// ...and switch on the returned action
@@ -454,9 +485,11 @@ public final class AutomataOutput {
 		for (Automata.@NonNull Entry entry : aut.automataEntries)
 			genEntry(entry);
 		
-		// Generate code for every cell in the automata
-		for (int i = 0; i < aut.automataCells.length; ++i)
-			genCell(i, aut.automataCells[i]);
+		// Generate code for every non-inlined cell in the automata
+		for (int i = 0; i < aut.automataCells.length; ++i) {
+			if (!shortCircuits.containsKey(i))
+				genCell(i, aut.automataCells[i]);
+		}
 		
 		genFooter();
 		buf.closeBlock();

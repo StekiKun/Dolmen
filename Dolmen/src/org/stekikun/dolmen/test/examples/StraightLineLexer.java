@@ -92,27 +92,27 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
             }
             // (
             case 40: {
-                return _jl_cell5();
+                return 9;
             }
             // )
             case 41: {
-                return _jl_cell4();
+                return 10;
             }
             // *
             case 42: {
-                return _jl_cell9();
+                return 5;
             }
             // +
             case 43: {
-                return _jl_cell10();
+                return 4;
             }
             // ,
             case 44: {
-                return _jl_cell6();
+                return 8;
             }
             // \-
             case 45: {
-                return _jl_cell8();
+                return 6;
             }
             default:  {
                 return rewind();
@@ -124,7 +124,7 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
                     switch (_jl_char) {
                     // /
                     case 47: {
-                        return _jl_cell7();
+                        return 7;
                     }
                     // :
                     case 58: {
@@ -139,7 +139,7 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
                         switch (_jl_char) {
                         // ;
                         case 59: {
-                            return _jl_cell2();
+                            return 12;
                         }
                         default:  {
                             return rewind();
@@ -186,7 +186,7 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
                         switch (_jl_char) {
                         // EOF
                         case 65535: {
-                            return _jl_cell1();
+                            return 13;
                         }
                         default:  {
                             return rewind();
@@ -198,53 +198,17 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
         }
     }
     
-    private int _jl_cell1() {
-        return 13;
-    }
-    
-    private int _jl_cell2() {
-        return 12;
-    }
-    
     private int _jl_cell3() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x003d
         case 61: {
-            return _jl_cell19();
+            return 11;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell4() {
-        return 10;
-    }
-    
-    private int _jl_cell5() {
-        return 9;
-    }
-    
-    private int _jl_cell6() {
-        return 8;
-    }
-    
-    private int _jl_cell7() {
-        return 7;
-    }
-    
-    private int _jl_cell8() {
-        return 6;
-    }
-    
-    private int _jl_cell9() {
-        return 5;
-    }
-    
-    private int _jl_cell10() {
-        return 4;
     }
     
     private int _jl_cell11() {
@@ -760,10 +724,6 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell19() {
-        return 11;
     }
     
      

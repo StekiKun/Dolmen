@@ -181,7 +181,7 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // 0x000a
         case 10: {
-            return _jl_cell16();
+            return 1;
         }
         // 0x000d
         case 13: {
@@ -189,11 +189,11 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // "
         case 34: {
-            return _jl_cell4();
+            return 11;
         }
         // ,
         case 44: {
-            return _jl_cell12();
+            return 4;
         }
         // \-
         case 45: {
@@ -217,15 +217,15 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // :
         case 58: {
-            return _jl_cell11();
+            return 5;
         }
         // \[
         case 91: {
-            return _jl_cell10();
+            return 6;
         }
         // \]
         case 93: {
-            return _jl_cell9();
+            return 7;
         }
         // f
         case 102: {
@@ -241,15 +241,15 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // {
         case 123: {
-            return _jl_cell14();
+            return 2;
         }
         // }
         case 125: {
-            return _jl_cell13();
+            return 3;
         }
         // EOF
         case 65535: {
-            return _jl_cell7();
+            return 13;
         }
         default:  {
             return rewind();
@@ -339,10 +339,6 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell4() {
-        return 11;
-    }
-    
     private int _jl_cell5() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -369,10 +365,6 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell7() {
-        return 13;
-    }
-    
     private int _jl_cell8() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -386,45 +378,17 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell9() {
-        return 7;
-    }
-    
-    private int _jl_cell10() {
-        return 6;
-    }
-    
-    private int _jl_cell11() {
-        return 5;
-    }
-    
-    private int _jl_cell12() {
-        return 4;
-    }
-    
-    private int _jl_cell13() {
-        return 3;
-    }
-    
-    private int _jl_cell14() {
-        return 2;
-    }
-    
     private int _jl_cell15() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
         // 0x000a
         case 10: {
-            return _jl_cell16();
+            return 1;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell16() {
-        return 1;
     }
     
     private int _jl_cell17() {
@@ -463,16 +427,12 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // e
         case 101: {
-            return _jl_cell20();
+            return 8;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell20() {
-        return 8;
     }
     
     private int _jl_cell21() {
@@ -506,16 +466,12 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // e
         case 101: {
-            return _jl_cell24();
+            return 9;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell24() {
-        return 9;
     }
     
     private int _jl_cell25() {
@@ -536,16 +492,12 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // l
         case 108: {
-            return _jl_cell27();
+            return 10;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell27() {
-        return 10;
     }
     
     private int _jl_cell28() {
@@ -752,7 +704,7 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         switch (_jl_char) {
         // "
         case 34: {
-            return _jl_cell36();
+            return 0;
         }
         // \\
         case 92: {
@@ -760,16 +712,12 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
         // EOF
         case 65535: {
-            return _jl_cell38();
+            return 4;
         }
         default:  {
             return _jl_cell37();
         }
         }
-    }
-    
-    private int _jl_cell36() {
-        return 0;
     }
     
     private int _jl_cell37() {
@@ -790,10 +738,6 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         }
     }
     
-    private int _jl_cell38() {
-        return 4;
-    }
-    
     private int _jl_cell39() {
         final char _jl_char = getNextChar();
         switch (_jl_char) {
@@ -806,32 +750,20 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 110:
         case 114:
         case 116: {
-            return _jl_cell42();
+            return 1;
         }
         // u
         case 117: {
-            return _jl_cell41();
+            return 2;
         }
         // EOF
         case 65535: {
             return rewind();
         }
         default:  {
-            return _jl_cell40();
+            return 3;
         }
         }
-    }
-    
-    private int _jl_cell40() {
-        return 3;
-    }
-    
-    private int _jl_cell41() {
-        return 2;
-    }
-    
-    private int _jl_cell42() {
-        return 1;
     }
     
     private int _jl_cell43() {
@@ -963,16 +895,12 @@ public final class JSonLexer extends org.stekikun.dolmen.codegen.LexBuffer {
         case 100:
         case 101:
         case 102: {
-            return _jl_cell47();
+            return 0;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell47() {
-        return 0;
     }
     
      

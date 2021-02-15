@@ -67,15 +67,15 @@ public final class ArithGroundLexer extends org.stekikun.dolmen.codegen.LexBuffe
         }
         // *
         case 42: {
-            return _jl_cell3();
+            return 3;
         }
         // +
         case 43: {
-            return _jl_cell4();
+            return 2;
         }
         // \-
         case 45: {
-            return _jl_cell2();
+            return 4;
         }
         // [0-9]
         case 48:
@@ -92,28 +92,12 @@ public final class ArithGroundLexer extends org.stekikun.dolmen.codegen.LexBuffe
         }
         // EOF
         case 65535: {
-            return _jl_cell1();
+            return 5;
         }
         default:  {
             return rewind();
         }
         }
-    }
-    
-    private int _jl_cell1() {
-        return 5;
-    }
-    
-    private int _jl_cell2() {
-        return 4;
-    }
-    
-    private int _jl_cell3() {
-        return 3;
-    }
-    
-    private int _jl_cell4() {
-        return 2;
     }
     
     private int _jl_cell5() {
