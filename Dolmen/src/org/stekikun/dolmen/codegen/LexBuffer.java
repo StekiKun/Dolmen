@@ -381,24 +381,35 @@ public class LexBuffer {
     @DolmenInternal 
     protected final char getNextChar() {
     	// If there aren't any more valid characters in the buffer
-    	if (curPos >= bufLimit) {
-    		// either we've reached end-of-file or we
-    		// need to refill
-    		if (eofReached) return 0xFFFF;
-    		try {
-				refill();
-			} catch (IOException e) {
-				// re-throw as unchecked lexical error exception
-				Position errPos = new Position(startLoc.filename,
-			    		absPos + curPos, startLoc.line, startLoc.bol);
-				throw new LexicalError(errPos, "IOException: " + e.getLocalizedMessage());
-			}
-    		// NB: refill() can only make bufLen grow,
-    		// or set eofReached, so it's one recursive call at most
-    		return getNextChar();
-    	}
+    	if (curPos >= bufLimit)
+    		// fetch more characters in the buffer and return one
+    		return getMoreChars();
     	// Otherwise simply return the next char in line
     	return tokenBuf[curPos++];
+    }
+    
+    /**
+     * Load more characters from the current input into the buffer,
+     * if possible.
+     * 
+     * @return the next available character if the load was
+     * 	successful, or 0xFFFF if the end-of-input has been reached.
+     */
+    private final char getMoreChars() {
+		// either we've reached end-of-file or we
+		// need to refill
+		if (eofReached) return 0xFFFF;
+		try {
+			refill();
+		} catch (IOException e) {
+			// re-throw as unchecked lexical error exception
+			Position errPos = new Position(startLoc.filename,
+		    		absPos + curPos, startLoc.line, startLoc.bol);
+			throw new LexicalError(errPos, "IOException: " + e.getLocalizedMessage());
+		}
+		// NB: refill() can only make bufLen grow,
+		// or set eofReached, so it's one recursive call at most
+		return getNextChar();    	
     }
     
     /**
