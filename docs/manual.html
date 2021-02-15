@@ -4181,6 +4181,21 @@ the value of <code>startLoc</code> to <code>start</code> afterwards. This is use
 <a href="#Lexers_Nested_Rules">nested rules</a> are used to parse a token
 and the token location needs to be adjusted.</p>
 </dd>
+<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>void disablePositions()</code></dt>
+<dd>
+<p>This method can be used to disable position tracking in the
+lexer. It must be called first before the lexer is used,
+and should not be called again afterwards. Once position
+tracking is disabled, the <code>startLoc</code> and <code>curLoc</code> fields are
+set to an arbitrary invalid value and are not updated by the
+lexical analyzer anymore.</p>
+</dd>
+<dt class="hdlist1"><span class="image"><img src="./images/methpub_obj.png" alt="methpub obj" title="public method"></span> <code>boolean hasPositions()</code></dt>
+<dd>
+<p>Returns whether position tracking is enabled in the current
+analyzer or not. Position tracking is enabled by default and
+can be disabled with the <code>disablePositions()</code> method.</p>
+</dd>
 </dl>
 </div>
 </div>
