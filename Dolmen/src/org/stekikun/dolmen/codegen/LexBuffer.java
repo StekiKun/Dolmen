@@ -202,7 +202,7 @@ public class LexBuffer {
     	this.startLoc = new Position(filename);
     	this.curLoc = startLoc;
     }
-
+    
 	/**
 	 * Resets this lexer buffer to read from the start of the given 
 	 * input source
@@ -222,7 +222,7 @@ public class LexBuffer {
 		this.lastAction = -1;
 		this.lastPos = 0;
 		this.memory = new int[0];
-		this.startLoc = new Position(filename);
+		this.startLoc = hasPositions ? new Position(filename) : DUMMY_POS;
 		this.curLoc = startLoc;
 	}
 
@@ -275,11 +275,45 @@ public class LexBuffer {
     @DolmenInternal 
     protected int memory[];
     
+    /**
+     * Whether position tracking in {@link #startLoc} and {@link #curLoc}
+     * is enabled. It is enabled by default.
+     */
+    private boolean hasPositions = true;
+    
     /** Position of the last token start */
     protected Position startLoc;
     
     /** Current token position */
     protected Position curLoc;
+
+    /**
+     * A dummy position used for {@link #startLoc} and {@link #curLoc}
+     * when position tracking is {@linkplain #disablePositions() disabled}.
+     * <p>
+     * It is guaranteed to be different from any valid position.
+     */
+    protected static final Position DUMMY_POS =
+        new Position("<Lexer positions disabled>", -1, -1, -1);
+        
+    /**
+     * @return whether position tracking is enabled in this lexer
+     */
+    public boolean hasPositions() {
+    	return hasPositions;
+    }
+    
+    /***
+	 * Disables position tracking in this lexer.
+	 * <p>
+	 * Should be called first before the lexer is used,
+	 * and cannot be re-enabled later.
+     */
+    public void disablePositions() {
+    	if (!hasPositions()) return;
+    	this.hasPositions = false;
+    	this.startLoc = this.curLoc = DUMMY_POS;
+    }
     
     /**
      * Tries to refill the token buffer from the character
@@ -404,6 +438,7 @@ public class LexBuffer {
      */
     @DolmenInternal 
     protected final void endToken() {
+    	if (!hasPositions) return;
     	startLoc = curLoc;
     	curLoc = new Position(startLoc.filename,
     		absPos + curPos, startLoc.line, startLoc.bol);
@@ -775,6 +810,7 @@ public class LexBuffer {
      * in semantic actions when matching a newline character.
      */
     protected final void newline() {
+    	if (!hasPositions) return;
     	Position pos = curLoc;
     	curLoc = new Position(pos.filename, pos.offset, pos.line + 1, pos.offset);
     }
