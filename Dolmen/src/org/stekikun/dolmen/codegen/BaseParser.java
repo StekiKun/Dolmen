@@ -253,7 +253,7 @@ public abstract class BaseParser<Token> {
 		 * 	being appended to the stack's top-level list
 		 * <li> each reduction of a non-terminal leads to the top-level list being
 		 * 	collapsed and popped from the stack, and the overall range represented
-		 *  from that list is appened to the new stack's top-level list
+		 *  from that list is appended to the new stack's top-level list
 		 * </ul>
 		 */
 		private Stack<@NonNull List<@NonNull Range>> _jl_locationStack;
@@ -424,7 +424,7 @@ public abstract class BaseParser<Token> {
 		}
 		
 		/**
-		 * Items are numbered from 0, and included all terminals and
+		 * Items are numbered from 1, and include all terminals and
 		 * non-terminals, bound or not.
 		 * 
 		 * @param i
@@ -443,7 +443,7 @@ public abstract class BaseParser<Token> {
 		}
 
 		/**
-		 * Items are numbered from 0, and included all terminals and
+		 * Items are numbered from 1, and include all terminals and
 		 * non-terminals, bound or not.
 		 * 
 		 * @param i
