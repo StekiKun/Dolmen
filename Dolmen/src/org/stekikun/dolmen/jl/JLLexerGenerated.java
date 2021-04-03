@@ -51,7 +51,7 @@ public final class JLLexerGenerated extends org.stekikun.dolmen.codegen.LexBuffe
      * @param reader
      */
     public JLLexerGenerated(String inputname, java.io.Reader reader) {
-        super(inputname, reader);
+        super("1.0.0", inputname, reader);
     }
     
     /**

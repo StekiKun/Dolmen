@@ -67,7 +67,7 @@ public final class NoRule extends org.stekikun.dolmen.codegen.BaseParser<NoRule.
      */
     public <T extends org.stekikun.dolmen.codegen.LexBuffer> 
         NoRule(T lexbuf, java.util.function.Function<T, Token> tokens) {
-        super(lexbuf, tokens);
+        super("1.0.0", lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

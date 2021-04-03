@@ -109,7 +109,7 @@ public final class AutomataOutput {
 	    buf.emitln(" * @param reader");
 	    buf.emitln(" */");
 		buf.emit("public ").emit(name).emit("(String inputname, java.io.Reader reader)").openBlock();
-	    buf.emit("super(inputname, reader);");
+	    buf.emit("super(\"").emit(Constants.VERSION).emit("\", inputname, reader);");
 	    buf.closeBlock();
 	}
 		

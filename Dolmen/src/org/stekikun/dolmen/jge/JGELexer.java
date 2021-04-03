@@ -66,7 +66,7 @@ public final class JGELexer extends org.stekikun.dolmen.codegen.LexBuffer {
      * @param reader
      */
     public JGELexer(String inputname, java.io.Reader reader) {
-        super(inputname, reader);
+        super("1.0.0", inputname, reader);
     }
     
     /**

@@ -247,7 +247,7 @@ public final class JSonParser extends org.stekikun.dolmen.codegen.BaseParser<JSo
      */
     public <T extends org.stekikun.dolmen.codegen.LexBuffer> 
         JSonParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
-        super(lexbuf, tokens);
+        super("1.0.0", lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

@@ -208,7 +208,7 @@ public final class JGEParser extends org.stekikun.dolmen.codegen.BaseParser<JGEP
      */
     public <T extends org.stekikun.dolmen.codegen.LexBuffer> 
         JGEParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
-        super(lexbuf, tokens);
+        super("1.0.0", lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

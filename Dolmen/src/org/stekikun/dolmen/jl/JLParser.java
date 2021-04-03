@@ -24,6 +24,7 @@ import org.stekikun.dolmen.codegen.BaseParser;
 import org.stekikun.dolmen.codegen.LexBuffer.LexicalError;
 import org.stekikun.dolmen.codegen.LexBuffer.Position;
 import org.stekikun.dolmen.common.CSet;
+import org.stekikun.dolmen.common.Constants;
 import org.stekikun.dolmen.common.Lists;
 import org.stekikun.dolmen.common.Maps;
 import org.stekikun.dolmen.common.Prompt;
@@ -65,7 +66,7 @@ public final class JLParser extends BaseParser<JLToken> {
 	 * @param tokens
 	 */
 	public JLParser(JLLexerGenerated lexbuf, Function<JLLexerGenerated, @NonNull JLToken> tokens) {
-		super(lexbuf, tokens);
+		super(Constants.VERSION, lexbuf, tokens);
 		this.definitions = Maps.empty();
 	}
 	

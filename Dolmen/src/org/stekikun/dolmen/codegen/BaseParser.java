@@ -11,6 +11,7 @@ import java.util.function.Supplier;
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
 import org.stekikun.dolmen.codegen.LexBuffer.Position;
+import org.stekikun.dolmen.common.Exceptions.DolmenVersionException;
 import org.stekikun.dolmen.common.Prompt;
 
 /**
@@ -153,11 +154,17 @@ public abstract class BaseParser<Token> {
 	 * 	turn is usually down to the lexer to generate one special
 	 * 	token for end-of-input).
 	 * </ul>
+	 * <p>
 	 * 
+	 * @param version	the version of Dolmen which generated the subclass
+	 * @param lexbuf
 	 * @param tokens
+	 * @throws DolmenVersionException if {@code version} is not equal to
+	 * 	the version of this {@code BaseParser}
 	 */
 	protected <T extends LexBuffer> 
-		BaseParser(T lexbuf, Function<T, @NonNull Token> tokens) {
+		BaseParser(String version, T lexbuf, Function<T, @NonNull Token> tokens) {
+		DolmenVersionException.checkParser(version);
 		this._jl_lexbuf = lexbuf;
 		this._jl_tokens = () -> tokens.apply(lexbuf);
 		this._jl_nextToken = null;
@@ -259,8 +266,8 @@ public abstract class BaseParser<Token> {
 		private Stack<@NonNull List<@NonNull Range>> _jl_locationStack;
 		
 		protected <T extends LexBuffer> 
-			WithPositions(T lexbuf, Function<T, @NonNull Token> tokens) {
-			super(lexbuf, tokens);
+			WithPositions(String version, T lexbuf, Function<T, @NonNull Token> tokens) {
+			super(version, lexbuf, tokens);
 			this._jl_locationStack = new Stack<>();
 		}
 

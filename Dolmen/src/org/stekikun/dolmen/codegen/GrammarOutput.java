@@ -124,7 +124,7 @@ public final class GrammarOutput {
 		   .emit("T lexbuf, ")
 		   .emit("java.util.function.Function<T, Token> tokens)")
 		   .decrIndent().openBlock();
-		buf.emit("super(lexbuf, tokens);")
+		buf.emit("super(\"").emit(Constants.VERSION).emit("\", lexbuf, tokens);")
 		   .closeBlock();
 		buf.newline();
 	}

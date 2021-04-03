@@ -68,7 +68,7 @@ public final class ArithGroundParser extends org.stekikun.dolmen.codegen.BasePar
      */
     public <T extends org.stekikun.dolmen.codegen.LexBuffer> 
         ArithGroundParser(T lexbuf, java.util.function.Function<T, Token> tokens) {
-        super(lexbuf, tokens);
+        super("1.0.0", lexbuf, tokens);
     }
     
     private Token eat(Token.Kind kind) {

@@ -15,7 +15,7 @@ public final class StraightLineLexer extends org.stekikun.dolmen.codegen.LexBuff
      * @param reader
      */
     public StraightLineLexer(String inputname, java.io.Reader reader) {
-        super(inputname, reader);
+        super("1.0.0", inputname, reader);
     }
     
     /**

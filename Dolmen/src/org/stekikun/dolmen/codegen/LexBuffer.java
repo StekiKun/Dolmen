@@ -13,6 +13,7 @@ import java.util.stream.StreamSupport;
 
 import org.eclipse.jdt.annotation.NonNull;
 import org.eclipse.jdt.annotation.Nullable;
+import org.stekikun.dolmen.common.Exceptions.DolmenVersionException;
 
 /**
  * Instances of buffers used by generated lexers.
@@ -179,11 +180,17 @@ public class LexBuffer {
 	}
 	
     /**
-     * Constructs a new lexer buffer based on the given character stream
+     * Constructs a new lexer buffer based on the given character stream.
+     *
+	 * @param version	the version of Dolmen which generated the subclass
      * @param filename
      * @param reader
+	 * @throws DolmenVersionException if {@code version} is not equal to
+	 * 	the version of this {@code LexBuffer}
      */
-    public LexBuffer(@Nullable String filename, java.io.@Nullable Reader reader) {
+    protected LexBuffer(String version, 
+    		@Nullable String filename, java.io.@Nullable Reader reader) {
+    	DolmenVersionException.checkLexer(version);
     	if (filename == null || reader == null)
     		throw new IllegalArgumentException();
 		// Same as #init(filename, reader), but calling #init will anger

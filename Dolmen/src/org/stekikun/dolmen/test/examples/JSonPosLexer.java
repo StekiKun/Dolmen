@@ -31,7 +31,7 @@ public final class JSonPosLexer extends org.stekikun.dolmen.codegen.LexBuffer {
      * @param reader
      */
     public JSonPosLexer(String inputname, java.io.Reader reader) {
-        super(inputname, reader);
+        super("1.0.0", inputname, reader);
     }
     
     /**
