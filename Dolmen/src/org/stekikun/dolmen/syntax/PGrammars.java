@@ -523,11 +523,15 @@ public abstract class PGrammars {
 			boolean changed;
 			do {
 				changed = false;
-				int idx = 0;
+				int idx = -1;
 				for (PGrammarRule rule : rules) {
+					++idx;
 					if (rule.params.isEmpty()) continue;
-					List<Sort> previous = sorts.get(rule.name.val);
-					List<Sort> newer = handleRule0(rule, mutParamSorts.get(idx++));
+					// The sorts map has been initialized for all rules in the SCC
+					List<Sort> previous = Nulls.ok(sorts.get(rule.name.val));
+					List<Sort> newer = handleRule0(rule, mutParamSorts.get(idx));
+					if (previous.size() != newer.size())
+						throw new IllegalStateException("Size mismatch in sort inference for rule " + rule.name.val);
 					if (!newer.equals(previous)) {
 						changed = true;
 						sorts.replace(rule.name.val, newer);
