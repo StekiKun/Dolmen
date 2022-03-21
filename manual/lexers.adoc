@@ -1056,8 +1056,12 @@ command line options are detailed in the following table.
 | `-r/--reports`
 | String
 | Name of the source file + `.reports`
-| No
 | File where potential problems should be reported.
+
+| `--no-colors`
+| Flag
+| No
+| Disable colors in output.
 
 |===
 
@@ -1350,9 +1354,9 @@ a dedicated entry for escape sequences can help factorize
 the two in a single set of rules.
 
 When using nested rules, one must be aware of the couple of
-subtleties. First, it is possible write a recursive entry, or a group
-of mutually recursive entries, in which case the user should be aware
-of the possibility of stack overflow. This is discussed
+subtleties. First, it is possible to write a recursive entry, or a
+group of mutually recursive entries, in which case the user should be
+aware of the possibility of stack overflow. This is discussed
 <<Lexers_Tail_Recursion_Ref,below>>. Second, the internal state
 of the lexing buffer is updated when performing nested calls,
 and a number of the <<Lexers_Semantic_Actions_Ref,inherited methods>>

@@ -607,7 +607,7 @@ public final class Expansion {
 	 * This container class represents a ground instance of
 	 * some {@linkplain #nterm non-terminal} applied to some
 	 * {@linkplain #params effective parameters}. 
-	 * <p
+	 * <p>
 	 * This represents a unit of pending work during the 
 	 * expansion of a parametric grammar. The field {@link #name}
 	 * gives the actual name of the corresponding instance

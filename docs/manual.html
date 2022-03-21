@@ -1439,7 +1439,7 @@ The best way to enjoy this tutorial is to try and proceed
   <a href="./files/lexer-tutorial.tgz">archive</a>
   to set up a working directory just like the one we assume
   in this section. This archive also contains a basic <code>Makefile</code>
-  to compiler the lexer and tokenizer, and a target <code>test</code> which
+  to compile the lexer and tokenizer, and a target <code>test</code> which
   runs the tokenizer as described below.
 </td>
 </tr>
@@ -4779,7 +4779,13 @@ command line options are detailed in the following table.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><code>-r/--reports</code></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">String</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">Name of the source file + <code>.reports</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">File where potential problems should be reported.</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><code>--no-colors</code></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Flag</p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">No</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">Disable colors in output.</p></td>
 </tr>
 </tbody>
 </table>
@@ -5121,9 +5127,9 @@ the two in a single set of rules.</p>
 </div>
 <div class="paragraph">
 <p>When using nested rules, one must be aware of the couple of
-subtleties. First, it is possible write a recursive entry, or a group
-of mutually recursive entries, in which case the user should be aware
-of the possibility of stack overflow. This is discussed
+subtleties. First, it is possible to write a recursive entry, or a
+group of mutually recursive entries, in which case the user should be
+aware of the possibility of stack overflow. This is discussed
 <a href="#Lexers_Tail_Recursion_Ref">below</a>. Second, the internal state
 of the lexing buffer is updated when performing nested calls,
 and a number of the <a href="#Lexers_Semantic_Actions_Ref">inherited methods</a>

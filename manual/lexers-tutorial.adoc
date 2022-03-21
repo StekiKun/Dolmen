@@ -317,7 +317,7 @@ NOTE: The best way to enjoy this tutorial is to try and proceed
   link:{doc-files}/lexer-tutorial.tgz[archive]
   to set up a working directory just like the one we assume
   in this section. This archive also contains a basic `Makefile`
-  to compiler the lexer and tokenizer, and a target `test` which
+  to compile the lexer and tokenizer, and a target `test` which
   runs the tokenizer as described below.
 
 Suppose we have created a file `JsonLexer.jl` with our lexer
