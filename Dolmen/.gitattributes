@@ -16,3 +16,11 @@ src/test/examples/JSonPosParser.java linguist-generated=true
 src/test/examples/StraightLineLexer.java linguist-generated=true
 src/test/examples/StraightLineParser.java linguist-generated=true
 src/test/examples/Templates.java linguist-generated=true
+#
+# https://help.github.com/articles/dealing-with-line-endings/
+#
+# Linux start script should use lf
+/gradlew        text eol=lf
+
+# These are Windows script files and should use crlf
+*.bat           text eol=crlf
